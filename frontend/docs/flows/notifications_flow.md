@@ -13,7 +13,7 @@ Covers:
 
 ## Notification Trigger
 
-Priority: Could / Week 6+.
+Priority: Could.
 
 A notification may be generated when:
 - part remaining lifetime falls below 500 km;

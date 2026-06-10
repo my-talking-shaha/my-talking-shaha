@@ -15,7 +15,7 @@ Settings is a secondary feature that centralizes user preferences and account-le
 
 ## Flow
 
-1. User opens settings from bottom navigation or profile icon.
+1. User opens settings from bottom navigation.
 2. User sees account/profile info.
 3. User can change theme/localization if supported.
 4. User can toggle notifications if notifications feature is in scope.

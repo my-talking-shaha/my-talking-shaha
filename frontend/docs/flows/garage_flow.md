@@ -32,13 +32,12 @@ Each card should display:
 - photo if available;
 - engine type;
 - current mileage;
-- status summary when available.
 
 ## Add Vehicle Flow
 
-1. User taps plus/add button.
+1. User taps add button.
 2. App opens add vehicle form.
-3. User enters brand, model, year, color, current mileage, engine type.
+3. User enters brand, model, year, current mileage, engine type.
 4. Brand/model may come from catalog or manual input.
 5. Client validates fields.
 6. Client sends create vehicle request.
@@ -46,12 +45,11 @@ Each card should display:
 
 ## Delete Vehicle Flow
 
-1. User opens vehicle actions.
-2. User taps delete.
-3. Confirmation dialog appears.
-4. If confirmed, client sends delete request.
-5. Vehicle is removed from garage.
-6. If selected vehicle was deleted, app remains/returns to garage.
+1. User makes long tap on car card
+2. Confirmation dialog appears.
+3. If confirmed, client sends delete request.
+4. Vehicle is removed from garage.
+5. If selected vehicle was deleted, app remains in garage.
 
 ## Validation
 
@@ -61,9 +59,6 @@ Required:
 - year;
 - current mileage;
 - engine type.
-
-Optional:
-- color.
 
 Rules:
 - mileage >= 0;
@@ -75,6 +70,5 @@ Rules:
 - Garage exists as a separate section.
 - All user vehicles are displayed.
 - User can add unlimited vehicles.
-- User can open vehicle details.
 - Empty state is shown when there are no cars.
 - Deletion requires confirmation.

@@ -13,44 +13,40 @@ Covers:
 - Vehicle characteristics/details.
 - Last events section.
 - Current condition/status section.
+- Embedded parts feature widget / maintenance forecast card.
 
 ## Open Vehicle Flow
 
-1. User selects vehicle from Garage.
-2. App navigates to `/vehicle/:vehicleId`.
+1. User selects a vehicle from Garage.
+2. App navigates to /vehicle/:vehicleId.
 3. Client loads vehicle profile and dashboard summary.
-4. Screen displays vehicle image/hero, characteristics, status, and recent events.
+4. Screen displays vehicle image/hero, characteristics, current condition, embedded parts feature widget, and recent events.
 
 ## Dashboard Content
 
 Show:
 - vehicle image/photo or fallback avatar;
 - brand/model;
-- year;
 - current mileage;
 - engine type;
 - VIN if available;
-- last maintenance date if available;
-- active warnings count;
-- overall status: OK / warning / critical / unknown;
+- embedded parts feature widget with maintenance forecast and remaining lifetime indicators;
 - last 5 timeline events;
 - shortcut to history, parts, analytics, chat.
 
-## Status Indicator
+## Parts Feature Widget
 
-Status meaning:
-- OK: no active warnings, critical resources above thresholds.
-- Warning: attention required, resource below warning threshold.
-- Critical: resource expired or urgent issue.
-- Unknown: insufficient data.
+The dashboard may include a reusable parts feature widget.
 
-Client should prefer backend-provided status. If local fallback is used, it must be clearly derived from available data only.
+The widget can display:
+- next maintenance forecast;
+- closest required service;
+- part remaining lifetime in kilometers and/or percent;
+- warning/critical indicators for low remaining lifetime.
 
-## Characteristics Flow
+This widget belongs to the parts feature in architecture, but is rendered inside the vehicle dashboard UI.
 
-1. User opens characteristics/details.
-2. App displays all available vehicle fields.
-3. Optional edit flow can be implemented if backend supports it.
+If the parts feature is not implemented yet, the dashboard must show a placeholder or hide the section without breaking the screen.
 
 ## Photo/Avatar Flow
 
@@ -63,8 +59,6 @@ Priority: Could.
 
 ## Acceptance Criteria
 
-- Vehicle card opens a detail page.
-- Dashboard shows current mileage, last maintenance date, and active warnings where available.
-- Overall status is visible.
-- User can tap blocks for detailed information when supported.
+- Dashboard shows vehicle image, brand/model, current mileage, engine type, and VIN if available.
+- Parts feature widget is shown if implemented, otherwise it is safely placeholdered.
 - Last events update after new timeline records.

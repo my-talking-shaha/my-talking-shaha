@@ -69,7 +69,7 @@ Fields:
 
 ## Edit/Delete Flow
 
-1. User opens event details.
+1. User makes long tap or swipe to left.
 2. User chooses edit or delete.
 3. Edit updates event and refreshes timeline.
 4. Delete requires confirmation and refreshes timeline.
