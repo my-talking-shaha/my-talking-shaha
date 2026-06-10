@@ -7,6 +7,7 @@ Check:
 - Use `const` widgets where useful and readable.
 - Avoid rebuilding whole screens for small state changes.
 - Avoid unnecessary nested scroll views.
+- Avoid signle scroll child view
 - Use list virtualization for long timeline/history lists.
 - Avoid large image decoding on the main thread where possible.
 - Avoid repeatedly formatting dates/currency in every build when state can precompute UI models.

@@ -20,7 +20,7 @@ Check:
 
 - Widget parses JSON.
 - Widget/controller calls HTTP client directly.
-- Domain imports Flutter, Dio, GoRouter, or platform packages.
+- Domain imports Flutter, http, GoRouter, or platform packages.
 - DTO leaks into UI.
 - Repository implementation is placed in domain.
 - API model is used as UI state.

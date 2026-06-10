@@ -21,8 +21,14 @@ AI answers must be grounded in stored vehicle data and rule-based calculations.
 
 If the system lacks enough data, display the standard fallback:
 
+Russian:
 ```text
 Недостаточно данных для ответа
+```
+
+English:
+```text
+Not enough data to response
 ```
 
 Do not invent:
