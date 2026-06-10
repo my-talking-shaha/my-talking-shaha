@@ -42,19 +42,7 @@ Use this order unless the human explicitly changes scope.
 - Push notifications.
 - Voice input in chat.
 
-## 3. Weekly Plan Alignment
-
-- Week 1: requirements, user stories, acceptance criteria, designs.
-- Week 2: technical foundation, app structure, contracts.
-- Week 3: auth, garage, user and car management.
-- Week 4: car timeline and CRUD.
-- Week 5: analytics and digital twin dashboard.
-- Week 6: AI assistant, rule-based prediction, reminders.
-- Week 7: testing, final UI/UX polish, documentation, demo.
-
-Agents must keep implementation aligned with the current week/task, not jump to later features without request.
-
-## 4. Architecture
+## 3. Architecture
 
 The Flutter client follows feature-first architecture.
 
@@ -118,7 +106,7 @@ Rules:
 - Presentation owns screens, widgets, UI state, form state, navigation triggers, and user interaction.
 - Business rules must live in domain use cases when they are not purely visual.
 
-## 5. State Management
+## 4. State Management
 
 Use Riverpod consistently.
 
@@ -131,7 +119,7 @@ Preferred patterns:
 
 Do not introduce another state management approach without approval.
 
-## 6. Navigation
+## 5. Navigation
 
 Use GoRouter consistently.
 
@@ -155,7 +143,7 @@ Expected route groups:
 
 Use route parameters for `vehicleId`. Do not keep the currently selected vehicle only in global mutable state.
 
-## 7. API and Contracts
+## 6. API and Contracts
 
 API contracts are documented in `docs/contracts/` and are the source of truth until backend provides a newer contract.
 
@@ -169,7 +157,7 @@ General assumptions:
 
 If backend differs from docs, update `docs/contracts/*.md` first or in the same diff.
 
-## 8. Design System
+## 7. Design System
 
 Follow `docs` and `.codex/skills/design_system.md`.
 
@@ -186,7 +174,7 @@ Visual direction:
 
 Do not implement generic default Material screens when project-specific design guidance exists.
 
-## 9. Core Rules
+## 8. Core Rules
 
 - Prefer minimal safe diffs.
 - Preserve feature-first architecture.
@@ -200,7 +188,7 @@ Do not implement generic default Material screens when project-specific design g
 - Never store secrets or tokens in source code.
 - Never log access tokens, refresh tokens, passwords, or private user data.
 
-## 10. Context Discovery
+## 9. Context Discovery
 
 Before implementing, inspect:
 - `AGENTS.md`;
@@ -214,7 +202,7 @@ Before implementing, inspect:
 
 Do not create parallel abstractions until existing implementations are inspected.
 
-## 11. Checks
+## 10. Checks
 
 Required before completion:
 
@@ -232,7 +220,7 @@ Preferred command:
 
 If checks cannot run, say exactly why.
 
-## 12. Review Expectations
+## 11. Review Expectations
 
 Changes must be:
 - architecture-consistent;
@@ -246,7 +234,7 @@ Severity levels:
 - `[P1]` broken user flow, architecture violation, incorrect API contract usage.
 - `[P2]` maintainability, naming, style, missing small test.
 
-## 13. Forbidden Actions
+## 12. Forbidden Actions
 
 Do not:
 - put HTTP code in widgets/controllers;
@@ -260,7 +248,7 @@ Do not:
 - implement fake live telemetry unless explicitly requested;
 - make the AI assistant answer without data grounding.
 
-## 14. Output Format
+## 13. Output Format
 
 For implementation tasks:
 
@@ -294,7 +282,7 @@ APPROVE / REQUEST CHANGES
 ### Suggested Fixes
 ```
 
-## 15. References
+## 14. References
 
 Architecture:
 - `docs/architecture/overview.md`
