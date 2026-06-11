@@ -2,8 +2,8 @@
 
 ## Screen/Widget From Design
 
-- `Parts-parts_widget.png`
-- same widget is also visible inside `Vehicle-dashboard.jpg` and `Analytics.jpg`.
+- Accord to `docs/design/screenshots/01_parts.jpg` for design example
+- same widget is also visible inside `01_vehicle.jpg` and `01_analytics.jpg`.
 
 ## Feature Meaning
 

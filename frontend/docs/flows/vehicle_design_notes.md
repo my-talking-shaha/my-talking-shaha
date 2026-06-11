@@ -2,7 +2,7 @@
 
 ## Screen From Design
 
-- `Vehicle-dashboard.jpg`
+- Accord to `docs/design/screenshots/01_vehicle.jpg` for design example
 
 ## Visual Structure
 

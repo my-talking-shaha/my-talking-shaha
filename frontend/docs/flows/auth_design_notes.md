@@ -2,8 +2,7 @@
 
 ## Screens From Design
 
-- `Auth-log in.png`
-- `Auth-sign up.png`
+- Accord to `docs/design/screenshots/auth/` for design example
 
 ## Visual Structure
 

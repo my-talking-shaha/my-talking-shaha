@@ -2,12 +2,7 @@
 
 ## Screens From Design
 
-- `History-car_history_wrapped.jpg`
-- `History-car_history_unwrapped.jpg`
-- `History-add_maintenance_no_photo.jpg`
-- `History-add_maintenance_photo.jpg`
-- `History-add_refuel.jpg`
-- `History-add_trip.jpg`
+- Accord to `docs/design/screenshots/history/` for design example
 
 ## Timeline Screen
 

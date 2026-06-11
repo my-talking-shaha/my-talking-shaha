@@ -2,7 +2,7 @@
 
 ## Screen From Design
 
-- `Settings.jpg`
+- Accord to `docs/design/screenshots/01_settings.jpg` for design example
 
 ## Visual Structure
 

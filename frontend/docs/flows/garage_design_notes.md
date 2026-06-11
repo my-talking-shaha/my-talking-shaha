@@ -2,9 +2,7 @@
 
 ## Screens From Design
 
-- `Garage-garage_empty.jpg`
-- `Garage-garage_not_empty.jpg`
-- `Garage-new_car_datails.jpg`
+- Accord to `docs/design/screenshots/garage/` for design example
 
 ## Garage With Cars
 

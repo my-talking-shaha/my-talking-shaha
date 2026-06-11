@@ -2,9 +2,7 @@
 
 ## Screens From Design
 
-- `Chat-empty_chat.jpg`
-- `Chat-non_empty_no_error_chat.jpg`
-- `Chat-non_empty_error_chat.jpg`
+- Accord to `docs/design/screenshots/chat/` for design example
 
 ## Empty Chat State
 

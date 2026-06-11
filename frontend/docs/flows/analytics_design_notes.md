@@ -2,7 +2,7 @@
 
 ## Screen From Design
 
-- `Analytics.jpg`
+- Accord to `docs/design/screenshots/01_analytics.jpg` for design example
 
 ## Visual Structure
 

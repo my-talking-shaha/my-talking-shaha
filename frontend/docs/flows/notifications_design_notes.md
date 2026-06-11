@@ -2,7 +2,7 @@
 
 ## Screen From Design
 
-- `Notofications-notification_center.jpg`
+- Accord to `docs/design/screenshots/01_notifications.jpg` for design example
 
 ## Visual Structure
 
