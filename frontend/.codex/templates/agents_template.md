@@ -83,7 +83,10 @@ Implementer must read:
 * Planner output
 * relevant skills from `.codex/skills/`
 * `docs/architecture/overview.md`
+* `docs/architecture/design_overview.md`
+* `docs/architecture/ui_component_inventory.md`
 * relevant docs from `docs/flows/`
+* relevant design examples from `dosc/design`
 * relevant contracts from `docs/contracts/`
 
 Implementer must:
@@ -94,6 +97,7 @@ Implementer must:
 * preserve feature-first architecture;
 * preserve Riverpod and GoRouter conventions;
 * use the existing design system and UI primitives;
+* accord to existing docs about design
 * update docs/contracts if implementation depends on new behavior;
 * add or update tests when behavior changes;
 * run available checks;
