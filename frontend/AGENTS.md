@@ -298,6 +298,12 @@ Flows:
 - `docs/flows/chat_flow.md`
 - `docs/flows/settings_flow.md`
 
+Design notes:
+- `docs/flows/*_design_notes.md`
+
+Design examples:
+- `docs/design/screenshots/*`
+
 Contracts:
 - `docs/contracts/auth_api.md`
 - `docs/contracts/garage_api.md`
