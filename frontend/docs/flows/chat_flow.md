@@ -5,7 +5,10 @@
 Covers:
 - CHAT-01 AI chat with car, Must.
 - CHAT-02 voice input, Could.
-- CHAT-03, CHAT-04, CHAT-05, CHAT-06 
+- CHAT-03 start screen with quick questions, Must.
+- CHAT-04 chat first, tabs second, Must.
+- CHAT-05 chat to pre-filled form, Must.
+- CHAT-06 chat history, Should.
 
 ## Screens
 
@@ -14,6 +17,8 @@ Covers:
 - Text input.
 - Optional voice input.
 - Recommendation card.
+- Quick-question buttons.
+- Pre-filled event forms launched from chat.
 
 ## Chat Flow
 
@@ -25,6 +30,22 @@ Covers:
 6. Backend responds using vehicle data and rules.
 7. Client appends assistant response.
 8. History remains available after next login.
+
+## Start Screen and Quick Questions Flow
+
+1. User opens the primary chat entry point for the selected vehicle.
+2. The chat screen is open by default for that entry point.
+3. User can type a message immediately.
+4. Quick-question buttons are shown below the input field.
+5. Starter set:
+   - `Состояние авто`;
+   - `Когда ТО?`;
+   - `Что может сломаться?`;
+   - `Добавить заправку`;
+   - `Записать ремонт`.
+6. Buttons may be dynamic and personalized for the selected user and vehicle.
+7. User taps a quick-question button.
+8. The question is sent to the chat as a user message.
 
 ## Grounding Requirements
 
@@ -59,7 +80,33 @@ Backend may return cards such as:
 - add event shortcut;
 - open part details.
 
+For CHAT-05, backend must support structured actions for these recognized event intents:
+- repair;
+- refuel;
+- trip.
+
 Flutter should render structured actions but not invent them.
+
+## Chat to Form Flow
+
+1. User sends a message about an event, for example `Заменил масло на 15000 км`.
+2. Backend recognizes the event intent and extracts known fields.
+3. Assistant responds with a confirmation question and a `Перейти к форме` action.
+4. Structured action payload includes:
+   - event type;
+   - target form route;
+   - pre-filled fields;
+   - return route to the current chat.
+5. User taps `Перейти к форме`.
+6. App opens the matching form with extracted fields pre-filled.
+7. User completes remaining fields and saves.
+8. App returns to the chat and appends an AI confirmation.
+9. User can cancel the action before saving.
+
+Example for `Заменил масло на 15000 км`:
+- event type: part replacement;
+- part: oil;
+- mileage: 15000.
 
 ## Voice Input
 
@@ -81,3 +128,5 @@ If implemented:
 - Answers include numbers where possible.
 - If AI cannot answer, fallback is shown.
 - Chat history is saved per vehicle.
+- Quick-question buttons are available on the chat start screen.
+- Recognized event intents can open pre-filled forms and return to chat after save.

@@ -16,7 +16,7 @@ The feature can be displayed as:
 
 Covers:
 
-- DATA-01: update parts and condition, Should.
+- DATA-01 (Update parts and condition): update parts and condition, Should.
 - STATUS-02: remaining part lifetime, Must.
 - NOTIF-01: warning notifications based on low remaining lifetime, Could.
 - CHAT-01: AI answers based on vehicle data and rules, Must.

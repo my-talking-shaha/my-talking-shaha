@@ -37,7 +37,7 @@ Each card should display:
 
 1. User taps add button.
 2. App opens add vehicle form.
-3. User enters brand, model, year, current mileage, engine type.
+3. User enters brand, model, year, optional color, current mileage, engine type.
 4. Brand/model may come from catalog or manual input.
 5. Client validates fields.
 6. Client sends create vehicle request.
@@ -72,4 +72,4 @@ Rules:
 - User can add unlimited vehicles.
 - Empty state is shown when there are no cars.
 - Deletion requires confirmation.
-- After chosing a vehicle user goes to chat with this vehicle
+- After choosing a vehicle, user opens the vehicle chat screen.

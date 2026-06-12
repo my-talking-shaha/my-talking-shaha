@@ -4,7 +4,7 @@
 
 Covers:
 - ACC-01 Registration with email/password.
-- ACC-02 Google auth, optional/Should.
+- ACC-02 Yandex ID auth, optional/Should.
 
 ## Screens
 

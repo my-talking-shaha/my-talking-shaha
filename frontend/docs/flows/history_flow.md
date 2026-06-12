@@ -19,7 +19,7 @@ Covers:
 
 1. User opens `/vehicle/:vehicleId/history`.
 2. Client fetches timeline events for selected vehicle.
-3. Events are shown in chronological order, preferably newest first.
+3. Events are shown in chronological order.
 4. Events can be grouped by month/date.
 5. User can search and filter by event type.
 
@@ -31,7 +31,8 @@ Fields:
 - mileage;
 - description;
 - cost;
-- replaced parts optional.
+- replaced parts;
+- photos optional.
 
 ### Refueling
 Fields:
