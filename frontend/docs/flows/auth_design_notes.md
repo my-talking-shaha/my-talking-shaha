@@ -34,7 +34,7 @@ Registration content:
 - Use a shared `AuthFormCard`.
 - Use `ShahaTextField` for all fields.
 - Use `ShahaButton.primary` for the main CTA.
-- Social auth provider should not be hardcoded in business logic. The current design shows YandexID, while requirements mention Google OAuth. Use a generic `SocialAuthButton` and align provider text with backend/product decision.
+- Social auth provider should not be hardcoded in business logic. The current design shows YandexID. Use a `YandexID` and align provider text with backend/product decision.
 - Keep validation messages friendly and short.
 
 ## States To Support
