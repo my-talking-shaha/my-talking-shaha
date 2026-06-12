@@ -66,25 +66,25 @@ Response `200`: same as register.
 Errors:
 - `401 INVALID_CREDENTIALS`.
 
-## Google Auth
+## YandexID Auth
 
 Priority: Should.
 
-`POST /api/v1/auth/google`
+`POST /api/v1/auth/yandexid`
 
 Request:
 
 ```json
 {
-  "idToken": "google-id-token"
+  "idToken": "yandex-id-token"
 }
 ```
 
 Response `200`: same as login.
 
 Client notes:
-- Google auth creates account if not present;
-- email from Google becomes primary email.
+- YandexID auth creates account if not present;
+- email from YandexID becomes primary email.
 
 ## Refresh Token
 
