@@ -20,7 +20,7 @@ Covers:
 3. If list is empty, show empty state with `Добавить автомобиль` action.
 4. If list has cars, show vehicle cards.
 5. User taps a vehicle card.
-6. App navigates to `/vehicle/:vehicleId`.
+6. App navigates to `/vehicle/:vehicleId/chat`.
 
 ## Vehicle Card Content
 
@@ -72,3 +72,4 @@ Rules:
 - User can add unlimited vehicles.
 - Empty state is shown when there are no cars.
 - Deletion requires confirmation.
+- After chosing a vehicle user goes to chat with this vehicle

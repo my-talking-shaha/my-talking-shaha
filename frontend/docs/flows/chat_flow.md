@@ -5,6 +5,7 @@
 Covers:
 - CHAT-01 AI chat with car, Must.
 - CHAT-02 voice input, Could.
+- CHAT-03, CHAT-04, CHAT-05, CHAT-06 
 
 ## Screens
 
