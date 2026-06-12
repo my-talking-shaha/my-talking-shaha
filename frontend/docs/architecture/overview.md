@@ -93,7 +93,7 @@ presentation -> domain -> data
 ## Feature Responsibilities
 
 ### auth
-Registration, login, logout, session state, Google auth hook, token storage integration.
+Registration, login, logout, session state, YandexID auth hook, token storage integration.
 
 ### garage
 List of user's vehicles, empty garage, add vehicle entry point, delete confirmation, vehicle selection.

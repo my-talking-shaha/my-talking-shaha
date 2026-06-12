@@ -33,7 +33,7 @@ Use this order unless the human explicitly changes scope.
 - Per-vehicle AI chat with grounded answers.
 
 ### Should
-- Google auth.
+- YandexID auth.
 - Parts catalog and default lifetime values.
 - Analytics for expenses, mileage, repairs, refueling, and maintenance.
 
