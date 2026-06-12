@@ -28,7 +28,7 @@ Russian:
 
 English:
 ```text
-Not enough data to response
+Not enough data to answer
 ```
 
 Do not invent:

@@ -55,12 +55,13 @@ All event types:
 
 Repair:
 - description required;
-- replaced parts optional.
+- replaced parts required;
+- photos optional.
 
 Refueling:
 - liters required and positive;
 - fuel type required;
-- cost optional or non-negative depending backend contract.
+- cost required and non-negative.
 
 Trip:
 - start mileage required;
@@ -70,7 +71,7 @@ Trip:
 
 Maintenance:
 - description/service type required;
-- cost optional or non-negative.
+- cost required and non-negative.
 
 ## Parts
 

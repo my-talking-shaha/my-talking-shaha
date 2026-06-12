@@ -190,7 +190,7 @@ Auth screens use:
 - social auth button if supported by backend;
 - switch link between login and registration.
 
-Note: current mockups show `YandexID`, while user stories mention Google OAuth. Implementation must follow the current product decision and backend contract. If unresolved, use a generic social auth component and avoid hardcoding a provider in business logic.
+Note: current mockups, user stories, and backend contract use `YandexID`. Use a generic social auth component at the UI boundary, but align provider text and auth flow with Yandex ID unless product/backend docs change.
 
 ### Garage
 
