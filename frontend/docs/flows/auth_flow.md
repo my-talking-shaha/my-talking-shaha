@@ -37,17 +37,17 @@ Covers:
    - user is navigated to `/garage`.
 6. On invalid credentials, show understandable error.
 
-## Google Auth Flow
+## YandexID Auth Flow
 
 Priority: Should.
 
-1. User taps `Войти через Google`.
-2. Native/web Google OAuth flow opens.
-3. Client sends Google ID token to backend.
+1. User taps `Войти через YandexID`.
+2. Native/web YandexID OAuth flow opens.
+3. Client sends YandexID ID token to backend.
 4. Backend creates account if needed or returns existing account.
 5. Client stores session and navigates to `/garage`.
 
-Do not implement Google auth before email/password unless explicitly requested.
+Do not implement YandexID auth before email/password unless explicitly requested.
 
 ## Logout Flow
 
@@ -76,4 +76,4 @@ Do not implement Google auth before email/password unless explicitly requested.
 - Empty garage exists after registration.
 - User is logged in after registration.
 - User can log out and log in again.
-- Google auth button exists only if feature is in scope.
+- YandexID auth button exists only if feature is in scope.
