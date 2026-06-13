@@ -5,41 +5,109 @@
 *.swp
 .DS_Store
 .atom/
-.build/
 .buildlog/
 .history
 .svn/
-.swiftpm/
-migrate_working_dir/
 
-# IntelliJ related
+# IntelliJ / Android Studio
 *.iml
 *.ipr
 *.iws
 .idea/
 
-# The .vscode folder contains launch configuration and tasks you configure in
-# VS Code which you may wish to be included in version control, so this line
-# is commented out by default.
-#.vscode/
+# VS Code
+.vscode/*
+!.vscode/launch.json
+!.vscode/tasks.json
+!.vscode/settings.json
 
-# Flutter/Dart/Pub related
-**/doc/api/
-**/ios/Flutter/.last_build_id
+# Dart / Flutter / Pub
 .dart_tool/
+.flutter-plugins
 .flutter-plugins-dependencies
-.pub-cache/
+.packages
 .pub/
-/build/
-/coverage/
+.pub-cache/
+build/
+coverage/
+**/doc/api/
+**/generated_plugin_registrant.dart
 
-# Symbolication related
-app.*.symbols
+# Keep pubspec.lock for Flutter apps
+# pubspec.lock
 
-# Obfuscation related
-app.*.map.json
+# Android
+android/.gradle/
+android/local.properties
+android/**/local.properties
+android/app/debug/
+android/app/profile/
+android/app/release/
+android/captures/
+android/**/GeneratedPluginRegistrant.java
+**/.cxx/
 
-# Android Studio will place build artifacts here
-/android/app/debug
-/android/app/profile
-/android/app/release
+# Android signing / secrets
+android/key.properties
+android/**/key.properties
+*.jks
+*.keystore
+
+# iOS
+ios/Pods/
+ios/.symlinks/
+ios/Flutter/.last_build_id
+ios/Flutter/App.framework
+ios/Flutter/Flutter.framework
+ios/Flutter/Flutter.podspec
+ios/Flutter/Generated.xcconfig
+ios/Flutter/ephemeral/
+ios/Flutter/app.flx
+ios/Flutter/app.zip
+ios/Flutter/flutter_assets/
+ios/Flutter/flutter_export_environment.sh
+ios/Runner/GeneratedPluginRegistrant.*
+ios/ServiceDefinitions.json
+ios/**/DerivedData/
+ios/**/xcuserdata/
+
+# macOS
+macos/Pods/
+macos/Flutter/ephemeral/
+macos/Flutter/GeneratedPluginRegistrant.swift
+macos/**/DerivedData/
+macos/**/xcuserdata/
+
+# Linux
+linux/flutter/ephemeral/
+linux/flutter/generated_plugin_registrant.cc
+linux/flutter/generated_plugin_registrant.h
+linux/flutter/generated_plugins.cmake
+
+# Windows
+windows/flutter/ephemeral/
+windows/flutter/generated_plugin_registrant.cc
+windows/flutter/generated_plugin_registrant.h
+windows/flutter/generated_plugins.cmake
+
+# FVM
+.fvm/flutter_sdk
+.fvm/versions
+
+# Environment / secrets
+.env
+.env.*
+!.env.example
+
+# Certificates / private keys
+*.pem
+*.p8
+*.p12
+*.cer
+*.mobileprovision
+*.provisionprofile
+
+# Firebase / external configs
+# Лучше решить в команде: коммитить или хранить отдельно.
+# android/app/google-services.json
+# ios/Runner/GoogleService-Info.plist

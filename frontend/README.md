@@ -1,17 +1,52 @@
-# frontend
+# My Talking Shaha
 
-A new Flutter project.
+This repository contains the mobile Flutter client for **My Talking Shaha**, a platform for creating a digital car twin. The app stores vehicle data, trips, refueling, repairs, maintenance, part lifetime, analytics, and AI assistant conversations.
 
-## Getting Started
+## Core architecture
 
-This project is a starting point for a Flutter application.
+The Flutter client uses feature-first architecture:
 
-A few resources to get you started if this is your first Flutter project:
+```text
+lib/
+  app/
+  core/
+  features/
+    auth/
+    garage/
+    vehicle/
+    history/
+    parts/
+    analytics/
+    chat/
+    notifications/
+    settings/
+```
 
-- [Learn Flutter](https://docs.flutter.dev/get-started/learn-flutter)
-- [Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Flutter learning resources](https://docs.flutter.dev/reference/learning-resources)
+Each feature uses layers:
 
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+```text
+feature_name/
+  presentation/
+  domain/
+  data/
+```
+
+Dependency direction:
+
+```text
+presentation -> domain -> data
+```
+
+## Required checks
+
+```bash
+.codex/scripts/check.sh
+```
+
+Equivalent commands:
+
+```bash
+dart format --set-exit-if-changed .
+flutter analyze
+flutter test
+```
