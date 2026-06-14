@@ -220,7 +220,23 @@ Preferred command:
 
 If checks cannot run, say exactly why.
 
-## 11. Review Expectations
+
+## 11. Test-First Expectations
+
+For non-trivial features and bug fixes, use the Tester agent before the Implementer changes production code.
+
+Tester must:
+- read Planner output, relevant docs, contracts, and existing tests;
+- add or update the smallest useful tests first when practical;
+- prefer domain, data, controller/provider, and widget tests that prove behavior;
+- report whether tests are expected to fail before implementation;
+- avoid implementing production behavior.
+
+Implementer must treat Tester output as part of the task contract and must not delete, weaken, or skip those tests without explanation.
+
+Reviewer must check that tests are meaningful, mapped to acceptance criteria, and were not weakened to pass.
+
+## 12. Review Expectations
 
 Changes must be:
 - architecture-consistent;
@@ -234,7 +250,7 @@ Severity levels:
 - `[P1]` broken user flow, architecture violation, incorrect API contract usage.
 - `[P2]` maintainability, naming, style, missing small test.
 
-## 12. Forbidden Actions
+## 13. Forbidden Actions
 
 Do not:
 - put HTTP code in widgets/controllers;
@@ -248,7 +264,7 @@ Do not:
 - implement fake live telemetry unless explicitly requested;
 - make the AI assistant answer without data grounding.
 
-## 13. Output Format
+## 14. Output Format
 
 For implementation tasks:
 
@@ -272,17 +288,29 @@ For planning tasks:
 ### Questions for Human
 ```
 
+For test-first tasks:
+
+```md
+### Test Scope
+### Tests Added / Updated
+### Expected Initial Result
+### Commands Run
+### Notes for Implementer
+### Testing Risks
+```
+
 For review tasks:
 
 ```md
 ### Verdict
 APPROVE / REQUEST CHANGES
 ### Findings
+### Test Coverage
 ### Missing Checks
 ### Suggested Fixes
 ```
 
-## 14. References
+## 15. References
 
 Architecture:
 - `docs/architecture/overview.md`
