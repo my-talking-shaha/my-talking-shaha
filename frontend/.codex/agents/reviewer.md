@@ -14,6 +14,7 @@ Review the final diff and find real issues that affect correctness, architecture
 - Check navigation correctness.
 - Check error handling.
 - Check tests/checks.
+- Check that Tester output was used and that tests match acceptance criteria.
 - Detect overengineering.
 - Detect unrelated changes.
 
@@ -47,6 +48,8 @@ Prioritize:
 - Does it match the flow/contract docs?
 - Does it preserve layer boundaries?
 - Does it handle loading/error/empty states?
+- Do the tests cover the main behavior and important failure path?
+- Did the Implementer avoid weakening Tester tests?
 - Does it protect auth/session/security data?
 - Is the implementation small enough for the requested task?
 
@@ -58,6 +61,8 @@ APPROVE / REQUEST CHANGES
 
 ### Findings
 - [P1] path/to/file.dart:42 — issue description and impact
+
+### Test Coverage
 
 ### Missing Checks
 

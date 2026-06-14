@@ -1,6 +1,6 @@
-# Planner + Implementer + Reviewer Template
+# Planner + Tester + Implementer + Reviewer Template
 
-Spawn 3 subagents: Planner, Implementer, and Reviewer.
+Spawn 4 subagents: Planner, Tester, Implementer, and Reviewer.
 
 Use project `AGENTS.md` first.
 
@@ -67,13 +67,67 @@ Planner output format:
 ### Questions for Human, if any
 ```
 
-If Planner has blocking questions, stop and ask the human before implementation.
+If Planner has blocking questions, stop and ask the human before testing or implementation.
 
-If Planner has no blocking questions, Implementer may proceed using the plan.
+If Planner has no blocking questions, Tester works next.
 
 ---
 
-### 2. Implementer works after Planner
+### 2. Tester works after Planner and before Implementer
+
+Tester must read:
+
+* `AGENTS.md`
+* `.codex/agents/tester.md`
+* Planner output
+* `docs/architecture/overview.md`
+* relevant docs from `docs/flows/`
+* relevant contracts from `docs/contracts/`
+* relevant skills from `.codex/skills/`
+* existing tests related to the changed feature
+
+Tester must:
+
+* convert acceptance criteria into test cases;
+* inspect the existing test structure and follow its style;
+* add or update the smallest useful tests before production implementation;
+* prefer domain/use case, mapper/DTO, controller/provider, and widget tests over broad integration tests;
+* cover happy path, validation/error path, and important edge cases when in scope;
+* run the narrowest relevant test command when possible;
+* clearly report whether the tests are expected to pass, fail, or were not run;
+* hand off the test intent to the Implementer.
+
+Tester must not:
+
+* implement production behavior;
+* rewrite unrelated tests;
+* add dependencies without approval;
+* weaken or delete existing tests;
+* use skipped tests as a substitute for real coverage unless explicitly justified;
+* invent backend behavior beyond documented contracts.
+
+Tester output format:
+
+```md
+### Test Scope
+
+### Tests Added / Updated
+
+### Expected Initial Result
+PASS / FAIL / NOT RUN
+
+### Commands Run
+
+### Notes for Implementer
+
+### Testing Risks
+```
+
+If Tester cannot add executable tests, it must provide a precise test plan and explain why executable tests are not practical before implementation.
+
+---
+
+### 3. Implementer works after Tester
 
 Implementer must read:
 
@@ -81,25 +135,28 @@ Implementer must read:
 * `.codex/agents/implementer.md`
 * `.codex/workflows/feature.md` or `.codex/workflows/bugfix.md`
 * Planner output
+* Tester output
 * relevant skills from `.codex/skills/`
 * `docs/architecture/overview.md`
 * `docs/architecture/design_overview.md`
 * `docs/architecture/ui_component_inventory.md`
 * relevant docs from `docs/flows/`
-* relevant design examples from `dosc/design`
+* relevant design examples from `docs/design`
 * relevant contracts from `docs/contracts/`
 
 Implementer must:
 
 * follow the Planner’s proposed approach unless there is a clear reason to adjust it;
+* use Tester output as part of the implementation contract;
+* make Tester tests pass by implementing production behavior, not by weakening tests;
 * implement the task with minimal safe changes;
 * keep changes small and reviewable;
 * preserve feature-first architecture;
 * preserve Riverpod and GoRouter conventions;
 * use the existing design system and UI primitives;
-* accord to existing docs about design
+* follow existing docs about design;
 * update docs/contracts if implementation depends on new behavior;
-* add or update tests when behavior changes;
+* add small additional tests only when the Tester missed an in-scope behavior;
 * run available checks;
 * report checks honestly.
 
@@ -125,12 +182,14 @@ Implementer output format:
 
 ### Assumptions
 
+### Tester Handoff Used
+
 ### Notes for Reviewer
 ```
 
 ---
 
-### 3. Reviewer works only after Implementer finishes
+### 4. Reviewer works only after Implementer finishes
 
 Reviewer must read:
 
@@ -140,6 +199,7 @@ Reviewer must read:
 * `.codex/review/performance.md`
 * `.codex/review/security.md`
 * Planner output
+* Tester output
 * Implementer output
 * relevant flow docs and contracts
 
@@ -147,6 +207,8 @@ Reviewer must:
 
 * review only the final diff;
 * check correctness against the task, user stories, and acceptance criteria;
+* check that Tester output maps to acceptance criteria;
+* check that Implementer did not weaken Tester tests;
 * check feature ownership;
 * check architecture boundaries;
 * check API contract usage;
@@ -180,6 +242,8 @@ APPROVE / REQUEST CHANGES
 ### Findings
 - [P1] path/to/file.dart:42 — issue description and impact
 
+### Test Coverage
+
 ### Missing Checks
 
 ### Suggested Fixes
@@ -200,6 +264,7 @@ If the human asks to fix Reviewer findings, run the Implementer again using:
 
 * original task;
 * Planner output;
+* Tester output;
 * Reviewer findings;
 * relevant docs and contracts.
 
@@ -222,7 +287,9 @@ Then run Reviewer again on the updated final diff.
 
 ## Required Checks
 
-Run available checks after implementation:
+Tester should run the narrowest relevant test command before implementation when possible.
+
+Implementer must run available checks after implementation:
 
 ```bash
 .codex/scripts/check.sh
@@ -242,6 +309,8 @@ Never claim checks passed if they were not executed.
 
 ```md
 ### Planner Summary
+
+### Tester Summary
 
 ### Implementer Summary
 

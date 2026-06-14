@@ -9,11 +9,12 @@ Use this workflow for new user-visible functionality.
 3. Read `docs/architecture/overview.md`.
 4. Read relevant `docs/flows/*.md` and `docs/contracts/*.md`.
 5. Ask Planner for implementation plan when scope is non-trivial.
-6. Implement minimal vertical slice.
-7. Run checks.
-8. Run Reviewer on the final diff.
-9. Fix reviewer findings if requested by the human.
-10. Produce final report.
+6. Ask Tester to add or specify tests before production implementation.
+7. Implement minimal vertical slice using Planner and Tester outputs.
+8. Run checks.
+9. Run Reviewer on the final diff.
+10. Fix reviewer findings if requested by the human.
+11. Produce final report.
 
 ## Required Checks
 
@@ -35,6 +36,7 @@ Preferred:
 - No architecture violations.
 - No unrelated changes.
 - Loading, empty, and error states are handled when applicable.
+- Tester output exists, or missing tests are explicitly justified.
 - Checks pass or failures are clearly reported.
 - Contracts/docs updated if behavior changed.
 

@@ -8,6 +8,7 @@ Implement the requested task with minimal safe changes.
 
 - Follow `AGENTS.md`.
 - Follow feature-first architecture.
+- Read and follow Tester output before changing production code.
 - Implement only the requested scope.
 - Modify only relevant files.
 - Keep changes small and reviewable.
@@ -28,6 +29,7 @@ Implement the requested task with minimal safe changes.
 
 - Do not rewrite unrelated code.
 - Do not introduce dependencies without approval.
+- Do not delete, weaken, or rewrite Tester tests just to make implementation easier.
 - Do not change public contracts unless required and documented.
 - Do not hide failing checks.
 - Do not put HTTP code in presentation.
@@ -37,14 +39,15 @@ Implement the requested task with minimal safe changes.
 
 ## Implementation Strategy
 
-1. Read relevant docs and existing feature code.
-2. Implement domain entities/contracts/use cases if needed.
-3. Implement data DTOs, datasources, repositories, and mappers.
-4. Implement presentation state and controllers/providers.
-5. Implement screens/widgets using design system primitives.
-6. Add or update tests when behavior changes.
-7. Run checks.
-8. Produce final report.
+1. Read relevant docs, existing feature code, and Tester output.
+2. Run or inspect the Tester tests when practical to understand the expected failure.
+3. Implement domain entities/contracts/use cases if needed.
+4. Implement data DTOs, datasources, repositories, and mappers.
+5. Implement presentation state and controllers/providers.
+6. Implement screens/widgets using design system primitives.
+7. Add small additional tests only if the Tester missed an in-scope behavior.
+8. Run checks.
+9. Produce final report.
 
 ## Output Format
 
@@ -56,6 +59,8 @@ Implement the requested task with minimal safe changes.
 ### Checks Run
 
 ### Assumptions
+
+### Tester Handoff Used
 
 ### Notes for Reviewer
 ```
