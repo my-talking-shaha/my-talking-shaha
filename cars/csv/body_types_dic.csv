@@ -1,0 +1,35 @@
+body_type,name
+ALLROAD,Внедорожник
+ALLROAD_3_DOORS,Внедорожник 3 дв.
+ALLROAD_5_DOORS,Внедорожник 5 дв.
+ALLROAD_OPEN,Внедорожник открытый
+CABRIO,Кабриолет
+COMPACTVAN,Компактвэн
+COUPE,Купе
+COUPE_HARDTOP,Купе-хардтоп
+FASTBACK,Фастбек
+HATCHBACK,Хэтчбек
+HATCHBACK_3_DOORS,Хэтчбек 3 дв.
+HATCHBACK_4_DOORS,Хэтчбек 4 дв.
+HATCHBACK_5_DOORS,Хэтчбек 5 дв.
+LANDO,Ландо
+LIFTBACK,Лифтбек
+LIMOUSINE,Лимузин
+MICROVAN,Микровэн
+MINIVAN,Минивэн
+PHAETON,Фаэтон
+PHAETON_WAGON,Фаэтон-универсал
+PICKUP,Пикап
+PICKUP_ONE,Пикап Одинарная кабина
+PICKUP_ONE_HALF,Пикап Полуторная кабина
+PICKUP_TWO,Пикап Двойная кабина
+ROADSTER,Родстер
+SEDAN,Седан
+SEDAN_2_DOORS,Седан 2 дв.
+SEDAN_HARDTOP,Седан-хардтоп
+SPEEDSTER,Спидстер
+TARGA,Тарга
+VAN,Фургон
+WAGON,Универсал
+WAGON_3_DOORS,Универсал 3 дв.
+WAGON_5_DOORS,Универсал 5 дв.
