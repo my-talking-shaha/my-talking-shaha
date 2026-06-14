@@ -8,11 +8,25 @@ The project currently contains a Spring Boot skeleton:
 backend/
   src/main/java/ru/talkingshaha/backend/
     BackendApplication.java
-    common/model/BaseEntity.java
-    user/model/AppUser.java
-    user/model/UserRole.java
-    vehicle/model/Vehicle.java
-    vehicle/model/FuelType.java
+    common/
+      dto/
+      error/
+      model/
+    user/
+      model/
+    vehicle/
+      dto/
+      model/
+    part/
+      model/
+    timeline/
+      model/
+    chat/
+      dto/
+      model/
+    prediction/
+      dto/
+      service/
   src/main/resources/application.properties
   pom.xml
 ```
@@ -21,6 +35,9 @@ Current base decisions:
 
 - main entity ids use `UUID`;
 - JPA entities inherit from `BaseEntity`;
+- DTO classes are separate from JPA entities;
+- JPA entity drafts for chat, timeline, and vehicle parts are left for the database/schema task;
+- repositories and migrations are intentionally not included in this part of Week 2 work;
 - database settings are configured through environment variables;
 - `spring.jpa.hibernate.ddl-auto=validate`, so the database structure should be created by Flyway migrations;
 - `open-in-view=false`, so services must prepare all data needed for API responses.
@@ -72,4 +89,3 @@ General rules:
 - required fields are checked at DTO level;
 - repair and maintenance cost can be `0` if the user does not know the price;
 - for MVP, photo metadata or URLs should be stored instead of binary files in the main tables.
-

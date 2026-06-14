@@ -47,6 +47,10 @@ public class Vehicle extends BaseEntity {
     @Column(name = "production_year")
     private Integer productionYear;
 
+    @Size(max = 40)
+    @Column(length = 40)
+    private String color;
+
     @PositiveOrZero
     @Column(nullable = false)
     private Integer mileageKm = 0;
@@ -54,4 +58,16 @@ public class Vehicle extends BaseEntity {
     @Enumerated(EnumType.STRING)
     @Column(length = 32)
     private FuelType fuelType;
+
+    @Size(max = 80)
+    @Column(length = 80)
+    private String engineDescription;
+
+    @Size(max = 32)
+    @Column(length = 32)
+    private String vin;
+
+    @Size(max = 500)
+    @Column(length = 500)
+    private String photoUrl;
 }
