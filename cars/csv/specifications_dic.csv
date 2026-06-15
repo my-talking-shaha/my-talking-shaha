@@ -1,0 +1,98 @@
+group_id,group_name,id,name,units
+NO_GROUP,,displacement,Объем,л
+NO_GROUP,,power,Мощность,л.с.
+NO_GROUP,,transmission,Коробка,
+NO_GROUP,,engine_type,Тип двигателя,
+NO_GROUP,,petrol_type,Топливо,
+NO_GROUP,,gear_type,Привод,
+NO_GROUP,,acceleration,Разгон,с
+NO_GROUP,,consumption_mixed,Расход,л
+NO_GROUP,,electric_range,Запас хода на электричестве,км
+NO_GROUP,,total_range,Запас хода в гибридном режиме,км
+GENERAL,Общая информация,country,Страна марки,
+GENERAL,Общая информация,auto_class,Класс автомобиля,
+GENERAL,Общая информация,doors_count,Количество дверей,
+GENERAL,Общая информация,seats,Количество мест,
+GENERAL,Общая информация,steering_wheel,Расположение руля,
+SIZES,Размеры,body_size,Длина,мм
+SIZES,Размеры,width,Ширина,мм
+SIZES,Размеры,height,Высота,мм
+SIZES,Размеры,wheel_base,Колёсная база,мм
+SIZES,Размеры,clearance,Клиренс,мм
+SIZES,Размеры,front_wheel_base,Ширина передней колеи,мм
+SIZES,Размеры,back_wheel_base,Ширина задней колеи,мм
+SIZES,Размеры,origin_tires_size,Размер колёс,
+SIZES,Размеры,landing_wheels_size,Сверловка,мм
+SIZES,Размеры,disk_size,Размеры дисков,
+VOLUME_AND_MASS,Объём и масса,boot_volume,Объем багажника мин/макс,л
+VOLUME_AND_MASS,Объём и масса,tank_volume,Объём топливного бака,л
+VOLUME_AND_MASS,Объём и масса,weight,Снаряженная масса,кг
+VOLUME_AND_MASS,Объём и масса,full_weight,Полная масса,кг
+TRANSMISSION,Трансмиссия,transmission,Коробка передач,
+TRANSMISSION,Трансмиссия,gear_value,Количество передач,
+TRANSMISSION,Трансмиссия,gear_type,Тип привода,
+SUSPENSION_AND_BRAKES,Подвеска и тормоза,front_suspension,Тип передней подвески,
+SUSPENSION_AND_BRAKES,Подвеска и тормоза,back_suspension,Тип задней подвески,
+SUSPENSION_AND_BRAKES,Подвеска и тормоза,front_brake,Передние тормоза,
+SUSPENSION_AND_BRAKES,Подвеска и тормоза,back_brake,Задние тормоза,
+PERFORMANCE_INDICATORS,Эксплуатационные показатели,max_speed,Максимальная скорость,км/ч
+PERFORMANCE_INDICATORS,Эксплуатационные показатели,acceleration,Разгон до 100 км/ч,с
+PERFORMANCE_INDICATORS,Эксплуатационные показатели,consumption,"Расход топлива, город/трасса/смешанный",л/100 км
+PERFORMANCE_INDICATORS,Эксплуатационные показатели,petrol_type,Марка топлива,
+PERFORMANCE_INDICATORS,Эксплуатационные показатели,emission_euro_class,Экологический класс,
+PERFORMANCE_INDICATORS,Эксплуатационные показатели,fuel_emission,Выбросы CO2,г/км
+PERFORMANCE_INDICATORS,Эксплуатационные показатели,consumption_kwt,Расход,кВт⋅ч/100 км
+ENGINE,Двигатель,engine_type,Тип двигателя,
+ENGINE,Двигатель,engine_order,Расположение двигателя,
+ENGINE,Двигатель,displacement,Объем двигателя,см³
+ENGINE,Двигатель,feeding,Тип наддува,
+ENGINE,Двигатель,max_power,Максимальная мощность,
+ENGINE,Двигатель,moment,Максимальный крутящий момент,
+ENGINE,Двигатель,cylinders_order,Расположение цилиндров,
+ENGINE,Двигатель,cylinders_value,Количество цилиндров,
+ENGINE,Двигатель,valves,Число клапанов на цилиндр,
+ENGINE,Двигатель,engine_feeding,Система питания двигателя,
+ENGINE,Двигатель,compression,Степень сжатия,
+ENGINE,Двигатель,diameter,Диаметр цилиндра и ход поршня,мм
+ENGINE,Двигатель,engine_list,Код двигателя,
+ENGINE,Двигатель,engine_list1,Модель двигателя,
+ENGINE,Двигатель,valvetrain,ГРМ,
+ENGINE,Двигатель,consumption_calc,Методика расчета расхода,
+BATTERY,Аккумуляторная батарея,battery_capacity,Емкость батареи,кВт⋅ч
+BATTERY,Аккумуляторная батарея,ev_battery_type,Тип батареи,
+BATTERY,Аккумуляторная батарея,quickcharge_time,Время быстрой зарядки,мин
+BATTERY,Аккумуляторная батарея,quickcharge_description,Описание быстрой зарядки,
+BATTERY,Аккумуляторная батарея,charging_port_types,Тип разъема для зарядки,
+BATTERY,Аккумуляторная батарея,electric_range,Запас хода на электричестве,км
+BATTERY,Аккумуляторная батарея,charge_time,Время зарядки,ч
+BATTERY,Аккумуляторная батарея,max_power_in,Максимальная мощность зарядки,кВт
+BATTERY,Аккумуляторная батарея,battery_charge_cycles,Количество циклов зарядки,
+BATTERY,Аккумуляторная батарея,battery_capacity_useful,Ёмкость батареи (доступная),кВт⋅ч
+BATTERY,Аккумуляторная батарея,battery_temp,Температурный режим батареи,С
+BATTERY,Аккумуляторная батарея,battery_capacities,Емкость батареи,кВт⋅ч
+PERFORMANCE_INDICATORS,Эксплуатационные показатели,consumption_city,Расход топлива в городе,л/100 км
+PERFORMANCE_INDICATORS,Эксплуатационные показатели,consumption_hiway,Расход топлива на трассе,л/100 км
+PERFORMANCE_INDICATORS,Эксплуатационные показатели,consumptions_city,Расход топлива в городе,л/100 км
+PERFORMANCE_INDICATORS,Эксплуатационные показатели,consumptions_hiway,Расход топлива на трассе,л/100 км
+PERFORMANCE_INDICATORS,Эксплуатационные показатели,consumptions_mixed,Расход топлива в смешанном цикле,л/100 км
+ENGINE,Двигатель,engine_capacity,Объем двигателя,л
+VOLUME_AND_MASS,Объём и масса,fuel_tank_capacity,Объём топливного бака,л
+BATTERY,Аккумуляторная батарея,full_charge_time,Полное время зарядки,ч
+NO_GROUP,,horse_power,Мощность,л.с.
+ENGINE,Двигатель,kvt_power,Мощность,кВт
+ENGINE,Двигатель,moment_rpm,Обороты макс. крутящего момента,об/мин
+ENGINE,Двигатель,piston_stroke,Ход поршня,мм
+BATTERY,Аккумуляторная батарея,quick_charge_time,Время быстрой зарядки,мин
+BATTERY,Аккумуляторная батарея,range_distance,Запас хода,км
+BATTERY,Аккумуляторная батарея,range_distances,Запас хода,км
+ENGINE,Двигатель,rpm_power,Обороты макс. мощности,об/мин
+PERFORMANCE_INDICATORS,Эксплуатационные показатели,safety_grade,"Оценка безопасности
+",
+PERFORMANCE_INDICATORS,Эксплуатационные показатели,safety_rating,"Название рейтинга безопасности
+",
+PERFORMANCE_INDICATORS,Эксплуатационные показатели,time_to_100,Разгон до 100 км/ч,с
+TRANSMISSION,Трансмиссия,transmission_code,Коробка передач,
+VOLUME_AND_MASS,Объём и масса,trunks_max_capacity,Объем багажника макс,л
+VOLUME_AND_MASS,Объём и масса,trunks_min_capacity,Объем багажника мин,л
+ENGINE,Двигатель,volume,Объем двигателя,см³
+SIZES,Размеры,wheel_size,Размер колёс,мм
