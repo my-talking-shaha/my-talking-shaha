@@ -41,7 +41,7 @@ abstract final class AppTheme {
         margin: EdgeInsets.zero,
         surfaceTintColor: Colors.transparent,
         shape: RoundedRectangleBorder(
-          borderRadius: AppRadii.card,
+          borderRadius: AppRadius.card,
           side: BorderSide(color: AppColors.border),
         ),
       ),
@@ -55,23 +55,23 @@ abstract final class AppTheme {
         suffixIconColor: AppColors.textMuted,
         contentPadding: EdgeInsets.symmetric(horizontal: 14, vertical: 14),
         border: OutlineInputBorder(
-          borderRadius: AppRadii.input,
+          borderRadius: AppRadius.input,
           borderSide: BorderSide(color: AppColors.border),
         ),
         enabledBorder: OutlineInputBorder(
-          borderRadius: AppRadii.input,
+          borderRadius: AppRadius.input,
           borderSide: BorderSide(color: AppColors.border),
         ),
         focusedBorder: OutlineInputBorder(
-          borderRadius: AppRadii.input,
+          borderRadius: AppRadius.input,
           borderSide: BorderSide(color: AppColors.primary, width: 1.4),
         ),
         errorBorder: OutlineInputBorder(
-          borderRadius: AppRadii.input,
+          borderRadius: AppRadius.input,
           borderSide: BorderSide(color: AppColors.error),
         ),
         focusedErrorBorder: OutlineInputBorder(
-          borderRadius: AppRadii.input,
+          borderRadius: AppRadius.input,
           borderSide: BorderSide(color: AppColors.error, width: 1.4),
         ),
       ),
@@ -85,7 +85,7 @@ abstract final class AppTheme {
           disabledForegroundColor: AppColors.textDisabled,
           minimumSize: const Size.fromHeight(48),
           padding: const EdgeInsets.symmetric(horizontal: 18),
-          shape: const RoundedRectangleBorder(borderRadius: AppRadii.button),
+          shape: const RoundedRectangleBorder(borderRadius: AppRadius.button),
           textStyle: const TextStyle(fontSize: 15, fontWeight: FontWeight.w700),
         ),
       ),
@@ -95,7 +95,7 @@ abstract final class AppTheme {
           foregroundColor: AppColors.textPrimary,
           minimumSize: const Size.fromHeight(48),
           side: const BorderSide(color: AppColors.border),
-          shape: const RoundedRectangleBorder(borderRadius: AppRadii.button),
+          shape: const RoundedRectangleBorder(borderRadius: AppRadius.button),
           textStyle: const TextStyle(fontSize: 15, fontWeight: FontWeight.w700),
         ),
       ),
@@ -202,14 +202,14 @@ abstract final class AppTheme {
         ),
         behavior: SnackBarBehavior.floating,
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(AppRadii.md),
+          borderRadius: BorderRadius.circular(AppRadius.md),
         ),
       ),
 
       bottomSheetTheme: const BottomSheetThemeData(
         backgroundColor: AppColors.surface,
         surfaceTintColor: Colors.transparent,
-        shape: RoundedRectangleBorder(borderRadius: AppRadii.bottomSheet),
+        shape: RoundedRectangleBorder(borderRadius: AppRadius.bottomSheet),
       ),
     );
   }
@@ -244,7 +244,7 @@ abstract final class AppColors {
   static const black = Color(0xFF000000);
 }
 
-abstract final class AppRadii {
+abstract final class AppRadius {
   static const double sm = 8;
   static const double md = 12;
   static const double lg = 16;
