@@ -23,6 +23,11 @@ import ru.talkingshaha.backend.common.model.BaseEntity;
 public class AppUser extends BaseEntity {
 
     @NotBlank
+    @Size(max = 255)
+    @Column(nullable = false, length = 255)
+    private String email;
+
+    @NotBlank
     @Size(max = 50)
     @Column(nullable = false, length = 50)
     private String username;
