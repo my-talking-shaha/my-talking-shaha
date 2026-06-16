@@ -30,7 +30,7 @@ public class ChatMessage extends BaseEntity {
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 20)
-    private ChatRole role;
+    private ChatMessageRole role;
 
     @Column(nullable = false, columnDefinition = "TEXT")
     private String text;
