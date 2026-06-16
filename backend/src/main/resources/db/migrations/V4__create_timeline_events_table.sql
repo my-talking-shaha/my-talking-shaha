@@ -5,12 +5,9 @@ CREATE TABLE timeline_events (
 
     type VARCHAR(32) NOT NULL,
 
-    event_date_time TIMESTAMP NOT NULL,
+    event_date_time TIMESTAMPTZ NOT NULL,
 
     title VARCHAR(255) NOT NULL,
-
-
-    currency VARCHAR(3),
 
     CONSTRAINT fk_timeline_vehicle
     FOREIGN KEY (vehicle_id)

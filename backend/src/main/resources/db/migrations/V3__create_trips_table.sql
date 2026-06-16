@@ -2,8 +2,8 @@ CREATE TABLE trips
 (
     id UUID PRIMARY KEY,
 
-    start_mileage_km INT DEFAULT 0 NOT NULL CHECK (start_mileage_km >=0),
-    end_mileage_km INT NOT NULL CHECK (end_mileage_km >0 and end_mileage_km >= start_mileage_km),
+    start_mileage_km INT NOT NULL CHECK (start_mileage_km >=0),
+    end_mileage_km INT NOT NULL CHECK (end_mileage_km >= start_mileage_km),
 
     route TEXT NOT NULL,
 
