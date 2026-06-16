@@ -10,7 +10,7 @@
   • After registration, the user is automatically signed in
   • If the user tries to register with an email that already exists, an error is shown
   • The user can sign out and sign in again with the same credentials |
-| ACC-02 | Sign in/sign up with Yandex ID | As a user, I want to be able to sign up/sign in with a Yandex account so that the login process is faster and does not require entering additional passwords. | Should |   • The login screen includes a "Sign in with Yandex ID" button
+| ACC-02 | Sign in/sign up with Yandex ID | As a user, I want to be able to sign up/sign in with a Yandex account so that the login process is faster and does not require entering additional passwords. | Could |   • The login screen includes a "Sign in with Yandex ID" button
   • Upon clicking, the system delegates authentication to the Yandex OAuth flow
   • After successful Yandex authorization:if no account exists for this Yandex ID, a new account is created;if an account exists, the user is signed in
   • The new account is permanently linked to the Yandex ID
