@@ -1,0 +1,139 @@
+# User stories (eng)
+
+### 1. Account and authentication
+
+| Short name | User story title | User story description | Priority | Acceptance criteria |
+| --- | --- | --- | --- | --- |
+| ACC-01 | App registration | As a user, I want to register in the app so that all data is linked to my account and I can access it from different devices. | Must |   • The user can create an account by providing an email and password
+  • The password must be at least 6 characters long
+  • After successful registration, an empty “garage” is created automatically
+  • After registration, the user is automatically signed in
+  • If the user tries to register with an email that already exists, an error is shown
+  • The user can sign out and sign in again with the same credentials |
+| ACC-02 | Sign in/sign up with Yandex ID | As a user, I want to be able to sign up/sign in with a Yandex account so that the login process is faster and does not require entering additional passwords. | Could |   • The login screen includes a "Sign in with Yandex ID" button
+  • Upon clicking, the system delegates authentication to the Yandex OAuth flow
+  • After successful Yandex authorization:if no account exists for this Yandex ID, a new account is created;if an account exists, the user is signed in
+  • The new account is permanently linked to the Yandex ID
+  • The email received from Yandex is stored as the user's primary email
+  • On Yandex authorization failure, the system displays a clear, user-friendly error message |
+| ACC-03 | Add multiple cars | As a user, I want to add multiple cars to my account with make, model, color, technical characteristics and details (or select a car from the common catalog if it exists there) so that I can manage all cars in one place. | Must |   • The user can open the "Add car" form
+  • The form includes the following fields: make, model, year, color, current mileage, engine type
+  • The system allows selecting make and model either from a predefined catalog or via manual entry
+  • All fields except color are required
+  • After saving, the car appears in the "Garage" list
+  • The number of cars a user can add is unlimited. |
+| ACC-04 | Car list (garage) | As a user, I want to have a “garage” — a list of all cars I’ve added — so that I can quickly switch between them and see basic info for each car. | Must |   • The app has a dedicated “Garage” section/screen
+  • The Garage shows all cars added by the user
+  • Each car is shown as a card with: make, model, year, color, photo (if uploaded), engine type
+  • Tapping a car card opens the car details page
+  • If there are no cars, an empty state is shown with an option to add a car
+  • The user can delete a car from the garage
+  • Deletion requires confirmation |
+
+---
+
+### 2. Car data input and storage
+
+| Short name | User story title | User story description | Priority | Acceptance criteria |
+| --- | --- | --- | --- | --- |
+| DATA-01 | Upload vehicle history | As a user, I want to be able to upload data about my car (repairs, mileage, technical condition, trips, refueling) so that I can conveniently store the entire history in a single digital space (car timeline). | Must |   • The user can add a repair record with: date, mileage, description, cost, replaced parts, photo (optional)
+  • The user can add a refueling record with: date, mileage, liters, cost, fuel type
+  • The user can add a trip record with: date, start mileage, end mileage, route (optional)
+  • All records are automatically linked to the selected car.Records are displayed in chronological order
+  • The user can edit and delete any record
+  • After adding, editing, or deleting a record, the record list updates automatically (no manual refresh required)
+  • The system does not allow entering a mileage value lower than any previously recorded mileage for that car |
+| DATA-02 | Update parts and condition | As a user, I want to upload data about newly installed parts or select them from a catalog so that I can keep up-to-date information about the car’s condition. | Should |   • The user can add a part with: part name, installation date, mileage at installation, lifespan (km), photo (optional)
+  • The user can select a part from a predefined catalog (e.g., oil, filter, timing belt, brake pads)
+  • When selected from the catalog, the system may auto-fill a typical lifespan if known
+  • The user can manually edit the part's lifespan
+  • The user can mark a part as **replaced**
+  • When this happens:the current part record is preserved with a "replaced" flag;a new part record is created (with new date and mileage) OR the user is guided to the "add part" flow. |
+| DATA-03 | Car photo/3D model | As a user, I want to upload photos of my car so that I can see its 3D model (or photo) in the car profile. | Could |   • The user can upload one or more car photos
+  • The uploaded photo is saved and displayed on the car card in the Garage
+  • The user can delete or replace a photo
+  • Supported formats: JPG, PNG 
+  • If multiple photos are uploaded, a swipeable gallery is available
+  • If the user uploads enough photos, the system may suggest generating a simplified 3D model |
+
+---
+
+### 3. Condition monitoring and prediction
+
+| Short name | User story title | User story description | Priority | Acceptance criteria |
+| --- | --- | --- | --- | --- |
+| STATUS-01 | View current condition | As a user, I want to see the car’s current condition in the app so that I can quickly assess its overall health and whether service is needed. | Must |   • The main car screen shows a summary: current mileage, last maintenance date, number of active warnings
+  • An overall condition indicator is shown (green — all good, yellow — attention needed, red — urgent service required)
+  • The user can view a list of all parts with their status
+  • The condition updates automatically when new records are added
+  • Tapping any block opens detailed information |
+| STATUS-02 | Remaining part lifespan | As a user, I want to see the remaining “lifetime” of parts (predicted lifespan) so that I can plan replacements before a failure occurs. | Must |   • For each part with a defined lifespan, the remaining lifespan is displayed:in kilometers;and/or as a percentage of the initial lifespan
+  • Calculation formula: remaining = initial lifespan − (current mileage − mileage at installation)
+  • If lifespan is not defined for a part, "Lifespan not set" is shown
+  • If remaining lifespan is less than 10% of initial lifespan — the part is highlighted in yellow (or other visual warning)
+  • If remaining lifespan is ≤ 0 km — the part is highlighted in red (replacement required)
+  • The user can manually adjust the initial lifespan value of any part |
+| STATUS-03 | Technical history analysis | As a user, I want to see an analysis of my car’s technical history so that I can understand the dynamics of failures, costs, and service efficiency. | Should |   • The user can open the “History analysis” section
+  • A chart of failure frequency by month/year is displayed
+  • A list of the most frequent repair types is displayed
+  • Mileage dynamics over time are displayed
+  • The user can select an analysis period (month, year, all time)
+  • Data updates when new records are added |
+| STATUS-04 | Spending and mileage analytics | As a user, I want to see analytics of my spending, mileage, number of repairs, refuels, and maintenance so that I can optimize car maintenance costs. | Should |   • The user can see total spending on the car (repairs + refueling + maintenance)
+  • Spending can be broken down by category (repairs, fuel, maintenance, parts)
+  • Average fuel consumption per 100 km is shown (if refuel and mileage data exist)
+  • A spending chart by month/year is shown
+  • Cost per 1 km is shown (total spending / total mileage) |
+
+---
+
+### 4. Notifications and warnings
+
+| Short name | User story title | User story description | Priority | Acceptance criteria |
+| --- | --- | --- | --- | --- |
+| NOTIF-01 | Notifications about potential failures | As a user, I want to receive notifications about potential car failures so that I can visit a service center in time and prevent a serious breakdown. | Could |   • The system sends a push notification when any part’s remaining lifespan becomes &lt; 500 km (or the threshold is set by the user)
+  • The notification includes: part name, remaining lifespan, recommended action
+  • Tapping the notification opens the part screen with a list of recommendations
+  • Notifications are sent no more than once per day per part (no spam)
+  • The user can enable/disable notifications in settings
+  • The app has a screen with all received notifications |
+
+---
+
+### 5. Communication with an AI agent (chat)
+
+| Short name | User story title | User story description | Priority | Acceptance criteria |
+| --- | --- | --- | --- | --- |
+| CHAT-01 | AI chat with the car | As a user, I want to “talk” to my car via an AI chat so that I can learn about potential part failures in advance, monitor the car’s condition, and get maintenance recommendations. | Must |   • The app has a “Chat with the car” section
+  • The user can send a natural-language text message
+  • The AI agent responds based on car data and rules
+  • The response includes specific numbers (mileage, remaining lifespan, date) where possible
+  • If the AI cannot answer, it returns a standard message: “Not enough data to answer”
+  • Chat history is saved and available on next sign-in
+  • Each car has its own separate chat |
+| CHAT-02 | Voice input in AI chat | As a user, I want to communicate with my car’s AI agent using voice input (or text chat) so that the interaction is convenient and does not require constant typing, especially while driving or quickly checking the car’s status. | Could |   • The message input field has a microphone button
+  • Tapping the microphone starts recording the user’s voice
+  • The recording is automatically converted to text
+  • The converted text is shown in the input field and can be edited before sending
+  • At least English is supported
+  • If recognition fails, an error message is shown and the user is prompted to retry
+  • The feature works on iOS and Android |
+| CHAT-03 | Start screen — chat + quick questions | As a user, I want to be able to immediately type in the chat with my car or pick a question from quick questions when I open the app so that I can quickly get the information I need and navigate the app faster. | Must |   • The home screen is the AI chat
+  • Below the input field, quick-action buttons are displayed.Starter set includes: "Car status", "When is next service?", "What might break?", "Add refuel", "Log repair"
+  • The system may adapt the set of quick questions based on car data (e.g., "Time to change oil?" when oil lifespan remaining &lt; 1000 km)
+  • Tapping a button sends the corresponding text as a user message to the chat. |
+| CHAT-04 | Chat first, tabs second | As a user, I want the AI chat to be the primary way to interact with the app, but if needed I can switch to dedicated tabs (garage, analytics, timeline) so that I can manage the car in the way that suits me. |  Must |   • By default, the chat is open
+  • Bottom navigation: Chat / Garage / Analytics / Timeline
+  • Switching tabs keeps the chat context
+  • The AI can suggest: “Go to Analytics to view the spending chart” |
+| CHAT-05 | Chat → form | As a user, I want to tell the AI about an event (repair, part replacement, refuel, trip) so that the AI redirects me to a pre-filled form where I can quickly enter all data and save it. | Must |   • The user can write a natural-language message describing an event: repair, part replacement, refuel, or trip
+  • The AI recognizes the event type (intent) and extracts relevant attributes (e.g., part name, mileage, date)
+  • The system responds with: "Would you like to add [event type]?" and a "Go to form" button
+  • Tapping the button opens the corresponding form, pre-filled with extracted data where possible
+  • The user can complete or modify any field and save.After saving, the system returns to the chat, and the AI confirms the addition
+  • The user may cancel the action at any step before saving. |
+| CHAT-06 | Chat history | As a user, I want all my AI conversations to be saved and be able to view the message history the next time I sign in so that I don’t lose the context of communication with the car. | Should |   • All AI dialogs are saved
+  • History is linked to the account and the car
+  • The user can scroll through the message history
+  • Search in history is NOT required (intentional MVP limitation)
+  • History is available on subsequent sign-in |
