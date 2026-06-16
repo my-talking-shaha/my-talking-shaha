@@ -6,13 +6,14 @@ import lombok.*;
 import java.math.BigDecimal;
 
 import ru.talkingshaha.backend.common.model.BaseEvent;
+import ru.talkingshaha.backend.vehicle.model.FuelType;
 
 @Getter
 @Setter
 @NoArgsConstructor
 @Entity
 @Table(name = "refuel")
-public class RefuelEvent extends BaseEvent {
+public class RefuelEvent     extends BaseEvent {
 
     @Column(nullable = false)
     private Integer mileageKm;

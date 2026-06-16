@@ -9,7 +9,7 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 import ru.talkingshaha.backend.common.model.BaseEntity;
-import ru.talkingshaha.backend.timeline.model.Maintenance;
+import ru.talkingshaha.backend.timeline.model.MaintenanceEvent;
 
 @Getter
 @Setter
@@ -20,7 +20,7 @@ public class Part extends BaseEntity {
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "maintenance_id", nullable = false)
-    private Maintenance maintenance;
+    private MaintenanceEvent maintenance;
 
     @Column(nullable = false, length = 255)
     private String name;
