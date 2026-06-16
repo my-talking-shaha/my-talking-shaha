@@ -5,6 +5,7 @@ CREATE TABLE IF NOT EXISTS parts(
     name VARCHAR (255) NOT NULL ,
     category VARCHAR (50) NOT NULL,
 
+    currency VARCHAR(3),
     installedAt DATE NOT NULL,
 
     installed_mileage_km INT NOT NULL CHECK ( installed_mileage_km > 0 ),

@@ -19,6 +19,9 @@ public class Maintenance extends BaseEvent {
     @Column(name = "mileage_km", nullable = false)
     private Integer mileageKm;
 
+    @Column(length = 3)
+    private String currency;
+
     @Column(nullable = false, precision = 10, scale = 2)
     private BigDecimal cost;
 }
