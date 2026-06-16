@@ -1,6 +1,5 @@
 package ru.talkingshaha.backend.timeline.model;
 
-
 import jakarta.persistence.*;
 
 import java.math.BigDecimal;
@@ -8,7 +7,6 @@ import java.math.BigDecimal;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
-
 import ru.talkingshaha.backend.common.model.BaseEvent;
 
 @Getter

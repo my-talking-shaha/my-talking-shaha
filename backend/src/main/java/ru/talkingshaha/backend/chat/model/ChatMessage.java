@@ -7,10 +7,8 @@ import java.time.OffsetDateTime;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
-
 import ru.talkingshaha.backend.common.model.BaseEntity;
 import ru.talkingshaha.backend.vehicle.model.Vehicle;
-
 
 @Getter
 @Setter

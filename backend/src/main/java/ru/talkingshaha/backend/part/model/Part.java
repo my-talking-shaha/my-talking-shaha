@@ -7,7 +7,6 @@ import java.time.LocalDate;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
-
 import ru.talkingshaha.backend.common.model.BaseEntity;
 import ru.talkingshaha.backend.timeline.model.MaintenanceEvent;
 
