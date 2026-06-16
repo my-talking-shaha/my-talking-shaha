@@ -6,7 +6,7 @@ CREATE TABLE IF NOT EXISTS parts(
     category VARCHAR (50) NOT NULL,
 
     currency VARCHAR(3),
-    installedAt DATE NOT NULL,
+    installed_at DATE NOT NULL,
 
     installed_mileage_km INT NOT NULL CHECK ( installed_mileage_km > 0 ),
     expected_lifetime_km INT NOT NULL CHECK ( expected_lifetime_km > 0 ),

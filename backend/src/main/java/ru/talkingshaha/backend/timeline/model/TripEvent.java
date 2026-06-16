@@ -1,8 +1,19 @@
 package ru.talkingshaha.backend.timeline.model;
 
 
-import jakarta.persistence.*;
-import lombok.*;
+package ru.talkingshaha.backend.timeline.model;
+
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.Table;
+
+import java.math.BigDecimal;
+
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
+
+import ru.talkingshaha.backend.common.model.BaseEvent;
 
 @Getter
 @Setter
@@ -24,5 +35,5 @@ public class Trip extends BaseEvent {
     private Integer durationMinutes;
 
     @Column(nullable = false, precision = 10, scale = 2)
-    private java.math.BigDecimal cost;
+    private BigDecimal cost;
 }

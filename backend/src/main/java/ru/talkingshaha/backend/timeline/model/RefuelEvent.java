@@ -5,6 +5,8 @@ import lombok.*;
 
 import java.math.BigDecimal;
 
+import ru.talkingshaha.backend.common.model.BaseEvent;
+
 @Getter
 @Setter
 @NoArgsConstructor
