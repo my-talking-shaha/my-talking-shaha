@@ -1,7 +1,7 @@
-CREATE TABLE IF NOT EXIST app_users(
-    id UUID PRIMARY KEY CHECK (id<=255),
+CREATE TABLE IF NOT EXISTS app_users(
+    id UUID PRIMARY KEY,
 
-    email VARCHAR(255) NOT NULL,
+    email VARCHAR(255) NOT NULL UNIQUE,
 
     username VARCHAR(50) NOT NULL,
     password_hash VARCHAR(255) NOT NULL,
@@ -11,4 +11,4 @@ CREATE TABLE IF NOT EXIST app_users(
     enabled BOOLEAN NOT NULL DEFAULT TRUE,
 
     CONSTRAINT uk_app_users_username UNIQUE (username)
-   )
+   );

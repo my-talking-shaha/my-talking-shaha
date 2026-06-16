@@ -1,4 +1,4 @@
-CREATE TABLE IF NOT EXISTS vehicles{
+CREATE TABLE IF NOT EXISTS vehicles(
     id UUID PRIMARY KEY,
     owner_id UUID NOT NULL,
     brand VARCHAR (80) NOT NULL,
@@ -19,4 +19,4 @@ CREATE TABLE IF NOT EXISTS vehicles{
     FOREIGN KEY (owner_id)
     REFERENCES app_users(id)
 
-    }
+    );
