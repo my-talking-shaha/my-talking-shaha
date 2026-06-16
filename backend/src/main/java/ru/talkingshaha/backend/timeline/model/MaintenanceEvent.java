@@ -18,7 +18,7 @@ import ru.talkingshaha.backend.common.model.BaseEvent;
 @NoArgsConstructor
 @Entity
 @Table(name = "maintenance")
-public class Maintenance extends BaseEvent {
+public class MaintenanceEvent extends BaseEvent {
 
     @Column(columnDefinition = "TEXT")
     private String description;

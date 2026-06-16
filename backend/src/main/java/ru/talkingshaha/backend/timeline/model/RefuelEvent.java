@@ -12,7 +12,7 @@ import ru.talkingshaha.backend.common.model.BaseEvent;
 @NoArgsConstructor
 @Entity
 @Table(name = "refuel")
-public class Refuel extends BaseEvent {
+public class RefuelEvent extends BaseEvent {
 
     @Column(nullable = false)
     private Integer mileageKm;

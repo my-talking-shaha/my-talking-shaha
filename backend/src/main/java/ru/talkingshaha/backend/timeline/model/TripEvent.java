@@ -1,8 +1,6 @@
 package ru.talkingshaha.backend.timeline.model;
 
 
-package ru.talkingshaha.backend.timeline.model;
-
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Table;
@@ -20,7 +18,7 @@ import ru.talkingshaha.backend.common.model.BaseEvent;
 @NoArgsConstructor
 @Entity
 @Table(name = "trips")
-public class Trip extends BaseEvent {
+public class TripEvent extends BaseEvent {
 
     @Column(name = "start_mileage_km", nullable = false)
     private Integer startMileageKm;
