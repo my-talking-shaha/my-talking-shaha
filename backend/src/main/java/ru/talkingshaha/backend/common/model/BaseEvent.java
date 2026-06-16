@@ -26,6 +26,4 @@ public abstract class BaseEvent extends BaseEntity {
     @Column(name = "event_date_time", nullable = false)
     private OffsetDateTime eventDateTime;
 
-    @Column(length = 3)
-    private String currency;
 }

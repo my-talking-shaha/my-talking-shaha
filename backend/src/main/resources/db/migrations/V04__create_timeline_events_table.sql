@@ -7,7 +7,6 @@ CREATE TABLE timeline_events (
 
     event_date_time TIMESTAMPTZ NOT NULL,
 
-    title VARCHAR(255) NOT NULL,
 
     CONSTRAINT fk_timeline_vehicle
     FOREIGN KEY (vehicle_id)
