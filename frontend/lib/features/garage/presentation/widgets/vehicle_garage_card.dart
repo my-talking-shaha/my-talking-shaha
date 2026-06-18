@@ -64,12 +64,6 @@ final class VehicleGarageCard extends StatelessWidget {
                             ],
                           ),
                         ),
-                        IconButton(
-                          tooltip: 'Delete ${vehicle.brand} ${vehicle.model}',
-                          onPressed: onDelete,
-                          icon: const Icon(Icons.delete_outline),
-                          color: AppColors.error,
-                        ),
                       ],
                     ),
                     const SizedBox(height: AppSpacing.lg),
@@ -98,6 +92,7 @@ final class VehicleGarageCard extends StatelessWidget {
                         onPressed: onOpen,
                         icon: const Icon(Icons.keyboard_arrow_right),
                         label: const Text('Open cockpit'),
+                        iconAlignment: IconAlignment.end,
                       ),
                     ),
                   ],
@@ -126,14 +121,10 @@ final class _VehicleImage extends StatelessWidget {
         aspectRatio: 16 / 7,
         child: photoUrl == null || photoUrl.isEmpty
             ? Container(
-                key: ValueKey(
-                  'garage_vehicle_photo_fallback_${vehicle.id}',
-                ),
+                key: ValueKey('garage_vehicle_photo_fallback_${vehicle.id}'),
                 decoration: const BoxDecoration(
                   color: AppColors.primarySoft,
-                  border: Border(
-                    bottom: BorderSide(color: AppColors.border),
-                  ),
+                  border: Border(bottom: BorderSide(color: AppColors.border)),
                 ),
                 child: const Center(
                   child: Icon(
@@ -183,7 +174,7 @@ final class _Metric extends StatelessWidget {
 
 String _formatMileage(int mileage) {
   return mileage.toString().replaceAllMapped(
-        RegExp(r'\B(?=(\d{3})+(?!\d))'),
-        (_) => ' ',
-      );
+    RegExp(r'\B(?=(\d{3})+(?!\d))'),
+    (_) => ' ',
+  );
 }

@@ -239,9 +239,9 @@ abstract final class AppRadius {
   static const double lg = 16;
   static const double xl = 20;
 
-  static const BorderRadius card = BorderRadius.all(Radius.circular(lg));
+  static const BorderRadius card = BorderRadius.all(Radius.circular(md));
   static const BorderRadius button = BorderRadius.all(Radius.circular(md));
-  static const BorderRadius input = BorderRadius.all(Radius.circular(md));
+  static const BorderRadius input = BorderRadius.all(Radius.circular(sm));
   static const BorderRadius bottomSheet = BorderRadius.vertical(
     top: Radius.circular(xl),
   );
