@@ -2,9 +2,10 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import 'package:frontend/app/theme/app_theme.dart';
+import 'package:frontend/features/garage/domain/entities/vehicle.dart';
 import 'package:frontend/features/garage/presentation/providers/garage_providers.dart';
-import 'package:frontend/features/garage/presentation/widgets/garage_empty_state.dart';
 import 'package:frontend/features/garage/presentation/widgets/vehicle_garage_card.dart';
 import 'package:go_router/go_router.dart';
 
@@ -16,60 +17,161 @@ final class GarageScreen extends ConsumerWidget {
     final vehiclesState = ref.watch(garageControllerProvider);
 
     return Scaffold(
-      body: SafeArea(
-        child: Padding(
+      body: vehiclesState.when(
+        data: (vehicles) {
+          if (vehicles.isEmpty) {
+            return _EmptyGarageBody(
+              onAddVehicle: () => context.go('/garage/add'),
+            );
+          }
+
+          return _GarageListBody(
+            vehicles: vehicles,
+            onAddVehicle: () => context.go('/garage/add'),
+            onOpenVehicle: (vehicleId) {
+              context.go('/vehicle/$vehicleId/chat');
+            },
+          );
+        },
+        loading: () => const Center(child: CircularProgressIndicator()),
+        error: (error, _) => _GarageErrorState(
+          onRetry: () {
+            unawaited(ref.read(garageControllerProvider.notifier).reload());
+          },
+        ),
+      ),
+    );
+  }
+}
+
+final class _GarageListBody extends StatelessWidget {
+  const _GarageListBody({
+    required this.vehicles,
+    required this.onAddVehicle,
+    required this.onOpenVehicle,
+  });
+
+  final List<Vehicle> vehicles;
+  final VoidCallback onAddVehicle;
+  final ValueChanged<String> onOpenVehicle;
+
+  @override
+  Widget build(BuildContext context) {
+    return SafeArea(
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(
+          AppSpacing.xl,
+          AppSpacing.lg,
+          AppSpacing.xl,
+          0,
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            _GarageHeader(onAddVehicle: onAddVehicle),
+            const SizedBox(height: AppSpacing.xl),
+            Expanded(
+              child: ListView.separated(
+                padding: const EdgeInsets.only(bottom: AppSpacing.xxxl),
+                itemCount: vehicles.length,
+                separatorBuilder: (_, _) =>
+                    const SizedBox(height: AppSpacing.xl),
+                itemBuilder: (context, index) {
+                  final vehicle = vehicles[index];
+
+                  return VehicleGarageCard(
+                    vehicle: vehicle,
+                    onOpen: () => onOpenVehicle(vehicle.id),
+                  );
+                },
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+final class _EmptyGarageBody extends StatelessWidget {
+  const _EmptyGarageBody({required this.onAddVehicle});
+
+  final VoidCallback onAddVehicle;
+
+  @override
+  Widget build(BuildContext context) {
+    return Stack(
+      fit: StackFit.expand,
+      children: [
+        SvgPicture.asset(
+          'assets/images/garage_bg.svg',
+          fit: BoxFit.cover,
+          alignment: Alignment.topCenter,
+        ),
+        Padding(
           padding: const EdgeInsets.fromLTRB(
             AppSpacing.xl,
             AppSpacing.lg,
             AppSpacing.xl,
-            0,
+            AppSpacing.xl,
           ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              _GarageHeader(onAddVehicle: () => context.go('/garage/add')),
-              const SizedBox(height: AppSpacing.xl),
-              Expanded(
-                child: vehiclesState.when(
-                  data: (vehicles) {
-                    if (vehicles.isEmpty) {
-                      return GarageEmptyState(
-                        onAddVehicle: () => context.go('/garage/add'),
-                      );
-                    }
-
-                    return ListView.separated(
-                      padding: const EdgeInsets.only(bottom: AppSpacing.xxxl),
-                      itemCount: vehicles.length,
-                      separatorBuilder: (_, _) =>
-                          const SizedBox(height: AppSpacing.xl),
-                      itemBuilder: (context, index) {
-                        final vehicle = vehicles[index];
-
-                        return VehicleGarageCard(
-                          vehicle: vehicle,
-                          onOpen: () {
-                            context.go('/vehicle/${vehicle.id}/chat');
-                          },
-                        );
-                      },
-                    );
-                  },
-                  loading: () =>
-                      const Center(child: CircularProgressIndicator()),
-                  error: (error, _) => _GarageErrorState(
-                    onRetry: () {
-                      unawaited(
-                        ref.read(garageControllerProvider.notifier).reload(),
-                      );
-                    },
+              Text(
+                'My Talking Shaha',
+                style: Theme.of(context).textTheme.headlineLarge?.copyWith(
+                  color: const Color(0xFFB8C3FF),
+                  fontSize: 31,
+                  fontWeight: FontWeight.w800,
+                  height: 1.08,
+                ),
+              ),
+              const Spacer(flex: 5),
+              Center(
+                child: ConstrainedBox(
+                  constraints: const BoxConstraints(maxWidth: 320),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(
+                        'Garage is empty',
+                        textAlign: TextAlign.center,
+                        style: Theme.of(context).textTheme.headlineMedium
+                            ?.copyWith(
+                              fontSize: 24,
+                              fontWeight: FontWeight.w800,
+                              height: 1.15,
+                            ),
+                      ),
+                      const SizedBox(height: AppSpacing.md),
+                      Text(
+                        'Add your first car to create its digital twin.',
+                        textAlign: TextAlign.center,
+                        style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                          color: AppColors.textSecondary,
+                          height: 1.35,
+                        ),
+                      ),
+                      const SizedBox(height: AppSpacing.xxl),
+                      SizedBox(
+                        width: double.infinity,
+                        height: 56,
+                        child: ElevatedButton.icon(
+                          onPressed: onAddVehicle,
+                          icon: const Icon(Icons.add_circle_outline, size: 22),
+                          label: const Text('Add vehicle'),
+                        ),
+                      ),
+                    ],
                   ),
                 ),
               ),
+              const Spacer(flex: 8),
             ],
           ),
         ),
-      ),
+      ],
     );
   }
 }

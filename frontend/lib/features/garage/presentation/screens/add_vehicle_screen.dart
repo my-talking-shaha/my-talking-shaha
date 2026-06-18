@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_svg/svg.dart';
 import 'package:frontend/app/theme/app_theme.dart';
 import 'package:frontend/features/garage/presentation/controllers/add_vehicle_controller.dart';
 import 'package:frontend/features/garage/presentation/providers/garage_providers.dart';
@@ -25,10 +26,14 @@ final class _AddVehicleScreenState extends ConsumerState<AddVehicleScreen> {
   @override
   Widget build(BuildContext context) {
     final state = _controller.state;
+    final hasEngineType = state.engineType.isNotEmpty;
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Add car'),
+        title: const Text(
+          'Car Specifications',
+          style: TextStyle(color: Color(0xFFB8C3FF)),
+        ),
         leading: IconButton(
           onPressed: () => context.go('/garage'),
           icon: const Icon(Icons.arrow_back),
@@ -40,16 +45,7 @@ final class _AddVehicleScreenState extends ConsumerState<AddVehicleScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(
-                'New car',
-                style: Theme.of(context).textTheme.headlineMedium,
-              ),
               const SizedBox(height: AppSpacing.sm),
-              Text(
-                'Fill in the basic details to create a digital twin.',
-                style: Theme.of(context).textTheme.bodyMedium,
-              ),
-              const SizedBox(height: AppSpacing.xxl),
               _GarageTextField(
                 label: 'Brand',
                 hintText: 'Lada',
@@ -96,11 +92,15 @@ final class _AddVehicleScreenState extends ConsumerState<AddVehicleScreen> {
               const SizedBox(height: AppSpacing.lg),
               DropdownButtonFormField<String>(
                 key: ValueKey(state.engineType),
-                initialValue:
-                    state.engineType.isEmpty ? null : state.engineType,
+                initialValue: state.engineType.isEmpty
+                    ? null
+                    : state.engineType,
                 decoration: InputDecoration(
                   labelText: 'Engine type',
                   errorText: state.fieldErrors['engineType'],
+                  floatingLabelStyle: hasEngineType
+                      ? const TextStyle(color: Color(0xFFB8C3FF))
+                      : null,
                 ),
                 hint: const Text('Select engine type'),
                 items: const [
@@ -119,9 +119,9 @@ final class _AddVehicleScreenState extends ConsumerState<AddVehicleScreen> {
                 const SizedBox(height: AppSpacing.lg),
                 Text(
                   state.errorMessage!,
-                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                        color: AppColors.error,
-                      ),
+                  style: Theme.of(
+                    context,
+                  ).textTheme.bodyMedium?.copyWith(color: AppColors.error),
                 ),
               ],
               const SizedBox(height: AppSpacing.xxxl),
@@ -135,7 +135,18 @@ final class _AddVehicleScreenState extends ConsumerState<AddVehicleScreen> {
                           height: 20,
                           child: CircularProgressIndicator(strokeWidth: 2),
                         )
-                      : const Text('Save'),
+                      : Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            SvgPicture.asset(
+                              'assets/icons/garage/rocket.svg',
+                              width: 20,
+                              height: 20,
+                            ),
+                            const SizedBox(width: 8),
+                            const Text('Start new shaha!'),
+                          ],
+                        ),
                 ),
               ),
             ],
@@ -198,6 +209,7 @@ final class _GarageTextField extends StatelessWidget {
         labelText: label,
         hintText: hintText,
         errorText: errorText,
+        floatingLabelStyle: const TextStyle(color: Color(0xFFB8C3FF)),
       ),
       keyboardType: keyboardType,
       inputFormatters: inputFormatters,
