@@ -20,7 +20,6 @@ abstract final class AppTheme {
       colorScheme: colorScheme,
       scaffoldBackgroundColor: AppColors.background,
       dividerColor: AppColors.divider,
-
       appBarTheme: const AppBarTheme(
         backgroundColor: AppColors.background,
         foregroundColor: AppColors.textPrimary,
@@ -34,7 +33,6 @@ abstract final class AppTheme {
         ),
         iconTheme: IconThemeData(color: AppColors.textPrimary, size: 22),
       ),
-
       cardTheme: const CardThemeData(
         color: AppColors.surface,
         elevation: 0,
@@ -45,7 +43,6 @@ abstract final class AppTheme {
           side: BorderSide(color: AppColors.border),
         ),
       ),
-
       inputDecorationTheme: const InputDecorationTheme(
         filled: true,
         fillColor: AppColors.surfaceHigh,
@@ -75,7 +72,6 @@ abstract final class AppTheme {
           borderSide: BorderSide(color: AppColors.error, width: 1.4),
         ),
       ),
-
       elevatedButtonTheme: ElevatedButtonThemeData(
         style: ElevatedButton.styleFrom(
           elevation: 0,
@@ -89,7 +85,6 @@ abstract final class AppTheme {
           textStyle: const TextStyle(fontSize: 15, fontWeight: FontWeight.w700),
         ),
       ),
-
       outlinedButtonTheme: OutlinedButtonThemeData(
         style: OutlinedButton.styleFrom(
           foregroundColor: AppColors.textPrimary,
@@ -99,14 +94,12 @@ abstract final class AppTheme {
           textStyle: const TextStyle(fontSize: 15, fontWeight: FontWeight.w700),
         ),
       ),
-
       textButtonTheme: TextButtonThemeData(
         style: TextButton.styleFrom(
           foregroundColor: AppColors.primary,
           textStyle: const TextStyle(fontSize: 14, fontWeight: FontWeight.w700),
         ),
       ),
-
       navigationBarTheme: NavigationBarThemeData(
         backgroundColor: AppColors.surface,
         indicatorColor: AppColors.primarySoft,
@@ -121,7 +114,6 @@ abstract final class AppTheme {
           return const IconThemeData(color: AppColors.textMuted);
         }),
       ),
-
       switchTheme: SwitchThemeData(
         thumbColor: WidgetStateProperty.resolveWith((states) {
           if (states.contains(WidgetState.selected)) {
@@ -138,7 +130,6 @@ abstract final class AppTheme {
           return AppColors.surfaceHighest;
         }),
       ),
-
       textTheme: const TextTheme(
         headlineLarge: TextStyle(
           color: AppColors.textPrimary,
@@ -193,7 +184,6 @@ abstract final class AppTheme {
           fontWeight: FontWeight.w600,
         ),
       ),
-
       snackBarTheme: SnackBarThemeData(
         backgroundColor: AppColors.surfaceHighest,
         contentTextStyle: const TextStyle(
@@ -205,7 +195,6 @@ abstract final class AppTheme {
           borderRadius: BorderRadius.circular(AppRadius.md),
         ),
       ),
-
       bottomSheetTheme: const BottomSheetThemeData(
         backgroundColor: AppColors.surface,
         surfaceTintColor: Colors.transparent,
