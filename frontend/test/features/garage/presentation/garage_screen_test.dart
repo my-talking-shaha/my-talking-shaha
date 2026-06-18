@@ -59,30 +59,15 @@ void main() {
     expect(find.text('chat:vehicle_123'), findsOneWidget);
   });
 
-  testWidgets(
-      'delete requires confirmation and refreshes the list after confirm',
-      (tester) async {
+  testWidgets('garage screen does not expose delete actions', (tester) async {
     final repository = _FakeGarageRepository(
-      vehicles: [
-        _vehicle(id: 'vehicle_123', brand: 'Lada', model: '2106'),
-        _vehicle(id: 'vehicle_456', brand: 'Toyota', model: 'Prius'),
-      ],
+      vehicles: [_vehicle(id: 'vehicle_123', brand: 'Lada', model: '2106')],
     );
 
     await _pumpGarage(tester, repository);
 
-    await tester.tap(find.byTooltip('Delete Lada 2106'));
-    await tester.pumpAndSettle();
-
-    expect(repository.deletedVehicleIds, isEmpty);
-    expect(find.text('Delete vehicle?'), findsOneWidget);
-
-    await tester.tap(find.text('Delete'));
-    await tester.pumpAndSettle();
-
-    expect(repository.deletedVehicleIds, ['vehicle_123']);
-    expect(find.textContaining('Lada'), findsNothing);
-    expect(find.textContaining('Toyota'), findsOneWidget);
+    expect(find.byTooltip('Delete Lada 2106'), findsNothing);
+    expect(find.text('Delete vehicle?'), findsNothing);
   });
 }
 

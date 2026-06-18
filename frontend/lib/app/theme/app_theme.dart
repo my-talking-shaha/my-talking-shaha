@@ -224,7 +224,7 @@ abstract final class AppColors {
   static const textMuted = Color(0xFF6F7788);
   static const textDisabled = Color(0xFF4B5263);
 
-  static const success = Color(0xFF36C58A);
+  static const success = Color(0xFF00DCE5);
   static const warning = Color(0xFFE8B950);
   static const error = Color(0xFFE85D75);
   static const info = Color(0xFF82A8BA);

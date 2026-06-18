@@ -3,7 +3,6 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:frontend/app/theme/app_theme.dart';
-import 'package:frontend/features/garage/domain/entities/vehicle.dart';
 import 'package:frontend/features/garage/presentation/providers/garage_providers.dart';
 import 'package:frontend/features/garage/presentation/widgets/garage_empty_state.dart';
 import 'package:frontend/features/garage/presentation/widgets/vehicle_garage_card.dart';
@@ -19,13 +18,17 @@ final class GarageScreen extends ConsumerWidget {
     return Scaffold(
       body: SafeArea(
         child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: AppSpacing.xl),
+          padding: const EdgeInsets.fromLTRB(
+            AppSpacing.xl,
+            AppSpacing.lg,
+            AppSpacing.xl,
+            0,
+          ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const SizedBox(height: AppSpacing.lg),
               _GarageHeader(onAddVehicle: () => context.go('/garage/add')),
-              const SizedBox(height: AppSpacing.xxl),
+              const SizedBox(height: AppSpacing.xl),
               Expanded(
                 child: vehiclesState.when(
                   data: (vehicles) {
@@ -36,9 +39,10 @@ final class GarageScreen extends ConsumerWidget {
                     }
 
                     return ListView.separated(
+                      padding: const EdgeInsets.only(bottom: AppSpacing.xxxl),
                       itemCount: vehicles.length,
                       separatorBuilder: (_, _) =>
-                          const SizedBox(height: AppSpacing.lg),
+                          const SizedBox(height: AppSpacing.xl),
                       itemBuilder: (context, index) {
                         final vehicle = vehicles[index];
 
@@ -47,18 +51,12 @@ final class GarageScreen extends ConsumerWidget {
                           onOpen: () {
                             context.go('/vehicle/${vehicle.id}/chat');
                           },
-                          onDelete: () => _confirmDelete(
-                            context,
-                            ref,
-                            vehicle,
-                          ),
                         );
                       },
                     );
                   },
-                  loading: () => const Center(
-                    child: CircularProgressIndicator(),
-                  ),
+                  loading: () =>
+                      const Center(child: CircularProgressIndicator()),
                   error: (error, _) => _GarageErrorState(
                     onRetry: () {
                       unawaited(
@@ -74,40 +72,6 @@ final class GarageScreen extends ConsumerWidget {
       ),
     );
   }
-
-  Future<void> _confirmDelete(
-    BuildContext context,
-    WidgetRef ref,
-    Vehicle vehicle,
-  ) async {
-    final confirmed = await showDialog<bool>(
-      context: context,
-      builder: (context) {
-        return AlertDialog(
-          title: const Text('Delete vehicle?'),
-          content: Text(
-            '${vehicle.brand} ${vehicle.model} will be removed from the garage.',
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.of(context).pop(false),
-              child: const Text('Cancel'),
-            ),
-            TextButton(
-              onPressed: () => Navigator.of(context).pop(true),
-              child: const Text('Delete'),
-            ),
-          ],
-        );
-      },
-    );
-
-    if (confirmed != true) {
-      return;
-    }
-
-    await ref.read(garageControllerProvider.notifier).deleteVehicle(vehicle.id);
-  }
 }
 
 final class _GarageHeader extends StatelessWidget {
@@ -117,30 +81,62 @@ final class _GarageHeader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Row(
+    return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                'My Talking Shaha',
-                style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                      color: AppColors.primary,
-                    ),
-              ),
-              const SizedBox(height: AppSpacing.sm),
-              Text('YOUR FLEET', style: Theme.of(context).textTheme.bodySmall),
-              const SizedBox(height: AppSpacing.xs),
-              Text('Garage', style: Theme.of(context).textTheme.headlineLarge),
-            ],
+        Text(
+          'My Talking Shaha',
+          style: Theme.of(context).textTheme.headlineLarge?.copyWith(
+            color: const Color(0xFFB8C3FF),
+            fontSize: 31,
+            fontWeight: FontWeight.w800,
+            height: 1.08,
           ),
         ),
-        IconButton.filled(
-          tooltip: 'Add vehicle',
-          onPressed: onAddVehicle,
-          icon: const Icon(Icons.add),
+        const SizedBox(height: 42),
+        Row(
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: [
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'YOUR FLEET',
+                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                      color: AppColors.success,
+                      fontSize: 12,
+                      fontWeight: FontWeight.w800,
+                      letterSpacing: 0.8,
+                    ),
+                  ),
+                  const SizedBox(height: AppSpacing.sm),
+                  Text(
+                    'Garage',
+                    style: Theme.of(context).textTheme.headlineMedium?.copyWith(
+                      fontSize: 25,
+                      fontWeight: FontWeight.w800,
+                      height: 1.05,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            SizedBox(
+              width: 56,
+              height: 56,
+              child: IconButton.filled(
+                tooltip: 'Add vehicle',
+                onPressed: onAddVehicle,
+                style: IconButton.styleFrom(
+                  backgroundColor: AppColors.primary,
+                  foregroundColor: AppColors.white,
+                  shape: const CircleBorder(),
+                ),
+                icon: const Icon(Icons.add, size: 32),
+              ),
+            ),
+          ],
         ),
       ],
     );

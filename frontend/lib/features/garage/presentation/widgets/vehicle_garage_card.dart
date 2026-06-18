@@ -7,13 +7,13 @@ final class VehicleGarageCard extends StatelessWidget {
   const VehicleGarageCard({
     required this.vehicle,
     required this.onOpen,
-    required this.onDelete,
+    this.onDelete,
     super.key,
   });
 
   final Vehicle vehicle;
   final VoidCallback onOpen;
-  final VoidCallback onDelete;
+  final VoidCallback? onDelete;
 
   @override
   Widget build(BuildContext context) {
@@ -189,10 +189,10 @@ final class _MetricTile extends StatelessWidget {
               textAlign: TextAlign.center,
               overflow: TextOverflow.ellipsis,
               style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                color: AppColors.textPrimary,
-                fontSize: 10,
-                height: 1.1,
-              ),
+                    color: AppColors.textPrimary,
+                    fontSize: 10,
+                    height: 1.1,
+                  ),
             ),
           ],
         ),
@@ -203,7 +203,7 @@ final class _MetricTile extends StatelessWidget {
 
 String _formatMileage(int mileage) {
   return mileage.toString().replaceAllMapped(
-    RegExp(r'\B(?=(\d{3})+(?!\d))'),
-    (_) => ' ',
-  );
+        RegExp(r'\B(?=(\d{3})+(?!\d))'),
+        (_) => ' ',
+      );
 }
