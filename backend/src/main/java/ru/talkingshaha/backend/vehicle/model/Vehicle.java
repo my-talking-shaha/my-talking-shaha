@@ -42,9 +42,9 @@ public class Vehicle extends BaseEntity {
     @Column(nullable = false, length = 120)
     private String model;
 
-    @Min(1886)
+    @Min(1900)
     @Max(2100)
-    @Column(name = "production_year")
+    @Column(name = "production_year", nullable = false)
     private Integer productionYear;
 
     @Size(max = 40)
@@ -63,8 +63,8 @@ public class Vehicle extends BaseEntity {
     @Column(length = 80)
     private String engineDescription;
 
-    @Size(max = 32)
-    @Column(length = 32)
+    @Size(min = 17, max = 17)
+    @Column(length = 17)
     private String vin;
 
     @Size(max = 500)
