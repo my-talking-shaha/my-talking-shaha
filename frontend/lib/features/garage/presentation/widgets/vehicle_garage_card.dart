@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import 'package:frontend/app/theme/app_theme.dart';
 import 'package:frontend/features/garage/domain/entities/vehicle.dart';
 
@@ -16,10 +17,9 @@ final class VehicleGarageCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final subtitle = [
-      vehicle.year.toString(),
-      if (vehicle.color != null && vehicle.color!.isNotEmpty) vehicle.color!,
-    ].join(' · ');
+    final subtitle = vehicle.color == null || vehicle.color!.isEmpty
+        ? '${vehicle.year} · ${vehicle.engineType}'
+        : '${vehicle.year} · ${vehicle.color} · ${vehicle.engineType}';
 
     return Material(
       color: Colors.transparent,
@@ -66,21 +66,33 @@ final class VehicleGarageCard extends StatelessWidget {
                         ),
                       ],
                     ),
-                    const SizedBox(height: AppSpacing.lg),
+                    const SizedBox(height: AppSpacing.md),
                     Row(
                       children: [
                         Expanded(
-                          child: _Metric(
+                          child: _MetricTile(
+                            iconPath: 'assets/icons/garage/mileage.svg',
                             label: 'MILEAGE',
                             value:
                                 '${_formatMileage(vehicle.currentMileageKm)} km',
                           ),
                         ),
-                        const SizedBox(width: AppSpacing.md),
+                        const SizedBox(width: AppSpacing.sm),
                         Expanded(
-                          child: _Metric(
-                            label: 'ENGINE',
-                            value: vehicle.engineType,
+                          child: _MetricTile(
+                            iconPath: 'assets/icons/garage/repair.svg',
+                            label: 'SERVICE',
+                            value: vehicle.activeWarningsCount > 0
+                                ? '${vehicle.activeWarningsCount} warnings'
+                                : 'No issues',
+                          ),
+                        ),
+                        const SizedBox(width: AppSpacing.sm),
+                        const Expanded(
+                          child: _MetricTile(
+                            iconPath: 'assets/icons/garage/refuel.svg',
+                            label: 'FUEL',
+                            value: 'No data',
                           ),
                         ),
                       ],
@@ -140,33 +152,50 @@ final class _VehicleImage extends StatelessWidget {
   }
 }
 
-final class _Metric extends StatelessWidget {
-  const _Metric({required this.label, required this.value});
+final class _MetricTile extends StatelessWidget {
+  const _MetricTile({
+    required this.iconPath,
+    required this.label,
+    required this.value,
+  });
 
+  final String iconPath;
   final String label;
   final String value;
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(AppSpacing.md),
-      decoration: BoxDecoration(
-        color: AppColors.backgroundDark,
-        borderRadius: BorderRadius.circular(AppRadius.md),
-        border: Border.all(color: AppColors.border),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(label, style: Theme.of(context).textTheme.bodySmall),
-          const SizedBox(height: AppSpacing.xs),
-          Text(
-            value,
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-            style: Theme.of(context).textTheme.titleMedium,
-          ),
-        ],
+    return Semantics(
+      label: '$label $value',
+      child: Container(
+        height: 48,
+        padding: const EdgeInsets.symmetric(
+          horizontal: AppSpacing.sm,
+          vertical: AppSpacing.xs,
+        ),
+        decoration: BoxDecoration(
+          color: AppColors.backgroundDark.withValues(alpha: 0.7),
+          borderRadius: BorderRadius.circular(AppRadius.sm),
+          border: Border.all(color: AppColors.border.withValues(alpha: 0.32)),
+        ),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            SvgPicture.asset(iconPath, width: 14, height: 14),
+            const SizedBox(height: 3),
+            Text(
+              value,
+              maxLines: 1,
+              textAlign: TextAlign.center,
+              overflow: TextOverflow.ellipsis,
+              style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                color: AppColors.textPrimary,
+                fontSize: 10,
+                height: 1.1,
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }

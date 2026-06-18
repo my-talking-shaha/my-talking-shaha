@@ -215,7 +215,7 @@ abstract final class AppColors {
   static const border = Color(0xFF2B303B);
   static const divider = Color(0xFF252A33);
 
-  static const primary = Color(0xFF4D75E6);
+  static const primary = Color(0xFF2E5BFF);
   static const primaryPressed = Color(0xFF3F63C9);
   static const primarySoft = Color(0xFF141B30);
 
