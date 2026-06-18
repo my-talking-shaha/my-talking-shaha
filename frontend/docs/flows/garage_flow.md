@@ -43,13 +43,41 @@ Each card should display:
 6. Client sends create vehicle request.
 7. On success, vehicle appears in garage.
 
+## Edit Vehicle Flow
+
+Edit vehicle form consists of the same fields as the add vehicle (but the fields are pre-filled with existing info)
+
+Scenario:
+1. user swipes the vehicle and taps "edit"
+2. user deletes current value in the field (using the button with the cross)
+3. user enters new data
+4. user saves the new form
+5. edit vehicle request sent
+6. updated info is displayed
+
+Acceptance criteria:
+- existing values are pre-filled
+- all the fields must be non-empty before saving
+
+Exceptions:
+1) Validation failed
+2) Network error
+
 ## Delete Vehicle Flow
 
-1. User makes long tap on car card
-2. Confirmation dialog appears.
-3. If confirmed, client sends delete request.
-4. Vehicle is removed from garage.
-5. If selected vehicle was deleted, app remains in garage.
+Scenario:
+1) user swipes the vehicle and taps "delete"
+2) confirmation dialog appears
+3) user confirms deletion
+4) delete vehicle request sent
+5) vehicle is no longer displayed
+
+Acceptance criteria:
+- confirmation is mandatory
+- garage list refreshes automatically
+
+Exceptions:
+1) Network error
 
 ## Validation
 
