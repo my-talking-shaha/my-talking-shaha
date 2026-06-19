@@ -225,44 +225,51 @@ final class _SwipeActionButton extends StatelessWidget {
   final Color color;
   final VoidCallback onPressed;
 
+  String get _actionKey => 'garage_swipe_action_${label.toLowerCase()}';
+
+  static const _labelStyle = TextStyle(
+    color: AppColors.textPrimary,
+    fontSize: 12,
+    fontWeight: FontWeight.w800,
+    height: 1.35,
+  );
+
   @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: AppSpacing.md),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          SizedBox(
-            width: 52,
-            height: 52,
-            child: IconButton.filled(
-              tooltip: label,
-              onPressed: onPressed,
-              style: IconButton.styleFrom(
-                backgroundColor: color,
-                foregroundColor: AppColors.white,
-                shape: const CircleBorder(),
-              ),
-              icon: SvgPicture.asset(
-                iconPath,
-                width: 26,
-                height: 26,
-                colorFilter: const ColorFilter.mode(
-                  AppColors.white,
-                  BlendMode.srcIn,
+    return Semantics(
+      label: label,
+      button: true,
+      child: Padding(
+        padding: const EdgeInsets.symmetric(vertical: AppSpacing.md),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            SizedBox(
+              width: 52,
+              height: 52,
+              child: IconButton.filled(
+                key: ValueKey(_actionKey),
+                onPressed: onPressed,
+                style: IconButton.styleFrom(
+                  backgroundColor: color,
+                  foregroundColor: AppColors.white,
+                  shape: const CircleBorder(),
+                ),
+                icon: SvgPicture.asset(
+                  iconPath,
+                  width: 26,
+                  height: 26,
+                  colorFilter: const ColorFilter.mode(
+                    AppColors.white,
+                    BlendMode.srcIn,
+                  ),
                 ),
               ),
             ),
-          ),
-          const SizedBox(height: AppSpacing.xs),
-          Text(
-            label,
-            style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                  color: AppColors.textPrimary,
-                  fontWeight: FontWeight.w800,
-                ),
-          ),
-        ],
+            const SizedBox(height: AppSpacing.xs),
+            Text(label, style: _labelStyle),
+          ],
+        ),
       ),
     );
   }

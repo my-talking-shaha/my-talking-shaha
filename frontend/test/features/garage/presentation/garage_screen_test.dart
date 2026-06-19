@@ -71,8 +71,12 @@ void main() {
     await tester.drag(find.byType(VehicleGarageCard), const Offset(-160, 0));
     await tester.pumpAndSettle();
 
-    expect(find.byTooltip('Edit'), findsOneWidget);
-    expect(find.byTooltip('Delete'), findsOneWidget);
+    expect(
+        find.byKey(const ValueKey('garage_swipe_action_edit')), findsOneWidget);
+    expect(
+      find.byKey(const ValueKey('garage_swipe_action_delete')),
+      findsOneWidget,
+    );
   });
 
   testWidgets('edit action opens prefilled form and saves changes',
@@ -95,7 +99,7 @@ void main() {
 
     await tester.drag(find.byType(VehicleGarageCard), const Offset(-160, 0));
     await tester.pumpAndSettle();
-    await tester.tap(find.byTooltip('Edit'));
+    await tester.tap(find.byKey(const ValueKey('garage_swipe_action_edit')));
     await tester.pumpAndSettle();
 
     expect(find.text('Edit car'), findsOneWidget);
@@ -129,7 +133,7 @@ void main() {
     await tester.drag(
         find.byType(VehicleGarageCard).first, const Offset(-160, 0));
     await tester.pumpAndSettle();
-    await tester.tap(find.byTooltip('Delete'));
+    await tester.tap(find.byKey(const ValueKey('garage_swipe_action_delete')));
     await tester.pumpAndSettle();
 
     expect(repository.deletedVehicleIds, isEmpty);
@@ -144,7 +148,7 @@ void main() {
     await tester.drag(
         find.byType(VehicleGarageCard).first, const Offset(-160, 0));
     await tester.pumpAndSettle();
-    await tester.tap(find.byTooltip('Delete'));
+    await tester.tap(find.byKey(const ValueKey('garage_swipe_action_delete')));
     await tester.pumpAndSettle();
     await tester.tap(
       find.descendant(
