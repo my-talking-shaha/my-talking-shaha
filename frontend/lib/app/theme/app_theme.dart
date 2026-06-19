@@ -20,7 +20,6 @@ abstract final class AppTheme {
       colorScheme: colorScheme,
       scaffoldBackgroundColor: AppColors.background,
       dividerColor: AppColors.divider,
-
       appBarTheme: const AppBarTheme(
         backgroundColor: AppColors.background,
         foregroundColor: AppColors.textPrimary,
@@ -34,7 +33,6 @@ abstract final class AppTheme {
         ),
         iconTheme: IconThemeData(color: AppColors.textPrimary, size: 22),
       ),
-
       cardTheme: const CardThemeData(
         color: AppColors.surface,
         elevation: 0,
@@ -45,7 +43,6 @@ abstract final class AppTheme {
           side: BorderSide(color: AppColors.border),
         ),
       ),
-
       inputDecorationTheme: const InputDecorationTheme(
         filled: true,
         fillColor: AppColors.surfaceHigh,
@@ -75,7 +72,6 @@ abstract final class AppTheme {
           borderSide: BorderSide(color: AppColors.error, width: 1.4),
         ),
       ),
-
       elevatedButtonTheme: ElevatedButtonThemeData(
         style: ElevatedButton.styleFrom(
           elevation: 0,
@@ -89,7 +85,6 @@ abstract final class AppTheme {
           textStyle: const TextStyle(fontSize: 15, fontWeight: FontWeight.w700),
         ),
       ),
-
       outlinedButtonTheme: OutlinedButtonThemeData(
         style: OutlinedButton.styleFrom(
           foregroundColor: AppColors.textPrimary,
@@ -99,14 +94,12 @@ abstract final class AppTheme {
           textStyle: const TextStyle(fontSize: 15, fontWeight: FontWeight.w700),
         ),
       ),
-
       textButtonTheme: TextButtonThemeData(
         style: TextButton.styleFrom(
           foregroundColor: AppColors.primary,
           textStyle: const TextStyle(fontSize: 14, fontWeight: FontWeight.w700),
         ),
       ),
-
       navigationBarTheme: NavigationBarThemeData(
         backgroundColor: AppColors.surface,
         indicatorColor: AppColors.primarySoft,
@@ -121,7 +114,6 @@ abstract final class AppTheme {
           return const IconThemeData(color: AppColors.textMuted);
         }),
       ),
-
       switchTheme: SwitchThemeData(
         thumbColor: WidgetStateProperty.resolveWith((states) {
           if (states.contains(WidgetState.selected)) {
@@ -138,7 +130,6 @@ abstract final class AppTheme {
           return AppColors.surfaceHighest;
         }),
       ),
-
       textTheme: const TextTheme(
         headlineLarge: TextStyle(
           color: AppColors.textPrimary,
@@ -193,7 +184,6 @@ abstract final class AppTheme {
           fontWeight: FontWeight.w600,
         ),
       ),
-
       snackBarTheme: SnackBarThemeData(
         backgroundColor: AppColors.surfaceHighest,
         contentTextStyle: const TextStyle(
@@ -205,7 +195,6 @@ abstract final class AppTheme {
           borderRadius: BorderRadius.circular(AppRadius.md),
         ),
       ),
-
       bottomSheetTheme: const BottomSheetThemeData(
         backgroundColor: AppColors.surface,
         surfaceTintColor: Colors.transparent,
@@ -226,7 +215,7 @@ abstract final class AppColors {
   static const border = Color(0xFF2B303B);
   static const divider = Color(0xFF252A33);
 
-  static const primary = Color(0xFF4D75E6);
+  static const primary = Color(0xFF2E5BFF);
   static const primaryPressed = Color(0xFF3F63C9);
   static const primarySoft = Color(0xFF141B30);
 
@@ -235,7 +224,7 @@ abstract final class AppColors {
   static const textMuted = Color(0xFF6F7788);
   static const textDisabled = Color(0xFF4B5263);
 
-  static const success = Color(0xFF36C58A);
+  static const success = Color(0xFF00DCE5);
   static const warning = Color(0xFFE8B950);
   static const error = Color(0xFFE85D75);
   static const info = Color(0xFF82A8BA);
@@ -250,9 +239,9 @@ abstract final class AppRadius {
   static const double lg = 16;
   static const double xl = 20;
 
-  static const BorderRadius card = BorderRadius.all(Radius.circular(lg));
+  static const BorderRadius card = BorderRadius.all(Radius.circular(md));
   static const BorderRadius button = BorderRadius.all(Radius.circular(md));
-  static const BorderRadius input = BorderRadius.all(Radius.circular(md));
+  static const BorderRadius input = BorderRadius.all(Radius.circular(sm));
   static const BorderRadius bottomSheet = BorderRadius.vertical(
     top: Radius.circular(xl),
   );
