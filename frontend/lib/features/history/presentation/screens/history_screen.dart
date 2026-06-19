@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:frontend/app/theme/app_theme.dart';
 
-final class HistoryPlaceholderScreen extends StatelessWidget {
-  const HistoryPlaceholderScreen({required this.vehicleId, super.key});
+final class HistoryScreen extends StatelessWidget {
+  const HistoryScreen({required this.vehicleId, super.key});
 
   final String vehicleId;
 

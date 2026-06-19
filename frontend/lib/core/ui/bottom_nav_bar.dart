@@ -25,34 +25,28 @@ final class PrimaryBottomNavBar extends StatelessWidget {
         .toList();
     final selectedIndex = destinations.indexOf(selectedDestination);
 
-    return DecoratedBox(
-      decoration: const BoxDecoration(
-        color: AppColors.surface,
-        border: Border(top: BorderSide(color: AppColors.divider)),
-      ),
-      child: SafeArea(
-        top: false,
-        child: NavigationBar(
-          selectedIndex: selectedIndex < 0 ? 0 : selectedIndex,
-          onDestinationSelected: (index) {
-            onDestinationSelected(destinations[index]);
-          },
-          destinations: destinations.map((destination) {
-            return NavigationDestination(
-              icon: _NavigationIcon(
-                destination: destination,
-                color: AppColors.textMuted,
-              ),
-              selectedIcon: _NavigationIcon(
-                destination: destination,
-                color: AppColors.primaryLight,
-              ),
-              label: destination.label,
-              tooltip: destination.label,
-            );
-          }).toList(),
-        ),
-      ),
+    return BottomNavigationBar(
+      type: BottomNavigationBarType.fixed,
+      currentIndex: selectedIndex < 0 ? 0 : selectedIndex,
+      onTap: (index) {
+        onDestinationSelected(destinations[index]);
+      },
+      showSelectedLabels: false,
+      showUnselectedLabels: false,
+      items: destinations.map((destination) {
+        return BottomNavigationBarItem(
+          icon: _NavigationIcon(
+            destination: destination,
+            color: AppColors.textMuted,
+          ),
+          activeIcon: _NavigationIcon(
+            destination: destination,
+            color: AppColors.primaryLight,
+          ),
+          label: destination.label,
+          tooltip: destination.label,
+        );
+      }).toList(),
     );
   }
 }

@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:frontend/app/theme/app_theme.dart';
 
-final class AnalyticsPlaceholderScreen extends StatelessWidget {
-  const AnalyticsPlaceholderScreen({required this.vehicleId, super.key});
+final class AnalyticsScreen extends StatelessWidget {
+  const AnalyticsScreen({required this.vehicleId, super.key});
 
   final String vehicleId;
 

@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:frontend/app/theme/app_theme.dart';
 
-final class SettingsPlaceholderScreen extends StatelessWidget {
-  const SettingsPlaceholderScreen({super.key});
+final class SettingsScreen extends StatelessWidget {
+  const SettingsScreen({super.key});
 
   @override
   Widget build(BuildContext context) {

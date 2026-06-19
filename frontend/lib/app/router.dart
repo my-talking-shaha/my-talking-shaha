@@ -1,11 +1,11 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:frontend/core/ui/navigation_shell.dart';
-import 'package:frontend/features/analytics/presentation/screens/analytics_placeholder_screen.dart';
+import 'package:frontend/features/analytics/presentation/screens/analytics_screen.dart';
 import 'package:frontend/features/chat/presentation/screens/chat_placeholder_screen.dart';
 import 'package:frontend/features/garage/presentation/screens/add_vehicle_screen.dart';
 import 'package:frontend/features/garage/presentation/screens/garage_screen.dart';
-import 'package:frontend/features/history/presentation/screens/history_placeholder_screen.dart';
-import 'package:frontend/features/settings/presentation/screens/settings_placeholder_screen.dart';
+import 'package:frontend/features/history/presentation/screens/history_screen.dart';
+import 'package:frontend/features/settings/presentation/screens/settings_screen.dart';
 import 'package:go_router/go_router.dart';
 
 final routerProvider = Provider<GoRouter>((ref) {
@@ -49,7 +49,7 @@ final routerProvider = Provider<GoRouter>((ref) {
                 path: '/vehicle/:vehicleId/history',
                 builder: (context, state) {
                   final vehicleId = state.pathParameters['vehicleId'] ?? '';
-                  return HistoryPlaceholderScreen(vehicleId: vehicleId);
+                  return HistoryScreen(vehicleId: vehicleId);
                 },
               ),
             ],
@@ -76,7 +76,7 @@ final routerProvider = Provider<GoRouter>((ref) {
                 path: '/vehicle/:vehicleId/analytics',
                 builder: (context, state) {
                   final vehicleId = state.pathParameters['vehicleId'] ?? '';
-                  return AnalyticsPlaceholderScreen(vehicleId: vehicleId);
+                  return AnalyticsScreen(vehicleId: vehicleId);
                 },
               ),
             ],
@@ -85,7 +85,7 @@ final routerProvider = Provider<GoRouter>((ref) {
             routes: [
               GoRoute(
                 path: '/settings',
-                builder: (context, state) => const SettingsPlaceholderScreen(),
+                builder: (context, state) => const SettingsScreen(),
               ),
             ],
           ),

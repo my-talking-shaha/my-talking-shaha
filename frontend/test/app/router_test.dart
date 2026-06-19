@@ -12,6 +12,13 @@ void main() {
     expect(find.byType(IndexedStack), findsOneWidget);
   });
 
+  testWidgets('five destination bar uses a fixed layout', (tester) async {
+    await _pumpApp(tester, initialLocation: '/vehicle/vehicle_123/chat');
+
+    expect(_navigationBar(tester).items, hasLength(5));
+    expect(_navigationBar(tester).type, BottomNavigationBarType.fixed);
+  });
+
   testWidgets('garage shows only garage and settings without a vehicle', (
     tester,
   ) async {
@@ -21,7 +28,7 @@ void main() {
     for (final label in ['History', 'Chat', 'Analytics']) {
       expect(_destination(label), findsNothing);
     }
-    expect(_navigationBar(tester).selectedIndex, 0);
+    expect(_navigationBar(tester).currentIndex, 0);
 
     await tester.tap(_destination('Settings'));
     await tester.pumpAndSettle();
@@ -31,7 +38,7 @@ void main() {
       Uri(path: '/settings'),
     );
     expect(_destinationLabels(tester), ['Garage', 'Settings']);
-    expect(_navigationBar(tester).selectedIndex, 1);
+    expect(_navigationBar(tester).currentIndex, 1);
   });
 
   testWidgets(
@@ -42,7 +49,7 @@ void main() {
         initialLocation: '/vehicle/vehicle_123/chat',
       );
 
-      expect(_navigationBar(tester).selectedIndex, 2);
+      expect(_navigationBar(tester).currentIndex, 2);
 
       await tester.tap(_destination('History'));
       await tester.pumpAndSettle();
@@ -51,7 +58,7 @@ void main() {
         app.router.routeInformationProvider.value.uri.path,
         '/vehicle/vehicle_123/history',
       );
-      expect(_navigationBar(tester).selectedIndex, 1);
+      expect(_navigationBar(tester).currentIndex, 1);
 
       await tester.tap(_destination('Analytics'));
       await tester.pumpAndSettle();
@@ -60,7 +67,7 @@ void main() {
         app.router.routeInformationProvider.value.uri.path,
         '/vehicle/vehicle_123/analytics',
       );
-      expect(_navigationBar(tester).selectedIndex, 3);
+      expect(_navigationBar(tester).currentIndex, 3);
 
       await tester.tap(_destination('Settings'));
       await tester.pumpAndSettle();
@@ -69,7 +76,7 @@ void main() {
         app.router.routeInformationProvider.value.uri,
         Uri(path: '/settings', queryParameters: {'vehicleId': 'vehicle_123'}),
       );
-      expect(_navigationBar(tester).selectedIndex, 4);
+      expect(_navigationBar(tester).currentIndex, 4);
 
       await tester.tap(_destination('Chat'));
       await tester.pumpAndSettle();
@@ -78,7 +85,7 @@ void main() {
         app.router.routeInformationProvider.value.uri.path,
         '/vehicle/vehicle_123/chat',
       );
-      expect(_navigationBar(tester).selectedIndex, 2);
+      expect(_navigationBar(tester).currentIndex, 2);
     },
   );
 }
@@ -104,21 +111,18 @@ Future<_TestApp> _pumpApp(
   return _TestApp(router);
 }
 
-NavigationBar _navigationBar(WidgetTester tester) {
-  return tester.widget<NavigationBar>(find.byType(NavigationBar));
+BottomNavigationBar _navigationBar(WidgetTester tester) {
+  return tester.widget<BottomNavigationBar>(find.byType(BottomNavigationBar));
 }
 
 Finder _destination(String label) {
-  return find.byWidgetPredicate(
-    (widget) => widget is NavigationDestination && widget.label == label,
-  );
+  return find.byTooltip(label);
 }
 
 List<String> _destinationLabels(WidgetTester tester) {
-  return tester
-      .widgetList<NavigationDestination>(find.byType(NavigationDestination))
-      .map((destination) => destination.label)
-      .toList();
+  return _navigationBar(
+    tester,
+  ).items.map((destination) => destination.label ?? '').toList();
 }
 
 final class _TestApp {
