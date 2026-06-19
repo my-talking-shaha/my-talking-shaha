@@ -22,4 +22,9 @@ final class GarageRepositoryImpl implements GarageRepository {
   Future<List<Vehicle>> getVehicles() {
     return _datasource.getVehicles();
   }
+
+  @override
+  Future<Vehicle> updateVehicle(String vehicleId, VehicleDraft draft) {
+    return _datasource.updateVehicle(vehicleId, draft);
+  }
 }

@@ -17,6 +17,13 @@ final routerProvider = Provider<GoRouter>((ref) {
         builder: (context, state) => const AddVehicleScreen(),
       ),
       GoRoute(
+        path: '/garage/edit/:vehicleId',
+        builder: (context, state) {
+          final vehicleId = state.pathParameters['vehicleId'] ?? '';
+          return AddVehicleScreen(vehicleId: vehicleId);
+        },
+      ),
+      GoRoute(
         path: '/vehicle/:vehicleId/chat',
         builder: (context, state) {
           final vehicleId = state.pathParameters['vehicleId'] ?? '';

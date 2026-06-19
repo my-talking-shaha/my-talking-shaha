@@ -5,7 +5,9 @@ import 'package:frontend/features/garage/domain/entities/garage_vehicle.dart';
 import 'package:frontend/features/garage/domain/entities/vehicle_draft.dart';
 import 'package:frontend/features/garage/domain/repositories/garage_repository.dart';
 import 'package:frontend/features/garage/presentation/providers/garage_providers.dart';
+import 'package:frontend/features/garage/presentation/screens/add_vehicle_screen.dart';
 import 'package:frontend/features/garage/presentation/screens/garage_screen.dart';
+import 'package:frontend/features/garage/presentation/widgets/vehicle_garage_card.dart';
 import 'package:go_router/go_router.dart';
 
 void main() {
@@ -14,9 +16,9 @@ void main() {
 
     await _pumpGarage(tester, repository);
 
-    expect(find.text('Add car'), findsOneWidget);
+    expect(find.text('Add vehicle'), findsOneWidget);
 
-    await tester.tap(find.text('Add car'));
+    await tester.tap(find.text('Add vehicle'));
     await tester.pumpAndSettle();
 
     expect(find.text('add vehicle route'), findsOneWidget);
@@ -59,15 +61,102 @@ void main() {
     expect(find.text('chat:vehicle_123'), findsOneWidget);
   });
 
-  testWidgets('garage screen does not expose delete actions', (tester) async {
+  testWidgets('swipe reveals edit and delete actions', (tester) async {
     final repository = _FakeGarageRepository(
       vehicles: [_vehicle(id: 'vehicle_123', brand: 'Lada', model: '2106')],
     );
 
     await _pumpGarage(tester, repository);
 
-    expect(find.byTooltip('Delete Lada 2106'), findsNothing);
-    expect(find.text('Delete vehicle?'), findsNothing);
+    await tester.drag(find.byType(VehicleGarageCard), const Offset(-160, 0));
+    await tester.pumpAndSettle();
+
+    expect(find.byTooltip('Edit'), findsOneWidget);
+    expect(find.byTooltip('Delete'), findsOneWidget);
+  });
+
+  testWidgets('edit action opens prefilled form and saves changes',
+      (tester) async {
+    final repository = _FakeGarageRepository(
+      vehicles: [
+        _vehicle(
+          id: 'vehicle_123',
+          brand: 'Lada',
+          model: '2106',
+          year: 1998,
+          color: 'blue',
+          currentMileageKm: 124580,
+          engineType: 'gasoline',
+        ),
+      ],
+    );
+
+    await _pumpGarage(tester, repository);
+
+    await tester.drag(find.byType(VehicleGarageCard), const Offset(-160, 0));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byTooltip('Edit'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Edit car'), findsOneWidget);
+    final textFields = tester.widgetList<TextField>(find.byType(TextField));
+    expect(textFields.elementAt(0).controller?.text, 'Lada');
+    expect(textFields.elementAt(1).controller?.text, '2106');
+
+    await tester.enterText(find.byType(TextField).at(1), '2107');
+    await tester.pumpAndSettle();
+    await tester.ensureVisible(find.text('Save changes'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Save changes'));
+    await tester.pumpAndSettle();
+
+    final vehicles = await repository.getVehicles();
+    expect(vehicles.single.model, '2107');
+    expect(find.textContaining('2107'), findsOneWidget);
+  });
+
+  testWidgets('delete action requires confirmation and supports cancel',
+      (tester) async {
+    final repository = _FakeGarageRepository(
+      vehicles: [
+        _vehicle(id: 'vehicle_123', brand: 'Lada', model: '2106'),
+        _vehicle(id: 'vehicle_456', brand: 'Toyota', model: 'Prius'),
+      ],
+    );
+
+    await _pumpGarage(tester, repository);
+
+    await tester.drag(
+        find.byType(VehicleGarageCard).first, const Offset(-160, 0));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byTooltip('Delete'));
+    await tester.pumpAndSettle();
+
+    expect(repository.deletedVehicleIds, isEmpty);
+    expect(find.text('Delete vehicle?'), findsOneWidget);
+
+    await tester.tap(find.text('Cancel'));
+    await tester.pumpAndSettle();
+
+    expect(repository.deletedVehicleIds, isEmpty);
+    expect(find.textContaining('Lada'), findsOneWidget);
+
+    await tester.drag(
+        find.byType(VehicleGarageCard).first, const Offset(-160, 0));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byTooltip('Delete'));
+    await tester.pumpAndSettle();
+    await tester.tap(
+      find.descendant(
+        of: find.byType(AlertDialog),
+        matching: find.text('Delete'),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    expect(repository.deletedVehicleIds, ['vehicle_123']);
+    expect(find.textContaining('Lada'), findsNothing);
+    expect(find.textContaining('Toyota'), findsOneWidget);
   });
 }
 
@@ -82,6 +171,13 @@ Future<void> _pumpGarage(
         path: '/garage/add',
         builder: (context, state) =>
             const Scaffold(body: Text('add vehicle route')),
+      ),
+      GoRoute(
+        path: '/garage/edit/:vehicleId',
+        builder: (context, state) {
+          final vehicleId = state.pathParameters['vehicleId'] ?? '';
+          return AddVehicleScreen(vehicleId: vehicleId);
+        },
       ),
       GoRoute(
         path: '/vehicle/:vehicleId/chat',
@@ -159,5 +255,24 @@ final class _FakeGarageRepository implements GarageRepository {
   Future<void> deleteVehicle(String vehicleId) async {
     deletedVehicleIds.add(vehicleId);
     _vehicles.removeWhere((vehicle) => vehicle.id == vehicleId);
+  }
+
+  @override
+  Future<GarageVehicle> updateVehicle(String vehicleId, VehicleDraft draft) {
+    final index = _vehicles.indexWhere((vehicle) => vehicle.id == vehicleId);
+    final vehicle = GarageVehicle(
+      id: vehicleId,
+      brand: draft.brand,
+      model: draft.model,
+      year: draft.year,
+      color: draft.color,
+      currentMileageKm: draft.currentMileageKm,
+      engineType: draft.engineType,
+      photoUrl: null,
+      status: GarageVehicleStatus.unknown,
+      activeWarningsCount: 0,
+    );
+    _vehicles[index] = vehicle;
+    return Future.value(vehicle);
   }
 }

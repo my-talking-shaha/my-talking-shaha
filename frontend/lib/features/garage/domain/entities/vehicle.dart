@@ -23,6 +23,32 @@ final class Vehicle {
   final String status;
   final int activeWarningsCount;
 
+  Vehicle copyWith({
+    String? id,
+    String? brand,
+    String? model,
+    int? year,
+    String? color,
+    int? currentMileageKm,
+    String? engineType,
+    String? photoUrl,
+    String? status,
+    int? activeWarningsCount,
+  }) {
+    return Vehicle(
+      id: id ?? this.id,
+      brand: brand ?? this.brand,
+      model: model ?? this.model,
+      year: year ?? this.year,
+      color: color ?? this.color,
+      currentMileageKm: currentMileageKm ?? this.currentMileageKm,
+      engineType: engineType ?? this.engineType,
+      photoUrl: photoUrl ?? this.photoUrl,
+      status: status ?? this.status,
+      activeWarningsCount: activeWarningsCount ?? this.activeWarningsCount,
+    );
+  }
+
   @override
   bool operator ==(Object other) {
     return identical(this, other) ||

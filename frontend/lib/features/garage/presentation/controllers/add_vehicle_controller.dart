@@ -2,16 +2,34 @@ import 'package:frontend/features/garage/domain/entities/vehicle.dart';
 import 'package:frontend/features/garage/domain/entities/vehicle_draft.dart';
 import 'package:frontend/features/garage/domain/repositories/garage_repository.dart';
 import 'package:frontend/features/garage/domain/use_cases/create_vehicle.dart';
+import 'package:frontend/features/garage/domain/use_cases/update_vehicle.dart';
 import 'package:frontend/features/garage/domain/validation/vehicle_draft_validator.dart';
 import 'package:frontend/features/garage/presentation/state/add_vehicle_state.dart';
 
 final class AddVehicleController {
   AddVehicleController({required GarageRepository repository})
-      : _createVehicle = CreateVehicle(repository);
+      : _createVehicle = CreateVehicle(repository),
+        _updateVehicle = UpdateVehicle(repository);
 
   final CreateVehicle _createVehicle;
+  final UpdateVehicle _updateVehicle;
+  String? _editingVehicleId;
 
   AddVehicleState state = const AddVehicleState();
+
+  bool get isEditing => _editingVehicleId != null;
+
+  void loadVehicle(Vehicle vehicle) {
+    _editingVehicleId = vehicle.id;
+    state = AddVehicleState(
+      brand: vehicle.brand,
+      model: vehicle.model,
+      year: vehicle.year.toString(),
+      color: vehicle.color ?? '',
+      currentMileage: vehicle.currentMileageKm.toString(),
+      engineType: vehicle.engineType,
+    );
+  }
 
   void updateBrand(String value) {
     state = state.copyWith(
@@ -74,7 +92,10 @@ final class AddVehicleController {
     );
 
     try {
-      final vehicle = await _createVehicle(draft);
+      final vehicleId = _editingVehicleId;
+      final vehicle = vehicleId == null
+          ? await _createVehicle(draft)
+          : await _updateVehicle(vehicleId, draft);
       state = state.copyWith(isSubmitting: false);
       return vehicle;
     } on GarageValidationException catch (error) {
@@ -87,7 +108,9 @@ final class AddVehicleController {
     } catch (_) {
       state = state.copyWith(
         isSubmitting: false,
-        errorMessage: 'Could not save the vehicle',
+        errorMessage: isEditing
+            ? 'Could not update the vehicle'
+            : 'Could not save the vehicle',
       );
       return null;
     }

@@ -63,5 +63,35 @@ void main() {
 
       expect(await secondRuntimeRepository.getVehicles(), isEmpty);
     });
+
+    test('updates an existing vehicle while preserving the id', () async {
+      final repository = GarageRepositoryImpl(InMemoryGarageDatasource());
+      final vehicle = await repository.addVehicle(
+        const VehicleDraft(
+          brand: 'Lada',
+          model: '2106',
+          year: 1998,
+          currentMileageKm: 124580,
+          engineType: 'gasoline',
+        ),
+      );
+
+      final updatedVehicle = await repository.updateVehicle(
+        vehicle.id,
+        const VehicleDraft(
+          brand: 'Lada',
+          model: '2107',
+          year: 2005,
+          color: 'green',
+          currentMileageKm: 130000,
+          engineType: 'diesel',
+        ),
+      );
+
+      expect(updatedVehicle.id, vehicle.id);
+      expect(updatedVehicle.model, '2107');
+      expect(updatedVehicle.color, 'green');
+      expect(await repository.getVehicles(), [updatedVehicle]);
+    });
   });
 }

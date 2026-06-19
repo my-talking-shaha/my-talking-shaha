@@ -82,6 +82,35 @@ void main() {
       expect(createdVehicle?.id, 'vehicle_1');
       expect(repository.createdDrafts, hasLength(1));
     });
+
+    test('loads an existing vehicle and submits updates', () async {
+      final repository = _RecordingGarageRepository();
+      final controller = AddVehicleController(repository: repository);
+
+      controller.loadVehicle(
+        _vehicle(
+          id: 'vehicle_123',
+          draft: const VehicleDraft(
+            brand: 'Lada',
+            model: '2106',
+            year: 1998,
+            color: 'blue',
+            currentMileageKm: 124580,
+            engineType: 'gasoline',
+          ),
+        ),
+      );
+      controller
+        ..updateModel('2107')
+        ..updateColor('green');
+
+      final updatedVehicle = await controller.submit();
+
+      expect(updatedVehicle?.id, 'vehicle_123');
+      expect(updatedVehicle?.model, '2107');
+      expect(updatedVehicle?.color, 'green');
+      expect(repository.createdDrafts.single.model, '2107');
+    });
   });
 }
 
@@ -121,4 +150,10 @@ final class _RecordingGarageRepository implements GarageRepository {
 
   @override
   Future<void> deleteVehicle(String vehicleId) async {}
+
+  @override
+  Future<GarageVehicle> updateVehicle(String vehicleId, VehicleDraft draft) {
+    createdDrafts.add(draft);
+    return Future.value(_vehicle(id: vehicleId, draft: draft));
+  }
 }

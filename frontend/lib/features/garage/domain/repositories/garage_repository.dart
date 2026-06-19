@@ -6,5 +6,7 @@ abstract interface class GarageRepository {
 
   Future<Vehicle> addVehicle(VehicleDraft draft);
 
+  Future<Vehicle> updateVehicle(String vehicleId, VehicleDraft draft);
+
   Future<void> deleteVehicle(String vehicleId);
 }

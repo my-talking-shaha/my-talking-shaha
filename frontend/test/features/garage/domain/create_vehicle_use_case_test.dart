@@ -74,4 +74,12 @@ class _FakeGarageRepository implements GarageRepository {
 
   @override
   Future<List<GarageVehicle>> getVehicles() async => const [];
+
+  @override
+  Future<GarageVehicle> updateVehicle(
+    String vehicleId,
+    VehicleDraft draft,
+  ) async {
+    return addVehicle(draft);
+  }
 }
