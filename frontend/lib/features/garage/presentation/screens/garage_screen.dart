@@ -152,9 +152,9 @@ final class _EmptyGarageBody extends StatelessWidget {
       children: [
         const _GarageEmptyBackground(),
         Padding(
-          padding: const EdgeInsets.fromLTRB(
+          padding: EdgeInsets.fromLTRB(
             AppSpacing.xl,
-            AppSpacing.lg,
+            MediaQuery.paddingOf(context).top + AppSpacing.lg,
             AppSpacing.xl,
             AppSpacing.xl,
           ),

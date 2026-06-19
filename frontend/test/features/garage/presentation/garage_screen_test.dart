@@ -12,6 +12,18 @@ import 'package:frontend/features/garage/presentation/widgets/vehicle_garage_car
 import 'package:go_router/go_router.dart';
 
 void main() {
+  testWidgets('empty garage content stays below the system status bar',
+      (tester) async {
+    const statusBarInset = 59.0;
+    final repository = _FakeGarageRepository();
+
+    await _pumpGarage(tester, repository, topPadding: statusBarInset);
+
+    final titleTop = tester.getTopLeft(find.text('My Talking Shaha')).dy;
+
+    expect(titleTop, greaterThanOrEqualTo(statusBarInset));
+  });
+
   testWidgets('empty garage shows the add vehicle action', (tester) async {
     final repository = _FakeGarageRepository();
 
@@ -183,12 +195,20 @@ void main() {
 }
 
 Future<void> _pumpGarage(
-    WidgetTester tester, _FakeGarageRepository repository) async {
+    WidgetTester tester, _FakeGarageRepository repository,
+    {double topPadding = 0}) async {
   final router = GoRouter(
     initialLocation: '/garage',
     routes: [
       GoRoute(
-          path: '/garage', builder: (context, state) => const GarageScreen()),
+        path: '/garage',
+        builder: (context, state) => MediaQuery(
+          data: MediaQuery.of(context).copyWith(
+            padding: EdgeInsets.only(top: topPadding),
+          ),
+          child: const GarageScreen(),
+        ),
+      ),
       GoRoute(
         path: '/garage/add',
         builder: (context, state) =>

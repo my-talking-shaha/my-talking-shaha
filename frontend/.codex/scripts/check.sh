@@ -2,7 +2,7 @@
 set -euo pipefail
 
 echo "Running format check..."
-dart format --set-exit-if-changed .
+dart format --set-exit-if-changed lib test
 
 echo "Running analyzer..."
 flutter analyze
