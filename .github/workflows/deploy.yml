@@ -1,0 +1,79 @@
+name: Deploy
+
+on:
+  push:
+    branches:
+      - main
+
+concurrency:
+  group: deploy-main
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  deploy:
+    name: Deploy to server
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    steps:
+      - name: Configure SSH
+        env:
+          SERVER_HOST: ${{ secrets.SERVER_HOST }}
+          SERVER_PORT: ${{ secrets.SERVER_PORT }}
+          SERVER_SSH_KEY: ${{ secrets.SERVER_SSH_KEY }}
+        run: |
+          set -euo pipefail
+
+          : "${SERVER_HOST:?SERVER_HOST secret is required}"
+          : "${SERVER_SSH_KEY:?SERVER_SSH_KEY secret is required}"
+
+          mkdir -p ~/.ssh
+          chmod 700 ~/.ssh
+
+          printf '%s\n' "$SERVER_SSH_KEY" > ~/.ssh/deploy_key
+          chmod 600 ~/.ssh/deploy_key
+
+          ssh-keyscan -p "${SERVER_PORT:-22}" "$SERVER_HOST" >> ~/.ssh/known_hosts
+
+      - name: Deploy Docker Compose stack
+        env:
+          SERVER_HOST: ${{ secrets.SERVER_HOST }}
+          SERVER_PORT: ${{ secrets.SERVER_PORT }}
+          SERVER_USER: ${{ secrets.SERVER_USER }}
+          SERVER_APP_PATH: ${{ secrets.SERVER_APP_PATH }}
+        run: |
+          set -euo pipefail
+
+          : "${SERVER_HOST:?SERVER_HOST secret is required}"
+          : "${SERVER_USER:?SERVER_USER secret is required}"
+          : "${SERVER_APP_PATH:?SERVER_APP_PATH secret is required}"
+
+          ssh -i ~/.ssh/deploy_key \
+            -p "${SERVER_PORT:-22}" \
+            -o IdentitiesOnly=yes \
+            "$SERVER_USER@$SERVER_HOST" \
+            "SERVER_APP_PATH='$SERVER_APP_PATH' bash -s" <<'REMOTE'
+          set -euo pipefail
+
+          cd "$SERVER_APP_PATH"
+
+          git fetch --prune origin main
+          git checkout main
+          git pull --ff-only origin main
+
+          if docker compose version >/dev/null 2>&1; then
+            COMPOSE="docker compose"
+          elif command -v docker-compose >/dev/null 2>&1; then
+            COMPOSE="docker-compose"
+          else
+            echo "Docker Compose is not installed" >&2
+            exit 1
+          fi
+
+          $COMPOSE -f docker/docker-compose.yml up -d --build --remove-orphans
+          $COMPOSE -f docker/docker-compose.yml ps
+          docker image prune -f
+          REMOTE
