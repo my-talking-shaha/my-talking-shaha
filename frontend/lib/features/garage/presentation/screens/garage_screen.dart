@@ -1,8 +1,9 @@
 import 'dart:async';
+import 'dart:math' as math;
+import 'dart:ui' as ui;
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:flutter_svg/flutter_svg.dart';
 import 'package:frontend/app/theme/app_theme.dart';
 import 'package:frontend/features/garage/domain/entities/vehicle.dart';
 import 'package:frontend/features/garage/presentation/providers/garage_providers.dart';
@@ -149,11 +150,7 @@ final class _EmptyGarageBody extends StatelessWidget {
     return Stack(
       fit: StackFit.expand,
       children: [
-        SvgPicture.asset(
-          'assets/images/garage_bg.svg',
-          fit: BoxFit.cover,
-          alignment: Alignment.topCenter,
-        ),
+        const _GarageEmptyBackground(),
         Padding(
           padding: const EdgeInsets.fromLTRB(
             AppSpacing.xl,
@@ -220,6 +217,113 @@ final class _EmptyGarageBody extends StatelessWidget {
           ),
         ),
       ],
+    );
+  }
+}
+
+final class _GarageEmptyBackground extends StatelessWidget {
+  const _GarageEmptyBackground();
+
+  static const double _assetWidth = 390;
+  static const double _assetHeight = 884;
+
+  @override
+  Widget build(BuildContext context) {
+    return IgnorePointer(
+      child: ColoredBox(
+        color: AppColors.background,
+        child: LayoutBuilder(
+          builder: (context, constraints) {
+            final screenSize = MediaQuery.sizeOf(context);
+            final width = constraints.maxWidth.isFinite
+                ? constraints.maxWidth
+                : screenSize.width;
+            final height = constraints.maxHeight.isFinite
+                ? constraints.maxHeight
+                : screenSize.height;
+            final scale = math.max(width / _assetWidth, height / _assetHeight);
+            final dx = (width - (_assetWidth * scale)) / 2;
+
+            return Stack(
+              fit: StackFit.expand,
+              children: [
+                _GarageBlurredGlow(
+                  left: dx + (-200 * scale),
+                  top: 101 * scale,
+                  size: 496 * scale,
+                  circleSize: 256 * scale,
+                  blurSigma: 60 * scale,
+                  color: const Color(0xFFB8C3FF).withValues(alpha: 0.20),
+                ),
+                _GarageBlurredGlow(
+                  left: dx + (94 * scale),
+                  top: 287 * scale,
+                  size: 496 * scale,
+                  circleSize: 256 * scale,
+                  blurSigma: 60 * scale,
+                  color: AppColors.success.withValues(alpha: 0.20),
+                ),
+                DecoratedBox(
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      begin: Alignment.topCenter,
+                      end: Alignment.bottomCenter,
+                      colors: [
+                        AppColors.background.withValues(alpha: 0),
+                        AppColors.background.withValues(alpha: 0.34),
+                        AppColors.background.withValues(alpha: 0.64),
+                      ],
+                      stops: const [0, 0.72, 1],
+                    ),
+                  ),
+                ),
+              ],
+            );
+          },
+        ),
+      ),
+    );
+  }
+}
+
+final class _GarageBlurredGlow extends StatelessWidget {
+  const _GarageBlurredGlow({
+    required this.left,
+    required this.top,
+    required this.size,
+    required this.circleSize,
+    required this.blurSigma,
+    required this.color,
+  });
+
+  final double left;
+  final double top;
+  final double size;
+  final double circleSize;
+  final double blurSigma;
+  final Color color;
+
+  @override
+  Widget build(BuildContext context) {
+    return Positioned(
+      left: left,
+      top: top,
+      width: size,
+      height: size,
+      child: ImageFiltered(
+        imageFilter: ui.ImageFilter.blur(sigmaX: blurSigma, sigmaY: blurSigma),
+        child: Center(
+          child: SizedBox.square(
+            dimension: circleSize,
+            child: DecoratedBox(
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                color: color,
+              ),
+            ),
+          ),
+        ),
+      ),
     );
   }
 }

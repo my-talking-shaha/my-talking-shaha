@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:frontend/features/garage/domain/entities/garage_vehicle.dart';
 import 'package:frontend/features/garage/domain/entities/vehicle_draft.dart';
@@ -22,6 +23,23 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('add vehicle route'), findsOneWidget);
+  });
+
+  testWidgets(
+      'empty garage background uses Flutter blur instead of SVG filters',
+      (tester) async {
+    final repository = _FakeGarageRepository();
+
+    await _pumpGarage(tester, repository);
+
+    expect(find.byType(SvgPicture), findsNothing);
+    expect(
+      find.byWidgetPredicate(
+        (widget) => widget is ImageFiltered || widget is BackdropFilter,
+        description: 'ImageFiltered or BackdropFilter blur',
+      ),
+      findsWidgets,
+    );
   });
 
   testWidgets(
