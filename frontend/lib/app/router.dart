@@ -1,17 +1,17 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:frontend/core/ui/navigation_shell.dart';
+import 'package:frontend/features/analytics/presentation/screens/analytics_placeholder_screen.dart';
 import 'package:frontend/features/chat/presentation/screens/chat_placeholder_screen.dart';
 import 'package:frontend/features/garage/presentation/screens/add_vehicle_screen.dart';
 import 'package:frontend/features/garage/presentation/screens/garage_screen.dart';
+import 'package:frontend/features/history/presentation/screens/history_placeholder_screen.dart';
+import 'package:frontend/features/settings/presentation/screens/settings_placeholder_screen.dart';
 import 'package:go_router/go_router.dart';
 
 final routerProvider = Provider<GoRouter>((ref) {
   return GoRouter(
     initialLocation: '/garage',
     routes: [
-      GoRoute(
-        path: '/garage',
-        builder: (context, state) => const GarageScreen(),
-      ),
       GoRoute(
         path: '/garage/add',
         builder: (context, state) => const AddVehicleScreen(),
@@ -23,12 +23,73 @@ final routerProvider = Provider<GoRouter>((ref) {
           return AddVehicleScreen(vehicleId: vehicleId);
         },
       ),
-      GoRoute(
-        path: '/vehicle/:vehicleId/chat',
-        builder: (context, state) {
-          final vehicleId = state.pathParameters['vehicleId'] ?? '';
-          return ChatPlaceholderScreen(vehicleId: vehicleId);
+      StatefulShellRoute.indexedStack(
+        builder: (context, state, navigationShell) {
+          return NavigationShell(
+            uri: state.uri,
+            navigationShell: navigationShell,
+          );
         },
+        branches: [
+          StatefulShellBranch(
+            routes: [
+              GoRoute(
+                path: '/garage',
+                builder: (context, state) => const GarageScreen(),
+              ),
+            ],
+          ),
+          StatefulShellBranch(
+            routes: [
+              GoRoute(
+                path: '/history',
+                redirect: (context, state) => '/garage',
+              ),
+              GoRoute(
+                path: '/vehicle/:vehicleId/history',
+                builder: (context, state) {
+                  final vehicleId = state.pathParameters['vehicleId'] ?? '';
+                  return HistoryPlaceholderScreen(vehicleId: vehicleId);
+                },
+              ),
+            ],
+          ),
+          StatefulShellBranch(
+            routes: [
+              GoRoute(path: '/chat', redirect: (context, state) => '/garage'),
+              GoRoute(
+                path: '/vehicle/:vehicleId/chat',
+                builder: (context, state) {
+                  final vehicleId = state.pathParameters['vehicleId'] ?? '';
+                  return ChatPlaceholderScreen(vehicleId: vehicleId);
+                },
+              ),
+            ],
+          ),
+          StatefulShellBranch(
+            routes: [
+              GoRoute(
+                path: '/analytics',
+                redirect: (context, state) => '/garage',
+              ),
+              GoRoute(
+                path: '/vehicle/:vehicleId/analytics',
+                builder: (context, state) {
+                  final vehicleId = state.pathParameters['vehicleId'] ?? '';
+                  return AnalyticsPlaceholderScreen(vehicleId: vehicleId);
+                },
+              ),
+            ],
+          ),
+          StatefulShellBranch(
+            routes: [
+              GoRoute(
+                path: '/settings',
+                builder: (context, state) => const SettingsPlaceholderScreen(),
+              ),
+            ],
+          ),
+        ],
       ),
     ],
   );
