@@ -5,7 +5,7 @@ import 'package:frontend/features/history/domain/history_event.dart';
 import 'package:frontend/features/history/domain/repositories/history_repository.dart';
 
 final mockHistoryDatasourceProvider = Provider<MockHistoryDatasource>((ref) {
-  return const MockHistoryDatasource();
+  return MockHistoryDatasource();
 });
 
 final historyRepositoryProvider = Provider<HistoryRepository>((ref) {
@@ -16,3 +16,9 @@ final historyEventsProvider = FutureProvider.autoDispose
     .family<List<HistoryEvent>, String>((ref, vehicleId) {
       return ref.watch(historyRepositoryProvider).getEvents(vehicleId);
     });
+
+typedef AddHistoryEvent = Future<void> Function(HistoryEvent event);
+
+final addHistoryEventProvider = Provider<AddHistoryEvent>((ref) {
+  return ref.watch(historyRepositoryProvider).addEvent;
+});

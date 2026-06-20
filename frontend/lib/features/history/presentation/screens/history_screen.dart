@@ -6,6 +6,7 @@ import 'package:frontend/features/history/domain/history_event.dart';
 import 'package:frontend/features/history/domain/history_event_type.dart';
 import 'package:frontend/features/history/presentation/providers/history_providers.dart';
 import 'package:frontend/features/history/presentation/widgets/event_card.dart';
+import 'package:go_router/go_router.dart';
 
 final class HistoryScreen extends ConsumerStatefulWidget {
   const HistoryScreen({required this.vehicleId, super.key});
@@ -26,6 +27,24 @@ final class _HistoryScreenState extends ConsumerState<HistoryScreen> {
 
     return Scaffold(
       appBar: AppBar(title: const Text('Maintenance History')),
+      floatingActionButton: FloatingActionButton(
+        onPressed: () async {
+          await context.push<HistoryEvent>(
+            '/vehicle/${widget.vehicleId}/history/add',
+          );
+          if (mounted) {
+            ref.invalidate(historyEventsProvider(widget.vehicleId));
+          }
+        },
+        tooltip: 'Add event',
+        backgroundColor: AppColors.primaryLight,
+        foregroundColor: const Color(0xFF002388),
+        elevation: 8,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(AppRadius.lg),
+        ),
+        child: const Icon(Icons.add, size: 30),
+      ),
       body: SafeArea(
         top: false,
         child: Column(
@@ -125,7 +144,7 @@ final class _TypeFilters extends StatelessWidget {
     ];
 
     return SizedBox(
-      height: 42,
+      height: 36,
       child: ListView.separated(
         padding: const EdgeInsets.symmetric(horizontal: AppSpacing.xl),
         scrollDirection: Axis.horizontal,
@@ -135,25 +154,36 @@ final class _TypeFilters extends StatelessWidget {
           final (label, type) = filters[index];
           final isSelected = selectedType == type;
 
-          return ChoiceChip(
-            label: Text(label),
+          return Semantics(
             selected: isSelected,
-            showCheckmark: false,
-            onSelected: (_) => onSelected(type),
-            labelStyle: Theme.of(context).textTheme.labelMedium?.copyWith(
-              color: isSelected
-                  ? AppColors.primaryLight
-                  : AppColors.textSecondary,
-              fontWeight: FontWeight.w700,
-              letterSpacing: 0.5,
+            child: TextButton(
+              onPressed: () => onSelected(type),
+              style: TextButton.styleFrom(
+                foregroundColor: isSelected
+                    ? AppColors.primaryLight
+                    : AppColors.textSecondary,
+                backgroundColor: isSelected
+                    ? AppColors.primarySoft
+                    : AppColors.surfaceHigh,
+                overlayColor: Colors.transparent,
+                side: BorderSide(
+                  color: isSelected
+                      ? AppColors.primaryPressed
+                      : AppColors.border,
+                ),
+                shape: const StadiumBorder(),
+                padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg),
+                minimumSize: const Size(0, 36),
+                tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                animationDuration: Duration.zero,
+                splashFactory: NoSplash.splashFactory,
+                textStyle: Theme.of(context).textTheme.labelMedium?.copyWith(
+                  fontWeight: FontWeight.w700,
+                  letterSpacing: 0.5,
+                ),
+              ),
+              child: Text(label),
             ),
-            backgroundColor: AppColors.surfaceHigh,
-            selectedColor: AppColors.primarySoft,
-            side: BorderSide(
-              color: isSelected ? AppColors.primaryPressed : AppColors.border,
-            ),
-            shape: const StadiumBorder(),
-            padding: const EdgeInsets.symmetric(horizontal: AppSpacing.sm),
           );
         },
       ),

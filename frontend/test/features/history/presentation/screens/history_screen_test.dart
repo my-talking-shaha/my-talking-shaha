@@ -14,7 +14,7 @@ void main() {
       ProviderScope(
         overrides: [
           mockHistoryDatasourceProvider.overrideWithValue(
-            const MockHistoryDatasource(delay: Duration.zero),
+            MockHistoryDatasource(delay: Duration.zero),
           ),
         ],
         child: MaterialApp(
@@ -28,6 +28,17 @@ void main() {
     expect(find.text('JUNE 2026'), findsOneWidget);
     expect(find.text('Refueling AI-95'), findsOneWidget);
     expect(find.text('Oil and filter change'), findsOneWidget);
+    expect(find.byTooltip('Add event'), findsOneWidget);
+
+    final repairsButton = tester.widget<TextButton>(
+      find.widgetWithText(TextButton, 'REPAIRS'),
+    );
+    expect(repairsButton.style?.splashFactory, NoSplash.splashFactory);
+    expect(repairsButton.style?.animationDuration, Duration.zero);
+    expect(
+      repairsButton.style?.overlayColor?.resolve({WidgetState.pressed}),
+      Colors.transparent,
+    );
 
     await tester.tap(find.text('REPAIRS'));
     await tester.pump();

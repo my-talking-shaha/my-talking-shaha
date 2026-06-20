@@ -11,4 +11,9 @@ final class HistoryRepositoryImpl implements HistoryRepository {
   Future<List<HistoryEvent>> getEvents(String vehicleId) {
     return _datasource.getEvents(vehicleId);
   }
+
+  @override
+  Future<void> addEvent(HistoryEvent event) {
+    return _datasource.addEvent(event);
+  }
 }

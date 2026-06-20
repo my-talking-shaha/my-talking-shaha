@@ -3,14 +3,57 @@ import 'package:frontend/features/history/domain/history_event.dart';
 import 'package:frontend/features/history/domain/history_event_type.dart';
 
 final class MockHistoryDatasource {
-  const MockHistoryDatasource({this.delay = const Duration(milliseconds: 600)});
+  MockHistoryDatasource({this.delay = const Duration(milliseconds: 600)});
 
   final Duration delay;
+  final Map<String, List<HistoryEvent>> _eventsByVehicleId = {};
 
   Future<List<HistoryEvent>> getEvents(String vehicleId) async {
     await Future<void>.delayed(delay);
 
-    return List.unmodifiable([
+    final events = List<HistoryEvent>.of(_eventsFor(vehicleId))
+      ..sort((first, second) => second.occurredAt.compareTo(first.occurredAt));
+    return List.unmodifiable(events);
+  }
+
+  Future<void> addEvent(HistoryEvent event) async {
+    await Future<void>.delayed(delay);
+
+    final events = _eventsFor(event.carId);
+    final maximumMileage = events.fold<int>(
+      0,
+      (maximum, item) =>
+          item.currentMileageKm > maximum ? item.currentMileageKm : maximum,
+    );
+    if (event.currentMileageKm < maximumMileage) {
+      throw ArgumentError.value(
+        event.currentMileageKm,
+        'event.currentMileageKm',
+        'Mileage cannot be lower than $maximumMileage km',
+      );
+    }
+
+    final details = event.details;
+    if (details is TripDetails && details.endKm != event.currentMileageKm) {
+      throw ArgumentError.value(
+        details.endKm,
+        'event.details.endKm',
+        'Trip end mileage must match the event current mileage',
+      );
+    }
+
+    events.add(event);
+  }
+
+  List<HistoryEvent> _eventsFor(String vehicleId) {
+    return _eventsByVehicleId.putIfAbsent(
+      vehicleId,
+      () => _initialEvents(vehicleId),
+    );
+  }
+
+  List<HistoryEvent> _initialEvents(String vehicleId) {
+    return [
       HistoryEvent(
         id: 'fuel_1',
         carId: vehicleId,
@@ -75,6 +118,6 @@ final class MockHistoryDatasource {
           fuelType: 'AI-95 • Lukoil Station',
         ),
       ),
-    ]);
+    ];
   }
 }

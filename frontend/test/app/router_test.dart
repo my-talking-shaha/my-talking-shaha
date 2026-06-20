@@ -3,6 +3,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:frontend/app/app.dart';
 import 'package:frontend/app/router.dart';
+import 'package:frontend/features/history/presentation/providers/history_providers.dart';
+import 'package:frontend/features/history/presentation/screens/add_history_event_screen.dart';
 import 'package:go_router/go_router.dart';
 
 void main() {
@@ -88,6 +90,60 @@ void main() {
       expect(_navigationBar(tester).currentIndex, 2);
     },
   );
+
+  testWidgets('history add route opens outside the tab shell', (tester) async {
+    await _pumpApp(tester, initialLocation: '/vehicle/vehicle_123/history/add');
+
+    expect(find.byType(AddHistoryEventScreen), findsOneWidget);
+    expect(find.byType(BottomNavigationBar), findsNothing);
+    final screen = tester.widget<AddHistoryEventScreen>(
+      find.byType(AddHistoryEventScreen),
+    );
+    expect(screen.vehicleId, 'vehicle_123');
+    expect(screen.initialMileageKm, 124580);
+  });
+
+  testWidgets('history add button opens the form and saves an event', (
+    tester,
+  ) async {
+    final app = await _pumpApp(
+      tester,
+      initialLocation: '/vehicle/vehicle_123/history',
+    );
+
+    await tester.tap(find.byType(FloatingActionButton));
+    await tester.pump();
+    await tester.pumpAndSettle();
+
+    expect(find.byType(AddHistoryEventScreen), findsOneWidget);
+
+    await tester.enterText(
+      find.byKey(const ValueKey('fuel-mileage')),
+      '124600',
+    );
+    await tester.enterText(find.byKey(const ValueKey('fuel-liters')), '42');
+    await tester.enterText(find.byKey(const ValueKey('fuel-cost')), '3000');
+    final saveButton = find.widgetWithText(ElevatedButton, 'Save');
+    await tester.dragUntilVisible(
+      saveButton,
+      find.byType(ListView),
+      const Offset(0, -300),
+    );
+    await tester.tap(saveButton);
+    await tester.pumpAndSettle();
+
+    expect(find.byType(AddHistoryEventScreen), findsNothing);
+    final eventsFuture = app.container
+        .read(historyRepositoryProvider)
+        .getEvents('vehicle_123');
+    await tester.pump(const Duration(milliseconds: 600));
+    final events = await eventsFuture;
+    expect(
+      events.any((event) => event.title == 'Refueling · 95 octane'),
+      isTrue,
+    );
+    expect(find.text('Refueling · 95 octane'), findsOneWidget);
+  });
 }
 
 Future<_TestApp> _pumpApp(
@@ -108,7 +164,7 @@ Future<_TestApp> _pumpApp(
   }
 
   await tester.pumpAndSettle();
-  return _TestApp(router);
+  return _TestApp(router, container);
 }
 
 BottomNavigationBar _navigationBar(WidgetTester tester) {
@@ -126,7 +182,8 @@ List<String> _destinationLabels(WidgetTester tester) {
 }
 
 final class _TestApp {
-  const _TestApp(this.router);
+  const _TestApp(this.router, this.container);
 
   final GoRouter router;
+  final ProviderContainer container;
 }
