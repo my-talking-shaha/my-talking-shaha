@@ -32,17 +32,15 @@ final class PartResourceRow extends StatelessWidget {
                         part.name,
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
-                        style:
-                            Theme.of(context).textTheme.titleMedium?.copyWith(
-                                  color: statusColor,
-                                  fontSize: 16,
-                                  fontWeight: FontWeight.w900,
-                                  height: 1.15,
-                                ),
+                        style: Theme.of(context).textTheme.titleMedium
+                            ?.copyWith(
+                              color: statusColor,
+                              fontSize: 16,
+                              fontWeight: FontWeight.w900,
+                              height: 1.15,
+                            ),
                       ),
                     ),
-                    const SizedBox(width: AppSpacing.sm),
-                    Icon(Icons.edit, color: statusColor, size: 14),
                   ],
                 ),
               ),
@@ -54,11 +52,11 @@ final class PartResourceRow extends StatelessWidget {
                   overflow: TextOverflow.ellipsis,
                   textAlign: TextAlign.end,
                   style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                        color: statusColor,
-                        fontSize: 12,
-                        fontWeight: FontWeight.w900,
-                        height: 1.15,
-                      ),
+                    color: statusColor,
+                    fontSize: 12,
+                    fontWeight: FontWeight.w900,
+                    height: 1.15,
+                  ),
                 ),
               ),
             ],
@@ -118,9 +116,9 @@ Color _statusColor(PartResourceStatus status) {
 String _formatInt(int value) {
   final prefix = value < 0 ? '-' : '';
   final formatted = value.abs().toString().replaceAllMapped(
-        RegExp(r'\B(?=(\d{3})+(?!\d))'),
-        (_) => ' ',
-      );
+    RegExp(r'\B(?=(\d{3})+(?!\d))'),
+    (_) => ' ',
+  );
 
   return '$prefix$formatted';
 }
