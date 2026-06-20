@@ -15,14 +15,14 @@ Response:
   "parts": [
     {
       "id": "part_123",
-      "name": "Масло двигателя",
-      "catalogKey": "engine_oil",
-      "installedAt": "2026-06-08T11:00:00Z",
-      "installedAtMileageKm": 123000,
-      "lifetimeKm": 10000,
+      "name": "Engine oil",
+      "category": "ENGINE_OIL",
+      "installedAt": "2026-06-08",
+      "installedMileageKm": 123000,
+      "expectedLifetimeKm": 10000,
       "remainingKm": 7500,
       "remainingPercent": 75,
-      "status": "ok"
+      "status": "OK"
     }
   ]
 }
@@ -31,10 +31,10 @@ Response:
 Status values:
 
 ```text
-ok
-warning
-critical
-unknown
+OK
+ATTENTION
+CRITICAL
+UNKNOWN
 ```
 
 ## Create Part
@@ -45,11 +45,11 @@ Request:
 
 ```json
 {
-  "name": "Масло двигателя",
-  "catalogKey": "engine_oil",
-  "installedAt": "2026-06-08T11:00:00Z",
-  "installedAtMileageKm": 123000,
-  "lifetimeKm": 10000
+  "name": "Engine oil",
+  "category": "ENGINE_OIL",
+  "installedAt": "2026-06-08",
+  "installedMileageKm": 123000,
+  "expectedLifetimeKm": 10000
 }
 ```
 
@@ -63,7 +63,7 @@ Request example:
 
 ```json
 {
-  "lifetimeKm": 12000
+  "expectedLifetimeKm": 12000
 }
 ```
 
@@ -77,9 +77,9 @@ Request:
 
 ```json
 {
-  "installedAt": "2026-07-01T10:00:00Z",
-  "installedAtMileageKm": 130000,
-  "lifetimeKm": 10000,
+  "installedAt": "2026-07-01",
+  "installedMileageKm": 130000,
+  "expectedLifetimeKm": 10000,
   "createTimelineEvent": true
 }
 ```
@@ -104,7 +104,7 @@ Response:
   "items": [
     {
       "key": "engine_oil",
-      "name": "Масло двигателя",
+      "name": "Engine oil",
       "defaultLifetimeKm": 10000
     }
   ]
@@ -118,7 +118,7 @@ Backend should provide `remainingKm`, `remainingPercent`, and `status` when poss
 Fallback formula:
 
 ```text
-remainingKm = lifetimeKm - (currentVehicleMileageKm - installedAtMileageKm)
+remainingKm = expectedLifetimeKm - (currentVehicleMileageKm - installedMileageKm)
 ```
 
-If `lifetimeKm` is missing, status is `unknown` and UI displays `Ресурс не задан`.
+If `expectedLifetimeKm` is missing, status is `UNKNOWN`.

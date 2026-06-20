@@ -1,45 +1,41 @@
 # Garage API Contract
 
-Base path: `/api/v1/garage`
+Base path: `/api/v1/vehicles`
 
 Auth: required.
 
 ## Get Garage Vehicles
 
-`GET /api/v1/garage/vehicles`
+`GET /api/v1/vehicles`
 
 Response `200`:
 
 ```json
-{
-  "vehicles": [
-    {
-      "id": "vehicle_123",
-      "brand": "Lada",
-      "model": "2106",
-      "year": 1998,
-      "color": "blue",
-      "currentMileageKm": 124580,
-      "engineType": "gasoline",
-      "photoUrl": "https://example.com/photo.jpg",
-      "status": "ok",
-      "activeWarningsCount": 0
-    }
-  ]
-}
+[
+  {
+    "id": "vehicle_123",
+    "brand": "Lada",
+    "model": "2106",
+    "productionYear": 1998,
+    "color": "blue",
+    "mileageKm": 124580,
+    "fuelType": "GASOLINE",
+    "engineDescription": "1.6 L",
+    "vin": "XTA21060012345678",
+    "photoUrl": null
+  }
+]
 ```
 
 Empty garage:
 
 ```json
-{
-  "vehicles": []
-}
+[]
 ```
 
 ## Create Vehicle
 
-`POST /api/v1/garage/vehicles`
+`POST /api/v1/vehicles`
 
 Request:
 
@@ -47,10 +43,12 @@ Request:
 {
   "brand": "Lada",
   "model": "2106",
-  "year": 1998,
+  "productionYear": 1998,
   "color": "blue",
-  "currentMileageKm": 124580,
-  "engineType": "gasoline"
+  "mileageKm": 124580,
+  "fuelType": "GASOLINE",
+  "engineDescription": "1.6 L",
+  "vin": "XTA21060012345678"
 }
 ```
 
@@ -61,27 +59,28 @@ Response `201`:
   "id": "vehicle_123",
   "brand": "Lada",
   "model": "2106",
-  "year": 1998,
+  "productionYear": 1998,
   "color": "blue",
-  "currentMileageKm": 124580,
-  "engineType": "gasoline",
-  "photoUrl": null,
-  "status": "unknown",
-  "activeWarningsCount": 0
+  "mileageKm": 124580,
+  "fuelType": "GASOLINE",
+  "engineDescription": "1.6 L",
+  "vin": "XTA21060012345678",
+  "photoUrl": null
 }
 ```
 
 Validation:
 - brand required;
 - model required;
-- year required;
-- currentMileageKm >= 0;
-- engineType required;
-- color optional.
+- productionYear required;
+- mileageKm >= 0;
+- fuelType required;
+- color optional;
+- VIN optional, exactly 17 symbols if provided.
 
 ## Delete Vehicle
 
-`DELETE /api/v1/garage/vehicles/{vehicleId}`
+`DELETE /api/v1/vehicles/{vehicleId}`
 
 Response `204`.
 
@@ -91,7 +90,7 @@ Client must ask for confirmation before calling delete.
 
 Priority: optional.
 
-`GET /api/v1/garage/catalog?query=lada`
+`GET /api/v1/vehicles/catalog?query=lada`
 
 Response:
 

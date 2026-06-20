@@ -17,12 +17,12 @@ CREATE TABLE IF NOT EXISTS vehicles
     owner_id           UUID         NOT NULL,
     brand              VARCHAR(80)  NOT NULL,
     model              VARCHAR(120) NOT NULL,
-    production_year    INTEGER      NOT NULL CHECK (production_year < 2100 AND production_year > 1886),
+    production_year    INTEGER      NOT NULL CHECK (production_year >= 1900 AND production_year <= 2100),
     color              VARCHAR(40),
     mileage_km         INTEGER      NOT NULL CHECK (mileage_km >= 0) DEFAULT 0,
     fuel_type          VARCHAR(32),
     engine_description VARCHAR(80),
-    vin                VARCHAR(32),
+    vin                VARCHAR(17),
     photo_url          VARCHAR(500),
     CONSTRAINT fk_vehicle_owner
     FOREIGN KEY (owner_id)
@@ -82,19 +82,18 @@ CREATE TABLE IF NOT EXISTS refuel
 CREATE TABLE IF NOT EXISTS parts
 (
     id                   UUID PRIMARY KEY,
-    maintenance_id       UUID         NOT NULL,
+    vehicle_id           UUID         NOT NULL,
     name                 VARCHAR(255) NOT NULL,
     category             VARCHAR(50)  NOT NULL,
-    currency             VARCHAR(3),
     installed_at         DATE         NOT NULL,
-    installed_mileage_km INT          NOT NULL CHECK ( installed_mileage_km > 0 ),
-    expected_lifetime_km INT          NOT NULL CHECK ( expected_lifetime_km > 0 ),
-    remaining_km         INT          NOT NULL CHECK ( remaining_km > 0 ),
-    remaining_percent    INT          NOT NULL CHECK ( remaining_percent > 0 ) DEFAULT 100,
+    installed_mileage_km INT          NOT NULL CHECK ( installed_mileage_km >= 0 ),
+    expected_lifetime_km INT          CHECK ( expected_lifetime_km > 0 ),
+    remaining_km         INT,
+    remaining_percent    INT,
     status               VARCHAR(20)  NOT NULL,
-    CONSTRAINT fk_maintenance_parts
-    FOREIGN KEY (maintenance_id)
-    REFERENCES maintenance (id)
+    CONSTRAINT fk_vehicle_parts
+    FOREIGN KEY (vehicle_id)
+    REFERENCES vehicles (id)
 );
 
 CREATE TABLE IF NOT EXISTS event_photos
