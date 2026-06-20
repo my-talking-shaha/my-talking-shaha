@@ -16,17 +16,17 @@ void main() {
       carId: 'vehicle_1',
       type: HistoryEventType.fuel,
       occurredAt: DateTime(2026, 6, 15, 14, 30),
-      title: 'Заправка АИ-95',
+      title: 'Refueling AI-95',
       currentMileageKm: 124580,
-      details: FuelDetails(cost: 2450, liters: 45, fuelType: 'АИ-95'),
+      details: FuelDetails(cost: 2450, liters: 45, fuelType: 'AI-95'),
     );
 
     await _pumpCard(tester, event);
 
-    expect(find.text('Заправка АИ-95'), findsOneWidget);
-    expect(find.text('45 л • АИ-95'), findsOneWidget);
+    expect(find.text('Refueling AI-95'), findsOneWidget);
+    expect(find.text('45 L • AI-95'), findsOneWidget);
     expect(find.text('2 450 ₽'), findsOneWidget);
-    expect(find.text('15 июня, 14:30'), findsOneWidget);
+    expect(find.text('June 15, 14:30'), findsOneWidget);
     expect(_svgAssetName(tester), 'assets/icons/events/gas.svg');
   });
 
@@ -38,19 +38,19 @@ void main() {
         carId: 'vehicle_1',
         type: HistoryEventType.maintenance,
         occurredAt: DateTime(2026, 6, 8, 11),
-        title: 'Замена масла и фильтров',
+        title: 'Oil and filter change',
         currentMileageKm: 124000,
         details: MaintenanceDetails(
           description: 'Shell Helix Ultra 5W-40',
-          replacedParts: ['Масляный фильтр', 'Воздушный фильтр'],
+          replacedParts: ['Oil filter', 'Air filter'],
         ),
       );
 
       await _pumpCard(tester, withoutOptionalValues);
 
       expect(find.text('Shell Helix Ultra 5W-40'), findsOneWidget);
-      expect(find.textContaining('Масляный фильтр'), findsOneWidget);
-      expect(find.textContaining('Воздушный фильтр'), findsOneWidget);
+      expect(find.textContaining('Oil filter'), findsOneWidget);
+      expect(find.textContaining('Air filter'), findsOneWidget);
       expect(find.textContaining('₽'), findsNothing);
       expect(_svgAssetName(tester), 'assets/icons/events/spanner.svg');
 
@@ -59,10 +59,10 @@ void main() {
         carId: 'vehicle_1',
         type: HistoryEventType.maintenance,
         occurredAt: DateTime(2026, 6, 8, 11),
-        title: 'Плановое ТО',
+        title: 'Scheduled maintenance',
         currentMileageKm: 124000,
         details: MaintenanceDetails(
-          description: 'Диагностика и замена расходников',
+          description: 'Diagnostics and consumables replacement',
           cost: 8900,
           photoUrls: const [
             '',
@@ -74,7 +74,7 @@ void main() {
       await _pumpCard(tester, withPhoto);
 
       expect(find.text('8 900 ₽'), findsOneWidget);
-      expect(find.text('Фото детали:'), findsOneWidget);
+      expect(find.text('Part photo:'), findsOneWidget);
       final image = tester.widget<Image>(find.byType(Image));
       expect(image.image, isA<NetworkImage>());
       expect(
@@ -99,21 +99,21 @@ void main() {
       carId: 'vehicle_1',
       type: HistoryEventType.trip,
       occurredAt: DateTime(2026, 6, 1, 9, 15),
-      title: 'Очень длинная поездка с названием, которое должно переноситься',
+      title: 'A very long trip title that should wrap onto multiple lines',
       currentMileageKm: 124000,
       details: const TripDetails(
         startKm: 100000,
         endKm: 112000,
-        route: 'Москва — Тула — Москва с дополнительной остановкой',
+        route: 'Moscow — Tula — Moscow with an additional stop',
         duration: Duration(hours: 2, minutes: 7),
       ),
     );
 
     await _pumpCard(tester, event);
 
-    expect(find.textContaining('Москва — Тула — Москва'), findsOneWidget);
-    expect(find.textContaining('2 ч 7 мин'), findsOneWidget);
-    expect(find.text('12 000 км'), findsOneWidget);
+    expect(find.textContaining('Moscow — Tula — Moscow'), findsOneWidget);
+    expect(find.textContaining('2 h 7 min'), findsOneWidget);
+    expect(find.text('12 000 km'), findsOneWidget);
     expect(_svgAssetName(tester), 'assets/icons/events/trip.svg');
     expect(tester.takeException(), isNull);
   });

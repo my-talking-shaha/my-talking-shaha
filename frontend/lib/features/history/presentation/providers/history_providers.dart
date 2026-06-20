@@ -1,0 +1,18 @@
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:frontend/features/history/data/datasources/mock_history_datasource.dart';
+import 'package:frontend/features/history/data/repositories/history_repository_impl.dart';
+import 'package:frontend/features/history/domain/history_event.dart';
+import 'package:frontend/features/history/domain/repositories/history_repository.dart';
+
+final mockHistoryDatasourceProvider = Provider<MockHistoryDatasource>((ref) {
+  return const MockHistoryDatasource();
+});
+
+final historyRepositoryProvider = Provider<HistoryRepository>((ref) {
+  return HistoryRepositoryImpl(ref.watch(mockHistoryDatasourceProvider));
+});
+
+final historyEventsProvider = FutureProvider.autoDispose
+    .family<List<HistoryEvent>, String>((ref, vehicleId) {
+      return ref.watch(historyRepositoryProvider).getEvents(vehicleId);
+    });

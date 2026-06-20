@@ -69,7 +69,7 @@ class EventCard extends StatelessWidget {
 
     return switch (details) {
       FuelDetails() => [
-        Text('${details.liters} л • ${details.fuelType}', style: bodyStyle),
+        Text('${details.liters} L • ${details.fuelType}', style: bodyStyle),
       ],
       MaintenanceDetails() => [
         if (details.description.trim().isNotEmpty)
@@ -77,13 +77,13 @@ class EventCard extends StatelessWidget {
         if (_nonEmptyParts(details).isNotEmpty) ...[
           const SizedBox(height: AppSpacing.xs),
           Text(
-            'Заменено: ${_nonEmptyParts(details).join(', ')}',
+            'Replaced: ${_nonEmptyParts(details).join(', ')}',
             style: bodyStyle,
           ),
         ],
         if (_firstPhotoUrl(details) case final photoUrl?) ...[
           const SizedBox(height: AppSpacing.xs),
-          Text('Фото детали:', style: bodyStyle),
+          Text('Part photo:', style: bodyStyle),
           const SizedBox(height: AppSpacing.xs),
           _EventPhoto(url: photoUrl),
         ],
@@ -229,7 +229,7 @@ class _EventPresentation {
         iconColor: AppColors.textSecondary,
         iconBackground: AppColors.surfaceHighest,
         metric: event.details is TripDetails
-            ? '${_formatNumber((event.details as TripDetails).distanceKm)} км'
+            ? '${_formatNumber((event.details as TripDetails).distanceKm)} km'
             : null,
       ),
     };
@@ -254,29 +254,29 @@ String _formatDuration(Duration duration) {
   final hours = duration.inHours;
   final minutes = duration.inMinutes.remainder(60);
 
-  if (hours == 0) return '$minutes мин';
-  if (minutes == 0) return '$hours ч';
-  return '$hours ч $minutes мин';
+  if (hours == 0) return '$minutes min';
+  if (minutes == 0) return '$hours h';
+  return '$hours h $minutes min';
 }
 
 String _formatDateTime(DateTime value) {
   const months = [
-    'января',
-    'февраля',
-    'марта',
-    'апреля',
-    'мая',
-    'июня',
-    'июля',
-    'августа',
-    'сентября',
-    'октября',
-    'ноября',
-    'декабря',
+    'January',
+    'February',
+    'March',
+    'April',
+    'May',
+    'June',
+    'July',
+    'August',
+    'September',
+    'October',
+    'November',
+    'December',
   ];
   final local = value.toLocal();
   final hour = local.hour.toString().padLeft(2, '0');
   final minute = local.minute.toString().padLeft(2, '0');
 
-  return '${local.day} ${months[local.month - 1]}, $hour:$minute';
+  return '${months[local.month - 1]} ${local.day}, $hour:$minute';
 }
