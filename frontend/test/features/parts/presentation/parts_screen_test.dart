@@ -26,8 +26,10 @@ void main() {
     expect(find.text('UPDATED 2 HOURS AGO'), findsOneWidget);
     expect(find.text('NEXT SERVICE'), findsOneWidget);
     expect(find.text('RESOURCE'), findsOneWidget);
-    expect(find.text('In 800 km'), findsOneWidget);
-    expect(find.text('Approx. date: in 16 days'), findsOneWidget);
+    expect(find.text('Service needed now'), findsOneWidget);
+    expect(find.text('Replace Battery now'), findsOneWidget);
+    expect(find.text('In 800 km'), findsNothing);
+    expect(find.text('Approx. date: in 16 days'), findsNothing);
     expect(find.text('19%'), findsOneWidget);
     expect(find.text('Engine oil'), findsOneWidget);
     expect(find.text('Front brake pads'), findsOneWidget);
@@ -38,8 +40,26 @@ void main() {
     expect(find.textContaining(RegExp(r'8\s?%')), findsOneWidget);
     expect(find.text('0% · 0 km'), findsOneWidget);
     expect(find.text('Lifetime not set'), findsOneWidget);
-    expect(find.byIcon(Icons.edit), findsNWidgets(4));
     expect(find.byType(LinearProgressIndicator), findsNWidgets(3));
+  });
+
+  testWidgets(
+      'maintenance forecast uses nearest future resource without critical parts',
+      (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      MaterialApp(
+        theme: AppTheme.dark,
+        home: Scaffold(
+          body: MaintenanceForecastCard(parts: _mockPartsWithoutCritical()),
+        ),
+      ),
+    );
+
+    expect(find.text('In 800 km'), findsOneWidget);
+    expect(find.text('Approx. date: in 16 days'), findsOneWidget);
+    expect(find.text('Service needed now'), findsNothing);
   });
 
   testWidgets('parts screen shows loading while parts are requested', (
@@ -190,6 +210,12 @@ List<VehiclePart> _mockParts() {
       status: PartResourceStatus.unknown,
     ),
   ];
+}
+
+List<VehiclePart> _mockPartsWithoutCritical() {
+  return _mockParts()
+      .where((part) => part.status != PartResourceStatus.critical)
+      .toList(growable: false);
 }
 
 final class _FakePartsRepository implements PartsRepository {
