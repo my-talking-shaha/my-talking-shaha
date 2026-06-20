@@ -25,10 +25,10 @@ final class MaintenanceForecastCard extends StatelessWidget {
         knownParts.isEmpty ? null : _averagePercent(knownParts);
 
     return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
+      crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         Padding(
-          padding: const EdgeInsets.symmetric(horizontal: AppSpacing.xs),
+          padding: const EdgeInsets.only(left: AppSpacing.xs),
           child: Row(
             children: [
               Expanded(
@@ -45,7 +45,7 @@ final class MaintenanceForecastCard extends StatelessWidget {
                 ),
               ),
               const SizedBox(width: AppSpacing.sm),
-              Flexible(
+              Expanded(
                 child: Text(
                   lastUpdatedLabel,
                   maxLines: 1,
@@ -64,6 +64,7 @@ final class MaintenanceForecastCard extends StatelessWidget {
         ),
         const SizedBox(height: AppSpacing.sm),
         DecoratedBox(
+          key: const ValueKey('maintenance_forecast_card_body'),
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(PartsDesignMetrics.cardRadius),
             color: PartsDesignColors.cardBackground,

@@ -24,6 +24,17 @@ void main() {
 
     expect(find.text('MAINTENANCE FORECAST'), findsOneWidget);
     expect(find.text('UPDATED 2 HOURS AGO'), findsOneWidget);
+    expect(
+      tester.getTopRight(find.text('UPDATED 2 HOURS AGO')).dx,
+      closeTo(
+        tester
+            .getTopRight(
+              find.byKey(const ValueKey('maintenance_forecast_card_body')),
+            )
+            .dx,
+        0.1,
+      ),
+    );
     expect(find.text('NEXT SERVICE'), findsOneWidget);
     expect(find.text('RESOURCE'), findsOneWidget);
     expect(find.text('Service needed now'), findsOneWidget);
