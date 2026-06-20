@@ -6,49 +6,41 @@ Auth: required.
 
 ## Get Vehicle Dashboard
 
-`GET /api/v1/vehicles/{vehicleId}`
+`GET /api/v1/vehicles/{vehicleId}/dashboard`
 
 Response:
 
 ```json
 {
-  "id": "vehicle_123",
-  "brand": "Lada",
-  "model": "2106",
-  "year": 1998,
-  "color": "blue",
-  "vin": "XTA2106001234567",
-  "currentMileageKm": 124580,
-  "engine": {
-    "type": "gasoline",
-    "volumeLiters": 1.6
+  "vehicle": {
+    "id": "vehicle_123",
+    "brand": "Lada",
+    "model": "2106",
+    "productionYear": 1998,
+    "color": "blue",
+    "vin": "XTA21060012345678",
+    "mileageKm": 124580,
+    "fuelType": "GASOLINE",
+    "engineDescription": "1.6 L",
+    "photoUrl": null
   },
-  "photoUrl": "https://example.com/photo.jpg",
-  "statusSummary": {
-    "status": "ok",
-    "lastMaintenanceDate": "2026-06-01T09:15:00Z",
-    "activeWarningsCount": 0,
-    "message": "Шаха готова к выезду"
+  "maintenanceForecast": {
+    "overallStatus": "OK",
+    "nextServiceInKm": 7500,
+    "updatedAt": "2026-06-18T17:00:00Z",
+    "parts": []
   },
-  "recentEvents": [
-    {
-      "id": "event_1",
-      "type": "trip",
-      "title": "Завершена поездка",
-      "subtitle": "Дом → Работа · 12.4 км",
-      "occurredAt": "2026-06-10T14:20:00Z"
-    }
-  ]
+  "recentEvents": []
 }
 ```
 
 Status values:
 
 ```text
-ok
-warning
-critical
-unknown
+OK
+ATTENTION
+CRITICAL
+UNKNOWN
 ```
 
 ## Update Vehicle
@@ -60,8 +52,8 @@ Request example:
 ```json
 {
   "color": "dark blue",
-  "vin": "XTA2106001234567",
-  "currentMileageKm": 125000
+  "vin": "XTA21060012345678",
+  "mileageKm": 125000
 }
 ```
 
