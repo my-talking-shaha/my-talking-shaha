@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:flutter_svg/flutter_svg.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:frontend/features/garage/domain/entities/garage_vehicle.dart';
 import 'package:frontend/features/garage/domain/entities/vehicle_draft.dart';
@@ -19,7 +18,7 @@ void main() {
 
     await _pumpGarage(tester, repository, topPadding: statusBarInset);
 
-    final titleTop = tester.getTopLeft(find.text('My Talking Shaha')).dy;
+    final titleTop = tester.getTopLeft(find.text('Моя Говорящая Шаха')).dy;
 
     expect(titleTop, greaterThanOrEqualTo(statusBarInset));
   });
@@ -29,9 +28,9 @@ void main() {
 
     await _pumpGarage(tester, repository);
 
-    expect(find.text('Add vehicle'), findsOneWidget);
+    expect(find.text('Добавить авто'), findsOneWidget);
 
-    await tester.tap(find.text('Add vehicle'));
+    await tester.tap(find.text('Добавить авто'));
     await tester.pumpAndSettle();
 
     expect(find.text('add vehicle route'), findsOneWidget);
@@ -44,7 +43,6 @@ void main() {
 
     await _pumpGarage(tester, repository);
 
-    expect(find.byType(SvgPicture), findsNothing);
     expect(
       find.byWidgetPredicate(
         (widget) => widget is ImageFiltered || widget is BackdropFilter,
@@ -132,16 +130,16 @@ void main() {
     await tester.tap(find.byKey(const ValueKey('garage_swipe_action_edit')));
     await tester.pumpAndSettle();
 
-    expect(find.text('Edit car'), findsOneWidget);
+    expect(find.text('Редактировать авто'), findsOneWidget);
     final textFields = tester.widgetList<TextField>(find.byType(TextField));
     expect(textFields.elementAt(0).controller?.text, 'Lada');
     expect(textFields.elementAt(1).controller?.text, '2106');
 
     await tester.enterText(find.byType(TextField).at(1), '2107');
     await tester.pumpAndSettle();
-    await tester.ensureVisible(find.text('Save changes'));
+    await tester.ensureVisible(find.text('СОХРАНИТЬ'));
     await tester.pumpAndSettle();
-    await tester.tap(find.text('Save changes'));
+    await tester.tap(find.text('СОХРАНИТЬ'));
     await tester.pumpAndSettle();
 
     final vehicles = await repository.getVehicles();
@@ -167,9 +165,9 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(repository.deletedVehicleIds, isEmpty);
-    expect(find.text('Delete vehicle?'), findsOneWidget);
+    expect(find.text('Удалить авто?'), findsOneWidget);
 
-    await tester.tap(find.text('Cancel'));
+    await tester.tap(find.text('Отмена'));
     await tester.pumpAndSettle();
 
     expect(repository.deletedVehicleIds, isEmpty);
@@ -183,7 +181,7 @@ void main() {
     await tester.tap(
       find.descendant(
         of: find.byType(AlertDialog),
-        matching: find.text('Delete'),
+        matching: find.text('Удалить'),
       ),
     );
     await tester.pumpAndSettle();
@@ -194,8 +192,7 @@ void main() {
   });
 }
 
-Future<void> _pumpGarage(
-    WidgetTester tester, _FakeGarageRepository repository,
+Future<void> _pumpGarage(WidgetTester tester, _FakeGarageRepository repository,
     {double topPadding = 0}) async {
   final router = GoRouter(
     initialLocation: '/garage',

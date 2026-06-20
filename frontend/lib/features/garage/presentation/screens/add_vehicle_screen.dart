@@ -27,11 +27,11 @@ final class _AddVehicleScreenState extends ConsumerState<AddVehicleScreen> {
   late final TextEditingController _colorController;
   bool _isLoadingVehicle = false;
 
-  static const _backgroundColor = Color(0xFF0D111A);
-  static const _fieldColor = Color(0xFF20242D);
-  static const _borderColor = Color(0xFF3B4252);
-  static const _accentColor = Color(0xFFB8C3FF);
-  static const _hintColor = Color(0xFF6F7482);
+  static const _backgroundColor = AppColors.backgroundDark;
+  static const _fieldColor = AppColors.surfaceHighest;
+  static const _borderColor = AppColors.border;
+  static const _accentColor = AppColors.primaryLight;
+  static const _hintColor = AppColors.textMuted;
 
   @override
   void initState() {
@@ -76,7 +76,7 @@ final class _AddVehicleScreenState extends ConsumerState<AddVehicleScreen> {
       }
 
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Vehicle was not found')),
+        const SnackBar(content: Text('Авто не найдено')),
       );
       context.go('/garage');
       return;
@@ -112,7 +112,7 @@ final class _AddVehicleScreenState extends ConsumerState<AddVehicleScreen> {
         titleSpacing: 0,
         iconTheme: const IconThemeData(color: _accentColor),
         title: Text(
-          isEditing ? 'Edit car' : 'Car Specifications',
+          isEditing ? 'Редактировать авто' : 'Car Specifications',
           style: const TextStyle(
             color: _accentColor,
             fontWeight: FontWeight.w700,
@@ -133,7 +133,7 @@ final class _AddVehicleScreenState extends ConsumerState<AddVehicleScreen> {
                   children: [
                     _GarageTextField(
                       label: 'Brand',
-                      hintText: 'Lada',
+                      hintText: 'e.g. BMW',
                       controller: _brandController,
                       errorText: state.fieldErrors['brand'],
                       textInputAction: TextInputAction.next,
@@ -143,7 +143,7 @@ final class _AddVehicleScreenState extends ConsumerState<AddVehicleScreen> {
                     const SizedBox(height: 24),
                     _GarageTextField(
                       label: 'Model',
-                      hintText: '2106',
+                      hintText: 'e.g. M4 Competition',
                       controller: _modelController,
                       errorText: state.fieldErrors['model'],
                       textInputAction: TextInputAction.next,
@@ -156,7 +156,7 @@ final class _AddVehicleScreenState extends ConsumerState<AddVehicleScreen> {
                         Expanded(
                           child: _GarageTextField(
                             label: 'Year',
-                            hintText: '1998',
+                            hintText: '2024',
                             controller: _yearController,
                             errorText: state.fieldErrors['year'],
                             keyboardType: TextInputType.number,
@@ -171,8 +171,8 @@ final class _AddVehicleScreenState extends ConsumerState<AddVehicleScreen> {
                         const SizedBox(width: 16),
                         Expanded(
                           child: _GarageTextField(
-                            label: 'Current mileage',
-                            hintText: '124580',
+                            label: 'Mileage (km)',
+                            hintText: '0',
                             controller: _mileageController,
                             errorText: state.fieldErrors['currentMileageKm'],
                             keyboardType: TextInputType.number,
@@ -189,7 +189,7 @@ final class _AddVehicleScreenState extends ConsumerState<AddVehicleScreen> {
                     const SizedBox(height: 24),
                     _GarageTextField(
                       label: 'Color',
-                      hintText: 'blue',
+                      hintText: 'e.g. Graphite',
                       controller: _colorController,
                       textInputAction: TextInputAction.next,
                       onChanged: (value) =>
@@ -243,13 +243,21 @@ final class _AddVehicleScreenState extends ConsumerState<AddVehicleScreen> {
                       ),
                       items: const [
                         DropdownMenuItem(
-                            value: 'gasoline', child: Text('gasoline')),
+                          value: 'gasoline',
+                          child: Text('Petrol'),
+                        ),
                         DropdownMenuItem(
-                            value: 'diesel', child: Text('diesel')),
+                          value: 'diesel',
+                          child: Text('Diesel'),
+                        ),
                         DropdownMenuItem(
-                            value: 'hybrid', child: Text('hybrid')),
+                          value: 'hybrid',
+                          child: Text('Hybrid'),
+                        ),
                         DropdownMenuItem(
-                            value: 'electric', child: Text('electric')),
+                          value: 'electric',
+                          child: Text('Electric'),
+                        ),
                       ],
                       onChanged: state.isSubmitting
                           ? null
@@ -305,9 +313,7 @@ final class _AddVehicleScreenState extends ConsumerState<AddVehicleScreen> {
                                   ),
                                   const SizedBox(width: 8),
                                   Text(
-                                    isEditing
-                                        ? 'Save changes'
-                                        : 'Start new shaha!',
+                                    isEditing ? 'СОХРАНИТЬ' : 'ЗАВЕСТИ ШАХУ',
                                     style: const TextStyle(
                                       fontWeight: FontWeight.w700,
                                       letterSpacing: 1.2,
@@ -350,7 +356,7 @@ final class _AddVehicleScreenState extends ConsumerState<AddVehicleScreen> {
     ref.invalidate(garageControllerProvider);
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        content: Text(isEditing ? 'Vehicle updated' : 'Vehicle added'),
+        content: Text(isEditing ? 'Авто обновлено' : 'Авто добавлено'),
       ),
     );
     context.go('/garage');
@@ -398,6 +404,16 @@ final class _GarageTextField extends StatelessWidget {
             hintText: hintText,
             errorText: errorText,
             hintStyle: const TextStyle(color: _hintColor),
+            suffixIcon: controller.text.isEmpty
+                ? null
+                : IconButton(
+                    tooltip: 'Очистить поле',
+                    onPressed: () {
+                      controller.clear();
+                      onChanged('');
+                    },
+                    icon: const Icon(Icons.close, size: 18),
+                  ),
             filled: true,
             fillColor: _fieldColor,
             contentPadding: const EdgeInsets.symmetric(

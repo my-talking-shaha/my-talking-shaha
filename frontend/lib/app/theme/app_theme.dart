@@ -217,6 +217,7 @@ abstract final class AppColors {
 
   static const primary = Color(0xFF2E5BFF);
   static const primaryPressed = Color(0xFF3F63C9);
+  static const primaryLight = Color(0xFFB8C3FF);
   static const primarySoft = Color(0xFF141B30);
 
   static const textPrimary = Color(0xFFF4F7FF);
