@@ -1,0 +1,296 @@
+openapi: 3.0.3
+info:
+  title: My Talking Shaha Core Garage API
+  version: 0.1.0
+  description: Core garage, vehicle dashboard, and vehicle parts API for the backend flow.
+servers:
+  - url: /api/v1
+paths:
+  /vehicles:
+    get:
+      summary: List demo user's garage vehicles
+      tags: [ Vehicles ]
+      responses:
+        '200':
+          description: Vehicles in the current garage
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Vehicle'
+    post:
+      summary: Add vehicle to garage
+      tags: [ Vehicles ]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateVehicleRequest'
+      responses:
+        '201':
+          description: Created vehicle
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Vehicle'
+        '400':
+          $ref: '#/components/responses/ValidationError'
+  /vehicles/{vehicleId}/dashboard:
+    get:
+      summary: Get vehicle dashboard with parts forecast
+      tags: [ Vehicles ]
+      parameters:
+        - $ref: '#/components/parameters/VehicleId'
+      responses:
+        '200':
+          description: Vehicle dashboard
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/VehicleDashboard'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /vehicles/{vehicleId}/parts:
+    get:
+      summary: List installed vehicle parts
+      tags: [ Parts ]
+      parameters:
+        - $ref: '#/components/parameters/VehicleId'
+      responses:
+        '200':
+          description: Installed parts
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PartList'
+        '404':
+          $ref: '#/components/responses/NotFound'
+    post:
+      summary: Add installed vehicle part
+      tags: [ Parts ]
+      parameters:
+        - $ref: '#/components/parameters/VehicleId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreatePartRequest'
+      responses:
+        '201':
+          description: Created part with calculated lifetime
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Part'
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /vehicles/{vehicleId}/parts/{partId}:
+    patch:
+      summary: Update installed vehicle part
+      tags: [ Parts ]
+      parameters:
+        - $ref: '#/components/parameters/VehicleId'
+        - name: partId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdatePartRequest'
+      responses:
+        '200':
+          description: Updated part with recalculated lifetime
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Part'
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '404':
+          $ref: '#/components/responses/NotFound'
+components:
+  parameters:
+    VehicleId:
+      name: vehicleId
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
+  responses:
+    ValidationError:
+      description: Validation error
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ApiError'
+    NotFound:
+      description: Resource not found
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ApiError'
+  schemas:
+    ApiError:
+      type: object
+      required: [ code, message, fields ]
+      properties:
+        code:
+          type: string
+          example: VALIDATION_ERROR
+        message:
+          type: string
+          example: Request contains invalid fields
+        fields:
+          type: object
+          additionalProperties:
+            type: string
+    CreateVehicleRequest:
+      type: object
+      required: [ brand, model, productionYear, mileageKm, fuelType ]
+      properties:
+        brand:
+          type: string
+          maxLength: 80
+        model:
+          type: string
+          maxLength: 120
+        productionYear:
+          type: integer
+          minimum: 1900
+          maximum: 2026
+        color:
+          type: string
+          maxLength: 40
+        mileageKm:
+          type: integer
+          minimum: 0
+        fuelType:
+          $ref: '#/components/schemas/FuelType'
+        engineDescription:
+          type: string
+          maxLength: 80
+        vin:
+          type: string
+          minLength: 17
+          maxLength: 17
+        photoUrl:
+          type: string
+          maxLength: 500
+    Vehicle:
+      allOf:
+        - $ref: '#/components/schemas/CreateVehicleRequest'
+        - type: object
+          required: [ id ]
+          properties:
+            id:
+              type: string
+              format: uuid
+    VehicleDashboard:
+      type: object
+      required: [ vehicle, maintenanceForecast, recentEvents ]
+      properties:
+        vehicle:
+          $ref: '#/components/schemas/Vehicle'
+        maintenanceForecast:
+          $ref: '#/components/schemas/MaintenanceForecast'
+        recentEvents:
+          type: array
+          items:
+            type: object
+    MaintenanceForecast:
+      type: object
+      required: [ overallStatus, updatedAt, parts ]
+      properties:
+        overallStatus:
+          $ref: '#/components/schemas/PartStatus'
+        nextServiceInKm:
+          type: integer
+          nullable: true
+        updatedAt:
+          type: string
+          format: date-time
+        parts:
+          type: array
+          items:
+            $ref: '#/components/schemas/Part'
+    PartList:
+      type: object
+      required: [ parts ]
+      properties:
+        parts:
+          type: array
+          items:
+            $ref: '#/components/schemas/Part'
+    CreatePartRequest:
+      type: object
+      required: [ name, category, installedAt, installedMileageKm ]
+      properties:
+        name:
+          type: string
+          maxLength: 255
+        category:
+          $ref: '#/components/schemas/PartCategory'
+        installedAt:
+          type: string
+          format: date
+        installedMileageKm:
+          type: integer
+          minimum: 0
+        expectedLifetimeKm:
+          type: integer
+          minimum: 1
+          nullable: true
+    UpdatePartRequest:
+      type: object
+      properties:
+        name:
+          type: string
+          maxLength: 255
+        category:
+          $ref: '#/components/schemas/PartCategory'
+        installedAt:
+          type: string
+          format: date
+        installedMileageKm:
+          type: integer
+          minimum: 0
+        expectedLifetimeKm:
+          type: integer
+          minimum: 1
+    Part:
+      allOf:
+        - $ref: '#/components/schemas/CreatePartRequest'
+        - type: object
+          required: [ id, remainingKm, remainingPercent, status ]
+          properties:
+            id:
+              type: string
+              format: uuid
+            remainingKm:
+              type: integer
+              nullable: true
+            remainingPercent:
+              type: integer
+              nullable: true
+            status:
+              $ref: '#/components/schemas/PartStatus'
+    FuelType:
+      type: string
+      enum: [ GASOLINE, DIESEL, ELECTRIC, HYBRID, OTHER ]
+    PartCategory:
+      type: string
+      enum: [ ENGINE_OIL, OIL_FILTER, AIR_FILTER, BRAKE_PADS, TIMING_BELT, BATTERY, OTHER ]
+    PartStatus:
+      type: string
+      enum: [ OK, ATTENTION, CRITICAL, UNKNOWN, REPLACED ]

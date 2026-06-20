@@ -111,9 +111,8 @@ Response `200`:
     "mileageKm": 10000,
     "fuelType": "GASOLINE",
     "engineDescription": "1.6 L",
-    "photoUrl": "https://example.com/car.jpg",
-    "lastMaintenanceKmAgo": 1000,
-    "lastRefuelDaysAgo": 2
+    "vin": "XTA21060012345678",
+    "photoUrl": "https://example.com/car.jpg"
   }
 ]
 ```
@@ -133,11 +132,19 @@ Request:
   "mileageKm": 10000,
   "fuelType": "GASOLINE",
   "engineDescription": "1.6 L",
-  "vin": "TESTVIN123"
+  "vin": "XTA21060012345678"
 }
 ```
 
 Response `201`: vehicle card.
+
+Validation:
+
+- `brand`, `model`, `productionYear`, `mileageKm`, and `fuelType` are required;
+- `productionYear >= 1900`;
+- `productionYear <= current year`;
+- `mileageKm >= 0`;
+- `vin` is optional, but must contain exactly 17 symbols when provided.
 
 ### Get vehicle dashboard
 
@@ -151,39 +158,37 @@ Response `200`:
     "id": "096c10bb-13d1-4599-9109-e9e79789ea88",
     "brand": "Lada",
     "model": "2106",
-    "displayName": "Test Car",
+    "productionYear": 2002,
+    "color": "green",
     "mileageKm": 10000,
     "fuelType": "GASOLINE",
     "engineDescription": "1.6 L",
-    "vin": "TESTVIN123",
+    "vin": "XTA21060012345678",
     "photoUrl": "https://example.com/car.jpg"
   },
   "maintenanceForecast": {
     "overallStatus": "ATTENTION",
     "nextServiceInKm": 500,
-    "estimatedDate": "2026-07-01",
     "updatedAt": "2026-06-12T10:00:00Z",
     "parts": [
       {
         "id": "023c10cc-13d1-4567-9109-e9e79789ea21",
         "name": "Brake pads",
+        "category": "BRAKE_PADS",
+        "installedAt": "2026-06-12",
+        "installedMileageKm": 10000,
+        "expectedLifetimeKm": 25000,
         "remainingKm": 500,
         "remainingPercent": 8,
         "status": "ATTENTION"
       }
     ]
   },
-  "recentEvents": [
-    {
-      "id": "044c10dc-13d1-4587-9169-e9e79789ea45",
-      "type": "TRIP",
-      "title": "Trip completed",
-      "subtitle": "Home -> University, 10 km",
-      "eventDateTime": "2026-06-12T14:20:00Z"
-    }
-  ]
+  "recentEvents": []
 }
 ```
+
+`recentEvents` is currently an empty list until the timeline API task is implemented.
 
 ### Update vehicle
 
@@ -321,19 +326,21 @@ Response `204`.
 Response `200`:
 
 ```json
-[
-  {
-    "id": "044c10cc-13d1-4587-9168-e9e79789ea67",
-    "name": "Engine oil",
-    "category": "ENGINE_OIL",
-    "installedAt": "2026-06-12",
-    "installedMileageKm": 10000,
-    "expectedLifetimeKm": 8000,
-    "remainingKm": 8000,
-    "remainingPercent": 100,
-    "status": "OK"
-  }
-]
+{
+  "parts": [
+    {
+      "id": "044c10cc-13d1-4587-9168-e9e79789ea67",
+      "name": "Engine oil",
+      "category": "ENGINE_OIL",
+      "installedAt": "2026-06-12",
+      "installedMileageKm": 10000,
+      "expectedLifetimeKm": 8000,
+      "remainingKm": 8000,
+      "remainingPercent": 100,
+      "status": "OK"
+    }
+  ]
+}
 ```
 
 ### Create part
@@ -348,12 +355,25 @@ Request:
   "category": "BRAKE_PADS",
   "installedAt": "2026-06-12",
   "installedMileageKm": 10000,
-  "expectedLifetimeKm": 25000,
-  "photoUrl": null
+  "expectedLifetimeKm": 25000
 }
 ```
 
 Response `201`: part.
+
+### Update part
+
+`PATCH /api/v1/vehicles/{vehicleId}/parts/{partId}`
+
+Request can contain any editable part fields:
+
+```json
+{
+  "expectedLifetimeKm": 30000
+}
+```
+
+Response `200`: updated part with recalculated `remainingKm`, `remainingPercent`, and `status`.
 
 ### Replace part
 
