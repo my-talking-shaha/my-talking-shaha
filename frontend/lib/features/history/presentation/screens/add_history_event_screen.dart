@@ -1,18 +1,33 @@
+import 'dart:async';
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:frontend/app/theme/app_theme.dart';
-import 'package:frontend/features/history/domain/event_detais.dart';
-import 'package:frontend/features/history/domain/history_event.dart';
-import 'package:frontend/features/history/domain/history_event_type.dart';
+import 'package:frontend/features/history/domain/entities/event_details.dart';
+import 'package:frontend/features/history/domain/entities/history_event.dart';
+import 'package:frontend/features/history/domain/entities/history_event_type.dart';
 import 'package:frontend/features/history/presentation/utils/history_event_form_utils.dart';
+import 'package:image_picker/image_picker.dart';
 
 typedef SaveHistoryEvent = Future<void> Function(HistoryEvent event);
+typedef PickHistoryPhoto = Future<XFile?> Function();
+typedef PersistHistoryPhoto =
+    Future<String> Function({
+      required String sourcePath,
+      required String originalName,
+      required String eventId,
+    });
+typedef DeleteHistoryPhoto = Future<void> Function(String path);
 
 final class AddHistoryEventScreen extends StatefulWidget {
   const AddHistoryEventScreen({
     required this.vehicleId,
     required this.onSave,
+    required this.persistPhoto,
+    required this.deletePhoto,
+    this.pickPhoto,
     this.initialMileageKm = 0,
     this.initialType = HistoryEventType.fuel,
     this.initialOccurredAt,
@@ -21,6 +36,9 @@ final class AddHistoryEventScreen extends StatefulWidget {
 
   final String vehicleId;
   final SaveHistoryEvent onSave;
+  final PersistHistoryPhoto persistPhoto;
+  final DeleteHistoryPhoto deletePhoto;
+  final PickHistoryPhoto? pickPhoto;
   final int initialMileageKm;
   final HistoryEventType initialType;
   final DateTime? initialOccurredAt;
@@ -35,7 +53,12 @@ final class _AddHistoryEventScreenState extends State<AddHistoryEventScreen> {
   late HistoryEventType _type;
   late DateTime _occurredAt;
   bool _isSaving = false;
+  bool _isPickingPhoto = false;
+  XFile? _selectedPhoto;
 
+  final _imagePicker = ImagePicker();
+
+  final _titleController = TextEditingController();
   final _mileageController = TextEditingController();
   final _fuelLitersController = TextEditingController();
   final _fuelCostController = TextEditingController();
@@ -58,10 +81,14 @@ final class _AddHistoryEventScreenState extends State<AddHistoryEventScreen> {
       _mileageController.text = widget.initialMileageKm.toString();
       _tripStartController.text = widget.initialMileageKm.toString();
     }
+    if (widget.pickPhoto == null && Platform.isAndroid) {
+      unawaited(_restoreLostPhoto());
+    }
   }
 
   @override
   void dispose() {
+    _titleController.dispose();
     _mileageController.dispose();
     _fuelLitersController.dispose();
     _fuelCostController.dispose();
@@ -108,6 +135,22 @@ final class _AddHistoryEventScreenState extends State<AddHistoryEventScreen> {
                   icon: Icons.calendar_today_outlined,
                   value: HistoryEventFormUtils.formatDateTime(_occurredAt),
                   onTap: _selectOccurredAt,
+                ),
+              ),
+              const SizedBox(height: AppSpacing.md),
+              _FormCard(
+                label: 'TITLE',
+                child: TextFormField(
+                  key: const ValueKey('event-title'),
+                  controller: _titleController,
+                  decoration: const InputDecoration(
+                    hintText: 'Enter event title...',
+                  ),
+                  textInputAction: TextInputAction.next,
+                  validator: (value) => HistoryEventFormUtils.validateRequired(
+                    value,
+                    label: 'Title',
+                  ),
                 ),
               ),
               const SizedBox(height: AppSpacing.md),
@@ -158,50 +201,66 @@ final class _AddHistoryEventScreenState extends State<AddHistoryEventScreen> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Expanded(
-                  child: _NumberField(
-                    key: const ValueKey('fuel-liters'),
-                    controller: _fuelLitersController,
-                    hintText: '0',
-                    suffixText: 'L',
-                    labelText: 'AMOUNT',
-                    validator: (value) =>
-                        HistoryEventFormUtils.validatePositiveInt(
-                          value,
-                          label: 'Amount',
-                        ),
+                  child: _LabeledField(
+                    label: 'AMOUNT',
+                    child: _NumberField(
+                      key: const ValueKey('fuel-liters'),
+                      controller: _fuelLitersController,
+                      hintText: '0',
+                      suffixText: 'L',
+                      validator: (value) =>
+                          HistoryEventFormUtils.validatePositiveInt(
+                            value,
+                            label: 'Amount',
+                          ),
+                    ),
                   ),
                 ),
                 const SizedBox(width: AppSpacing.sm),
                 Expanded(
-                  child: _NumberField(
-                    key: const ValueKey('fuel-cost'),
-                    controller: _fuelCostController,
-                    hintText: '0',
-                    suffixText: '₽',
-                    labelText: 'COST',
-                    validator: (value) =>
-                        HistoryEventFormUtils.validatePositiveInt(
-                          value,
-                          label: 'Cost',
-                        ),
+                  child: _LabeledField(
+                    label: 'COST',
+                    child: _NumberField(
+                      key: const ValueKey('fuel-cost'),
+                      controller: _fuelCostController,
+                      hintText: '0',
+                      suffixText: '₽',
+                      validator: (value) =>
+                          HistoryEventFormUtils.validatePositiveInt(
+                            value,
+                            label: 'Cost',
+                          ),
+                    ),
                   ),
                 ),
               ],
             ),
             const SizedBox(height: AppSpacing.md),
-            DropdownButtonFormField<String>(
-              key: const ValueKey('fuel-type'),
-              initialValue: _fuelType,
-              decoration: const InputDecoration(labelText: 'FUEL TYPE'),
-              items: const [
-                DropdownMenuItem(value: '92 octane', child: Text('92 octane')),
-                DropdownMenuItem(value: '95 octane', child: Text('95 octane')),
-                DropdownMenuItem(value: '98 octane', child: Text('98 octane')),
-                DropdownMenuItem(value: 'Diesel', child: Text('Diesel')),
-              ],
-              onChanged: (value) {
-                if (value != null) _fuelType = value;
-              },
+            _LabeledField(
+              label: 'FUEL TYPE',
+              child: DropdownButtonFormField<String>(
+                key: const ValueKey('fuel-type'),
+                initialValue: _fuelType,
+                decoration: const InputDecoration(),
+                items: const [
+                  DropdownMenuItem(
+                    value: '92 octane',
+                    child: Text('92 octane'),
+                  ),
+                  DropdownMenuItem(
+                    value: '95 octane',
+                    child: Text('95 octane'),
+                  ),
+                  DropdownMenuItem(
+                    value: '98 octane',
+                    child: Text('98 octane'),
+                  ),
+                  DropdownMenuItem(value: 'Diesel', child: Text('Diesel')),
+                ],
+                onChanged: (value) {
+                  if (value != null) _fuelType = value;
+                },
+              ),
             ),
           ],
         ),
@@ -275,7 +334,14 @@ final class _AddHistoryEventScreenState extends State<AddHistoryEventScreen> {
         ),
       ),
       const SizedBox(height: AppSpacing.md),
-      const _PhotoCard(),
+      _PhotoCard(
+        photo: _selectedPhoto,
+        isPicking: _isPickingPhoto,
+        onPick: _pickPhoto,
+        onRemove: _selectedPhoto == null
+            ? null
+            : () => setState(() => _selectedPhoto = null),
+      ),
     ];
   }
 
@@ -287,29 +353,33 @@ final class _AddHistoryEventScreenState extends State<AddHistoryEventScreen> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Expanded(
-              child: _NumberField(
-                key: const ValueKey('trip-start'),
-                controller: _tripStartController,
-                hintText: '124,500',
-                suffixText: 'km',
-                labelText: 'START',
-                validator: (value) => HistoryEventFormUtils.validateTripStart(
-                  value,
-                  minimumMileageKm: widget.initialMileageKm,
+              child: _LabeledField(
+                label: 'START',
+                child: _NumberField(
+                  key: const ValueKey('trip-start'),
+                  controller: _tripStartController,
+                  hintText: '124,500',
+                  suffixText: 'km',
+                  validator: (value) => HistoryEventFormUtils.validateTripStart(
+                    value,
+                    minimumMileageKm: widget.initialMileageKm,
+                  ),
                 ),
               ),
             ),
             const SizedBox(width: AppSpacing.sm),
             Expanded(
-              child: _NumberField(
-                key: const ValueKey('trip-end'),
-                controller: _tripEndController,
-                hintText: '124,650',
-                suffixText: 'km',
-                labelText: 'END',
-                validator: (value) => HistoryEventFormUtils.validateTripEnd(
-                  value,
-                  startMileage: _tripStartController.text,
+              child: _LabeledField(
+                label: 'END',
+                child: _NumberField(
+                  key: const ValueKey('trip-end'),
+                  controller: _tripEndController,
+                  hintText: '124,650',
+                  suffixText: 'km',
+                  validator: (value) => HistoryEventFormUtils.validateTripEnd(
+                    value,
+                    startMileage: _tripStartController.text,
+                  ),
                 ),
               ),
             ),
@@ -331,7 +401,7 @@ final class _AddHistoryEventScreenState extends State<AddHistoryEventScreen> {
       ),
       const SizedBox(height: AppSpacing.md),
       _FormCard(
-        label: 'TRIP DETAILS',
+        label: 'DURATION',
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -341,7 +411,6 @@ final class _AddHistoryEventScreenState extends State<AddHistoryEventScreen> {
                 controller: _tripDurationController,
                 hintText: '90',
                 suffixText: 'min',
-                labelText: 'DURATION',
                 icon: Icons.timer_outlined,
                 validator: (value) => HistoryEventFormUtils.validatePositiveInt(
                   value,
@@ -360,11 +429,31 @@ final class _AddHistoryEventScreenState extends State<AddHistoryEventScreen> {
     if (!(_formKey.currentState?.validate() ?? false)) return;
 
     setState(() => _isSaving = true);
+    String? persistedPhotoPath;
     try {
-      final event = _createEvent();
+      final eventId = 'local-${DateTime.now().microsecondsSinceEpoch}';
+      final photo = _type == HistoryEventType.maintenance
+          ? _selectedPhoto
+          : null;
+      if (photo != null) {
+        persistedPhotoPath = await widget.persistPhoto(
+          sourcePath: photo.path,
+          originalName: photo.name,
+          eventId: eventId,
+        );
+      }
+
+      final event = _createEvent(id: eventId, photoPath: persistedPhotoPath);
       await widget.onSave(event);
       if (mounted) Navigator.of(context).pop(event);
     } catch (_) {
+      if (persistedPhotoPath != null) {
+        try {
+          await widget.deletePhoto(persistedPhotoPath);
+        } catch (_) {
+          // The original save error is more useful to the user.
+        }
+      }
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Could not save the event. Try again.')),
@@ -372,6 +461,52 @@ final class _AddHistoryEventScreenState extends State<AddHistoryEventScreen> {
     } finally {
       if (mounted) setState(() => _isSaving = false);
     }
+  }
+
+  Future<void> _pickPhoto() async {
+    if (_isPickingPhoto) return;
+    setState(() => _isPickingPhoto = true);
+
+    try {
+      final photo = widget.pickPhoto != null
+          ? await widget.pickPhoto!()
+          : await _imagePicker.pickImage(
+              source: ImageSource.gallery,
+              imageQuality: 85,
+              maxWidth: 1600,
+              requestFullMetadata: false,
+            );
+      if (photo != null && mounted) {
+        setState(() => _selectedPhoto = photo);
+      }
+    } on PlatformException {
+      _showPhotoError('Could not access the photo library.');
+    } catch (_) {
+      _showPhotoError('Could not select the photo.');
+    } finally {
+      if (mounted) setState(() => _isPickingPhoto = false);
+    }
+  }
+
+  Future<void> _restoreLostPhoto() async {
+    try {
+      final response = await _imagePicker.retrieveLostData();
+      final files = response.files;
+      if (files != null && files.isNotEmpty && mounted) {
+        setState(() => _selectedPhoto = files.first);
+      } else if (response.exception != null) {
+        _showPhotoError('Could not restore the selected photo.');
+      }
+    } on PlatformException {
+      _showPhotoError('Could not restore the selected photo.');
+    }
+  }
+
+  void _showPhotoError(String message) {
+    if (!mounted) return;
+    ScaffoldMessenger.maybeOf(
+      context,
+    )?.showSnackBar(SnackBar(content: Text(message)));
   }
 
   Future<void> _selectOccurredAt() async {
@@ -400,16 +535,14 @@ final class _AddHistoryEventScreenState extends State<AddHistoryEventScreen> {
     });
   }
 
-  HistoryEvent _createEvent() {
-    final timestamp = DateTime.now().microsecondsSinceEpoch;
-
+  HistoryEvent _createEvent({required String id, String? photoPath}) {
     return switch (_type) {
       HistoryEventType.fuel => HistoryEvent(
-        id: 'local-$timestamp',
+        id: id,
         carId: widget.vehicleId,
         type: _type,
         occurredAt: _occurredAt,
-        title: 'Refueling · $_fuelType',
+        title: _titleController.text.trim(),
         currentMileageKm: int.parse(_mileageController.text),
         details: FuelDetails(
           cost: int.parse(_fuelCostController.text),
@@ -418,11 +551,11 @@ final class _AddHistoryEventScreenState extends State<AddHistoryEventScreen> {
         ),
       ),
       HistoryEventType.maintenance => HistoryEvent(
-        id: 'local-$timestamp',
+        id: id,
         carId: widget.vehicleId,
         type: _type,
         occurredAt: _occurredAt,
-        title: 'Maintenance',
+        title: _titleController.text.trim(),
         currentMileageKm: int.parse(_mileageController.text),
         details: MaintenanceDetails(
           description: _maintenanceDescriptionController.text.trim(),
@@ -430,14 +563,15 @@ final class _AddHistoryEventScreenState extends State<AddHistoryEventScreen> {
           replacedParts: HistoryEventFormUtils.parseCommaSeparated(
             _replacedPartsController.text,
           ),
+          photoUrls: photoPath == null ? null : [photoPath],
         ),
       ),
       HistoryEventType.trip => HistoryEvent(
-        id: 'local-$timestamp',
+        id: id,
         carId: widget.vehicleId,
         type: _type,
         occurredAt: _occurredAt,
-        title: 'Trip',
+        title: _titleController.text.trim(),
         currentMileageKm: int.parse(_tripEndController.text),
         details: TripDetails(
           startKm: int.parse(_tripStartController.text),
@@ -593,12 +727,30 @@ final class _SectionLabel extends StatelessWidget {
   }
 }
 
+final class _LabeledField extends StatelessWidget {
+  const _LabeledField({required this.label, required this.child});
+
+  final String label;
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        _SectionLabel(label),
+        const SizedBox(height: AppSpacing.sm),
+        child,
+      ],
+    );
+  }
+}
+
 final class _NumberField extends StatelessWidget {
   const _NumberField({
     required this.controller,
     required this.hintText,
     this.suffixText,
-    this.labelText,
     this.icon,
     this.validator,
     super.key,
@@ -607,7 +759,6 @@ final class _NumberField extends StatelessWidget {
   final TextEditingController controller;
   final String hintText;
   final String? suffixText;
-  final String? labelText;
   final IconData? icon;
   final FormFieldValidator<String>? validator;
 
@@ -619,7 +770,6 @@ final class _NumberField extends StatelessWidget {
       inputFormatters: [FilteringTextInputFormatter.digitsOnly],
       decoration: InputDecoration(
         hintText: hintText,
-        labelText: labelText,
         prefixIcon: icon == null ? null : Icon(icon),
         suffixText: suffixText,
       ),
@@ -682,7 +832,6 @@ final class _InformationCard extends StatelessWidget {
         borderRadius: AppRadius.card,
       ),
       child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           const Icon(
             Icons.info_outline,
@@ -691,7 +840,12 @@ final class _InformationCard extends StatelessWidget {
           ),
           const SizedBox(width: AppSpacing.md),
           Expanded(
-            child: Text(message, style: Theme.of(context).textTheme.bodySmall),
+            child: Text(
+              message,
+              style: Theme.of(
+                context,
+              ).textTheme.bodyMedium?.copyWith(color: AppColors.primaryLight),
+            ),
           ),
         ],
       ),
@@ -700,18 +854,86 @@ final class _InformationCard extends StatelessWidget {
 }
 
 final class _PhotoCard extends StatelessWidget {
-  const _PhotoCard();
+  const _PhotoCard({
+    required this.photo,
+    required this.isPicking,
+    required this.onPick,
+    required this.onRemove,
+  });
+
+  final XFile? photo;
+  final bool isPicking;
+  final VoidCallback onPick;
+  final VoidCallback? onRemove;
 
   @override
   Widget build(BuildContext context) {
     return _FormCard(
       label: 'PART PHOTO',
       optional: true,
-      child: OutlinedButton.icon(
-        onPressed: () {},
-        icon: const Icon(Icons.add_circle_outline, size: 18),
-        label: const Text('Add photo from gallery'),
-      ),
+      child: photo == null
+          ? OutlinedButton.icon(
+              key: const ValueKey('maintenance-photo-add'),
+              onPressed: isPicking ? null : onPick,
+              icon: isPicking
+                  ? const SizedBox.square(
+                      dimension: 18,
+                      child: CircularProgressIndicator(strokeWidth: 2),
+                    )
+                  : const Icon(Icons.add_circle_outline, size: 18),
+              label: Text(isPicking ? 'Opening gallery...' : 'Add photo'),
+            )
+          : Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Stack(
+                  children: [
+                    ClipRRect(
+                      borderRadius: AppRadius.input,
+                      child: Image.file(
+                        File(photo!.path),
+                        key: const ValueKey('maintenance-photo-preview'),
+                        width: double.infinity,
+                        height: 220,
+                        fit: BoxFit.cover,
+                        errorBuilder: (context, error, stackTrace) => Container(
+                          height: 220,
+                          color: AppColors.surfaceHighest,
+                          alignment: Alignment.center,
+                          child: const Icon(
+                            Icons.broken_image_outlined,
+                            color: AppColors.textMuted,
+                          ),
+                        ),
+                      ),
+                    ),
+                    Positioned(
+                      top: AppSpacing.sm,
+                      right: AppSpacing.sm,
+                      child: IconButton.filled(
+                        key: const ValueKey('maintenance-photo-remove'),
+                        onPressed: onRemove,
+                        tooltip: 'Remove photo',
+                        style: IconButton.styleFrom(
+                          backgroundColor: AppColors.backgroundDark.withValues(
+                            alpha: 0.82,
+                          ),
+                          foregroundColor: AppColors.textPrimary,
+                        ),
+                        icon: const Icon(Icons.close),
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: AppSpacing.sm),
+                OutlinedButton.icon(
+                  key: const ValueKey('maintenance-photo-change'),
+                  onPressed: isPicking ? null : onPick,
+                  icon: const Icon(Icons.photo_library_outlined, size: 18),
+                  label: const Text('Choose another photo'),
+                ),
+              ],
+            ),
     );
   }
 }

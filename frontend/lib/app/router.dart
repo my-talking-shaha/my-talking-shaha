@@ -47,6 +47,12 @@ final routerProvider = Provider<GoRouter>((ref) {
                     vehicleId: vehicleId,
                     initialMileageKm: currentMileageKm,
                     onSave: ref.read(addHistoryEventProvider),
+                    persistPhoto: ref
+                        .read(historyPhotoStorageProvider)
+                        .persistPhoto,
+                    deletePhoto: ref
+                        .read(historyPhotoStorageProvider)
+                        .deletePhoto,
                   );
                 },
                 loading: () => const Scaffold(

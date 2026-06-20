@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:frontend/app/theme/app_theme.dart';
-import 'package:frontend/features/history/domain/event_detais.dart';
-import 'package:frontend/features/history/domain/history_event.dart';
-import 'package:frontend/features/history/domain/history_event_type.dart';
+import 'package:frontend/features/history/domain/entities/event_details.dart';
+import 'package:frontend/features/history/domain/entities/history_event.dart';
+import 'package:frontend/features/history/domain/entities/history_event_type.dart';
 import 'package:frontend/features/history/presentation/providers/history_providers.dart';
 import 'package:frontend/features/history/presentation/widgets/event_card.dart';
 import 'package:go_router/go_router.dart';
@@ -122,7 +122,6 @@ final class _SearchField extends StatelessWidget {
       decoration: const InputDecoration(
         hintText: 'Search history…',
         prefixIcon: Icon(Icons.search),
-        suffixIcon: Icon(Icons.tune),
       ),
     );
   }
@@ -172,7 +171,7 @@ final class _TypeFilters extends StatelessWidget {
                       : AppColors.border,
                 ),
                 shape: const StadiumBorder(),
-                padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg),
+                padding: const EdgeInsets.symmetric(horizontal: AppSpacing.xl),
                 minimumSize: const Size(0, 36),
                 tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                 animationDuration: Duration.zero,

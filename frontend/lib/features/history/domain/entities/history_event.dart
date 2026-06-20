@@ -1,5 +1,5 @@
-import 'package:frontend/features/history/domain/event_detais.dart';
-import 'package:frontend/features/history/domain/history_event_type.dart';
+import 'package:frontend/features/history/domain/entities/event_details.dart';
+import 'package:frontend/features/history/domain/entities/history_event_type.dart';
 
 class HistoryEvent {
   final String id;

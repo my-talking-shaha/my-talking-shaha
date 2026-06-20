@@ -2,9 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:frontend/app/theme/app_theme.dart';
-import 'package:frontend/features/history/domain/event_detais.dart';
-import 'package:frontend/features/history/domain/history_event.dart';
-import 'package:frontend/features/history/domain/history_event_type.dart';
+import 'package:frontend/features/history/domain/entities/event_details.dart';
+import 'package:frontend/features/history/domain/entities/history_event.dart';
+import 'package:frontend/features/history/domain/entities/history_event_type.dart';
 import 'package:frontend/features/history/presentation/widgets/event_card.dart';
 
 void main() {
@@ -83,6 +83,24 @@ void main() {
       );
       expect(image.fit, BoxFit.cover);
       expect(image.errorBuilder, isNotNull);
+
+      final withLocalPhoto = HistoryEvent(
+        id: 'maintenance_3',
+        carId: 'vehicle_1',
+        type: HistoryEventType.maintenance,
+        occurredAt: DateTime(2026, 6, 8, 11),
+        title: 'Local photo',
+        currentMileageKm: 124000,
+        details: MaintenanceDetails(
+          description: 'Local preview',
+          photoUrls: const ['/tmp/maintenance-photo.jpg'],
+        ),
+      );
+
+      await _pumpCard(tester, withLocalPhoto);
+
+      final localImage = tester.widget<Image>(find.byType(Image));
+      expect(localImage.image, isA<FileImage>());
     },
   );
 

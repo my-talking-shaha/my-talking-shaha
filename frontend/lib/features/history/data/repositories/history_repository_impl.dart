@@ -1,5 +1,5 @@
 import 'package:frontend/features/history/data/datasources/mock_history_datasource.dart';
-import 'package:frontend/features/history/domain/history_event.dart';
+import 'package:frontend/features/history/domain/entities/history_event.dart';
 import 'package:frontend/features/history/domain/repositories/history_repository.dart';
 
 final class HistoryRepositoryImpl implements HistoryRepository {

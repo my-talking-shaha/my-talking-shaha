@@ -118,6 +118,10 @@ void main() {
     expect(find.byType(AddHistoryEventScreen), findsOneWidget);
 
     await tester.enterText(
+      find.byKey(const ValueKey('event-title')),
+      'Highway refueling',
+    );
+    await tester.enterText(
       find.byKey(const ValueKey('fuel-mileage')),
       '124600',
     );
@@ -138,11 +142,8 @@ void main() {
         .getEvents('vehicle_123');
     await tester.pump(const Duration(milliseconds: 600));
     final events = await eventsFuture;
-    expect(
-      events.any((event) => event.title == 'Refueling · 95 octane'),
-      isTrue,
-    );
-    expect(find.text('Refueling · 95 octane'), findsOneWidget);
+    expect(events.any((event) => event.title == 'Highway refueling'), isTrue);
+    expect(find.text('Highway refueling'), findsOneWidget);
   });
 }
 

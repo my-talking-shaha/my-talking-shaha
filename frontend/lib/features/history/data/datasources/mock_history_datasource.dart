@@ -1,6 +1,6 @@
-import 'package:frontend/features/history/domain/event_detais.dart';
-import 'package:frontend/features/history/domain/history_event.dart';
-import 'package:frontend/features/history/domain/history_event_type.dart';
+import 'package:frontend/features/history/domain/entities/event_details.dart';
+import 'package:frontend/features/history/domain/entities/history_event.dart';
+import 'package:frontend/features/history/domain/entities/history_event_type.dart';
 
 final class MockHistoryDatasource {
   MockHistoryDatasource({this.delay = const Duration(milliseconds: 600)});

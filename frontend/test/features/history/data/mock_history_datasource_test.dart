@@ -1,8 +1,8 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:frontend/features/history/data/datasources/mock_history_datasource.dart';
-import 'package:frontend/features/history/domain/event_detais.dart';
-import 'package:frontend/features/history/domain/history_event.dart';
-import 'package:frontend/features/history/domain/history_event_type.dart';
+import 'package:frontend/features/history/domain/entities/event_details.dart';
+import 'package:frontend/features/history/domain/entities/history_event.dart';
+import 'package:frontend/features/history/domain/entities/history_event_type.dart';
 
 void main() {
   test('adds an event and returns it in newest-first order', () async {

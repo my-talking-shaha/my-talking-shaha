@@ -1,9 +1,11 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:frontend/app/theme/app_theme.dart';
-import 'package:frontend/features/history/domain/event_detais.dart';
-import 'package:frontend/features/history/domain/history_event.dart';
-import 'package:frontend/features/history/domain/history_event_type.dart';
+import 'package:frontend/features/history/domain/entities/event_details.dart';
+import 'package:frontend/features/history/domain/entities/history_event.dart';
+import 'package:frontend/features/history/domain/entities/history_event_type.dart';
 
 class EventCard extends StatelessWidget {
   final HistoryEvent event;
@@ -170,10 +172,13 @@ class _EventPhoto extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final uri = Uri.tryParse(url);
+    final isRemote = uri?.scheme == 'http' || uri?.scheme == 'https';
+
     return ClipRRect(
       borderRadius: BorderRadius.circular(AppRadius.sm),
-      child: Image.network(
-        url,
+      child: Image(
+        image: isRemote ? NetworkImage(url) : FileImage(File(url)),
         width: 104,
         height: 128,
         fit: BoxFit.cover,

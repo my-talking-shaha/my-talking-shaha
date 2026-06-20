@@ -29,6 +29,7 @@ void main() {
     expect(find.text('Refueling AI-95'), findsOneWidget);
     expect(find.text('Oil and filter change'), findsOneWidget);
     expect(find.byTooltip('Add event'), findsOneWidget);
+    expect(find.byIcon(Icons.tune), findsNothing);
 
     final repairsButton = tester.widget<TextButton>(
       find.widgetWithText(TextButton, 'REPAIRS'),
