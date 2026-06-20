@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:frontend/app/theme/app_theme.dart';
 import 'package:frontend/features/parts/presentation/providers/parts_providers.dart';
 import 'package:frontend/features/parts/presentation/widgets/maintenance_forecast_card.dart';
+import 'package:frontend/features/parts/presentation/widgets/parts_design_tokens.dart';
 import 'package:go_router/go_router.dart';
 
 final class PartsScreen extends ConsumerWidget {
@@ -16,7 +17,7 @@ final class PartsScreen extends ConsumerWidget {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Parts lifetime widget example'),
+        title: const Text('Maintenance forecast'),
         leading: IconButton(
           onPressed: () => context.go('/garage'),
           icon: const Icon(Icons.arrow_back),
@@ -38,14 +39,6 @@ final class PartsScreen extends ConsumerWidget {
                 AppSpacing.xxxl,
               ),
               children: [
-                Text(
-                  vehicleId,
-                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                    color: AppColors.success,
-                    fontWeight: FontWeight.w800,
-                  ),
-                ),
-                const SizedBox(height: AppSpacing.xl),
                 MaintenanceForecastCard(parts: parts),
               ],
             ),
@@ -71,7 +64,7 @@ final class _PartsLoadingState extends StatelessWidget {
   Widget build(BuildContext context) {
     return const Center(
       key: ValueKey('parts_loading_state'),
-      child: CircularProgressIndicator(),
+      child: CircularProgressIndicator(color: PartsDesignColors.accent),
     );
   }
 }
@@ -92,13 +85,12 @@ final class _PartsEmptyState extends StatelessWidget {
               width: 72,
               height: 72,
               decoration: BoxDecoration(
-                color: AppColors.primarySoft,
+                color: PartsDesignColors.cardBackground,
                 borderRadius: BorderRadius.circular(AppRadius.lg),
-                border: Border.all(color: AppColors.border),
               ),
               child: const Icon(
                 Icons.build_circle_outlined,
-                color: AppColors.success,
+                color: PartsDesignColors.accent,
                 size: 36,
               ),
             ),

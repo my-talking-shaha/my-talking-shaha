@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:frontend/app/theme/app_theme.dart';
 import 'package:frontend/features/parts/domain/entities/vehicle_part.dart';
+import 'package:frontend/features/parts/presentation/widgets/parts_design_tokens.dart';
 
 final class PartResourceRow extends StatelessWidget {
   const PartResourceRow({required this.part, super.key});
@@ -13,9 +14,10 @@ final class PartResourceRow extends StatelessWidget {
     final progressValue = remainingPercent == null
         ? null
         : (remainingPercent / 100).clamp(0.0, 1.0).toDouble();
+    final statusColor = _statusColor(part.status);
 
-    return Container(
-      padding: const EdgeInsets.all(AppSpacing.sm),
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: AppSpacing.xs),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -23,39 +25,67 @@ final class PartResourceRow extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
+                child: Row(
                   children: [
-                    Text(
-                      part.name,
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
-                      style: Theme.of(context).textTheme.titleMedium,
+                    Flexible(
+                      child: Text(
+                        part.name,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style:
+                            Theme.of(context).textTheme.titleMedium?.copyWith(
+                                  color: statusColor,
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.w900,
+                                  height: 1.15,
+                                ),
+                      ),
                     ),
+                    const SizedBox(width: AppSpacing.sm),
+                    Icon(Icons.edit, color: statusColor, size: 14),
                   ],
                 ),
               ),
               const SizedBox(width: AppSpacing.md),
-              Text(
-                _resourceText(part),
-                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                  color: _statusColor(part.status),
-                  fontWeight: FontWeight.w700,
+              Flexible(
+                child: Text(
+                  _resourceText(part),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  textAlign: TextAlign.end,
+                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                        color: statusColor,
+                        fontSize: 12,
+                        fontWeight: FontWeight.w900,
+                        height: 1.15,
+                      ),
                 ),
               ),
             ],
           ),
           const SizedBox(height: AppSpacing.sm),
-          if (progressValue != null) ...[
-            const SizedBox(height: AppSpacing.xs),
-            LinearProgressIndicator(
-              value: progressValue,
-              minHeight: 6,
-              borderRadius: BorderRadius.circular(AppRadius.sm),
-              backgroundColor: AppColors.surfaceHighest,
-              color: _statusColor(part.status),
+          if (progressValue != null)
+            ClipRRect(
+              borderRadius: BorderRadius.circular(
+                PartsDesignMetrics.progressHeight,
+              ),
+              child: LinearProgressIndicator(
+                value: progressValue,
+                minHeight: PartsDesignMetrics.progressHeight,
+                backgroundColor: PartsDesignColors.progressTrack,
+                color: statusColor,
+              ),
+            )
+          else
+            ClipRRect(
+              borderRadius: BorderRadius.circular(
+                PartsDesignMetrics.progressHeight,
+              ),
+              child: const SizedBox(
+                height: PartsDesignMetrics.progressHeight,
+                child: ColoredBox(color: PartsDesignColors.unknown),
+              ),
             ),
-          ],
         ],
       ),
     );
@@ -70,24 +100,27 @@ String _resourceText(VehiclePart part) {
     return 'Lifetime not set';
   }
 
-  return '$remainingPercent% · ${_formatInt(remainingKm)} km';
+  final displayPercent = remainingPercent.clamp(0, 100);
+  final displayRemainingKm = remainingKm < 0 ? 0 : remainingKm;
+
+  return '$displayPercent% · ${_formatInt(displayRemainingKm)} km';
 }
 
 Color _statusColor(PartResourceStatus status) {
   return switch (status) {
-    PartResourceStatus.ok => AppColors.success,
-    PartResourceStatus.warning => AppColors.warning,
-    PartResourceStatus.critical => AppColors.error,
-    PartResourceStatus.unknown => AppColors.textMuted,
+    PartResourceStatus.ok => PartsDesignColors.ok,
+    PartResourceStatus.warning => PartsDesignColors.warning,
+    PartResourceStatus.critical => PartsDesignColors.critical,
+    PartResourceStatus.unknown => PartsDesignColors.unknown,
   };
 }
 
 String _formatInt(int value) {
   final prefix = value < 0 ? '-' : '';
   final formatted = value.abs().toString().replaceAllMapped(
-    RegExp(r'\B(?=(\d{3})+(?!\d))'),
-    (_) => ' ',
-  );
+        RegExp(r'\B(?=(\d{3})+(?!\d))'),
+        (_) => ' ',
+      );
 
   return '$prefix$formatted';
 }

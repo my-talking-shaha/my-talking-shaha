@@ -23,6 +23,12 @@ void main() {
     );
 
     expect(find.text('MAINTENANCE FORECAST'), findsOneWidget);
+    expect(find.text('UPDATED 2 HOURS AGO'), findsOneWidget);
+    expect(find.text('NEXT SERVICE'), findsOneWidget);
+    expect(find.text('RESOURCE'), findsOneWidget);
+    expect(find.text('In 800 km'), findsOneWidget);
+    expect(find.text('Approx. date: in 16 days'), findsOneWidget);
+    expect(find.text('19%'), findsOneWidget);
     expect(find.text('Engine oil'), findsOneWidget);
     expect(find.text('Front brake pads'), findsOneWidget);
     expect(find.text('Battery'), findsOneWidget);
@@ -30,10 +36,9 @@ void main() {
     expect(find.textContaining(RegExp(r'5\s?000|5,000')), findsOneWidget);
     expect(find.textContaining(RegExp(r'50\s?%')), findsWidgets);
     expect(find.textContaining(RegExp(r'8\s?%')), findsOneWidget);
+    expect(find.text('0% · 0 km'), findsOneWidget);
     expect(find.text('Lifetime not set'), findsOneWidget);
-    expect(find.textContaining('OK'), findsWidgets);
-    expect(find.textContaining('Warning'), findsOneWidget);
-    expect(find.textContaining('Critical'), findsOneWidget);
+    expect(find.byIcon(Icons.edit), findsNWidgets(4));
     expect(find.byType(LinearProgressIndicator), findsNWidgets(3));
   });
 
@@ -65,10 +70,10 @@ void main() {
 
     expect(repository.requestedVehicleIds, ['vehicle_123']);
     expect(find.byType(MaintenanceForecastCard), findsOneWidget);
+    expect(find.text('NEXT SERVICE'), findsOneWidget);
     expect(find.text('Engine oil'), findsOneWidget);
     expect(find.text('Lifetime not set'), findsOneWidget);
-    expect(find.textContaining('Warning'), findsOneWidget);
-    expect(find.textContaining('Critical'), findsOneWidget);
+    expect(find.text('0% · 0 km'), findsOneWidget);
   });
 
   testWidgets('parts screen back action returns to garage', (tester) async {
