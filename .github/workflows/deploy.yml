@@ -38,7 +38,7 @@ jobs:
 
           ssh-keyscan -p "${SERVER_PORT:-22}" "$SERVER_HOST" >> ~/.ssh/known_hosts
 
-      - name: Deploy Docker Compose stack
+      - name: Deploy backend service
         env:
           SERVER_HOST: ${{ secrets.SERVER_HOST }}
           SERVER_PORT: ${{ secrets.SERVER_PORT }}
@@ -73,7 +73,7 @@ jobs:
             exit 1
           fi
 
-          $COMPOSE -f docker/docker-compose.yml up -d --build --remove-orphans
-          $COMPOSE -f docker/docker-compose.yml ps
+          $COMPOSE -f docker/docker-compose.yml up -d --build --remove-orphans backend
+          $COMPOSE -f docker/docker-compose.yml ps postgres backend
           docker image prune -f
           REMOTE

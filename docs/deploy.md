@@ -20,10 +20,10 @@ Autodeploy runs from GitHub Actions after every push to `main`.
 
    Log out and log back in after changing groups.
 
-4. Run the stack once manually:
+4. Run the backend once manually:
 
    ```bash
-   docker compose -f docker/docker-compose.yml up -d --build
+   docker compose -f docker/docker-compose.yml up -d --build backend
    ```
 
 ## GitHub secrets
@@ -44,10 +44,10 @@ On every push to `main`, the workflow:
 2. Goes to `SERVER_APP_PATH`.
 3. Runs `git fetch --prune origin main`.
 4. Updates the server checkout with `git pull --ff-only origin main`.
-5. Rebuilds and restarts the stack:
+5. Rebuilds and restarts only the backend service and its dependencies:
 
    ```bash
-   docker compose -f docker/docker-compose.yml up -d --build --remove-orphans
+   docker compose -f docker/docker-compose.yml up -d --build --remove-orphans backend
    ```
 
 ## Database note
