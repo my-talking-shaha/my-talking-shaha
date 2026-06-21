@@ -96,7 +96,7 @@ void main() {
       await tester.tap(find.textContaining('Lada'));
       await tester.pumpAndSettle();
 
-      expect(find.text('dashboard:vehicle_123'), findsOneWidget);
+      expect(find.text('chat:vehicle_123'), findsOneWidget);
     },
   );
 
@@ -244,10 +244,10 @@ Future<void> _pumpGarage(
         },
       ),
       GoRoute(
-        path: '/vehicle/:vehicleId/dashboard',
+        path: '/vehicle/:vehicleId/chat',
         builder: (context, state) {
           final vehicleId = state.pathParameters['vehicleId'];
-          return Scaffold(body: Text('dashboard:$vehicleId'));
+          return Scaffold(body: Text('chat:$vehicleId'));
         },
       ),
     ],

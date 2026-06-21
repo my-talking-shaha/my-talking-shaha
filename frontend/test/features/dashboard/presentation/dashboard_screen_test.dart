@@ -10,9 +10,7 @@ import 'package:frontend/features/garage/domain/repositories/garage_repository.d
 import 'package:frontend/features/garage/presentation/providers/garage_providers.dart';
 
 void main() {
-  testWidgets('shows vehicle summary, forecast section, and events', (
-    tester,
-  ) async {
+  testWidgets('shows vehicle summary and latest events', (tester) async {
     String? copiedVin;
     final binaryMessenger =
         TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger;
@@ -68,7 +66,6 @@ void main() {
     await tester.pump();
     expect(copiedVin, 'XTA21060012345678');
     expect(find.text('VIN copied'), findsOneWidget);
-    expect(find.text('MAINTENANCE FORECAST'), findsOneWidget);
     expect(find.text('Refueling AI-95'), findsOneWidget);
     expect(tester.takeException(), isNull);
   });

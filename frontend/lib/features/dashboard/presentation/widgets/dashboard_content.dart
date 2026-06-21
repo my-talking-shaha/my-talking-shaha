@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:frontend/app/theme/app_theme.dart';
 import 'package:frontend/features/dashboard/presentation/widgets/dashboard_latest_events.dart';
-import 'package:frontend/features/dashboard/presentation/widgets/dashboard_section_header.dart';
 import 'package:frontend/features/dashboard/presentation/widgets/dashboard_vehicle_summary.dart';
 import 'package:frontend/features/garage/domain/entities/vehicle.dart';
 import 'package:frontend/features/history/domain/entities/history_event.dart';
@@ -31,8 +30,6 @@ final class DashboardContent extends StatelessWidget {
         children: [
           DashboardVehicleSummary(vehicle: vehicle),
           const SizedBox(height: AppSpacing.xxxl),
-          const DashboardSectionHeader(title: 'MAINTENANCE FORECAST'),
-          const SizedBox(height: AppSpacing.md),
           // TODO: forecast here
           const SizedBox(height: AppSpacing.xxxl),
           DashboardLatestEvents(

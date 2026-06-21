@@ -87,13 +87,17 @@ final routerProvider = Provider<GoRouter>((ref) {
             routes: [
               GoRoute(
                 path: '/garage',
-                builder: (context, state) => const GarageScreen(),
+                pageBuilder: (context, state) =>
+                    _tabPage(state: state, child: const GarageScreen()),
               ),
               GoRoute(
                 path: '/vehicle/:vehicleId/dashboard',
-                builder: (context, state) {
+                pageBuilder: (context, state) {
                   final vehicleId = state.pathParameters['vehicleId'] ?? '';
-                  return DashboardScreen(vehicleId: vehicleId);
+                  return _tabPage(
+                    state: state,
+                    child: DashboardScreen(vehicleId: vehicleId),
+                  );
                 },
               ),
             ],
@@ -106,9 +110,12 @@ final routerProvider = Provider<GoRouter>((ref) {
               ),
               GoRoute(
                 path: '/vehicle/:vehicleId/history',
-                builder: (context, state) {
+                pageBuilder: (context, state) {
                   final vehicleId = state.pathParameters['vehicleId'] ?? '';
-                  return HistoryScreen(vehicleId: vehicleId);
+                  return _tabPage(
+                    state: state,
+                    child: HistoryScreen(vehicleId: vehicleId),
+                  );
                 },
               ),
             ],
@@ -118,9 +125,12 @@ final routerProvider = Provider<GoRouter>((ref) {
               GoRoute(path: '/chat', redirect: (context, state) => '/garage'),
               GoRoute(
                 path: '/vehicle/:vehicleId/chat',
-                builder: (context, state) {
+                pageBuilder: (context, state) {
                   final vehicleId = state.pathParameters['vehicleId'] ?? '';
-                  return ChatPlaceholderScreen(vehicleId: vehicleId);
+                  return _tabPage(
+                    state: state,
+                    child: ChatPlaceholderScreen(vehicleId: vehicleId),
+                  );
                 },
               ),
             ],
@@ -133,9 +143,12 @@ final routerProvider = Provider<GoRouter>((ref) {
               ),
               GoRoute(
                 path: '/vehicle/:vehicleId/analytics',
-                builder: (context, state) {
+                pageBuilder: (context, state) {
                   final vehicleId = state.pathParameters['vehicleId'] ?? '';
-                  return AnalyticsScreen(vehicleId: vehicleId);
+                  return _tabPage(
+                    state: state,
+                    child: AnalyticsScreen(vehicleId: vehicleId),
+                  );
                 },
               ),
             ],
@@ -144,7 +157,8 @@ final routerProvider = Provider<GoRouter>((ref) {
             routes: [
               GoRoute(
                 path: '/settings',
-                builder: (context, state) => const SettingsScreen(),
+                pageBuilder: (context, state) =>
+                    _tabPage(state: state, child: const SettingsScreen()),
               ),
             ],
           ),
@@ -153,3 +167,10 @@ final routerProvider = Provider<GoRouter>((ref) {
     ],
   );
 });
+
+NoTransitionPage<void> _tabPage({
+  required GoRouterState state,
+  required Widget child,
+}) {
+  return NoTransitionPage<void>(key: state.pageKey, child: child);
+}
