@@ -23,6 +23,14 @@ import ru.talkingshaha.backend.part.service.PartService;
 import ru.talkingshaha.backend.vehicle.model.Vehicle;
 import ru.talkingshaha.backend.vehicle.service.VehicleService;
 
+/**
+ * Application service for a vehicle's timeline (service history) events.
+ *
+ * <p>Handles the three event types (refuel, trip, maintenance), validates that an event's
+ * mileage is not lower than the vehicle's current mileage, advances the vehicle mileage when
+ * an event reports a higher reading, and maps the polymorphic event entities to a single
+ * {@link TimelineEventResponse} shape.
+ */
 @Service
 public class TimelineEventService {
 
@@ -131,6 +139,10 @@ public class TimelineEventService {
         }
     }
 
+    /**
+     * Maps a stored event to the unified timeline response, populating only the fields that
+     * apply to the concrete event type and leaving the rest null.
+     */
     private TimelineEventResponse toResponse(BaseEvent event) {
         return switch (event) {
             case RefuelEvent r -> new TimelineEventResponse(
@@ -155,6 +167,7 @@ public class TimelineEventService {
                         t.getType(),
                         "Trip",
                         t.getEventDateTime(),
+                        null,
                         t.getEndMileageKm(),
                         null, null, null, null,
                         t.getStartMileageKm(),
