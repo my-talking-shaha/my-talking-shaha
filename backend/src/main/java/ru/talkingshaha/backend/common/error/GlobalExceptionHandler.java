@@ -38,6 +38,12 @@ public class GlobalExceptionHandler {
         return ResponseEntity.status(HttpStatus.NOT_FOUND).body(ApiError.of("NOT_FOUND", exception.getMessage()));
     }
 
+    @ExceptionHandler(ForbiddenException.class)
+    public ResponseEntity<ApiError> handleForbidden(ForbiddenException exception) {
+        log.warn("API error code=FORBIDDEN message={}", exception.getMessage());
+        return ResponseEntity.status(HttpStatus.FORBIDDEN).body(ApiError.of("FORBIDDEN", exception.getMessage()));
+    }
+
     private String fieldMessage(FieldError fieldError) {
         return fieldError.getDefaultMessage() == null ? "Invalid value" : fieldError.getDefaultMessage();
     }
