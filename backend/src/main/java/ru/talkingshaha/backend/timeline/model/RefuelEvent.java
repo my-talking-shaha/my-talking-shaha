@@ -28,9 +28,9 @@ public class RefuelEvent extends BaseEvent {
     @Column(nullable = false, length = 32)
     private FuelType fuelType;
 
-    @Column(nullable = false, length = 32)
+    @Column(length = 32)
     private String fuelName;
 
-    @Column(nullable = false, length = 255)
+    @Column(length = 255)
     private String stationName;
 }
