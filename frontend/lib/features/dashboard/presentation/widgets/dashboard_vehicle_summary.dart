@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:frontend/app/theme/app_theme.dart';
 import 'package:frontend/features/dashboard/presentation/utils/dashboard_utils.dart';
@@ -30,19 +31,14 @@ final class DashboardVehicleSummary extends StatelessWidget {
             Expanded(
               child: _MetricCard(
                 label: 'ENGINE',
-                value: DashboardUtils.engineLabel(vehicle.engineType),
-                subtitle: [
-                  vehicle.year.toString(),
-                  if (vehicle.color case final color?
-                      when color.trim().isNotEmpty)
-                    color.trim(),
-                ].join(' • '),
+                value: _engineSpecificationLabel(vehicle),
+                subtitle: DashboardUtils.engineLabel(vehicle.engineType),
               ),
             ),
           ],
         ),
         const SizedBox(height: AppSpacing.lg),
-        const _VinPlaceholderCard(),
+        _VinCard(vin: vehicle.vin),
       ],
     );
   }
@@ -203,11 +199,16 @@ final class _MetricCard extends StatelessWidget {
   }
 }
 
-final class _VinPlaceholderCard extends StatelessWidget {
-  const _VinPlaceholderCard();
+final class _VinCard extends StatelessWidget {
+  const _VinCard({required this.vin});
+
+  final String? vin;
 
   @override
   Widget build(BuildContext context) {
+    final value = vin?.trim();
+    final hasVin = value != null && value.isNotEmpty;
+
     return Container(
       padding: const EdgeInsets.all(AppSpacing.lg),
       decoration: BoxDecoration(
@@ -224,7 +225,7 @@ final class _VinPlaceholderCard extends StatelessWidget {
                 Text('VIN NUMBER', style: dashboardSectionLabelStyle(context)),
                 const SizedBox(height: AppSpacing.xs),
                 Text(
-                  'VIN unavailable',
+                  hasVin ? value : 'VIN unavailable',
                   style: Theme.of(
                     context,
                   ).textTheme.bodyLarge?.copyWith(color: AppColors.textMuted),
@@ -232,9 +233,38 @@ final class _VinPlaceholderCard extends StatelessWidget {
               ],
             ),
           ),
-          const Icon(Icons.copy_outlined, color: AppColors.textDisabled),
+          IconButton(
+            tooltip: hasVin ? 'Copy VIN' : 'VIN unavailable',
+            style: IconButton.styleFrom(
+              foregroundColor: AppColors.primaryLight,
+              disabledForegroundColor: AppColors.textDisabled,
+            ),
+            onPressed: hasVin ? () => _copyVin(context, value) : null,
+            icon: const Icon(Icons.copy_outlined),
+          ),
         ],
       ),
     );
   }
+
+  Future<void> _copyVin(BuildContext context, String value) async {
+    await Clipboard.setData(ClipboardData(text: value));
+    if (!context.mounted) return;
+
+    ScaffoldMessenger.of(context)
+      ..hideCurrentSnackBar()
+      ..showSnackBar(const SnackBar(content: Text('VIN copied')));
+  }
+}
+
+String _engineSpecificationLabel(Vehicle vehicle) {
+  final power = vehicle.enginePowerHp;
+  if (power != null) return '$power hp';
+
+  final volume = vehicle.engineVolumeLiters;
+  if (volume != null) {
+    return '${DashboardUtils.engineVolumeLabel(volume)} L';
+  }
+
+  return 'Unknown';
 }

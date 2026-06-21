@@ -23,6 +23,11 @@ abstract final class DashboardUtils {
     return '${normalized[0].toUpperCase()}${normalized.substring(1)}';
   }
 
+  static String engineVolumeLabel(double volumeLiters) {
+    final value = volumeLiters.toString();
+    return value.endsWith('.0') ? value.substring(0, value.length - 2) : value;
+  }
+
   static String eventSubtitle(HistoryEvent event) {
     return switch (event.details) {
       FuelDetails(:final liters, :final fuelType) => '$liters L • $fuelType',
@@ -47,7 +52,6 @@ abstract final class DashboardUtils {
       return '$hour:$minute';
     }
     if (difference == 1) return 'YESTERDAY';
-    if (difference > 1 && difference < 7) return '$difference D.';
 
     const months = [
       'JAN',

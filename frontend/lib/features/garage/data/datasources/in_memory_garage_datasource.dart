@@ -19,6 +19,9 @@ final class InMemoryGarageDatasource {
       color: normalizedDraft.color,
       currentMileageKm: normalizedDraft.currentMileageKm,
       engineType: normalizedDraft.engineType,
+      engineVolumeLiters: normalizedDraft.engineVolumeLiters,
+      enginePowerHp: normalizedDraft.enginePowerHp,
+      vin: normalizedDraft.vin,
       photoUrl: null,
       status: 'unknown',
       activeWarningsCount: 0,
@@ -43,6 +46,12 @@ final class InMemoryGarageDatasource {
       color: normalizedDraft.color,
       currentMileageKm: normalizedDraft.currentMileageKm,
       engineType: normalizedDraft.engineType,
+      engineVolumeLiters: normalizedDraft.engineVolumeLiters,
+      clearEngineVolume: normalizedDraft.engineVolumeLiters == null,
+      enginePowerHp: normalizedDraft.enginePowerHp,
+      clearEnginePower: normalizedDraft.enginePowerHp == null,
+      vin: normalizedDraft.vin,
+      clearVin: normalizedDraft.vin == null,
     );
 
     _vehicles[index] = updatedVehicle;

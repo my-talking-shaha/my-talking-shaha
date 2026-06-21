@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:frontend/app/theme/app_theme.dart';
@@ -9,9 +10,28 @@ import 'package:frontend/features/garage/domain/repositories/garage_repository.d
 import 'package:frontend/features/garage/presentation/providers/garage_providers.dart';
 
 void main() {
-  testWidgets('shows vehicle summary, forecast placeholder, and events', (
+  testWidgets('shows vehicle summary, forecast section, and events', (
     tester,
   ) async {
+    String? copiedVin;
+    final binaryMessenger =
+        TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger;
+    binaryMessenger.setMockMethodCallHandler(SystemChannels.platform, (
+      methodCall,
+    ) async {
+      if (methodCall.method == 'Clipboard.setData') {
+        final arguments = methodCall.arguments as Map<Object?, Object?>;
+        copiedVin = arguments['text'] as String?;
+      }
+      return null;
+    });
+    addTearDown(
+      () => binaryMessenger.setMockMethodCallHandler(
+        SystemChannels.platform,
+        null,
+      ),
+    );
+
     tester.view.physicalSize = const Size(430, 1600);
     tester.view.devicePixelRatio = 1;
     addTearDown(tester.view.resetPhysicalSize);
@@ -28,6 +48,9 @@ void main() {
           color: 'blue',
           currentMileageKm: 124580,
           engineType: 'gasoline',
+          engineVolumeLiters: 1.6,
+          enginePowerHp: null,
+          vin: 'XTA21060012345678',
           status: 'ok',
           activeWarningsCount: 0,
         ),
@@ -37,11 +60,15 @@ void main() {
     expect(find.text('My Shaha'), findsOneWidget);
     expect(find.text('Lada 2106'), findsOneWidget);
     expect(find.text('124,580'), findsOneWidget);
+    expect(find.text('1.6 L'), findsOneWidget);
     expect(find.text('Gasoline'), findsOneWidget);
-    expect(find.text('1998 • blue'), findsOneWidget);
-    expect(find.text('VIN unavailable'), findsOneWidget);
-    expect(find.text('Maintenance forecast'), findsOneWidget);
-    expect(find.text('Coming soon'), findsOneWidget);
+    expect(find.text('1998 • blue'), findsNothing);
+    expect(find.text('XTA21060012345678'), findsOneWidget);
+    await tester.tap(find.byTooltip('Copy VIN'));
+    await tester.pump();
+    expect(copiedVin, 'XTA21060012345678');
+    expect(find.text('VIN copied'), findsOneWidget);
+    expect(find.text('MAINTENANCE FORECAST'), findsOneWidget);
     expect(find.text('Refueling AI-95'), findsOneWidget);
     expect(tester.takeException(), isNull);
   });

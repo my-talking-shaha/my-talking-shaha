@@ -8,8 +8,8 @@ import 'package:frontend/features/garage/presentation/state/add_vehicle_state.da
 
 final class AddVehicleController {
   AddVehicleController({required GarageRepository repository})
-      : _createVehicle = CreateVehicle(repository),
-        _updateVehicle = UpdateVehicle(repository);
+    : _createVehicle = CreateVehicle(repository),
+      _updateVehicle = UpdateVehicle(repository);
 
   final CreateVehicle _createVehicle;
   final UpdateVehicle _updateVehicle;
@@ -28,6 +28,10 @@ final class AddVehicleController {
       color: vehicle.color ?? '',
       currentMileage: vehicle.currentMileageKm.toString(),
       engineType: vehicle.engineType,
+      engineSpecification: vehicle.engineType == 'electric'
+          ? vehicle.enginePowerHp?.toString() ?? ''
+          : vehicle.engineVolumeLiters?.toString() ?? '',
+      vin: vehicle.vin ?? '',
     );
   }
 
@@ -68,9 +72,27 @@ final class AddVehicleController {
   }
 
   void updateEngineType(String value) {
+    final didChange = state.engineType != value;
     state = state.copyWith(
       engineType: value,
-      fieldErrors: _withoutError('engineType'),
+      engineSpecification: didChange ? '' : state.engineSpecification,
+      fieldErrors: _withoutErrors(['engineType', 'engineSpecification']),
+      clearErrorMessage: true,
+    );
+  }
+
+  void updateEngineSpecification(String value) {
+    state = state.copyWith(
+      engineSpecification: value,
+      fieldErrors: _withoutError('engineSpecification'),
+      clearErrorMessage: true,
+    );
+  }
+
+  void updateVin(String value) {
+    state = state.copyWith(
+      vin: value,
+      fieldErrors: _withoutError('vin'),
       clearErrorMessage: true,
     );
   }
@@ -120,6 +142,15 @@ final class AddVehicleController {
     final errors = <String, String>{};
     final parsedYear = int.tryParse(state.year.trim());
     final parsedMileage = int.tryParse(state.currentMileage.trim());
+    final isElectric = state.engineType.trim().toLowerCase() == 'electric';
+    final parsedEngineVolume = isElectric
+        ? null
+        : double.tryParse(
+            state.engineSpecification.trim().replaceAll(',', '.'),
+          );
+    final parsedEnginePower = isElectric
+        ? int.tryParse(state.engineSpecification.trim())
+        : null;
 
     if (state.brand.trim().isEmpty) {
       errors['brand'] = 'Enter a brand';
@@ -136,8 +167,15 @@ final class AddVehicleController {
     if (state.engineType.trim().isEmpty) {
       errors['engineType'] = 'Select an engine type';
     }
+    if (isElectric && parsedEnginePower == null) {
+      errors['engineSpecification'] = 'Enter power output';
+    } else if (!isElectric && parsedEngineVolume == null) {
+      errors['engineSpecification'] = 'Enter engine volume';
+    }
 
-    if (parsedYear == null || parsedMileage == null) {
+    if (parsedYear == null ||
+        parsedMileage == null ||
+        (isElectric ? parsedEnginePower == null : parsedEngineVolume == null)) {
       state = state.copyWith(
         fieldErrors: errors,
         errorMessage: 'Check the vehicle details',
@@ -152,8 +190,12 @@ final class AddVehicleController {
       color: state.color,
       currentMileageKm: parsedMileage,
       engineType: state.engineType,
+      engineVolumeLiters: parsedEngineVolume,
+      enginePowerHp: parsedEnginePower,
+      vin: state.vin,
     );
-    final validationResult = VehicleDraftValidator.validate(draft);
+    final normalizedDraft = draft.trimmed();
+    final validationResult = VehicleDraftValidator.validate(normalizedDraft);
     errors.addAll(validationResult.fieldErrors);
 
     if (errors.isNotEmpty) {
@@ -164,11 +206,19 @@ final class AddVehicleController {
       return null;
     }
 
-    return draft;
+    return normalizedDraft;
   }
 
   Map<String, String> _withoutError(String field) {
     final errors = Map<String, String>.from(state.fieldErrors)..remove(field);
+    return Map.unmodifiable(errors);
+  }
+
+  Map<String, String> _withoutErrors(Iterable<String> fields) {
+    final errors = Map<String, String>.from(state.fieldErrors);
+    for (final field in fields) {
+      errors.remove(field);
+    }
     return Map.unmodifiable(errors);
   }
 }

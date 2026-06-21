@@ -4,7 +4,6 @@ import 'package:frontend/app/theme/app_theme.dart';
 import 'package:frontend/features/dashboard/presentation/widgets/dashboard_latest_events.dart';
 import 'package:frontend/features/dashboard/presentation/widgets/dashboard_section_header.dart';
 import 'package:frontend/features/dashboard/presentation/widgets/dashboard_vehicle_summary.dart';
-import 'package:frontend/features/dashboard/presentation/widgets/maintenance_forecast_placeholder.dart';
 import 'package:frontend/features/garage/domain/entities/vehicle.dart';
 import 'package:frontend/features/history/domain/entities/history_event.dart';
 
@@ -34,7 +33,7 @@ final class DashboardContent extends StatelessWidget {
           const SizedBox(height: AppSpacing.xxxl),
           const DashboardSectionHeader(title: 'MAINTENANCE FORECAST'),
           const SizedBox(height: AppSpacing.md),
-          const MaintenanceForecastPlaceholder(),
+          // TODO: forecast here
           const SizedBox(height: AppSpacing.xxxl),
           DashboardLatestEvents(
             vehicleId: vehicle.id,

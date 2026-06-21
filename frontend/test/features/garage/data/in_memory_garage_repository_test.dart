@@ -17,6 +17,9 @@ void main() {
           year: 1998,
           currentMileageKm: 124580,
           engineType: 'gasoline',
+          engineVolumeLiters: 1.6,
+          enginePowerHp: null,
+          vin: 'XTA21060012345678',
         ),
       );
       final secondVehicle = await repository.addVehicle(
@@ -27,6 +30,8 @@ void main() {
           color: 'green',
           currentMileageKm: 89000,
           engineType: 'diesel',
+          engineVolumeLiters: 2,
+          enginePowerHp: null,
         ),
       );
 
@@ -37,6 +42,9 @@ void main() {
         firstVehicle.id,
         secondVehicle.id,
       ]);
+      expect(firstVehicle.engineVolumeLiters, 1.6);
+      expect(firstVehicle.enginePowerHp, isNull);
+      expect(firstVehicle.vin, 'XTA21060012345678');
 
       await repository.deleteVehicle(firstVehicle.id);
 
@@ -54,6 +62,8 @@ void main() {
           year: 1998,
           currentMileageKm: 124580,
           engineType: 'gasoline',
+          engineVolumeLiters: 1.6,
+          enginePowerHp: null,
         ),
       );
 
@@ -73,6 +83,9 @@ void main() {
           year: 1998,
           currentMileageKm: 124580,
           engineType: 'gasoline',
+          engineVolumeLiters: 1.6,
+          enginePowerHp: null,
+          vin: 'XTA21060012345678',
         ),
       );
 
@@ -84,13 +97,18 @@ void main() {
           year: 2005,
           color: 'green',
           currentMileageKm: 130000,
-          engineType: 'diesel',
+          engineType: 'electric',
+          engineVolumeLiters: null,
+          enginePowerHp: 150,
         ),
       );
 
       expect(updatedVehicle.id, vehicle.id);
       expect(updatedVehicle.model, '2107');
       expect(updatedVehicle.color, 'green');
+      expect(updatedVehicle.engineVolumeLiters, isNull);
+      expect(updatedVehicle.enginePowerHp, 150);
+      expect(updatedVehicle.vin, isNull);
       expect(await repository.getVehicles(), [updatedVehicle]);
     });
   });

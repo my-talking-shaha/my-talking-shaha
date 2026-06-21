@@ -35,13 +35,18 @@ Required:
 - year;
 - current mileage;
 - engine type.
+- engine specification: volume or power output based on engine type.
 
 Optional:
 - color.
+- VIN.
 
 Validation:
 - year must be realistic;
 - mileage must be non-negative;
+- engine specification must be positive;
+- volume and power output are mutually exclusive;
+- VIN must contain exactly 17 characters when provided;
 - brand/model may come from catalog or manual input;
 - no submit while already submitting.
 
