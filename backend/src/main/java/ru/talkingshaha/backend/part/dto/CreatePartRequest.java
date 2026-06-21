@@ -1,5 +1,6 @@
 package ru.talkingshaha.backend.part.dto;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
@@ -13,4 +14,6 @@ public record CreatePartRequest(
         @NotNull PartCategory category,
         @NotNull LocalDate installedAt,
         @NotNull @PositiveOrZero Integer installedMileageKm,
-        @Positive Integer expectedLifetimeKm) {}
+        @Positive Integer expectedLifetimeKm,
+        @Size(max = 2000) String description,
+        @Positive BigDecimal cost) {}

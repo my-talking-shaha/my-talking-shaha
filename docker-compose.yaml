@@ -1,0 +1,15 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: talking-shaha-postgres
+    environment:
+      POSTGRES_DB: talking_shaha
+      POSTGRES_USER: talking_shaha
+      POSTGRES_PASSWORD: talking_shaha
+    ports:
+      - "5432:5432"
+    volumes:
+      - talking_shaha_pgdata:/var/lib/postgresql/data
+
+volumes:
+  talking_shaha_pgdata:
