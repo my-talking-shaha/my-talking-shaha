@@ -81,10 +81,17 @@ void main() {
       expect(find.textContaining('blue'), findsOneWidget);
       expect(find.textContaining('gasoline'), findsOneWidget);
       expect(find.textContaining('124'), findsOneWidget);
-      expect(
-        find.byKey(const ValueKey('garage_vehicle_photo_fallback_vehicle_123')),
-        findsOneWidget,
+      final fallbackFinder = find.byKey(
+        const ValueKey('garage_vehicle_photo_fallback_vehicle_123'),
       );
+      expect(fallbackFinder, findsOneWidget);
+      final fallback = tester.widget<Container>(fallbackFinder);
+      expect((fallback.decoration as BoxDecoration).gradient, isNotNull);
+      expect(
+        find.descendant(of: fallbackFinder, matching: find.text('Lada 2106')),
+        findsNothing,
+      );
+      expect(find.text('Lada 2106'), findsOneWidget);
 
       await tester.tap(find.textContaining('Lada'));
       await tester.pumpAndSettle();
