@@ -20,10 +20,10 @@ Autodeploy runs from GitHub Actions after every push to `main`.
 
    Log out and log back in after changing groups.
 
-4. Run the backend once manually:
+4. Run the application once manually:
 
    ```bash
-   docker compose -f docker/docker-compose.yml up -d --build backend
+   docker compose -f docker/docker-compose.yml up -d --build backend frontend
    ```
 
 ## GitHub secrets
@@ -41,18 +41,25 @@ Add these secrets in GitHub:
 On every push to `main`, the workflow:
 
 1. Checks out the repository on the GitHub Actions runner.
-2. Builds and starts the backend Docker stack with Postgres.
+2. Builds and starts the application Docker stack with Postgres.
 3. Waits for `http://localhost:8080/actuator/health`.
-4. Stops the smoke-test stack.
-5. Connects to the server over SSH.
-6. Goes to `SERVER_APP_PATH`.
-7. Runs `git fetch --prune origin main`.
-8. Updates the server checkout with `git pull --ff-only origin main`.
-9. Rebuilds and restarts only the backend service and its dependencies:
+4. Waits for `http://localhost/health`.
+5. Verifies the generated OpenAPI docs at `http://localhost/v3/api-docs`.
+6. Stops the smoke-test stack.
+7. Connects to the server over SSH.
+8. Goes to `SERVER_APP_PATH`.
+9. Runs `git fetch --prune origin main`.
+10. Updates the server checkout with `git pull --ff-only origin main`.
+11. Rebuilds and restarts the backend and frontend services with their dependencies:
 
    ```bash
-   docker compose -f docker/docker-compose.yml up -d --build --remove-orphans backend
+   docker compose -f docker/docker-compose.yml up -d --build --remove-orphans backend frontend
    ```
+
+After deployment, the web app should be available at `http://SERVER_HOST`.
+
+Swagger UI should be available at `http://SERVER_HOST/swagger-ui.html`.
+The generated OpenAPI JSON should be available at `http://SERVER_HOST/v3/api-docs`.
 
 ## Database note
 
