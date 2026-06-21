@@ -189,12 +189,20 @@ Response `200`:
       }
     ]
   },
-  "recentEvents": []
+  "recentEvents": [
+    {
+      "id": "044c10dc-13d1-4587-9169-e9e79789ea45",
+      "type": "REFUEL",
+      "title": "Refill AI-95",
+      "subtitle": "30 L",
+      "eventDateTime": "2026-06-12T14:30:00Z"
+    }
+  ]
 }
 ```
 
-`recentEvents` is currently always an empty list; the dashboard is not yet wired to the
-timeline events API.
+`recentEvents` contains up to five of the most recent timeline events, newest first, in a
+compact form (`id`, `type`, `title`, `subtitle`, `eventDateTime`).
 
 ### Update vehicle
 
@@ -216,14 +224,14 @@ Request can contain any editable fields:
 
 Response `204`.
 
-## Timeline (events)
+## Timeline
 
 Every event is returned in a single unified shape. Only the fields relevant to the
 event `type` are populated; the rest are `null`.
 
 ### List events
 
-`GET /api/v1/vehicles/{vehicleId}/events?type=REFUEL`
+`GET /api/v1/vehicles/{vehicleId}/timeline?type=REFUEL`
 
 `type` is optional. Supported values: `TRIP`, `REFUEL`, `REPAIR`, `MAINTENANCE`,
 `PART_REPLACEMENT`, `WARNING`. Events are returned most recent first. Pagination is not
@@ -252,7 +260,7 @@ Response `200`:
 
 ### Add refuel
 
-`POST /api/v1/vehicles/{vehicleId}/events/refuel`
+`POST /api/v1/vehicles/{vehicleId}/timeline/refuel`
 
 Request:
 
@@ -272,7 +280,7 @@ Response `201`: timeline event. `liters` must be in `(0, 1000]` and `cost > 0`.
 
 ### Add trip
 
-`POST /api/v1/vehicles/{vehicleId}/events/trip`
+`POST /api/v1/vehicles/{vehicleId}/timeline/trip`
 
 Request:
 
@@ -291,7 +299,7 @@ cost. Response `201`: timeline event.
 
 ### Add maintenance
 
-`POST /api/v1/vehicles/{vehicleId}/events/maintenance`
+`POST /api/v1/vehicles/{vehicleId}/timeline/maintenance`
 
 Request:
 

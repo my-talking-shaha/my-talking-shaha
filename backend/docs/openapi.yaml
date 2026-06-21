@@ -155,7 +155,7 @@ paths:
           $ref: '#/components/responses/ValidationError'
         '404':
           $ref: '#/components/responses/NotFound'
-  /vehicles/{vehicleId}/events:
+  /vehicles/{vehicleId}/timeline:
     get:
       summary: List vehicle timeline events
       tags: [ Timeline ]
@@ -176,7 +176,7 @@ paths:
                 $ref: '#/components/schemas/TimelineEventList'
         '404':
           $ref: '#/components/responses/NotFound'
-  /vehicles/{vehicleId}/events/refuel:
+  /vehicles/{vehicleId}/timeline/refuel:
     post:
       summary: Add refuel event
       tags: [ Timeline ]
@@ -199,7 +199,7 @@ paths:
           $ref: '#/components/responses/ValidationError'
         '404':
           $ref: '#/components/responses/NotFound'
-  /vehicles/{vehicleId}/events/trip:
+  /vehicles/{vehicleId}/timeline/trip:
     post:
       summary: Add trip event
       tags: [ Timeline ]
@@ -222,7 +222,7 @@ paths:
           $ref: '#/components/responses/ValidationError'
         '404':
           $ref: '#/components/responses/NotFound'
-  /vehicles/{vehicleId}/events/maintenance:
+  /vehicles/{vehicleId}/timeline/maintenance:
     post:
       summary: Add maintenance event
       tags: [ Timeline ]
@@ -340,7 +340,7 @@ components:
         recentEvents:
           type: array
           items:
-            type: object
+            $ref: '#/components/schemas/RecentEvent'
     MaintenanceForecast:
       type: object
       required: [ overallStatus, updatedAt, parts ]
@@ -357,6 +357,25 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/Part'
+    RecentEvent:
+      type: object
+      description: Compact timeline event shown on the dashboard.
+      required: [ id, type, eventDateTime ]
+      properties:
+        id:
+          type: string
+          format: uuid
+        type:
+          $ref: '#/components/schemas/TimelineEventType'
+        title:
+          type: string
+          nullable: true
+        subtitle:
+          type: string
+          nullable: true
+        eventDateTime:
+          type: string
+          format: date-time
     PartList:
       type: object
       required: [ parts ]
