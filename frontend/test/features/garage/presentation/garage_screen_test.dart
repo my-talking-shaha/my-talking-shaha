@@ -244,10 +244,10 @@ Future<void> _pumpGarage(
         },
       ),
       GoRoute(
-        path: '/vehicle/:vehicleId/chat',
+        path: '/vehicle/:vehicleId/parts',
         builder: (context, state) {
           final vehicleId = state.pathParameters['vehicleId'];
-          return Scaffold(body: Text('chat:$vehicleId'));
+          return Scaffold(body: Text('parts:$vehicleId'));
         },
       ),
     ],

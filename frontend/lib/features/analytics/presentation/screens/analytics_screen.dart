@@ -7,6 +7,8 @@ import 'package:frontend/app/theme/app_theme.dart';
 import 'package:frontend/features/analytics/domain/entities/analytics_period.dart';
 import 'package:frontend/features/analytics/domain/entities/analytics_summary.dart';
 import 'package:frontend/features/analytics/presentation/providers/analytics_providers.dart';
+import 'package:frontend/features/parts/presentation/providers/parts_providers.dart';
+import 'package:frontend/features/parts/presentation/widgets/maintenance_forecast_card.dart';
 
 final class AnalyticsScreen extends ConsumerStatefulWidget {
   const AnalyticsScreen({required this.vehicleId, super.key});
@@ -57,6 +59,7 @@ final class _AnalyticsScreenState extends ConsumerState<AnalyticsScreen> {
 
             return _AnalyticsDashboard(
               summary: summary,
+              vehicleId: widget.vehicleId,
               selectedPeriod: _selectedPeriod,
               onPeriodSelected: (period) {
                 setState(() => _selectedPeriod = period);
@@ -78,11 +81,13 @@ final class _AnalyticsScreenState extends ConsumerState<AnalyticsScreen> {
 final class _AnalyticsDashboard extends StatelessWidget {
   const _AnalyticsDashboard({
     required this.summary,
+    required this.vehicleId,
     required this.selectedPeriod,
     required this.onPeriodSelected,
   });
 
   final AnalyticsSummary summary;
+  final String vehicleId;
   final AnalyticsPeriod selectedPeriod;
   final ValueChanged<AnalyticsPeriod> onPeriodSelected;
 
@@ -137,8 +142,15 @@ final class _AnalyticsDashboard extends StatelessWidget {
           trendPercent: summary.trendPercent,
         ),
         const SizedBox(height: AppSpacing.xxl),
-        // TODO(parts-rebase): Insert MaintenanceForecastCard from
-        // features/parts here after the parts branch is rebased, then remove
+        Consumer(
+          builder: (context, ref, child) => ref
+              .watch(vehiclePartsProvider(vehicleId))
+              .maybeWhen(
+                data: (parts) => MaintenanceForecastCard(parts: parts),
+                orElse: () => const SizedBox.shrink(),
+              ),
+        ),
+        const SizedBox(height: AppSpacing.xxl),
         const _SectionHeader(title: 'HISTORY ANALYSIS'),
         const SizedBox(height: AppSpacing.md),
         _HistoryAnalysisCard(summary: summary),
