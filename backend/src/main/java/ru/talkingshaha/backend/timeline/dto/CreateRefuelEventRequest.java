@@ -9,7 +9,7 @@ import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.PastOrPresent;
 import jakarta.validation.constraints.Positive;
 import jakarta.validation.constraints.PositiveOrZero;
-import ru.talkingshaha.backend.vehicle.model.FuelTy pe;
+import ru.talkingshaha.backend.vehicle.model.FuelType;
 
 public record CreateRefuelEventRequest(
         @NotNull @PastOrPresent OffsetDateTime eventDateTime,

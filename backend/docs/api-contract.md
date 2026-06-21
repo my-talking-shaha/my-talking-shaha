@@ -300,8 +300,7 @@ Request:
   "startMileageKm": 10000,
   "endMileageKm": 10010,
   "route": "Home -> University",
-  "durationMinutes": 30,
-  "cost": 0
+  "durationMinutes": 30
 }
 ```
 

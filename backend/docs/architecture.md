@@ -87,5 +87,5 @@ General rules:
 - mileage in new events cannot be lower than the already known vehicle mileage;
 - event date and time must be valid;
 - required fields are checked at DTO level;
-- repair and maintenance cost can be `0` if the user does not know the price;
+- repair and maintenance cost must be greater than `0`;
 - for MVP, photo metadata or URLs should be stored instead of binary files in the main tables.

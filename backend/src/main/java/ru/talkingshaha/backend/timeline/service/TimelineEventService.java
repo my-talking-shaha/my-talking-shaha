@@ -92,7 +92,6 @@ public class TimelineEventService {
         event.setEndMileageKm(request.endMileageKm());
         event.setRoute(request.route());
         event.setDurationMinutes(request.durationMinutes());
-        event.setCost(request.cost());
         updateVehicleMileage(vehicle, request.endMileageKm());
         return toResponse(trips.save(event));
     }
@@ -156,7 +155,6 @@ public class TimelineEventService {
                         t.getType(),
                         "Trip",
                         t.getEventDateTime(),
-                        t.getCost(),
                         t.getEndMileageKm(),
                         null, null, null, null,
                         t.getStartMileageKm(),
@@ -166,7 +164,7 @@ public class TimelineEventService {
                         t.getDurationMinutes(),
                         null, null, null);
             }
-            case MaintenanceEvent m -> new Time lineEventResponse(
+            case MaintenanceEvent m -> new TimelineEventResponse(
                     m.getId(),
                     m.getType(),
                     m.getName(),

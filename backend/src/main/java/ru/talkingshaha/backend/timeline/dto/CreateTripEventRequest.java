@@ -13,6 +13,5 @@ public record CreateTripEventRequest(
         @PositiveOrZero Integer startMileageKm,
         @NotNull @PositiveOrZero Integer endMileageKm,
         String route,
-        @NotNull @Positive Integer durationMinutes,
-        @Positive BigDecimal cost) {
+        @NotNull @Positive Integer durationMinutes) {
 }
