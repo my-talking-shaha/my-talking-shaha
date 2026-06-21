@@ -150,6 +150,7 @@ final class _AnalyticsDashboard extends StatelessWidget {
                 orElse: () => const SizedBox.shrink(),
               ),
         ),
+        const SizedBox(height: AppSpacing.xxl),
         const _SectionHeader(title: 'HISTORY ANALYSIS'),
         const SizedBox(height: AppSpacing.md),
         _HistoryAnalysisCard(summary: summary),
