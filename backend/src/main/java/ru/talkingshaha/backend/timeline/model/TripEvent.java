@@ -27,7 +27,4 @@ public class TripEvent extends BaseEvent {
 
     @Column(name = "duration_minutes", nullable = false)
     private Integer durationMinutes;
-
-    @Column(precision = 10, scale = 2)
-    private BigDecimal cost;
 }

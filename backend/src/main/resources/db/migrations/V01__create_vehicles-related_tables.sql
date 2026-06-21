@@ -47,7 +47,6 @@ CREATE TABLE IF NOT EXISTS trips
     end_mileage_km   INT            NOT NULL CHECK (end_mileage_km >= 0),
     route            TEXT,
     duration_minutes INT            NOT NULL CHECK (duration_minutes > 0),
-    cost             NUMERIC(10, 2) CHECK (cost > 0),
     CONSTRAINT fk_trip_event
         FOREIGN KEY (id)
             REFERENCES timeline_events (id)
