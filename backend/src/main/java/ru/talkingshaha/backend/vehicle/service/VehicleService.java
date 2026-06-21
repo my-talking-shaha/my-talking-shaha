@@ -10,9 +10,13 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import ru.talkingshaha.backend.common.error.ForbiddenException;
 import ru.talkingshaha.backend.common.error.ResourceNotFoundException;
+import ru.talkingshaha.backend.common.model.BaseEvent;
 import ru.talkingshaha.backend.part.dto.PartResponse;
 import ru.talkingshaha.backend.part.model.PartStatus;
 import ru.talkingshaha.backend.part.repository.PartRepository;
+import ru.talkingshaha.backend.timeline.model.MaintenanceEvent;
+import ru.talkingshaha.backend.timeline.model.RefuelEvent;
+import ru.talkingshaha.backend.timeline.model.TripEvent;
 import ru.talkingshaha.backend.user.model.AppUser;
 import ru.talkingshaha.backend.user.service.CurrentUserService;
 import org.springframework.util.StringUtils;
@@ -20,6 +24,7 @@ import ru.talkingshaha.backend.timeline.repository.TimelineEventRepository;
 import ru.talkingshaha.backend.vehicle.dto.CreateVehicleRequest;
 import ru.talkingshaha.backend.vehicle.dto.UpdateVehicleRequest;
 import ru.talkingshaha.backend.vehicle.dto.VehicleDashboardResponse;
+import ru.talkingshaha.backend.vehicle.dto.VehicleDashboardResponse.RecentEventResponse;
 import ru.talkingshaha.backend.vehicle.dto.VehicleResponse;
 import ru.talkingshaha.backend.vehicle.model.Vehicle;
 import ru.talkingshaha.backend.vehicle.repository.VehicleRepository;
@@ -32,6 +37,9 @@ import ru.talkingshaha.backend.vehicle.repository.VehicleRepository;
  */
 @Service
 public class VehicleService {
+
+    /** Maximum number of timeline events shown on the dashboard. */
+    private static final int RECENT_EVENTS_LIMIT = 5;
 
     private final VehicleRepository vehicles;
     private final PartRepository parts;
@@ -116,7 +124,36 @@ public class VehicleService {
                 .orElse(null);
         var forecast = new VehicleDashboardResponse.MaintenanceForecast(
                 overallStatus, nextServiceInKm, OffsetDateTime.now(), forecastParts);
-        return new VehicleDashboardResponse(toResponse(vehicle), forecast, List.of());
+        return new VehicleDashboardResponse(toResponse(vehicle), forecast, recentEvents(vehicle));
+    }
+
+    private List<RecentEventResponse> recentEvents(Vehicle vehicle) {
+        return events.findAllByVehicleOrderByEventDateTimeDesc(vehicle).stream()
+                .limit(RECENT_EVENTS_LIMIT)
+                .map(this::toRecentEvent)
+                .toList();
+    }
+
+    private RecentEventResponse toRecentEvent(BaseEvent event) {
+        String title;
+        String subtitle;
+        switch (event) {
+            case RefuelEvent r -> {
+                title = "Refill " + (r.getFuelName() != null ? r.getFuelName() : r.getFuelType().name());
+                subtitle = r.getLiters() != null ? r.getLiters() + " L" : null;
+            }
+            case TripEvent t -> {
+                title = "Trip";
+                subtitle = t.getRoute();
+            }
+            case MaintenanceEvent m -> {
+                title = m.getName();
+                subtitle = m.getDescription();
+            }
+            default -> throw new IllegalStateException("Unknown event type: " + event.getClass());
+        }
+        return new RecentEventResponse(
+                event.getId().toString(), event.getType().name(), title, subtitle, event.getEventDateTime());
     }
 
     /**
