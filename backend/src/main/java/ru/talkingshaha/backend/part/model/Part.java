@@ -1,8 +1,14 @@
 package ru.talkingshaha.backend.part.model;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
 
+import java.util.ArrayList;
+import java.util.List;
+
+import jakarta.persistence.CollectionTable;
 import jakarta.persistence.Column;
+import jakarta.persistence.ElementCollection;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
@@ -52,4 +58,15 @@ public class Part extends BaseEntity {
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 20)
     private PartStatus status;
+
+    @Column(columnDefinition = "TEXT")
+    private String description;
+
+    @Column(precision = 10, scale = 2)
+    private BigDecimal cost;
+
+    @ElementCollection(fetch = FetchType.LAZY)
+    @CollectionTable(name = "part_photos", joinColumns = @JoinColumn(name = "part_id"))
+    @Column(name = "photo_url", nullable = false, length = 500)
+    private List<String> photoUrls = new ArrayList<>();
 }

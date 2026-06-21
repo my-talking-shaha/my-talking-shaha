@@ -25,6 +25,8 @@ final class _AddVehicleScreenState extends ConsumerState<AddVehicleScreen> {
   late final TextEditingController _yearController;
   late final TextEditingController _mileageController;
   late final TextEditingController _colorController;
+  late final TextEditingController _vinController;
+  late final TextEditingController _engineSpecificationController;
   bool _isLoadingVehicle = false;
 
   static const _backgroundColor = Color(0xFF0D111A);
@@ -42,6 +44,8 @@ final class _AddVehicleScreenState extends ConsumerState<AddVehicleScreen> {
     _yearController = TextEditingController();
     _mileageController = TextEditingController();
     _colorController = TextEditingController();
+    _vinController = TextEditingController();
+    _engineSpecificationController = TextEditingController();
     unawaited(_loadVehicleForEdit());
   }
 
@@ -52,6 +56,8 @@ final class _AddVehicleScreenState extends ConsumerState<AddVehicleScreen> {
     _yearController.dispose();
     _mileageController.dispose();
     _colorController.dispose();
+    _vinController.dispose();
+    _engineSpecificationController.dispose();
     super.dispose();
   }
 
@@ -75,9 +81,9 @@ final class _AddVehicleScreenState extends ConsumerState<AddVehicleScreen> {
         return;
       }
 
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Vehicle was not found')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('Vehicle was not found')));
       context.go('/garage');
       return;
     } finally {
@@ -96,6 +102,8 @@ final class _AddVehicleScreenState extends ConsumerState<AddVehicleScreen> {
     _yearController.text = state.year;
     _mileageController.text = state.currentMileage;
     _colorController.text = state.color;
+    _vinController.text = state.vin;
+    _engineSpecificationController.text = state.engineSpecification;
   }
 
   @override
@@ -161,7 +169,7 @@ final class _AddVehicleScreenState extends ConsumerState<AddVehicleScreen> {
                             errorText: state.fieldErrors['year'],
                             keyboardType: TextInputType.number,
                             inputFormatters: [
-                              FilteringTextInputFormatter.digitsOnly
+                              FilteringTextInputFormatter.digitsOnly,
                             ],
                             textInputAction: TextInputAction.next,
                             onChanged: (value) =>
@@ -177,11 +185,13 @@ final class _AddVehicleScreenState extends ConsumerState<AddVehicleScreen> {
                             errorText: state.fieldErrors['currentMileageKm'],
                             keyboardType: TextInputType.number,
                             inputFormatters: [
-                              FilteringTextInputFormatter.digitsOnly
+                              FilteringTextInputFormatter.digitsOnly,
                             ],
                             textInputAction: TextInputAction.next,
                             onChanged: (value) => _update(
-                                _controller.updateCurrentMileage, value),
+                              _controller.updateCurrentMileage,
+                              value,
+                            ),
                           ),
                         ),
                       ],
@@ -196,12 +206,30 @@ final class _AddVehicleScreenState extends ConsumerState<AddVehicleScreen> {
                           _update(_controller.updateColor, value),
                     ),
                     const SizedBox(height: 24),
+                    _GarageTextField(
+                      label: 'VIN number (optional)',
+                      hintText: 'XTA21060012345678',
+                      controller: _vinController,
+                      errorText: state.fieldErrors['vin'],
+                      inputFormatters: [
+                        LengthLimitingTextInputFormatter(17),
+                        FilteringTextInputFormatter.allow(
+                          RegExp('[a-zA-Z0-9]'),
+                        ),
+                      ],
+                      textCapitalization: TextCapitalization.characters,
+                      textInputAction: TextInputAction.next,
+                      onChanged: (value) =>
+                          _update(_controller.updateVin, value),
+                    ),
+                    const SizedBox(height: 24),
                     const _GarageDropdownLabel(label: 'Engine type'),
                     const SizedBox(height: 10),
                     DropdownButtonFormField<String>(
                       key: ValueKey(state.engineType),
-                      initialValue:
-                          state.engineType.isEmpty ? null : state.engineType,
+                      initialValue: state.engineType.isEmpty
+                          ? null
+                          : state.engineType,
                       dropdownColor: _fieldColor,
                       borderRadius: BorderRadius.circular(8),
                       icon: const Icon(
@@ -243,34 +271,69 @@ final class _AddVehicleScreenState extends ConsumerState<AddVehicleScreen> {
                       ),
                       items: const [
                         DropdownMenuItem(
-                            value: 'gasoline', child: Text('gasoline')),
+                          value: 'gasoline',
+                          child: Text('gasoline'),
+                        ),
                         DropdownMenuItem(
-                            value: 'diesel', child: Text('diesel')),
+                          value: 'diesel',
+                          child: Text('diesel'),
+                        ),
                         DropdownMenuItem(
-                            value: 'hybrid', child: Text('hybrid')),
+                          value: 'hybrid',
+                          child: Text('hybrid'),
+                        ),
                         DropdownMenuItem(
-                            value: 'electric', child: Text('electric')),
+                          value: 'electric',
+                          child: Text('electric'),
+                        ),
                       ],
                       onChanged: state.isSubmitting
                           ? null
                           : (value) {
-                              _update(
-                                  _controller.updateEngineType, value ?? '');
+                              _updateEngineType(value ?? '');
                             },
                     ),
+                    if (hasEngineType) ...[
+                      const SizedBox(height: 24),
+                      _GarageTextField(
+                        label: state.engineType == 'electric'
+                            ? 'Power output (hp)'
+                            : 'Engine volume (L)',
+                        hintText: state.engineType == 'electric'
+                            ? '283'
+                            : '1.6',
+                        controller: _engineSpecificationController,
+                        errorText: state.fieldErrors['engineSpecification'],
+                        keyboardType: state.engineType == 'electric'
+                            ? TextInputType.number
+                            : const TextInputType.numberWithOptions(
+                                decimal: true,
+                              ),
+                        inputFormatters: [
+                          if (state.engineType == 'electric')
+                            FilteringTextInputFormatter.digitsOnly
+                          else
+                            FilteringTextInputFormatter.allow(
+                              RegExp('[0-9,.]'),
+                            ),
+                        ],
+                        textInputAction: TextInputAction.done,
+                        onChanged: (value) => _update(
+                          _controller.updateEngineSpecification,
+                          value,
+                        ),
+                      ),
+                    ],
                     if (state.errorMessage != null) ...[
                       const SizedBox(height: 24),
                       Text(
                         state.errorMessage!,
-                        style: Theme.of(
-                          context,
-                        )
-                            .textTheme
-                            .bodyMedium
-                            ?.copyWith(color: AppColors.error),
+                        style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                          color: AppColors.error,
+                        ),
                       ),
                     ],
-                    const SizedBox(height: 84),
+                    const SizedBox(height: 40),
                     SizedBox(
                       width: double.infinity,
                       height: 64,
@@ -292,8 +355,9 @@ final class _AddVehicleScreenState extends ConsumerState<AddVehicleScreen> {
                             ? const SizedBox(
                                 width: 20,
                                 height: 20,
-                                child:
-                                    CircularProgressIndicator(strokeWidth: 2),
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2,
+                                ),
                               )
                             : Row(
                                 mainAxisSize: MainAxisSize.min,
@@ -330,6 +394,14 @@ final class _AddVehicleScreenState extends ConsumerState<AddVehicleScreen> {
     });
   }
 
+  void _updateEngineType(String value) {
+    setState(() {
+      _controller.updateEngineType(value);
+      _engineSpecificationController.text =
+          _controller.state.engineSpecification;
+    });
+  }
+
   Future<void> _submit() async {
     FocusScope.of(context).unfocus();
     final isEditing = widget.vehicleId != null;
@@ -349,9 +421,7 @@ final class _AddVehicleScreenState extends ConsumerState<AddVehicleScreen> {
 
     ref.invalidate(garageControllerProvider);
     ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(isEditing ? 'Vehicle updated' : 'Vehicle added'),
-      ),
+      SnackBar(content: Text(isEditing ? 'Vehicle updated' : 'Vehicle added')),
     );
     context.go('/garage');
   }
@@ -367,6 +437,7 @@ final class _GarageTextField extends StatelessWidget {
     this.keyboardType,
     this.inputFormatters,
     this.textInputAction,
+    this.textCapitalization = TextCapitalization.none,
   });
 
   static const _fieldColor = Color(0xFF20242D);
@@ -382,6 +453,7 @@ final class _GarageTextField extends StatelessWidget {
   final TextInputType? keyboardType;
   final List<TextInputFormatter>? inputFormatters;
   final TextInputAction? textInputAction;
+  final TextCapitalization textCapitalization;
 
   @override
   Widget build(BuildContext context) {
@@ -424,6 +496,7 @@ final class _GarageTextField extends StatelessWidget {
           keyboardType: keyboardType,
           inputFormatters: inputFormatters,
           textInputAction: textInputAction,
+          textCapitalization: textCapitalization,
           onChanged: onChanged,
         ),
       ],

@@ -104,11 +104,11 @@ abstract final class AppTheme {
         backgroundColor: AppColors.surface,
         indicatorColor: AppColors.primarySoft,
         elevation: 0,
-        height: 64,
+        height: 72,
         labelBehavior: NavigationDestinationLabelBehavior.alwaysHide,
         iconTheme: WidgetStateProperty.resolveWith((states) {
           if (states.contains(WidgetState.selected)) {
-            return const IconThemeData(color: AppColors.primary);
+            return const IconThemeData(color: AppColors.primaryLight);
           }
 
           return const IconThemeData(color: AppColors.textMuted);
@@ -216,6 +216,7 @@ abstract final class AppColors {
   static const divider = Color(0xFF252A33);
 
   static const primary = Color(0xFF2E5BFF);
+  static const primaryLight = Color(0xFFB8C3FF);
   static const primaryPressed = Color(0xFF3F63C9);
   static const primarySoft = Color(0xFF141B30);
 

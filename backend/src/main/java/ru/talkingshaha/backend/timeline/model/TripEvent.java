@@ -16,18 +16,15 @@ import ru.talkingshaha.backend.common.model.BaseEvent;
 @Table(name = "trips")
 public class TripEvent extends BaseEvent {
 
-    @Column(name = "start_mileage_km", nullable = false)
+    @Column(name = "start_mileage_km")
     private Integer startMileageKm;
 
     @Column(name = "end_mileage_km", nullable = false)
     private Integer endMileageKm;
 
-    @Column(nullable = false)
+    @Column
     private String route;
 
     @Column(name = "duration_minutes", nullable = false)
     private Integer durationMinutes;
-
-    @Column(nullable = false, precision = 10, scale = 2)
-    private BigDecimal cost;
 }

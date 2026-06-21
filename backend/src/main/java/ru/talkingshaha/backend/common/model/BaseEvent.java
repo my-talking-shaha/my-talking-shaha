@@ -13,7 +13,9 @@ import ru.talkingshaha.backend.vehicle.model.Vehicle;
 
 @Getter
 @Setter
-@MappedSuperclass
+@Entity
+@Table(name = "timeline_events")
+@Inheritance(strategy = InheritanceType.JOINED)
 @EqualsAndHashCode(onlyExplicitlyIncluded = true)
 public abstract class BaseEvent extends BaseEntity {
 
