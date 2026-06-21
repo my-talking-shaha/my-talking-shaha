@@ -19,6 +19,7 @@ import ru.talkingshaha.backend.timeline.repository.MaintenanceEventRepository;
 import ru.talkingshaha.backend.timeline.repository.RefuelEventRepository;
 import ru.talkingshaha.backend.timeline.repository.TimelineEventRepository;
 import ru.talkingshaha.backend.timeline.repository.TripEventRepository;
+import ru.talkingshaha.backend.part.service.PartService;
 import ru.talkingshaha.backend.vehicle.model.Vehicle;
 import ru.talkingshaha.backend.vehicle.service.VehicleService;
 
@@ -30,18 +31,21 @@ public class TimelineEventService {
     private final RefuelEventRepository refuels;
     private final MaintenanceEventRepository maintenances;
     private final VehicleService vehicles;
+    private final PartService parts;
 
     public TimelineEventService(
             TimelineEventRepository events,
             TripEventRepository trips,
             RefuelEventRepository refuels,
             MaintenanceEventRepository maintenances,
-            VehicleService vehicles) {
+            VehicleService vehicles,
+            PartService parts) {
         this.events = events;
         this.trips = trips;
         this.refuels = refuels;
         this.maintenances = maintenances;
         this.vehicles = vehicles;
+        this.parts = parts;
     }
 
     @Transactional(readOnly = true)
@@ -128,6 +132,7 @@ public class TimelineEventService {
     private void updateVehicleMileage(Vehicle vehicle, Integer mileageKm) {
         if (mileageKm != null && mileageKm > vehicle.getMileageKm()) {
             vehicle.setMileageKm(mileageKm);
+            parts.refreshPartsForVehicle(vehicle);
         }
     }
 

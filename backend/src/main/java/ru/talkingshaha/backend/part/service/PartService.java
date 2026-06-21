@@ -77,9 +77,15 @@ public class PartService {
         return toResponse(part);
     }
 
+    @Transactional
+    public void refreshPartsForVehicle(Vehicle vehicle) {
+        parts.findAllByVehicleOrderByInstalledAtDescNameAsc(vehicle)
+                .forEach(part -> refreshLifetime(vehicle, part));
+    }
+
     private void refreshLifetime(Vehicle vehicle, Part part) {
         var lifetime = lifetimeService.calculate(new PartLifetimeRequest(
-                vehicle.getMileageKm(), part.getInstalledMileageKm(), part.getExpectedLifetimeKm()));
+                vehicle.getMileageKm(), part.getInstalledMileageKm(), part.getExpectedLifetimeKm(), part.getCategory()));
         part.setRemainingKm(lifetime.remainingKm());
         part.setRemainingPercent(lifetime.remainingPercent());
         part.setStatus(lifetime.status());
