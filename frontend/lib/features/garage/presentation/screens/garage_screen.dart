@@ -161,28 +161,73 @@ final class _EmptyGarageBody extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return SafeArea(
-      child: Center(
-        child: ConstrainedBox(
-          constraints: const BoxConstraints(maxWidth: 430),
-          child: Padding(
-            padding: const EdgeInsets.fromLTRB(
-              AppSpacing.xl,
-              AppSpacing.lg,
-              AppSpacing.xl,
-              AppSpacing.xl,
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const _GarageBrandTitle(),
-                Expanded(
-                  child: Center(
-                    child: GarageEmptyState(onAddVehicle: onAddVehicle),
+    return Stack(
+      fit: StackFit.expand,
+      children: [
+        const _GarageEmptyBackground(),
+        Padding(
+          padding: EdgeInsets.fromLTRB(
+            AppSpacing.xl,
+            MediaQuery.paddingOf(context).top + AppSpacing.lg,
+            AppSpacing.xl,
+            AppSpacing.xl,
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                'My Talking Shaha',
+                style: Theme.of(context).textTheme.headlineLarge?.copyWith(
+                      color: const Color(0xFFB8C3FF),
+                      fontSize: 31,
+                      fontWeight: FontWeight.w800,
+                      height: 1.08,
+                    ),
+              ),
+              const Spacer(),
+              Center(
+                child: ConstrainedBox(
+                  constraints: const BoxConstraints(maxWidth: 320),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(
+                        'Garage is empty',
+                        textAlign: TextAlign.center,
+                        style: Theme.of(context)
+                            .textTheme
+                            .headlineMedium
+                            ?.copyWith(
+                              fontSize: 24,
+                              fontWeight: FontWeight.w800,
+                              height: 1.15,
+                            ),
+                      ),
+                      const SizedBox(height: AppSpacing.md),
+                      Text(
+                        'Add your first car to create its digital twin.',
+                        textAlign: TextAlign.center,
+                        style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                              color: AppColors.textSecondary,
+                              height: 1.35,
+                            ),
+                      ),
+                      const SizedBox(height: AppSpacing.xxl),
+                      SizedBox(
+                        width: double.infinity,
+                        height: 56,
+                        child: ElevatedButton.icon(
+                          onPressed: onAddVehicle,
+                          icon: const Icon(Icons.add_circle_outline, size: 22),
+                          label: const Text('Add vehicle'),
+                        ),
+                      ),
+                    ],
                   ),
                 ),
-              ],
-            ),
+              ),
+              const Spacer(),
+            ],
           ),
         ),
       ),
