@@ -5,6 +5,8 @@ import 'package:frontend/features/dashboard/presentation/widgets/dashboard_lates
 import 'package:frontend/features/dashboard/presentation/widgets/dashboard_vehicle_summary.dart';
 import 'package:frontend/features/garage/domain/entities/vehicle.dart';
 import 'package:frontend/features/history/domain/entities/history_event.dart';
+import 'package:frontend/features/parts/presentation/providers/parts_providers.dart';
+import 'package:frontend/features/parts/presentation/widgets/maintenance_forecast_card.dart';
 
 final class DashboardContent extends StatelessWidget {
   const DashboardContent({
@@ -30,7 +32,14 @@ final class DashboardContent extends StatelessWidget {
         children: [
           DashboardVehicleSummary(vehicle: vehicle),
           const SizedBox(height: AppSpacing.xxxl),
-          // TODO: forecast here
+          Consumer(
+            builder: (context, ref, child) => ref
+                .watch(vehiclePartsProvider(vehicle.id))
+                .maybeWhen(
+                  data: (parts) => MaintenanceForecastCard(parts: parts),
+                  orElse: () => const SizedBox.shrink(),
+                ),
+          ),
           const SizedBox(height: AppSpacing.xxxl),
           DashboardLatestEvents(
             vehicleId: vehicle.id,
