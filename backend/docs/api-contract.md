@@ -2,6 +2,11 @@
 
 API prefix: `/api/v1`
 
+> Status: the Garage/Vehicles, Parts, and Timeline sections are implemented. Auth,
+> Analytics, Chat, Prediction, and Notifications are planned and described here as the
+> target contract. The machine-readable spec in `openapi.yaml` covers the implemented
+> endpoints only.
+
 ## Common rules
 
 Headers:
@@ -188,7 +193,8 @@ Response `200`:
 }
 ```
 
-`recentEvents` is currently an empty list until the timeline API task is implemented.
+`recentEvents` is currently always an empty list; the dashboard is not yet wired to the
+timeline events API.
 
 ### Update vehicle
 
@@ -210,40 +216,43 @@ Request can contain any editable fields:
 
 Response `204`.
 
-## Timeline
+## Timeline (events)
 
-### List timeline
+Every event is returned in a single unified shape. Only the fields relevant to the
+event `type` are populated; the rest are `null`.
 
-`GET /api/v1/vehicles/{vehicleId}/timeline?type=REFUEL&page=0&size=20`
+### List events
 
-`type` is optional. Supported values: `TRIP`, `REFUEL`, `REPAIR`, `MAINTENANCE`, `PART_REPLACEMENT`, `WARNING`.
+`GET /api/v1/vehicles/{vehicleId}/events?type=REFUEL`
+
+`type` is optional. Supported values: `TRIP`, `REFUEL`, `REPAIR`, `MAINTENANCE`,
+`PART_REPLACEMENT`, `WARNING`. Events are returned most recent first. Pagination is not
+implemented yet.
 
 Response `200`:
 
 ```json
 {
-  "items": [
+  "events": [
     {
       "id": "044c10dc-13d1-4587-9169-e9e79789ea45",
       "type": "REFUEL",
+      "title": "Refill AI-95",
       "eventDateTime": "2026-06-12T14:30:00Z",
-      "mileageKm": 10000,
-      "title": "Fuel refill",
-      "description": "30 liters of AI-95 fuel",
       "cost": 2000,
-      "currency": "RUB",
-      "photoUrls": []
+      "mileageKm": 10000,
+      "liters": 30,
+      "fuelType": "GASOLINE",
+      "fuelName": "AI-95",
+      "stationName": "Test Station"
     }
-  ],
-  "page": 0,
-  "size": 20,
-  "totalElements": 1
+  ]
 }
 ```
 
 ### Add refuel
 
-`POST /api/v1/vehicles/{vehicleId}/timeline/refuels`
+`POST /api/v1/vehicles/{vehicleId}/events/refuel`
 
 Request:
 
@@ -259,38 +268,11 @@ Request:
 }
 ```
 
-Response `201`: timeline event.
-
-### Add repair or maintenance
-
-`POST /api/v1/vehicles/{vehicleId}/timeline/repairs`
-
-Request:
-
-```json
-{
-  "type": "MAINTENANCE",
-  "eventDateTime": "2026-06-12T16:30:00Z",
-  "mileageKm": 10000,
-  "description": "Oil and filter replacement",
-  "cost": 3000,
-  "replacedParts": [
-    {
-      "name": "Engine oil",
-      "expectedLifetimeKm": 8000
-    }
-  ],
-  "photoUrls": [
-    "https://example.com/event-photo.jpg"
-  ]
-}
-```
-
-Response `201`: timeline event.
+Response `201`: timeline event. `liters` must be in `(0, 1000]` and `cost > 0`.
 
 ### Add trip
 
-`POST /api/v1/vehicles/{vehicleId}/timeline/trips`
+`POST /api/v1/vehicles/{vehicleId}/events/trip`
 
 Request:
 
@@ -304,17 +286,32 @@ Request:
 }
 ```
 
-Response `201`: timeline event.
+`startMileageKm` is optional; when present it must not exceed `endMileageKm`. Trips have no
+cost. Response `201`: timeline event.
 
-### Update timeline event
+### Add maintenance
 
-`PATCH /api/v1/vehicles/{vehicleId}/timeline/{eventId}`
+`POST /api/v1/vehicles/{vehicleId}/events/maintenance`
 
-### Delete timeline event
+Request:
 
-`DELETE /api/v1/vehicles/{vehicleId}/timeline/{eventId}`
+```json
+{
+  "eventDateTime": "2026-06-12T16:30:00Z",
+  "mileageKm": 10000,
+  "name": "Oil change",
+  "description": "Oil and filter replacement",
+  "cost": 3000,
+  "photoUrls": [
+    "https://example.com/event-photo.jpg"
+  ]
+}
+```
 
-Response `204`.
+`cost`, when provided, must be greater than `0`. Response `201`: timeline event.
+
+Creating any event with a `mileageKm`/`endMileageKm` higher than the vehicle's current
+mileage advances the vehicle mileage and recalculates its parts.
 
 ## Parts
 
@@ -354,11 +351,14 @@ Request:
   "category": "BRAKE_PADS",
   "installedAt": "2026-06-12",
   "installedMileageKm": 10000,
-  "expectedLifetimeKm": 25000
+  "expectedLifetimeKm": 25000,
+  "description": "Front axle",
+  "cost": 2500
 }
 ```
 
-Response `201`: part.
+`expectedLifetimeKm` is optional; when omitted, a per-category default is used. `description`
+and `cost` are optional. Response `201`: part.
 
 ### Update part
 
@@ -374,7 +374,7 @@ Request can contain any editable part fields:
 
 Response `200`: updated part with recalculated `remainingKm`, `remainingPercent`, and `status`.
 
-### Replace part
+### Replace part (planned, not implemented)
 
 `POST /api/v1/vehicles/{vehicleId}/parts/{partId}/replace`
 
