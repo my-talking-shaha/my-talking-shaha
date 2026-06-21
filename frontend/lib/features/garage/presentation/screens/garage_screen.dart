@@ -30,7 +30,7 @@ final class GarageScreen extends ConsumerWidget {
             vehicles: vehicles,
             onAddVehicle: () => context.go('/garage/add'),
             onOpenVehicle: (vehicleId) {
-              context.go('/vehicle/$vehicleId/chat');
+              context.go('/vehicle/$vehicleId/dashboard');
             },
             onEditVehicle: (vehicleId) {
               context.go('/garage/edit/$vehicleId');

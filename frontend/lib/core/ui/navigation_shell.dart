@@ -42,6 +42,8 @@ final class NavigationShell extends StatelessWidget {
 
   String? _locationFor(Destination destination, String? vehicleId) {
     return switch (destination) {
+      Destination.garage when vehicleId != null =>
+        '/vehicle/$vehicleId/dashboard',
       Destination.garage => '/garage',
       Destination.history when vehicleId != null =>
         '/vehicle/$vehicleId/history',

@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:frontend/app/app.dart';
 import 'package:frontend/app/router.dart';
+import 'package:frontend/features/dashboard/presentation/screens/dashboard_screen.dart';
 import 'package:frontend/features/history/presentation/providers/history_providers.dart';
 import 'package:frontend/features/history/presentation/screens/add_history_event_screen.dart';
 import 'package:go_router/go_router.dart';
@@ -19,6 +20,13 @@ void main() {
 
     expect(_navigationBar(tester).items, hasLength(5));
     expect(_navigationBar(tester).type, BottomNavigationBarType.fixed);
+    expect(_destinationLabels(tester), [
+      'Dashboard',
+      'History',
+      'Chat',
+      'Analytics',
+      'Settings',
+    ]);
   });
 
   testWidgets('garage shows only garage and settings without a vehicle', (
@@ -52,6 +60,16 @@ void main() {
       );
 
       expect(_navigationBar(tester).currentIndex, 2);
+
+      await tester.tap(_destination('Dashboard'));
+      await tester.pumpAndSettle();
+
+      expect(
+        app.router.routeInformationProvider.value.uri.path,
+        '/vehicle/vehicle_123/dashboard',
+      );
+      expect(_navigationBar(tester).currentIndex, 0);
+      expect(find.byType(DashboardScreen), findsOneWidget);
 
       await tester.tap(_destination('History'));
       await tester.pumpAndSettle();

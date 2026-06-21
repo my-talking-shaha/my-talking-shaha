@@ -34,6 +34,7 @@ final class PrimaryBottomNavBar extends StatelessWidget {
       showSelectedLabels: false,
       showUnselectedLabels: false,
       items: destinations.map((destination) {
+        final label = destination.label(hasVehicleContext: hasVehicleContext);
         return BottomNavigationBarItem(
           icon: _NavigationIcon(
             destination: destination,
@@ -43,8 +44,8 @@ final class PrimaryBottomNavBar extends StatelessWidget {
             destination: destination,
             color: AppColors.primaryLight,
           ),
-          label: destination.label,
-          tooltip: destination.label,
+          label: label,
+          tooltip: label,
         );
       }).toList(),
     );
@@ -69,8 +70,8 @@ final class _NavigationIcon extends StatelessWidget {
 }
 
 extension on Destination {
-  String get label => switch (this) {
-    Destination.garage => 'Garage',
+  String label({required bool hasVehicleContext}) => switch (this) {
+    Destination.garage => hasVehicleContext ? 'Dashboard' : 'Garage',
     Destination.history => 'History',
     Destination.chat => 'Chat',
     Destination.analytics => 'Analytics',
