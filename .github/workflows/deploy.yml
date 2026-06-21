@@ -13,8 +13,47 @@ permissions:
   contents: read
 
 jobs:
+  backend-smoke-test:
+    name: Backend Docker smoke test
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Build and start backend stack
+        run: docker compose -f docker/docker-compose.yml up -d --build --remove-orphans backend
+
+      - name: Wait for backend health
+        run: |
+          set -euo pipefail
+
+          for attempt in {1..30}; do
+            if curl -fsS http://localhost:8080/actuator/health; then
+              exit 0
+            fi
+
+            echo "Backend is not healthy yet, retry $attempt/30"
+            sleep 5
+          done
+
+          echo "Backend did not become healthy in time" >&2
+          docker compose -f docker/docker-compose.yml ps postgres backend
+          docker compose -f docker/docker-compose.yml logs --no-color postgres backend
+          exit 1
+
+      - name: Dump backend stack logs
+        if: always()
+        run: docker compose -f docker/docker-compose.yml logs --no-color postgres backend
+
+      - name: Stop backend stack
+        if: always()
+        run: docker compose -f docker/docker-compose.yml down -v --remove-orphans
+
   deploy:
     name: Deploy to server
+    needs: backend-smoke-test
     runs-on: ubuntu-latest
     timeout-minutes: 30
 

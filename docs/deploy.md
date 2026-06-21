@@ -40,11 +40,15 @@ Add these secrets in GitHub:
 
 On every push to `main`, the workflow:
 
-1. Connects to the server over SSH.
-2. Goes to `SERVER_APP_PATH`.
-3. Runs `git fetch --prune origin main`.
-4. Updates the server checkout with `git pull --ff-only origin main`.
-5. Rebuilds and restarts only the backend service and its dependencies:
+1. Checks out the repository on the GitHub Actions runner.
+2. Builds and starts the backend Docker stack with Postgres.
+3. Waits for `http://localhost:8080/actuator/health`.
+4. Stops the smoke-test stack.
+5. Connects to the server over SSH.
+6. Goes to `SERVER_APP_PATH`.
+7. Runs `git fetch --prune origin main`.
+8. Updates the server checkout with `git pull --ff-only origin main`.
+9. Rebuilds and restarts only the backend service and its dependencies:
 
    ```bash
    docker compose -f docker/docker-compose.yml up -d --build --remove-orphans backend
@@ -52,4 +56,4 @@ On every push to `main`, the workflow:
 
 ## Database note
 
-The current Docker Compose file sets `SPRING_JPA_HIBERNATE_DDL_AUTO=create`. That is unsafe for persistent production data because the application may recreate the schema during startup. Before storing real production data, replace this with a migration-safe setup, for example Flyway migrations that match the JPA entities and `ddl-auto=validate`.
+The current Docker Compose file sets `SPRING_JPA_HIBERNATE_DDL_AUTO=validate` and leaves schema changes to Flyway migrations. The deployment workflow smoke-tests this path with Postgres before connecting to the server.
