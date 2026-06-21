@@ -61,7 +61,6 @@ public class TimelineEventService {
     public TimelineEventResponse createRefuelEvent(UUID vehicleId, CreateRefuelEventRequest request) {
         Vehicle vehicle = vehicles.requireOwnedVehicle(vehicleId);
         validateMileage(vehicle, request.mileageKm());
-
         RefuelEvent event = new RefuelEvent();
         event.setVehicle(vehicle);
         event.setType(TimelineEventType.REFUEL);
@@ -72,7 +71,6 @@ public class TimelineEventService {
         event.setFuelType(request.fuelType());
         event.setFuelName(request.fuelName());
         event.setStationName(request.stationName());
-
         updateVehicleMileage(vehicle, request.mileageKm());
         return toResponse(refuels.save(event));
     }
@@ -95,7 +93,6 @@ public class TimelineEventService {
         event.setRoute(request.route());
         event.setDurationMinutes(request.durationMinutes());
         event.setCost(request.cost());
-
         updateVehicleMileage(vehicle, request.endMileageKm());
         return toResponse(trips.save(event));
     }
@@ -104,7 +101,6 @@ public class TimelineEventService {
     public TimelineEventResponse createMaintenanceEvent(UUID vehicleId, CreateMaintenanceEventRequest request) {
         Vehicle vehicle = vehicles.requireOwnedVehicle(vehicleId);
         validateMileage(vehicle, request.mileageKm());
-
         MaintenanceEvent event = new MaintenanceEvent();
         event.setVehicle(vehicle);
         event.setType(TimelineEventType.MAINTENANCE);
