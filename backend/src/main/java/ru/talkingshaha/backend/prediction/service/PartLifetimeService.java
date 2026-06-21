@@ -10,11 +10,6 @@ import ru.talkingshaha.backend.prediction.dto.PartLifetimeResponse;
 
 @Service
 public class PartLifetimeService {
-
-    /**
-     * Дефолтные ресурсы по категориям в км.
-     * Используются когда пользователь не указал expectedLifetimeKm.
-     */
     private static final Map<PartCategory, Integer> DEFAULT_LIFETIMES = Map.of(
             PartCategory.ENGINE_OIL,   10_000,
             PartCategory.OIL_FILTER,   10_000,
@@ -22,7 +17,6 @@ public class PartLifetimeService {
             PartCategory.BRAKE_PADS,   40_000,
             PartCategory.TIMING_BELT,  60_000,
             PartCategory.BATTERY,     100_000
-            // OTHER — нет дефолта, слишком широкая категория
     );
 
     public PartLifetimeResponse calculate(PartLifetimeRequest request) {
@@ -42,12 +36,6 @@ public class PartLifetimeService {
         return new PartLifetimeResponse(remainingKm, remainingPercent, status(remainingKm, remainingPercent));
     }
 
-    /**
-     * Возвращает ресурс детали:
-     * 1. Если пользователь указал — берём его значение
-     * 2. Иначе — берём дефолт по категории
-     * 3. Если и категории нет дефолта — null (UNKNOWN)
-     */
     private Integer resolveLifetime(PartLifetimeRequest request) {
         if (request.expectedLifetimeKm() != null) {
             return request.expectedLifetimeKm();
