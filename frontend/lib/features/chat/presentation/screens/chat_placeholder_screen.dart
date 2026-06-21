@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:frontend/app/theme/app_theme.dart';
-import 'package:go_router/go_router.dart';
 
 final class ChatPlaceholderScreen extends StatelessWidget {
   const ChatPlaceholderScreen({required this.vehicleId, super.key});
@@ -12,10 +11,6 @@ final class ChatPlaceholderScreen extends StatelessWidget {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Shaha Chat'),
-        leading: IconButton(
-          onPressed: () => context.go('/garage'),
-          icon: const Icon(Icons.arrow_back),
-        ),
       ),
       body: SafeArea(
         child: Padding(

@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:frontend/core/ui/navigation_shell.dart';
 import 'package:frontend/features/analytics/presentation/screens/analytics_screen.dart';
 import 'package:frontend/features/chat/presentation/screens/chat_placeholder_screen.dart';
+import 'package:frontend/features/dashboard/presentation/screens/dashboard_screen.dart';
 import 'package:frontend/features/garage/presentation/screens/add_vehicle_screen.dart';
 import 'package:frontend/features/garage/presentation/screens/garage_screen.dart';
 import 'package:frontend/features/history/presentation/providers/history_providers.dart';
@@ -86,7 +87,18 @@ final routerProvider = Provider<GoRouter>((ref) {
             routes: [
               GoRoute(
                 path: '/garage',
-                builder: (context, state) => const GarageScreen(),
+                pageBuilder: (context, state) =>
+                    _tabPage(state: state, child: const GarageScreen()),
+              ),
+              GoRoute(
+                path: '/vehicle/:vehicleId/dashboard',
+                pageBuilder: (context, state) {
+                  final vehicleId = state.pathParameters['vehicleId'] ?? '';
+                  return _tabPage(
+                    state: state,
+                    child: DashboardScreen(vehicleId: vehicleId),
+                  );
+                },
               ),
             ],
           ),
@@ -98,9 +110,12 @@ final routerProvider = Provider<GoRouter>((ref) {
               ),
               GoRoute(
                 path: '/vehicle/:vehicleId/history',
-                builder: (context, state) {
+                pageBuilder: (context, state) {
                   final vehicleId = state.pathParameters['vehicleId'] ?? '';
-                  return HistoryScreen(vehicleId: vehicleId);
+                  return _tabPage(
+                    state: state,
+                    child: HistoryScreen(vehicleId: vehicleId),
+                  );
                 },
               ),
             ],
@@ -110,9 +125,12 @@ final routerProvider = Provider<GoRouter>((ref) {
               GoRoute(path: '/chat', redirect: (context, state) => '/garage'),
               GoRoute(
                 path: '/vehicle/:vehicleId/chat',
-                builder: (context, state) {
+                pageBuilder: (context, state) {
                   final vehicleId = state.pathParameters['vehicleId'] ?? '';
-                  return ChatPlaceholderScreen(vehicleId: vehicleId);
+                  return _tabPage(
+                    state: state,
+                    child: ChatPlaceholderScreen(vehicleId: vehicleId),
+                  );
                 },
               ),
             ],
@@ -125,9 +143,12 @@ final routerProvider = Provider<GoRouter>((ref) {
               ),
               GoRoute(
                 path: '/vehicle/:vehicleId/analytics',
-                builder: (context, state) {
+                pageBuilder: (context, state) {
                   final vehicleId = state.pathParameters['vehicleId'] ?? '';
-                  return AnalyticsScreen(vehicleId: vehicleId);
+                  return _tabPage(
+                    state: state,
+                    child: AnalyticsScreen(vehicleId: vehicleId),
+                  );
                 },
               ),
             ],
@@ -136,7 +157,8 @@ final routerProvider = Provider<GoRouter>((ref) {
             routes: [
               GoRoute(
                 path: '/settings',
-                builder: (context, state) => const SettingsScreen(),
+                pageBuilder: (context, state) =>
+                    _tabPage(state: state, child: const SettingsScreen()),
               ),
             ],
           ),
@@ -145,3 +167,10 @@ final routerProvider = Provider<GoRouter>((ref) {
     ],
   );
 });
+
+NoTransitionPage<void> _tabPage({
+  required GoRouterState state,
+  required Widget child,
+}) {
+  return NoTransitionPage<void>(key: state.pageKey, child: child);
+}

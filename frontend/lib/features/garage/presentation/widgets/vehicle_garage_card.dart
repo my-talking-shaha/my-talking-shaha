@@ -172,8 +172,9 @@ final class _SwipeRevealActionsState extends State<_SwipeRevealActions> {
       },
       onHorizontalDragEnd: (_) {
         setState(() {
-          _dragOffset =
-              _dragOffset.abs() > _actionWidth * 0.38 ? -_actionWidth : 0;
+          _dragOffset = _dragOffset.abs() > _actionWidth * 0.38
+              ? -_actionWidth
+              : 0;
         });
       },
       child: Stack(
@@ -282,7 +283,7 @@ final class _VehicleImage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final photoUrl = vehicle.photoUrl;
+    final photoUrl = vehicle.photoUrl?.trim();
 
     return ClipRRect(
       borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
@@ -291,16 +292,44 @@ final class _VehicleImage extends StatelessWidget {
         child: photoUrl == null || photoUrl.isEmpty
             ? Container(
                 key: ValueKey('garage_vehicle_photo_fallback_${vehicle.id}'),
-                decoration: const BoxDecoration(
-                  color: AppColors.primarySoft,
-                  border: Border(bottom: BorderSide(color: AppColors.border)),
-                ),
-                child: const Center(
-                  child: Icon(
-                    Icons.directions_car_filled,
-                    color: AppColors.primary,
-                    size: 56,
+                decoration: BoxDecoration(
+                  color: AppColors.backgroundDark,
+                  gradient: LinearGradient(
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                    colors: [
+                      AppColors.primaryPressed.withValues(alpha: 0.34),
+                      AppColors.primarySoft.withValues(alpha: 0.94),
+                      AppColors.backgroundDark,
+                    ],
+                    stops: const [0, 0.56, 1],
                   ),
+                  border: const Border(
+                    bottom: BorderSide(color: AppColors.border),
+                  ),
+                ),
+                child: Stack(
+                  children: [
+                    Align(
+                      alignment: const Alignment(0, -0.22),
+                      child: ShaderMask(
+                        blendMode: BlendMode.srcIn,
+                        shaderCallback: (bounds) => const LinearGradient(
+                          begin: Alignment.topCenter,
+                          end: Alignment.bottomCenter,
+                          colors: [
+                            AppColors.primaryLight,
+                            AppColors.primaryPressed,
+                          ],
+                        ).createShader(bounds),
+                        child: const Icon(
+                          Icons.directions_car_filled_rounded,
+                          color: AppColors.white,
+                          size: 92,
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
               )
             : Image.network(photoUrl, fit: BoxFit.cover),
@@ -346,10 +375,10 @@ final class _MetricTile extends StatelessWidget {
               textAlign: TextAlign.center,
               overflow: TextOverflow.ellipsis,
               style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                    color: AppColors.textPrimary,
-                    fontSize: 10,
-                    height: 1.1,
-                  ),
+                color: AppColors.textPrimary,
+                fontSize: 10,
+                height: 1.1,
+              ),
             ),
           ],
         ),
@@ -360,7 +389,7 @@ final class _MetricTile extends StatelessWidget {
 
 String _formatMileage(int mileage) {
   return mileage.toString().replaceAllMapped(
-        RegExp(r'\B(?=(\d{3})+(?!\d))'),
-        (_) => ' ',
-      );
+    RegExp(r'\B(?=(\d{3})+(?!\d))'),
+    (_) => ' ',
+  );
 }
