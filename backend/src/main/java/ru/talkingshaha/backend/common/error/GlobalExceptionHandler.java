@@ -11,6 +11,13 @@ import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
+/**
+ * Translates application exceptions into the common {@link ApiError} response.
+ *
+ * <p>Mapping: bean-validation failures and {@link IllegalArgumentException} → 400
+ * {@code VALIDATION_ERROR}; {@link ResourceNotFoundException} → 404 {@code NOT_FOUND};
+ * {@link ForbiddenException} → 403 {@code FORBIDDEN}.
+ */
 @RestControllerAdvice
 public class GlobalExceptionHandler {
 

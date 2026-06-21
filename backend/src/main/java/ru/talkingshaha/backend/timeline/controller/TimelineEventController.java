@@ -20,6 +20,12 @@ import ru.talkingshaha.backend.timeline.dto.TimelineEventResponse;
 import ru.talkingshaha.backend.timeline.model.TimelineEventType;
 import ru.talkingshaha.backend.timeline.service.TimelineEventService;
 
+/**
+ * REST API for a vehicle's timeline (service history) events.
+ *
+ * <p>Events are typed: refuels, trips, and maintenance. Creating an event may advance the
+ * vehicle's stored mileage and recalculate the lifetime of its parts.
+ */
 @RestController
 @RequestMapping("/api/v1/vehicles/{vehicleId}/events")
 public class TimelineEventController {
@@ -30,6 +36,13 @@ public class TimelineEventController {
         this.service = service;
     }
 
+    /**
+     * Lists the timeline events of a vehicle, most recent first.
+     *
+     * @param vehicleId the vehicle identifier
+     * @param type      optional filter by event type; when null, all types are returned
+     * @return the matching timeline events
+     */
     @GetMapping
     public TimelineEventListResponse getEvents(
             @PathVariable UUID vehicleId,
@@ -37,6 +50,13 @@ public class TimelineEventController {
         return service.getEvents(vehicleId, type);
     }
 
+    /**
+     * Records a refuel event for a vehicle.
+     *
+     * @param vehicleId the vehicle identifier
+     * @param request   the refuel data
+     * @return the created timeline event
+     */
     @PostMapping("/refuel")
     @ResponseStatus(HttpStatus.CREATED)
     public TimelineEventResponse createRefuelEvent(
@@ -45,6 +65,13 @@ public class TimelineEventController {
         return service.createRefuelEvent(vehicleId, request);
     }
 
+    /**
+     * Records a trip event for a vehicle.
+     *
+     * @param vehicleId the vehicle identifier
+     * @param request   the trip data
+     * @return the created timeline event
+     */
     @PostMapping("/trip")
     @ResponseStatus(HttpStatus.CREATED)
     public TimelineEventResponse createTripEvent(
@@ -53,6 +80,13 @@ public class TimelineEventController {
         return service.createTripEvent(vehicleId, request);
     }
 
+    /**
+     * Records a maintenance event for a vehicle.
+     *
+     * @param vehicleId the vehicle identifier
+     * @param request   the maintenance data
+     * @return the created timeline event
+     */
     @PostMapping("/maintenance")
     @ResponseStatus(HttpStatus.CREATED)
     public TimelineEventResponse createMaintenanceEvent(

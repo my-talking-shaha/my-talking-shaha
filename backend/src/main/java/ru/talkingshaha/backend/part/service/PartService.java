@@ -18,6 +18,13 @@ import ru.talkingshaha.backend.prediction.service.PartLifetimeService;
 import ru.talkingshaha.backend.vehicle.model.Vehicle;
 import ru.talkingshaha.backend.vehicle.service.VehicleService;
 
+/**
+ * Application service for vehicle parts.
+ *
+ * <p>On every create or update the part's remaining lifetime is recomputed via
+ * {@link PartLifetimeService}. {@link #refreshPartsForVehicle(Vehicle)} is invoked when the
+ * vehicle mileage changes so that all parts stay in sync.
+ */
 @Service
 public class PartService {
 
@@ -77,6 +84,11 @@ public class PartService {
         return toResponse(part);
     }
 
+    /**
+     * Recalculates the lifetime of every part of a vehicle, e.g. after its mileage changed.
+     *
+     * @param vehicle the vehicle whose parts should be refreshed
+     */
     @Transactional
     public void refreshPartsForVehicle(Vehicle vehicle) {
         parts.findAllByVehicleOrderByInstalledAtDescNameAsc(vehicle)

@@ -11,6 +11,10 @@ import jakarta.validation.constraints.Positive;
 import jakarta.validation.constraints.PositiveOrZero;
 import ru.talkingshaha.backend.vehicle.model.FuelType;
 
+/**
+ * Request to record a refuel event. {@code liters} is capped at 1000 to reject obvious
+ * input errors, and {@code cost} must be positive.
+ */
 public record CreateRefuelEventRequest(
         @NotNull @PastOrPresent OffsetDateTime eventDateTime,
         @NotNull @PositiveOrZero Integer mileageKm,

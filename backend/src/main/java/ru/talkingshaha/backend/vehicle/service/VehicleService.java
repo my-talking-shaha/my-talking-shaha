@@ -24,6 +24,12 @@ import ru.talkingshaha.backend.vehicle.dto.VehicleResponse;
 import ru.talkingshaha.backend.vehicle.model.Vehicle;
 import ru.talkingshaha.backend.vehicle.repository.VehicleRepository;
 
+/**
+ * Application service for garage vehicles.
+ *
+ * <p>Every operation is scoped to the authenticated owner; access to another user's vehicle
+ * raises {@link ForbiddenException} and a missing vehicle raises {@link ResourceNotFoundException}.
+ */
 @Service
 public class VehicleService {
 
@@ -84,6 +90,11 @@ public class VehicleService {
         return toResponse(vehicle);
     }
 
+    /**
+     * Deletes a vehicle and cascades the removal of its timeline events and parts.
+     *
+     * @param vehicleId the vehicle identifier
+     */
     @Transactional
     public void deleteVehicle(UUID vehicleId) {
         Vehicle vehicle = requireOwnedVehicle(vehicleId);
@@ -108,6 +119,14 @@ public class VehicleService {
         return new VehicleDashboardResponse(toResponse(vehicle), forecast, List.of());
     }
 
+    /**
+     * Loads a vehicle and verifies it belongs to the current user.
+     *
+     * @param vehicleId the vehicle identifier
+     * @return the owned vehicle
+     * @throws ResourceNotFoundException if no vehicle with the given id exists
+     * @throws ForbiddenException        if the vehicle belongs to another user
+     */
     @Transactional(readOnly = true)
     public Vehicle requireOwnedVehicle(UUID vehicleId) {
         AppUser owner = currentUserService.currentUser();

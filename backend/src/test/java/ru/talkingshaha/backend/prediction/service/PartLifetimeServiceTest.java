@@ -12,7 +12,7 @@ class PartLifetimeServiceTest {
 
     private final PartLifetimeService service = new PartLifetimeService();
 
-    // --- Существующие тесты (пользователь задал expectedLifetimeKm) ---
+    // --- Existing tests (user provided expectedLifetimeKm) ---
 
     @Test
     void returnsOkWhenPartHasEnoughLifetime() {
@@ -45,11 +45,11 @@ class PartLifetimeServiceTest {
                 .hasMessage("Current mileage must not be lower than installed mileage");
     }
 
-    // --- Rule-based тесты (expectedLifetimeKm не задан, используем дефолт по категории) ---
+    // --- Rule-based tests (expectedLifetimeKm not provided, category default is used) ---
 
     @Test
     void usesDefaultLifetimeForEngineOilWhenExpectedNotSet() {
-        // ENGINE_OIL дефолт = 10_000 км, установлена при 50_000, сейчас 55_000
+        // ENGINE_OIL default = 10_000 km, installed at 50_000, current 55_000
         // usedKm = 5_000, remaining = 5_000, percent = 50%
         var result = service.calculate(new PartLifetimeRequest(55_000, 50_000, null, PartCategory.ENGINE_OIL));
         assertThat(result.remainingKm()).isEqualTo(5_000);
@@ -59,8 +59,8 @@ class PartLifetimeServiceTest {
 
     @Test
     void usesDefaultLifetimeForBrakePadsWhenExpectedNotSet() {
-        // BRAKE_PADS дефолт = 40_000 км, установлена при 0, сейчас 39_000
-        // usedKm = 39_000, remaining = 1_000, percent = 2% → ATTENTION
+        // BRAKE_PADS default = 40_000 km, installed at 0, current 39_000
+        // usedKm = 39_000, remaining = 1_000, percent = 2% -> ATTENTION
         var result = service.calculate(new PartLifetimeRequest(39_000, 0, null, PartCategory.BRAKE_PADS));
         assertThat(result.remainingKm()).isEqualTo(1_000);
         assertThat(result.remainingPercent()).isEqualTo(2);
@@ -69,7 +69,7 @@ class PartLifetimeServiceTest {
 
     @Test
     void userSpecifiedLifetimeOverridesDefault() {
-        // Пользователь задал 5_000 вместо дефолтных 10_000 для ENGINE_OIL
+        // User provided 5_000 instead of the default 10_000 for ENGINE_OIL
         var result = service.calculate(new PartLifetimeRequest(54_000, 50_000, 5_000, PartCategory.ENGINE_OIL));
         assertThat(result.remainingKm()).isEqualTo(1_000);
         assertThat(result.remainingPercent()).isEqualTo(20);
@@ -78,7 +78,7 @@ class PartLifetimeServiceTest {
 
     @Test
     void returnsUnknownWhenNeitherLifetimeNorCategoryDefaultExists() {
-        // OTHER не имеет дефолта, expectedLifetimeKm не задан
+        // OTHER has no default and expectedLifetimeKm is not provided
         var result = service.calculate(new PartLifetimeRequest(10_000, 5_000, null, PartCategory.OTHER));
         assertThat(result.remainingKm()).isNull();
         assertThat(result.remainingPercent()).isNull();
