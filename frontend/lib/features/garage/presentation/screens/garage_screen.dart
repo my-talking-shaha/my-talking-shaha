@@ -170,7 +170,7 @@ final class _EmptyGarageBody extends StatelessWidget {
                       height: 1.08,
                     ),
               ),
-              const Spacer(flex: 5),
+              const Spacer(),
               Center(
                 child: ConstrainedBox(
                   constraints: const BoxConstraints(maxWidth: 320),
@@ -212,7 +212,7 @@ final class _EmptyGarageBody extends StatelessWidget {
                   ),
                 ),
               ),
-              const Spacer(flex: 8),
+              const Spacer(),
             ],
           ),
         ),
