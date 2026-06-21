@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
@@ -17,7 +18,29 @@ final class AnalyticsScreen extends ConsumerStatefulWidget {
 }
 
 final class _AnalyticsScreenState extends ConsumerState<AnalyticsScreen> {
+  static const _pollingInterval = Duration(seconds: 60);
+
   AnalyticsPeriod _selectedPeriod = AnalyticsPeriod.year;
+  Timer? _pollingTimer;
+
+  @override
+  void initState() {
+    super.initState();
+    _pollingTimer = Timer.periodic(_pollingInterval, (_) {
+      if (!mounted) {
+        return;
+      }
+
+      final request = (vehicleId: widget.vehicleId, period: _selectedPeriod);
+      ref.invalidate(analyticsSummaryProvider(request));
+    });
+  }
+
+  @override
+  void dispose() {
+    _pollingTimer?.cancel();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -78,19 +101,19 @@ final class _AnalyticsDashboard extends StatelessWidget {
         Text(
           'Intelligence',
           style: Theme.of(context).textTheme.headlineLarge?.copyWith(
-                color: AppColors.primaryLight,
-                fontSize: 28,
-                height: 1.1,
-              ),
+            color: AppColors.primaryLight,
+            fontSize: 28,
+            height: 1.1,
+          ),
         ),
         const SizedBox(height: 42),
         Text('Analytics', style: Theme.of(context).textTheme.headlineMedium),
         const SizedBox(height: AppSpacing.sm),
         Text(
           'Performance and spending overview',
-          style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                color: AppColors.textSecondary,
-              ),
+          style: Theme.of(
+            context,
+          ).textTheme.bodyLarge?.copyWith(color: AppColors.textSecondary),
         ),
         const SizedBox(height: AppSpacing.xl),
         _PeriodSelector(
@@ -101,22 +124,21 @@ final class _AnalyticsDashboard extends StatelessWidget {
         _AnalyticsSummaryCard(summary: summary),
         const SizedBox(height: AppSpacing.xxl),
         _SectionHeader(
-          title: '${_periodNoun(summary.period)} EXPENSES',
-          trailing:
-              'AVG: ${_formatMoney(_averageValue(charts.expensesByMonth).round())}',
+          title: 'SEASONAL EXPENSES',
+          trailing: 'TOTAL: ${_formatMoney(summary.totalExpenses!.amount)}',
         ),
         const SizedBox(height: AppSpacing.md),
         _ChartCard(
           points: charts.expensesByMonth,
           valueFormatter: (value) => _formatMoney(value.round()),
-          legend: 'Expenses (RUB)',
+          legend: 'Monthly expense trend',
           accentColor: AppColors.primaryLight,
           chartType: _ChartType.line,
+          trendPercent: summary.trendPercent,
         ),
         const SizedBox(height: AppSpacing.xxl),
         // TODO(parts-rebase): Insert MaintenanceForecastCard from
-        // features/parts here after the parts branch is rebased.
-        // Keep forecast calculations owned by the parts feature.
+        // features/parts here after the parts branch is rebased, then remove
         const _SectionHeader(title: 'HISTORY ANALYSIS'),
         const SizedBox(height: AppSpacing.md),
         _HistoryAnalysisCard(summary: summary),
@@ -162,13 +184,14 @@ final class _PeriodSelector extends StatelessWidget {
                     borderRadius: AppRadius.input,
                   ),
                   minimumSize: const Size(0, 40),
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: AppSpacing.sm),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: AppSpacing.sm,
+                  ),
                   tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                   textStyle: Theme.of(context).textTheme.labelMedium?.copyWith(
-                        fontWeight: FontWeight.w800,
-                        letterSpacing: 0.6,
-                      ),
+                    fontWeight: FontWeight.w800,
+                    letterSpacing: 0.6,
+                  ),
                 ),
                 child: Text(_periodLabel(period)),
               ),
@@ -200,9 +223,9 @@ final class _AnalyticsSummaryCard extends StatelessWidget {
           Text(
             '${_periodAdjective(summary.period)} EXPENSES',
             style: Theme.of(context).textTheme.labelMedium?.copyWith(
-                  color: AppColors.textSecondary,
-                  letterSpacing: 1.2,
-                ),
+              color: AppColors.textSecondary,
+              letterSpacing: 1.2,
+            ),
           ),
           const SizedBox(height: AppSpacing.sm),
           FittedBox(
@@ -211,10 +234,10 @@ final class _AnalyticsSummaryCard extends StatelessWidget {
             child: Text(
               _formatMoney(totalExpenses.amount),
               style: Theme.of(context).textTheme.headlineLarge?.copyWith(
-                    color: AppColors.primaryLight,
-                    fontSize: 46,
-                    height: 1.05,
-                  ),
+                color: AppColors.primaryLight,
+                fontSize: 46,
+                height: 1.05,
+              ),
             ),
           ),
           const SizedBox(height: AppSpacing.xxl),
@@ -231,16 +254,14 @@ final class _AnalyticsSummaryCard extends StatelessWidget {
                     Text(
                       'COST PER KM',
                       style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                            color: AppColors.success,
-                            letterSpacing: 0.7,
-                          ),
+                        color: AppColors.success,
+                        letterSpacing: 0.7,
+                      ),
                     ),
                     const SizedBox(height: AppSpacing.xs),
                     Text(
                       '${_formatDecimal(mileage.costPerKm)} ₽',
-                      style: Theme.of(context)
-                          .textTheme
-                          .headlineMedium
+                      style: Theme.of(context).textTheme.headlineMedium
                           ?.copyWith(color: AppColors.success),
                     ),
                   ],
@@ -282,9 +303,9 @@ final class _ExpenseCategoryGrid extends StatelessWidget {
                   children: [
                     Text(
                       _categoryLabel(category.category).toUpperCase(),
-                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                            letterSpacing: 0.7,
-                          ),
+                      style: Theme.of(
+                        context,
+                      ).textTheme.bodySmall?.copyWith(letterSpacing: 0.7),
                     ),
                     const SizedBox(height: AppSpacing.xs),
                     Text(
@@ -320,18 +341,14 @@ final class _TrendBadge extends StatelessWidget {
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          const Icon(
-            Icons.trending_up,
-            color: AppColors.success,
-            size: 14,
-          ),
+          const Icon(Icons.trending_up, color: AppColors.success, size: 14),
           const SizedBox(width: AppSpacing.xs),
           Text(
             '${_formatDecimal(percent)}%',
             style: Theme.of(context).textTheme.labelMedium?.copyWith(
-                  color: AppColors.success,
-                  fontWeight: FontWeight.w800,
-                ),
+              color: AppColors.success,
+              fontWeight: FontWeight.w800,
+            ),
           ),
         ],
       ),
@@ -346,6 +363,7 @@ final class _ChartCard extends StatelessWidget {
     required this.legend,
     required this.accentColor,
     this.chartType = _ChartType.bar,
+    this.trendPercent,
   });
 
   final List<AnalyticsChartPoint> points;
@@ -353,6 +371,7 @@ final class _ChartCard extends StatelessWidget {
   final String legend;
   final Color accentColor;
   final _ChartType chartType;
+  final double? trendPercent;
 
   @override
   Widget build(BuildContext context) {
@@ -394,9 +413,13 @@ final class _ChartCard extends StatelessWidget {
               Text(
                 'Avg: ${valueFormatter(average)}',
                 style: Theme.of(context).textTheme.labelMedium?.copyWith(
-                      color: AppColors.primaryLight,
-                    ),
+                  color: AppColors.primaryLight,
+                ),
               ),
+              if (trendPercent case final trend?) ...[
+                const SizedBox(width: AppSpacing.sm),
+                _TrendBadge(percent: trend),
+              ],
             ],
           ),
         ],
@@ -413,9 +436,7 @@ final class _HistoryAnalysisCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final charts = summary.charts!;
-    final mileage = summary.mileage!;
-    final fuel = summary.fuel!;
-    final repairs = summary.repairs!;
+    final history = summary.history;
 
     return _DashboardCard(
       padding: const EdgeInsets.all(AppSpacing.lg),
@@ -423,11 +444,11 @@ final class _HistoryAnalysisCard extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            'REPAIR FREQUENCY OVER TIME',
+            'PERFORMANCE TREND OVER TIME',
             style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                  color: AppColors.textSecondary,
-                  letterSpacing: 0.8,
-                ),
+              color: AppColors.textSecondary,
+              letterSpacing: 0.8,
+            ),
           ),
           const SizedBox(height: AppSpacing.md),
           SizedBox(
@@ -435,7 +456,7 @@ final class _HistoryAnalysisCard extends StatelessWidget {
             width: double.infinity,
             child: CustomPaint(
               painter: _AnalyticsChartPainter(
-                points: charts.repairsByMonth,
+                points: charts.mileageByMonth,
                 accentColor: AppColors.success,
                 type: _ChartType.bar,
                 showLabels: false,
@@ -456,11 +477,19 @@ final class _HistoryAnalysisCard extends StatelessWidget {
                 children: [
                   SizedBox(
                     width: itemWidth,
-                    child: _FrequentRepairs(repairs: repairs),
+                    child: history == null
+                        ? const _UnavailableText(
+                            message: 'Company metrics are not available',
+                          )
+                        : _CompanyMetrics(history: history),
                   ),
                   SizedBox(
                     width: itemWidth,
-                    child: _MileageDynamics(mileage: mileage, fuel: fuel),
+                    child: history == null
+                        ? const _UnavailableText(
+                            message: 'Counts are not available',
+                          )
+                        : _HistoryCounts(history: history),
                   ),
                 ],
               );
@@ -472,10 +501,10 @@ final class _HistoryAnalysisCard extends StatelessWidget {
   }
 }
 
-final class _FrequentRepairs extends StatelessWidget {
-  const _FrequentRepairs({required this.repairs});
+final class _CompanyMetrics extends StatelessWidget {
+  const _CompanyMetrics({required this.history});
 
-  final RepairAnalytics repairs;
+  final HistoryAnalytics history;
 
   @override
   Widget build(BuildContext context) {
@@ -483,66 +512,70 @@ final class _FrequentRepairs extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          'FREQUENT REPAIRS',
+          'COMPANY METRICS',
           style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                color: AppColors.textSecondary,
-                letterSpacing: 0.7,
-              ),
+            color: AppColors.textSecondary,
+            letterSpacing: 0.7,
+          ),
         ),
         const SizedBox(height: AppSpacing.sm),
-        for (final repair in repairs.mostFrequentTypes) ...[
-          _MetricBullet(label: repair.label, value: '${repair.count}'),
-          if (repair != repairs.mostFrequentTypes.last)
+        for (final metric in history.companyMetrics) ...[
+          _MetricBullet(
+            label: metric.label,
+            value: '${metric.value}/${metric.maxValue}',
+          ),
+          if (metric != history.companyMetrics.last)
             const SizedBox(height: AppSpacing.xs),
         ],
-        const SizedBox(height: AppSpacing.sm),
+      ],
+    );
+  }
+}
+
+final class _HistoryCounts extends StatelessWidget {
+  const _HistoryCounts({required this.history});
+
+  final HistoryAnalytics history;
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
         Text(
-          '${repairs.count} total repair records',
-          style: Theme.of(context).textTheme.bodySmall,
+          'KEY COUNTS',
+          style: Theme.of(context).textTheme.bodySmall?.copyWith(
+            color: AppColors.textSecondary,
+            letterSpacing: 0.7,
+          ),
+        ),
+        const SizedBox(height: AppSpacing.sm),
+        _MetricBullet(
+          label: 'Subscription',
+          value: '${history.subscriptionCount}',
+        ),
+        const SizedBox(height: AppSpacing.xs),
+        _MetricBullet(
+          label: 'Electronics',
+          value: '${history.electronicsCount}',
         ),
       ],
     );
   }
 }
 
-final class _MileageDynamics extends StatelessWidget {
-  const _MileageDynamics({required this.mileage, required this.fuel});
+final class _UnavailableText extends StatelessWidget {
+  const _UnavailableText({required this.message});
 
-  final MileageAnalytics mileage;
-  final FuelAnalytics fuel;
+  final String message;
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          'MILEAGE DYNAMICS',
-          style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                color: AppColors.textSecondary,
-                letterSpacing: 0.7,
-              ),
-        ),
-        const SizedBox(height: AppSpacing.sm),
-        Text(
-          '+${_formatNumber(mileage.monthlyDeltaKm)} km/mo',
-          style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                color: AppColors.primaryLight,
-              ),
-        ),
-        const SizedBox(height: AppSpacing.xs),
-        Text(
-          'Up ${_formatDecimal(mileage.growthPercent)}%',
-          style: Theme.of(context).textTheme.bodySmall,
-        ),
-        const SizedBox(height: AppSpacing.md),
-        Text(
-          '${_formatDecimal(fuel.averageConsumptionPer100Km)} L / 100 km',
-          style: Theme.of(context).textTheme.labelMedium?.copyWith(
-                color: AppColors.success,
-              ),
-        ),
-      ],
+    return Text(
+      message,
+      style: Theme.of(
+        context,
+      ).textTheme.bodyMedium?.copyWith(color: AppColors.textMuted),
     );
   }
 }
@@ -571,9 +604,9 @@ final class _MetricBullet extends StatelessWidget {
         ),
         Text(
           value,
-          style: Theme.of(context).textTheme.labelMedium?.copyWith(
-                color: AppColors.textPrimary,
-              ),
+          style: Theme.of(
+            context,
+          ).textTheme.labelMedium?.copyWith(color: AppColors.textPrimary),
         ),
       ],
     );
@@ -594,17 +627,17 @@ final class _SectionHeader extends StatelessWidget {
           child: Text(
             title,
             style: Theme.of(context).textTheme.labelMedium?.copyWith(
-                  color: AppColors.textSecondary,
-                  letterSpacing: 1.1,
-                ),
+              color: AppColors.textSecondary,
+              letterSpacing: 1.1,
+            ),
           ),
         ),
         if (trailing != null)
           Text(
             trailing!,
-            style: Theme.of(context).textTheme.labelMedium?.copyWith(
-                  color: AppColors.primaryLight,
-                ),
+            style: Theme.of(
+              context,
+            ).textTheme.labelMedium?.copyWith(color: AppColors.primaryLight),
           ),
       ],
     );
@@ -791,7 +824,11 @@ final class _AnalyticsChartPainter extends CustomPainter {
   }
 
   void _drawBars(
-      Canvas canvas, Size size, double chartHeight, double maxValue) {
+    Canvas canvas,
+    Size size,
+    double chartHeight,
+    double maxValue,
+  ) {
     final slotWidth = size.width / points.length;
     final barWidth = math.min(42.0, slotWidth * 0.62);
     final paint = Paint()..color = accentColor.withValues(alpha: 0.72);
@@ -810,7 +847,11 @@ final class _AnalyticsChartPainter extends CustomPainter {
   }
 
   void _drawLine(
-      Canvas canvas, Size size, double chartHeight, double maxValue) {
+    Canvas canvas,
+    Size size,
+    double chartHeight,
+    double maxValue,
+  ) {
     final path = Path();
     final fillPath = Path();
     final step = points.length == 1 ? 0.0 : size.width / (points.length - 1);
@@ -895,22 +936,12 @@ String _periodAdjective(AnalyticsPeriod period) {
   };
 }
 
-String _periodNoun(AnalyticsPeriod period) {
-  return switch (period) {
-    AnalyticsPeriod.month => 'MONTHLY',
-    AnalyticsPeriod.year => 'PERIOD',
-    AnalyticsPeriod.all => 'ALL-TIME',
-  };
-}
-
 String _categoryLabel(ExpenseCategory category) {
   return switch (category) {
-    ExpenseCategory.fuel => 'Fuel',
-    ExpenseCategory.repair => 'Repair',
-    ExpenseCategory.maintenance => 'Maintenance',
-    ExpenseCategory.parts => 'Parts',
-    ExpenseCategory.washing => 'Washing',
-    ExpenseCategory.other => 'Other',
+    ExpenseCategory.investments => 'Investments',
+    ExpenseCategory.industry => 'Industry',
+    ExpenseCategory.payments => 'Payments',
+    ExpenseCategory.supplies => 'Supplies',
   };
 }
 

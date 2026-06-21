@@ -30,13 +30,16 @@ final class MockAnalyticsDatasource {
       totalExpenses: const MoneyAmount(amount: 15650, currency: 'RUB'),
       trendPercent: 4.2,
       expensesByCategory: const [
-        ExpenseCategoryAmount(category: ExpenseCategory.repair, amount: 8900),
-        ExpenseCategoryAmount(category: ExpenseCategory.fuel, amount: 2450),
         ExpenseCategoryAmount(
-          category: ExpenseCategory.maintenance,
-          amount: 4300,
+          category: ExpenseCategory.investments,
+          amount: 6200,
         ),
-        ExpenseCategoryAmount(category: ExpenseCategory.parts, amount: 0),
+        ExpenseCategoryAmount(category: ExpenseCategory.industry, amount: 3100),
+        ExpenseCategoryAmount(category: ExpenseCategory.payments, amount: 2450),
+        ExpenseCategoryAmount(
+          category: ExpenseCategory.supplies,
+          amount: 3900,
+        ),
       ],
       mileage: const MileageAnalytics(
         totalKm: 1240,
@@ -55,6 +58,8 @@ final class MockAnalyticsDatasource {
           RepairTypeMetric(label: 'Electrical', count: 2),
         ],
       ),
+      maintenanceForecast: _maintenanceForecast(),
+      history: _historyAnalytics(),
       charts: const AnalyticsCharts(
         expensesByMonth: [
           AnalyticsChartPoint(label: 'Jan', value: 24000),
@@ -91,13 +96,18 @@ final class MockAnalyticsDatasource {
       totalExpenses: const MoneyAmount(amount: 342500, currency: 'RUB'),
       trendPercent: 4.2,
       expensesByCategory: const [
-        ExpenseCategoryAmount(category: ExpenseCategory.repair, amount: 145000),
-        ExpenseCategoryAmount(category: ExpenseCategory.fuel, amount: 112500),
         ExpenseCategoryAmount(
-          category: ExpenseCategory.maintenance,
-          amount: 56000,
+          category: ExpenseCategory.investments,
+          amount: 145000,
         ),
-        ExpenseCategoryAmount(category: ExpenseCategory.parts, amount: 29000),
+        ExpenseCategoryAmount(
+            category: ExpenseCategory.industry, amount: 112500),
+        ExpenseCategoryAmount(
+            category: ExpenseCategory.payments, amount: 56000),
+        ExpenseCategoryAmount(
+          category: ExpenseCategory.supplies,
+          amount: 29000,
+        ),
       ],
       mileage: const MileageAnalytics(
         totalKm: 23840,
@@ -116,6 +126,8 @@ final class MockAnalyticsDatasource {
           RepairTypeMetric(label: 'Electrical', count: 2),
         ],
       ),
+      maintenanceForecast: _maintenanceForecast(),
+      history: _historyAnalytics(),
       charts: const AnalyticsCharts(
         expensesByMonth: [
           AnalyticsChartPoint(label: 'Jul', value: 28500),
@@ -152,13 +164,18 @@ final class MockAnalyticsDatasource {
       totalExpenses: const MoneyAmount(amount: 916800, currency: 'RUB'),
       trendPercent: 8.7,
       expensesByCategory: const [
-        ExpenseCategoryAmount(category: ExpenseCategory.repair, amount: 384000),
-        ExpenseCategoryAmount(category: ExpenseCategory.fuel, amount: 292300),
         ExpenseCategoryAmount(
-          category: ExpenseCategory.maintenance,
-          amount: 151500,
+          category: ExpenseCategory.investments,
+          amount: 384000,
         ),
-        ExpenseCategoryAmount(category: ExpenseCategory.parts, amount: 89000),
+        ExpenseCategoryAmount(
+            category: ExpenseCategory.industry, amount: 292300),
+        ExpenseCategoryAmount(
+            category: ExpenseCategory.payments, amount: 151500),
+        ExpenseCategoryAmount(
+          category: ExpenseCategory.supplies,
+          amount: 89000,
+        ),
       ],
       mileage: const MileageAnalytics(
         totalKm: 67420,
@@ -177,6 +194,8 @@ final class MockAnalyticsDatasource {
           RepairTypeMetric(label: 'Electrical', count: 8),
         ],
       ),
+      maintenanceForecast: _maintenanceForecast(),
+      history: _historyAnalytics(),
       charts: const AnalyticsCharts(
         expensesByMonth: [
           AnalyticsChartPoint(label: '2021', value: 168000),
@@ -212,11 +231,53 @@ final class MockAnalyticsDatasource {
       mileage: null,
       fuel: null,
       repairs: null,
+      maintenanceForecast: null,
+      history: null,
       charts: null,
       trendPercent: null,
       message:
           'Not enough data for analytics yet. Add trips, refueling, repairs, '
           'or maintenance records to unlock insights.',
+    );
+  }
+
+  AnalyticsMaintenanceForecast _maintenanceForecast() {
+    return const AnalyticsMaintenanceForecast(
+      remainingDistanceKm: 2400,
+      approximateDateLabel: 'Jan 24, 2024 (45 days)',
+      updatedLabel: 'Updated 2 hours ago',
+      resourcePercent: 84,
+      items: [
+        AnalyticsMaintenanceItem(
+          label: 'Brake pads',
+          remainingPercent: 15,
+          remainingDistanceKm: 3200,
+          urgency: AnalyticsMaintenanceUrgency.warning,
+        ),
+        AnalyticsMaintenanceItem(
+          label: 'Engine oil',
+          remainingPercent: 5,
+          remainingDistanceKm: 450,
+          urgency: AnalyticsMaintenanceUrgency.critical,
+        ),
+        AnalyticsMaintenanceItem(
+          label: 'Timing belt',
+          remainingPercent: 0,
+          remainingDistanceKm: 0,
+          urgency: AnalyticsMaintenanceUrgency.critical,
+        ),
+      ],
+    );
+  }
+
+  HistoryAnalytics _historyAnalytics() {
+    return const HistoryAnalytics(
+      companyMetrics: [
+        CompanyMetric(label: 'Reliability', value: 92, maxValue: 100),
+        CompanyMetric(label: 'Efficiency', value: 78, maxValue: 100),
+      ],
+      subscriptionCount: 4,
+      electronicsCount: 2,
     );
   }
 }
