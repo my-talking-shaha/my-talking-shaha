@@ -27,7 +27,7 @@ import ru.talkingshaha.backend.timeline.service.TimelineEventService;
  * vehicle's stored mileage and recalculate the lifetime of its parts.
  */
 @RestController
-@RequestMapping("/api/v1/vehicles/{vehicleId}/events")
+@RequestMapping("/api/v1/vehicles/{vehicleId}/timeline")
 public class TimelineEventController {
 
     private final TimelineEventService service;
