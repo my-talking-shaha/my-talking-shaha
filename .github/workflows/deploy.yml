@@ -13,17 +13,17 @@ permissions:
   contents: read
 
 jobs:
-  backend-smoke-test:
-    name: Backend Docker smoke test
+  app-smoke-test:
+    name: Application Docker smoke test
     runs-on: ubuntu-latest
-    timeout-minutes: 20
+    timeout-minutes: 45
 
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Build and start backend stack
-        run: docker compose -f docker/docker-compose.yml up -d --build --remove-orphans backend
+      - name: Build and start application stack
+        run: docker compose -f docker/docker-compose.yml up -d --build --remove-orphans backend frontend
 
       - name: Wait for backend health
         run: |
@@ -39,23 +39,51 @@ jobs:
           done
 
           echo "Backend did not become healthy in time" >&2
-          docker compose -f docker/docker-compose.yml ps postgres backend
-          docker compose -f docker/docker-compose.yml logs --no-color postgres backend
+          docker compose -f docker/docker-compose.yml ps postgres backend frontend
+          docker compose -f docker/docker-compose.yml logs --no-color postgres backend frontend
           exit 1
 
-      - name: Dump backend stack logs
-        if: always()
-        run: docker compose -f docker/docker-compose.yml logs --no-color postgres backend
+      - name: Wait for frontend health
+        run: |
+          set -euo pipefail
 
-      - name: Stop backend stack
+          for attempt in {1..30}; do
+            if curl -fsS http://localhost/health; then
+              exit 0
+            fi
+
+            echo "Frontend is not healthy yet, retry $attempt/30"
+            sleep 5
+          done
+
+          echo "Frontend did not become healthy in time" >&2
+          docker compose -f docker/docker-compose.yml ps postgres backend frontend
+          docker compose -f docker/docker-compose.yml logs --no-color postgres backend frontend
+          exit 1
+
+      - name: Verify OpenAPI docs
+        run: curl -fsS http://localhost/v3/api-docs >/dev/null
+
+      - name: Verify Swagger UI
+        run: |
+          set -euo pipefail
+
+          curl -fsS http://localhost/swagger-ui.html | grep -q "SwaggerUIBundle"
+          curl -fsS http://localhost/webjars/swagger-ui/5.32.2/swagger-ui.css | grep -q "swagger-ui"
+
+      - name: Dump application stack logs
+        if: always()
+        run: docker compose -f docker/docker-compose.yml logs --no-color postgres backend frontend
+
+      - name: Stop application stack
         if: always()
         run: docker compose -f docker/docker-compose.yml down -v --remove-orphans
 
   deploy:
     name: Deploy to server
-    needs: backend-smoke-test
+    needs: app-smoke-test
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    timeout-minutes: 60
 
     steps:
       - name: Configure SSH
@@ -77,7 +105,7 @@ jobs:
 
           ssh-keyscan -p "${SERVER_PORT:-22}" "$SERVER_HOST" >> ~/.ssh/known_hosts
 
-      - name: Deploy backend service
+      - name: Deploy application services
         env:
           SERVER_HOST: ${{ secrets.SERVER_HOST }}
           SERVER_PORT: ${{ secrets.SERVER_PORT }}
@@ -112,7 +140,7 @@ jobs:
             exit 1
           fi
 
-          $COMPOSE -f docker/docker-compose.yml up -d --build --remove-orphans backend
-          $COMPOSE -f docker/docker-compose.yml ps postgres backend
+          $COMPOSE -f docker/docker-compose.yml up -d --build --remove-orphans backend frontend
+          $COMPOSE -f docker/docker-compose.yml ps postgres backend frontend
           docker image prune -f
           REMOTE
