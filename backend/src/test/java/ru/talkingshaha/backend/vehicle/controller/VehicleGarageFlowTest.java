@@ -46,12 +46,10 @@ class VehicleGarageFlowTest {
                 .getResponse()
                 .getContentAsString();
         String vehicleId = vehicleJson.replaceAll(".*\"id\":\"([^\"]+)\".*", "$1");
-
         mockMvc.perform(get("/api/v1/vehicles"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$", hasSize(1)))
                 .andExpect(jsonPath("$[0].id").value(vehicleId));
-
         mockMvc.perform(post("/api/v1/vehicles/{vehicleId}/parts", vehicleId)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(
@@ -68,7 +66,6 @@ class VehicleGarageFlowTest {
                 .andExpect(jsonPath("$.remainingKm").value(24000))
                 .andExpect(jsonPath("$.remainingPercent").value(96))
                 .andExpect(jsonPath("$.status").value("OK"));
-
         mockMvc.perform(get("/api/v1/vehicles/{vehicleId}/dashboard", vehicleId))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.vehicle.id").value(vehicleId))
@@ -98,7 +95,6 @@ class VehicleGarageFlowTest {
     @Test
     void createsPartEventAndReturnsAnalytics() throws Exception {
         String vehicleId = createVehicle();
-
         mockMvc.perform(post("/api/v1/vehicles/{vehicleId}/timeline/refuel", vehicleId)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(
@@ -113,7 +109,6 @@ class VehicleGarageFlowTest {
                                         }
                                         """))
                 .andExpect(status().isCreated());
-
         mockMvc.perform(post("/api/v1/vehicles/{vehicleId}/timeline/trip", vehicleId)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(
@@ -129,7 +124,6 @@ class VehicleGarageFlowTest {
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.cost").doesNotExist())
                 .andExpect(jsonPath("$.averageFuelConsumptionLitersPerKm").value(0.1));
-
         mockMvc.perform(post("/api/v1/vehicles/{vehicleId}/timeline/part", vehicleId)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(
@@ -147,7 +141,6 @@ class VehicleGarageFlowTest {
                 .andExpect(jsonPath("$.type").value("PART_REPLACEMENT"))
                 .andExpect(jsonPath("$.name").value("Brake pads"))
                 .andExpect(jsonPath("$.photoUrls[0]").value("https://example.com/brake-pads.jpg"));
-
         mockMvc.perform(get("/api/v1/vehicles/{vehicleId}/analytics?period=ALL_TIME", vehicleId))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.period").value("ALL_TIME"))
@@ -163,7 +156,6 @@ class VehicleGarageFlowTest {
     @Test
     void rejectsZeroRefuelLitersAndInvalidAnalyticsPeriod() throws Exception {
         String vehicleId = createVehicle();
-
         mockMvc.perform(post("/api/v1/vehicles/{vehicleId}/timeline/refuel", vehicleId)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(
@@ -178,10 +170,22 @@ class VehicleGarageFlowTest {
                                         """))
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.code").value("VALIDATION_ERROR"));
-
         mockMvc.perform(get("/api/v1/vehicles/{vehicleId}/analytics?period=WEEK", vehicleId))
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.code").value("VALIDATION_ERROR"));
+        mockMvc.perform(post("/api/v1/vehicles/{vehicleId}/timeline/part", vehicleId)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(
+                                """
+                                        {
+                                          "eventDateTime": "2026-06-14T10:00:00Z",
+                                          "mileageKm": 10000,
+                                          "name": "Brake pads",
+                                          "cost": 0
+                                        }
+                                        """))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.fields.cost").value("must be greater than 0"));
     }
 
     private String createVehicle() throws Exception {

@@ -3,6 +3,10 @@ package ru.talkingshaha.backend.vehicle.controller;
 import java.util.List;
 import java.util.UUID;
 
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -14,6 +18,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
+import ru.talkingshaha.backend.common.error.ApiError;
 import ru.talkingshaha.backend.vehicle.dto.CreateVehicleRequest;
 import ru.talkingshaha.backend.vehicle.dto.UpdateVehicleRequest;
 import ru.talkingshaha.backend.vehicle.dto.VehicleDashboardResponse;
@@ -22,6 +27,20 @@ import ru.talkingshaha.backend.vehicle.service.VehicleService;
 
 @RestController
 @RequestMapping("/api/v1/vehicles")
+@ApiResponses({
+        @ApiResponse(
+                responseCode = "400",
+                description = "Validation error",
+                content = @Content(schema = @Schema(implementation = ApiError.class))),
+        @ApiResponse(
+                responseCode = "403",
+                description = "Vehicle belongs to another user",
+                content = @Content(schema = @Schema(implementation = ApiError.class))),
+        @ApiResponse(
+                responseCode = "404",
+                description = "Vehicle not found",
+                content = @Content(schema = @Schema(implementation = ApiError.class)))
+})
 public class VehicleController {
 
     private final VehicleService vehicles;
