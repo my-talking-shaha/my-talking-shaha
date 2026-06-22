@@ -25,8 +25,8 @@ CREATE TABLE IF NOT EXISTS vehicles
     vin                VARCHAR(17),
     photo_url          VARCHAR(500),
     CONSTRAINT fk_vehicle_owner
-        FOREIGN KEY (owner_id)
-            REFERENCES app_users (id)
+    FOREIGN KEY (owner_id)
+    REFERENCES app_users (id)
 );
 
 CREATE TABLE IF NOT EXISTS timeline_events
@@ -55,8 +55,9 @@ CREATE TABLE IF NOT EXISTS trips
 CREATE TABLE IF NOT EXISTS maintenance
 (
     id          UUID PRIMARY KEY,
+    name        VARCHAR(255)   NOT NULL,
     description TEXT,
-    mileage_km  INTEGER NOT NULL CHECK (mileage_km >= 0),
+    mileage_km  INTEGER        NOT NULL CHECK (mileage_km >= 0),
     cost        NUMERIC(10, 2) CHECK (cost > 0),
     CONSTRAINT fk_maintenance_event
         FOREIGN KEY (id)

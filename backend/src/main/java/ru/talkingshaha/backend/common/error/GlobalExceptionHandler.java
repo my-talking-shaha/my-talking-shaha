@@ -11,6 +11,13 @@ import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
+/**
+ * Translates application exceptions into the common {@link ApiError} response.
+ *
+ * <p>Mapping: bean-validation failures and {@link IllegalArgumentException} → 400
+ * {@code VALIDATION_ERROR}; {@link ResourceNotFoundException} → 404 {@code NOT_FOUND};
+ * {@link ForbiddenException} → 403 {@code FORBIDDEN}.
+ */
 @RestControllerAdvice
 public class GlobalExceptionHandler {
 
@@ -36,6 +43,12 @@ public class GlobalExceptionHandler {
     public ResponseEntity<ApiError> handleNotFound(ResourceNotFoundException exception) {
         log.warn("API error code=NOT_FOUND message={}", exception.getMessage());
         return ResponseEntity.status(HttpStatus.NOT_FOUND).body(ApiError.of("NOT_FOUND", exception.getMessage()));
+    }
+
+    @ExceptionHandler(ForbiddenException.class)
+    public ResponseEntity<ApiError> handleForbidden(ForbiddenException exception) {
+        log.warn("API error code=FORBIDDEN message={}", exception.getMessage());
+        return ResponseEntity.status(HttpStatus.FORBIDDEN).body(ApiError.of("FORBIDDEN", exception.getMessage()));
     }
 
     private String fieldMessage(FieldError fieldError) {

@@ -2,7 +2,7 @@ openapi: 3.0.3
 info:
   title: My Talking Shaha Core Garage API
   version: 0.1.0
-  description: Core garage, vehicle dashboard, and vehicle parts API for the backend flow.
+  description: Core garage, vehicle dashboard, vehicle parts, and timeline (service history) API for the backend flow.
 servers:
   - url: /api/v1
 paths:
@@ -37,6 +37,43 @@ paths:
                 $ref: '#/components/schemas/Vehicle'
         '400':
           $ref: '#/components/responses/ValidationError'
+  /vehicles/{vehicleId}:
+    patch:
+      summary: Update vehicle
+      tags: [ Vehicles ]
+      parameters:
+        - $ref: '#/components/parameters/VehicleId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateVehicleRequest'
+      responses:
+        '200':
+          description: Updated vehicle
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Vehicle'
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+    delete:
+      summary: Delete vehicle with its parts and events
+      tags: [ Vehicles ]
+      parameters:
+        - $ref: '#/components/parameters/VehicleId'
+      responses:
+        '204':
+          description: Vehicle deleted
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
   /vehicles/{vehicleId}/dashboard:
     get:
       summary: Get vehicle dashboard with parts forecast
@@ -118,6 +155,96 @@ paths:
           $ref: '#/components/responses/ValidationError'
         '404':
           $ref: '#/components/responses/NotFound'
+  /vehicles/{vehicleId}/timeline:
+    get:
+      summary: List vehicle timeline events
+      tags: [ Timeline ]
+      parameters:
+        - $ref: '#/components/parameters/VehicleId'
+        - name: type
+          in: query
+          required: false
+          description: Optional filter by event type
+          schema:
+            $ref: '#/components/schemas/TimelineEventType'
+      responses:
+        '200':
+          description: Timeline events, most recent first
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TimelineEventList'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /vehicles/{vehicleId}/timeline/refuel:
+    post:
+      summary: Add refuel event
+      tags: [ Timeline ]
+      parameters:
+        - $ref: '#/components/parameters/VehicleId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateRefuelEventRequest'
+      responses:
+        '201':
+          description: Created refuel event
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TimelineEvent'
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /vehicles/{vehicleId}/timeline/trip:
+    post:
+      summary: Add trip event
+      tags: [ Timeline ]
+      parameters:
+        - $ref: '#/components/parameters/VehicleId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateTripEventRequest'
+      responses:
+        '201':
+          description: Created trip event
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TimelineEvent'
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /vehicles/{vehicleId}/timeline/maintenance:
+    post:
+      summary: Add maintenance event
+      tags: [ Timeline ]
+      parameters:
+        - $ref: '#/components/parameters/VehicleId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateMaintenanceEventRequest'
+      responses:
+        '201':
+          description: Created maintenance event
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TimelineEvent'
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '404':
+          $ref: '#/components/responses/NotFound'
 components:
   parameters:
     VehicleId:
@@ -136,6 +263,12 @@ components:
             $ref: '#/components/schemas/ApiError'
     NotFound:
       description: Resource not found
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ApiError'
+    Forbidden:
+      description: Resource belongs to another user
       content:
         application/json:
           schema:
@@ -207,7 +340,7 @@ components:
         recentEvents:
           type: array
           items:
-            type: object
+            $ref: '#/components/schemas/RecentEvent'
     MaintenanceForecast:
       type: object
       required: [ overallStatus, updatedAt, parts ]
@@ -224,6 +357,25 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/Part'
+    RecentEvent:
+      type: object
+      description: Compact timeline event shown on the dashboard.
+      required: [ id, type, eventDateTime ]
+      properties:
+        id:
+          type: string
+          format: uuid
+        type:
+          $ref: '#/components/schemas/TimelineEventType'
+        title:
+          type: string
+          nullable: true
+        subtitle:
+          type: string
+          nullable: true
+        eventDateTime:
+          type: string
+          format: date-time
     PartList:
       type: object
       required: [ parts ]
@@ -251,6 +403,15 @@ components:
           type: integer
           minimum: 1
           nullable: true
+        description:
+          type: string
+          maxLength: 2000
+          nullable: true
+        cost:
+          type: number
+          minimum: 0
+          exclusiveMinimum: true
+          nullable: true
     UpdatePartRequest:
       type: object
       properties:
@@ -268,23 +429,217 @@ components:
         expectedLifetimeKm:
           type: integer
           minimum: 1
+        description:
+          type: string
+          maxLength: 2000
+        cost:
+          type: number
+          minimum: 0
+          exclusiveMinimum: true
     Part:
-      allOf:
-        - $ref: '#/components/schemas/CreatePartRequest'
-        - type: object
-          required: [ id, remainingKm, remainingPercent, status ]
-          properties:
-            id:
-              type: string
-              format: uuid
-            remainingKm:
-              type: integer
-              nullable: true
-            remainingPercent:
-              type: integer
-              nullable: true
-            status:
-              $ref: '#/components/schemas/PartStatus'
+      type: object
+      required: [ id, name, category, installedAt, installedMileageKm, remainingKm, remainingPercent, status ]
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        category:
+          $ref: '#/components/schemas/PartCategory'
+        installedAt:
+          type: string
+          format: date
+        installedMileageKm:
+          type: integer
+        expectedLifetimeKm:
+          type: integer
+          nullable: true
+        remainingKm:
+          type: integer
+          nullable: true
+        remainingPercent:
+          type: integer
+          nullable: true
+        status:
+          $ref: '#/components/schemas/PartStatus'
+    UpdateVehicleRequest:
+      type: object
+      description: Partial vehicle update; only the provided fields are applied.
+      properties:
+        brand:
+          type: string
+          maxLength: 80
+        model:
+          type: string
+          maxLength: 120
+        productionYear:
+          type: integer
+          minimum: 1900
+          maximum: 2100
+        color:
+          type: string
+          maxLength: 40
+        mileageKm:
+          type: integer
+          minimum: 0
+        fuelType:
+          $ref: '#/components/schemas/FuelType'
+        engineDescription:
+          type: string
+          maxLength: 80
+        vin:
+          type: string
+          minLength: 17
+          maxLength: 17
+        photoUrl:
+          type: string
+          maxLength: 500
+    CreateRefuelEventRequest:
+      type: object
+      required: [ eventDateTime, mileageKm, liters, cost, fuelType ]
+      properties:
+        eventDateTime:
+          type: string
+          format: date-time
+        mileageKm:
+          type: integer
+          minimum: 0
+        liters:
+          type: number
+          minimum: 0
+          maximum: 1000
+        cost:
+          type: number
+          minimum: 0
+          exclusiveMinimum: true
+        fuelType:
+          $ref: '#/components/schemas/FuelType'
+        fuelName:
+          type: string
+          nullable: true
+        stationName:
+          type: string
+          nullable: true
+    CreateTripEventRequest:
+      type: object
+      required: [ eventDateTime, endMileageKm, durationMinutes ]
+      properties:
+        eventDateTime:
+          type: string
+          format: date-time
+        startMileageKm:
+          type: integer
+          minimum: 0
+          nullable: true
+        endMileageKm:
+          type: integer
+          minimum: 0
+        route:
+          type: string
+          nullable: true
+        durationMinutes:
+          type: integer
+          minimum: 1
+    CreateMaintenanceEventRequest:
+      type: object
+      required: [ eventDateTime, mileageKm, name ]
+      properties:
+        eventDateTime:
+          type: string
+          format: date-time
+        mileageKm:
+          type: integer
+          minimum: 0
+        name:
+          type: string
+          maxLength: 255
+        description:
+          type: string
+          nullable: true
+        cost:
+          type: number
+          minimum: 0
+          exclusiveMinimum: true
+          nullable: true
+        photoUrls:
+          type: array
+          nullable: true
+          items:
+            type: string
+    TimelineEventList:
+      type: object
+      required: [ events ]
+      properties:
+        events:
+          type: array
+          items:
+            $ref: '#/components/schemas/TimelineEvent'
+    TimelineEvent:
+      type: object
+      description: >-
+        Unified timeline event. Fields are populated according to `type`: refuel events use
+        liters/fuelType/fuelName/stationName and cost; trip events use
+        startMileageKm/endMileageKm/distanceKm/route/durationMinutes; maintenance events use
+        name/description/photoUrls and cost.
+      required: [ id, type, eventDateTime ]
+      properties:
+        id:
+          type: string
+          format: uuid
+        type:
+          $ref: '#/components/schemas/TimelineEventType'
+        title:
+          type: string
+          nullable: true
+        eventDateTime:
+          type: string
+          format: date-time
+        cost:
+          type: number
+          nullable: true
+        mileageKm:
+          type: integer
+          nullable: true
+        liters:
+          type: number
+          nullable: true
+        fuelType:
+          allOf:
+            - $ref: '#/components/schemas/FuelType'
+          nullable: true
+        fuelName:
+          type: string
+          nullable: true
+        stationName:
+          type: string
+          nullable: true
+        startMileageKm:
+          type: integer
+          nullable: true
+        endMileageKm:
+          type: integer
+          nullable: true
+        distanceKm:
+          type: integer
+          nullable: true
+        route:
+          type: string
+          nullable: true
+        durationMinutes:
+          type: integer
+          nullable: true
+        name:
+          type: string
+          nullable: true
+        description:
+          type: string
+          nullable: true
+        photoUrls:
+          type: array
+          nullable: true
+          items:
+            type: string
     FuelType:
       type: string
       enum: [ GASOLINE, DIESEL, ELECTRIC, HYBRID, OTHER ]
@@ -294,3 +649,6 @@ components:
     PartStatus:
       type: string
       enum: [ OK, ATTENTION, CRITICAL, UNKNOWN, REPLACED ]
+    TimelineEventType:
+      type: string
+      enum: [ TRIP, REFUEL, REPAIR, MAINTENANCE, PART_REPLACEMENT, WARNING ]
