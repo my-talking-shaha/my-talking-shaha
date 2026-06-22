@@ -6,10 +6,6 @@ import jakarta.validation.constraints.PositiveOrZero;
 import jakarta.validation.constraints.Size;
 import ru.talkingshaha.backend.vehicle.model.FuelType;
 
-/**
- * Request to partially update a vehicle. All fields are optional; only the non-null fields
- * are applied. When provided, {@code vin} must be exactly 17 characters.
- */
 public record UpdateVehicleRequest(
         @Size(max = 80) String brand,
         @Size(max = 120) String model,

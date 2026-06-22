@@ -29,16 +29,9 @@ import ru.talkingshaha.backend.vehicle.dto.VehicleResponse;
 import ru.talkingshaha.backend.vehicle.model.Vehicle;
 import ru.talkingshaha.backend.vehicle.repository.VehicleRepository;
 
-/**
- * Application service for garage vehicles.
- *
- * <p>Every operation is scoped to the authenticated owner; access to another user's vehicle
- * raises {@link ForbiddenException} and a missing vehicle raises {@link ResourceNotFoundException}.
- */
 @Service
 public class VehicleService {
 
-    /** Maximum number of timeline events shown on the dashboard. */
     private static final int RECENT_EVENTS_LIMIT = 5;
 
     private final VehicleRepository vehicles;
@@ -98,11 +91,6 @@ public class VehicleService {
         return toResponse(vehicle);
     }
 
-    /**
-     * Deletes a vehicle and cascades the removal of its timeline events and parts.
-     *
-     * @param vehicleId the vehicle identifier
-     */
     @Transactional
     public void deleteVehicle(UUID vehicleId) {
         Vehicle vehicle = requireOwnedVehicle(vehicleId);
@@ -156,14 +144,6 @@ public class VehicleService {
                 event.getId().toString(), event.getType().name(), title, subtitle, event.getEventDateTime());
     }
 
-    /**
-     * Loads a vehicle and verifies it belongs to the current user.
-     *
-     * @param vehicleId the vehicle identifier
-     * @return the owned vehicle
-     * @throws ResourceNotFoundException if no vehicle with the given id exists
-     * @throws ForbiddenException        if the vehicle belongs to another user
-     */
     @Transactional(readOnly = true)
     public Vehicle requireOwnedVehicle(UUID vehicleId) {
         AppUser owner = currentUserService.currentUser();
@@ -205,7 +185,10 @@ public class VehicleService {
                 part.getExpectedLifetimeKm(),
                 part.getRemainingKm(),
                 part.getRemainingPercent(),
-                part.getStatus());
+                part.getStatus(),
+                part.getDescription(),
+                part.getCost(),
+                List.copyOf(part.getPhotoUrls()));
     }
 
     private PartStatus overallStatus(List<PartResponse> parts) {

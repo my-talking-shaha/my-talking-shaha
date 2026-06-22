@@ -11,10 +11,6 @@ import jakarta.validation.constraints.Positive;
 import jakarta.validation.constraints.PositiveOrZero;
 import jakarta.validation.constraints.Size;
 
-/**
- * Request to record a maintenance event. {@code cost}, when provided, must be positive;
- * {@code photoUrls} are optional attachments.
- */
 public record CreateMaintenanceEventRequest(
         @NotNull @PastOrPresent OffsetDateTime eventDateTime,
         @NotNull @PositiveOrZero Integer mileageKm,

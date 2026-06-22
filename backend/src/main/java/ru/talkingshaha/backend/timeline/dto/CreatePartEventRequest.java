@@ -2,20 +2,20 @@ package ru.talkingshaha.backend.timeline.dto;
 
 import java.math.BigDecimal;
 import java.time.OffsetDateTime;
+import java.util.List;
 
-import jakarta.validation.constraints.DecimalMin;
+import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.PastOrPresent;
 import jakarta.validation.constraints.Positive;
 import jakarta.validation.constraints.PositiveOrZero;
-import ru.talkingshaha.backend.vehicle.model.FuelType;
+import jakarta.validation.constraints.Size;
 
-public record CreateRefuelEventRequest(
+public record CreatePartEventRequest(
         @NotNull @PastOrPresent OffsetDateTime eventDateTime,
         @NotNull @PositiveOrZero Integer mileageKm,
-        @NotNull @DecimalMin(value = "0", inclusive = false) BigDecimal liters,
-        @NotNull @Positive BigDecimal cost,
-        @NotNull FuelType fuelType,
-        String fuelName,
-        String stationName) {
+        @NotBlank @Size(max = 255) String name,
+        String description,
+        @Positive BigDecimal cost,
+        List<String> photoUrls) {
 }

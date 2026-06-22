@@ -18,13 +18,6 @@ import ru.talkingshaha.backend.prediction.service.PartLifetimeService;
 import ru.talkingshaha.backend.vehicle.model.Vehicle;
 import ru.talkingshaha.backend.vehicle.service.VehicleService;
 
-/**
- * Application service for vehicle parts.
- *
- * <p>On every create or update the part's remaining lifetime is recomputed via
- * {@link PartLifetimeService}. {@link #refreshPartsForVehicle(Vehicle)} is invoked when the
- * vehicle mileage changes so that all parts stay in sync.
- */
 @Service
 public class PartService {
 
@@ -56,6 +49,11 @@ public class PartService {
         part.setInstalledAt(request.installedAt());
         part.setInstalledMileageKm(request.installedMileageKm());
         part.setExpectedLifetimeKm(request.expectedLifetimeKm());
+        part.setDescription(request.description());
+        part.setCost(request.cost());
+        if (request.photoUrls() != null) {
+            part.getPhotoUrls().addAll(request.photoUrls());
+        }
         refreshLifetime(vehicle, part);
         return toResponse(parts.save(part));
     }
@@ -80,15 +78,20 @@ public class PartService {
         if (request.expectedLifetimeKm() != null) {
             part.setExpectedLifetimeKm(request.expectedLifetimeKm());
         }
+        if (request.description() != null) {
+            part.setDescription(request.description());
+        }
+        if (request.cost() != null) {
+            part.setCost(request.cost());
+        }
+        if (request.photoUrls() != null) {
+            part.getPhotoUrls().clear();
+            part.getPhotoUrls().addAll(request.photoUrls());
+        }
         refreshLifetime(vehicle, part);
         return toResponse(part);
     }
 
-    /**
-     * Recalculates the lifetime of every part of a vehicle, e.g. after its mileage changed.
-     *
-     * @param vehicle the vehicle whose parts should be refreshed
-     */
     @Transactional
     public void refreshPartsForVehicle(Vehicle vehicle) {
         parts.findAllByVehicleOrderByInstalledAtDescNameAsc(vehicle)
@@ -113,6 +116,9 @@ public class PartService {
                 part.getExpectedLifetimeKm(),
                 part.getRemainingKm(),
                 part.getRemainingPercent(),
-                part.getStatus());
+                part.getStatus(),
+                part.getDescription(),
+                part.getCost(),
+                List.copyOf(part.getPhotoUrls()));
     }
 }

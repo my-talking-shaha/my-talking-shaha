@@ -2,8 +2,8 @@
 
 API prefix: `/api/v1`
 
-> Status: the Garage/Vehicles, Parts, and Timeline sections are implemented. Auth,
-> Analytics, Chat, Prediction, and Notifications are planned and described here as the
+> Status: the Garage/Vehicles, Parts, Timeline, and Analytics sections are implemented. Auth,
+> Chat, Prediction, and Notifications are planned and described here as the
 > target contract. The machine-readable spec in `openapi.yaml` covers the implemented
 > endpoints only.
 
@@ -276,7 +276,7 @@ Request:
 }
 ```
 
-Response `201`: timeline event. `liters` must be in `(0, 1000]` and `cost > 0`.
+Response `201`: timeline event. `liters > 0` and `cost > 0`.
 
 ### Add trip
 
@@ -318,6 +318,29 @@ Request:
 
 `cost`, when provided, must be greater than `0`. Response `201`: timeline event.
 
+### Add part event
+
+`POST /api/v1/vehicles/{vehicleId}/timeline/part`
+
+Request:
+
+```json
+{
+  "eventDateTime": "2026-06-14T10:00:00Z",
+  "mileageKm": 10400,
+  "name": "Brake pads",
+  "description": "Front axle replacement",
+  "cost": 4200,
+  "photoUrls": [
+    "https://example.com/brake-pads.jpg"
+  ]
+}
+```
+
+`name`, `eventDateTime`, and `mileageKm` are required. `description`, `cost`, and
+`photoUrls` are optional. `cost`, when provided, must be greater than `0`.
+Response `201`: timeline event with `type = PART_REPLACEMENT`.
+
 Creating any event with a `mileageKm`/`endMileageKm` higher than the vehicle's current
 mileage advances the vehicle mileage and recalculates its parts.
 
@@ -341,7 +364,10 @@ Response `200`:
       "expectedLifetimeKm": 8000,
       "remainingKm": 8000,
       "remainingPercent": 100,
-      "status": "OK"
+      "status": "OK",
+      "description": "Front axle",
+      "cost": 2500,
+      "photoUrls": []
     }
   ]
 }
@@ -361,12 +387,15 @@ Request:
   "installedMileageKm": 10000,
   "expectedLifetimeKm": 25000,
   "description": "Front axle",
-  "cost": 2500
+  "cost": 2500,
+  "photoUrls": [
+    "https://example.com/part-photo.jpg"
+  ]
 }
 ```
 
-`expectedLifetimeKm` is optional; when omitted, a per-category default is used. `description`
-and `cost` are optional. Response `201`: part.
+`expectedLifetimeKm` is optional; when omitted, a per-category default is used.
+`description`, `cost`, and `photoUrls` are optional. Response `201`: part.
 
 ### Update part
 
@@ -382,68 +411,70 @@ Request can contain any editable part fields:
 
 Response `200`: updated part with recalculated `remainingKm`, `remainingPercent`, and `status`.
 
-### Replace part (planned, not implemented)
-
-`POST /api/v1/vehicles/{vehicleId}/parts/{partId}/replace`
-
-Request:
-
-```json
-{
-  "installedAt": "2026-06-12",
-  "installedMileageKm": 10000,
-  "expectedLifetimeKm": 25000,
-  "cost": 2500,
-  "description": "Front brake pad replacement"
-}
-```
-
-Response `201`: new part plus created timeline event.
+Part replacements are represented in service history by
+`POST /api/v1/vehicles/{vehicleId}/timeline/part`.
 
 ## Analytics
 
-### Get analytics summary
+### Get analytics overview
 
-`GET /api/v1/vehicles/{vehicleId}/analytics?period=YEAR&year=2026`
+`GET /api/v1/vehicles/{vehicleId}/analytics?period=YEAR`
+
+`period` is optional. Supported values: `MONTH`, `YEAR`, `ALL_TIME`.
 
 Response `200`:
 
 ```json
 {
   "period": "YEAR",
-  "totalExpenses": 5000,
+  "totalExpenses": 342500,
   "currency": "RUB",
   "expensesByCategory": {
-    "REPAIR": 2500,
-    "FUEL": 2000,
-    "MAINTENANCE": 500,
-    "PARTS": 0
+    "FUEL": 112500,
+    "MAINTENANCE": 56000,
+    "PARTS": 174000
   },
-  "costPerKm": 5,
   "monthlyExpenses": [
     {
       "month": "2026-06",
-      "amount": 5000
+      "total": 15650,
+      "breakdownByCategory": {
+        "FUEL": 2450,
+        "MAINTENANCE": 8900,
+        "PARTS": 4300
+      }
     }
   ],
-  "failureFrequency": [
+  "seasonalExpenses": [
     {
-      "month": "2026-06",
-      "count": 1
+      "season": "SUMMER",
+      "total": 15650
     }
   ],
-  "frequentRepairs": [
-    {
-      "name": "Brakes",
-      "count": 1
-    }
-  ],
-  "mileageDynamics": {
-    "kmPerMonth": 1000,
-    "trendPercent": 10
-  }
+  "costPerKilometer": {
+    "totalKm": 1240,
+    "totalExpenses": 15650,
+    "costPerKm": 12.62
+  },
+  "fuel": {
+    "totalLiters": 120.4,
+    "averageConsumptionLitersPer100Km": 7.2
+  },
+  "historyAnalysis": {
+    "eventCount": 7,
+    "refuelCount": 2,
+    "tripCount": 1,
+    "maintenanceCount": 3,
+    "partEventCount": 1,
+    "totalTripKm": 1240,
+    "averageTripKm": 1240
+  },
+  "hasData": true
 }
 ```
+
+If there is no data for the selected period, response is still `200` with zero totals,
+empty chart arrays, zero metrics, and `hasData = false`.
 
 ## Chat
 

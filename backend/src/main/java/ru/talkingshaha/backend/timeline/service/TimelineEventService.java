@@ -1,5 +1,7 @@
 package ru.talkingshaha.backend.timeline.service;
 
+import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.util.List;
 import java.util.UUID;
 
@@ -7,6 +9,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import ru.talkingshaha.backend.common.model.BaseEvent;
 import ru.talkingshaha.backend.timeline.dto.CreateMaintenanceEventRequest;
+import ru.talkingshaha.backend.timeline.dto.CreatePartEventRequest;
 import ru.talkingshaha.backend.timeline.dto.CreateRefuelEventRequest;
 import ru.talkingshaha.backend.timeline.dto.CreateTripEventRequest;
 import ru.talkingshaha.backend.timeline.dto.TimelineEventListResponse;
@@ -23,14 +26,6 @@ import ru.talkingshaha.backend.part.service.PartService;
 import ru.talkingshaha.backend.vehicle.model.Vehicle;
 import ru.talkingshaha.backend.vehicle.service.VehicleService;
 
-/**
- * Application service for a vehicle's timeline (service history) events.
- *
- * <p>Handles the three event types (refuel, trip, maintenance), validates that an event's
- * mileage is not lower than the vehicle's current mileage, advances the vehicle mileage when
- * an event reports a higher reading, and maps the polymorphic event entities to a single
- * {@link TimelineEventResponse} shape.
- */
 @Service
 public class TimelineEventService {
 
@@ -124,6 +119,26 @@ public class TimelineEventService {
         return toResponse(maintenances.save(event));
     }
 
+    @Transactional
+    public TimelineEventResponse createPartEvent(UUID vehicleId, CreatePartEventRequest request) {
+        Vehicle vehicle = vehicles.requireOwnedVehicle(vehicleId);
+        validateMileage(vehicle, request.mileageKm());
+        MaintenanceEvent event = new MaintenanceEvent();
+        event.setVehicle(vehicle);
+        event.setType(TimelineEventType.PART_REPLACEMENT);
+        event.setEventDateTime(request.eventDateTime());
+        event.setName(request.name());
+        event.setDescription(request.description());
+        event.setMileageKm(request.mileageKm());
+        event.setCost(request.cost());
+        if (request.photoUrls() != null) {
+            event.getPhotoUrls().addAll(request.photoUrls());
+        }
+
+        updateVehicleMileage(vehicle, request.mileageKm());
+        return toResponse(maintenances.save(event));
+    }
+
     private void validateMileage(Vehicle vehicle, Integer mileageKm) {
         if (mileageKm != null && mileageKm < vehicle.getMileageKm()) {
             throw new IllegalArgumentException(
@@ -139,10 +154,6 @@ public class TimelineEventService {
         }
     }
 
-    /**
-     * Maps a stored event to the unified timeline response, populating only the fields that
-     * apply to the concrete event type and leaving the rest null.
-     */
     private TimelineEventResponse toResponse(BaseEvent event) {
         return switch (event) {
             case RefuelEvent r -> new TimelineEventResponse(
@@ -157,11 +168,13 @@ public class TimelineEventService {
                     r.getFuelName(),
                     r.getStationName(),
                     null, null, null, null, null,
+                    null,
                     null, null, null);
             case TripEvent t -> {
                 Integer distance = (t.getStartMileageKm() != null && t.getEndMileageKm() != null)
                         ? t.getEndMileageKm() - t.getStartMileageKm()
                         : null;
+                BigDecimal averageConsumption = averageFuelConsumptionLitersPerKm(t.getVehicle());
                 yield new TimelineEventResponse(
                         t.getId(),
                         t.getType(),
@@ -175,6 +188,7 @@ public class TimelineEventService {
                         distance,
                         t.getRoute(),
                         t.getDurationMinutes(),
+                        averageConsumption,
                         null, null, null);
             }
             case MaintenanceEvent m -> new TimelineEventResponse(
@@ -186,10 +200,32 @@ public class TimelineEventService {
                     m.getMileageKm(),
                     null, null, null, null,
                     null, null, null, null, null,
+                    null,
                     m.getName(),
                     m.getDescription(),
-                    m.getPhotoUrls());
+                    List.copyOf(m.getPhotoUrls()));
             default -> throw new IllegalStateException("Unknown event type: " + event.getClass());
         };
+    }
+
+    private BigDecimal averageFuelConsumptionLitersPerKm(Vehicle vehicle) {
+        BigDecimal liters = events.findAllByVehicleAndTypeOrderByEventDateTimeDesc(vehicle, TimelineEventType.REFUEL)
+                .stream()
+                .filter(RefuelEvent.class::isInstance)
+                .map(RefuelEvent.class::cast)
+                .map(RefuelEvent::getLiters)
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+        int distanceKm = events.findAllByVehicleAndTypeOrderByEventDateTimeDesc(vehicle, TimelineEventType.TRIP)
+                .stream()
+                .filter(TripEvent.class::isInstance)
+                .map(TripEvent.class::cast)
+                .mapToInt(trip -> trip.getStartMileageKm() == null
+                        ? 0
+                        : Math.max(0, trip.getEndMileageKm() - trip.getStartMileageKm()))
+                .sum();
+        if (distanceKm == 0 || liters.compareTo(BigDecimal.ZERO) == 0) {
+            return BigDecimal.ZERO;
+        }
+        return liters.divide(BigDecimal.valueOf(distanceKm), 4, RoundingMode.HALF_UP);
     }
 }
