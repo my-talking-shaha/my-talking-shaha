@@ -6,9 +6,12 @@ final class Vehicle {
     required this.year,
     required this.currentMileageKm,
     required this.engineType,
+    required this.engineVolumeLiters,
+    required this.enginePowerHp,
     required this.status,
     required this.activeWarningsCount,
     this.color,
+    this.vin,
     this.photoUrl,
   });
 
@@ -19,6 +22,9 @@ final class Vehicle {
   final String? color;
   final int currentMileageKm;
   final String engineType;
+  final double? engineVolumeLiters;
+  final int? enginePowerHp;
+  final String? vin;
   final String? photoUrl;
   final String status;
   final int activeWarningsCount;
@@ -31,6 +37,12 @@ final class Vehicle {
     String? color,
     int? currentMileageKm,
     String? engineType,
+    double? engineVolumeLiters,
+    bool clearEngineVolume = false,
+    int? enginePowerHp,
+    bool clearEnginePower = false,
+    String? vin,
+    bool clearVin = false,
     String? photoUrl,
     String? status,
     int? activeWarningsCount,
@@ -43,6 +55,13 @@ final class Vehicle {
       color: color ?? this.color,
       currentMileageKm: currentMileageKm ?? this.currentMileageKm,
       engineType: engineType ?? this.engineType,
+      engineVolumeLiters: clearEngineVolume
+          ? null
+          : engineVolumeLiters ?? this.engineVolumeLiters,
+      enginePowerHp: clearEnginePower
+          ? null
+          : enginePowerHp ?? this.enginePowerHp,
+      vin: clearVin ? null : vin ?? this.vin,
       photoUrl: photoUrl ?? this.photoUrl,
       status: status ?? this.status,
       activeWarningsCount: activeWarningsCount ?? this.activeWarningsCount,
@@ -61,6 +80,9 @@ final class Vehicle {
             color == other.color &&
             currentMileageKm == other.currentMileageKm &&
             engineType == other.engineType &&
+            engineVolumeLiters == other.engineVolumeLiters &&
+            enginePowerHp == other.enginePowerHp &&
+            vin == other.vin &&
             photoUrl == other.photoUrl &&
             status == other.status &&
             activeWarningsCount == other.activeWarningsCount;
@@ -68,15 +90,18 @@ final class Vehicle {
 
   @override
   int get hashCode => Object.hash(
-        id,
-        brand,
-        model,
-        year,
-        color,
-        currentMileageKm,
-        engineType,
-        photoUrl,
-        status,
-        activeWarningsCount,
-      );
+    id,
+    brand,
+    model,
+    year,
+    color,
+    currentMileageKm,
+    engineType,
+    engineVolumeLiters,
+    enginePowerHp,
+    vin,
+    photoUrl,
+    status,
+    activeWarningsCount,
+  );
 }

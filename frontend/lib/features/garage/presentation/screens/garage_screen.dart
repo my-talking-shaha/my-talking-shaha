@@ -30,7 +30,7 @@ final class GarageScreen extends ConsumerWidget {
             vehicles: vehicles,
             onAddVehicle: () => context.go('/garage/add'),
             onOpenVehicle: (vehicleId) {
-              context.go('/vehicle/$vehicleId/chat');
+              context.go('/vehicle/$vehicleId/dashboard');
             },
             onEditVehicle: (vehicleId) {
               context.go('/garage/edit/$vehicleId');
@@ -164,13 +164,13 @@ final class _EmptyGarageBody extends StatelessWidget {
               Text(
                 'My Talking Shaha',
                 style: Theme.of(context).textTheme.headlineLarge?.copyWith(
-                      color: const Color(0xFFB8C3FF),
-                      fontSize: 31,
-                      fontWeight: FontWeight.w800,
-                      height: 1.08,
-                    ),
+                  color: const Color(0xFFB8C3FF),
+                  fontSize: 31,
+                  fontWeight: FontWeight.w800,
+                  height: 1.08,
+                ),
               ),
-              const Spacer(flex: 5),
+              const Spacer(),
               Center(
                 child: ConstrainedBox(
                   constraints: const BoxConstraints(maxWidth: 320),
@@ -180,9 +180,7 @@ final class _EmptyGarageBody extends StatelessWidget {
                       Text(
                         'Garage is empty',
                         textAlign: TextAlign.center,
-                        style: Theme.of(context)
-                            .textTheme
-                            .headlineMedium
+                        style: Theme.of(context).textTheme.headlineMedium
                             ?.copyWith(
                               fontSize: 24,
                               fontWeight: FontWeight.w800,
@@ -194,9 +192,9 @@ final class _EmptyGarageBody extends StatelessWidget {
                         'Add your first car to create its digital twin.',
                         textAlign: TextAlign.center,
                         style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                              color: AppColors.textSecondary,
-                              height: 1.35,
-                            ),
+                          color: AppColors.textSecondary,
+                          height: 1.35,
+                        ),
                       ),
                       const SizedBox(height: AppSpacing.xxl),
                       SizedBox(
@@ -212,7 +210,7 @@ final class _EmptyGarageBody extends StatelessWidget {
                   ),
                 ),
               ),
-              const Spacer(flex: 8),
+              const Spacer(),
             ],
           ),
         ),
@@ -316,10 +314,7 @@ final class _GarageBlurredGlow extends StatelessWidget {
           child: SizedBox.square(
             dimension: circleSize,
             child: DecoratedBox(
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                color: color,
-              ),
+              decoration: BoxDecoration(shape: BoxShape.circle, color: color),
             ),
           ),
         ),
@@ -341,11 +336,11 @@ final class _GarageHeader extends StatelessWidget {
         Text(
           'My Talking Shaha',
           style: Theme.of(context).textTheme.headlineLarge?.copyWith(
-                color: const Color(0xFFB8C3FF),
-                fontSize: 31,
-                fontWeight: FontWeight.w800,
-                height: 1.08,
-              ),
+            color: const Color(0xFFB8C3FF),
+            fontSize: 31,
+            fontWeight: FontWeight.w800,
+            height: 1.08,
+          ),
         ),
         const SizedBox(height: 42),
         Row(
@@ -358,20 +353,20 @@ final class _GarageHeader extends StatelessWidget {
                   Text(
                     'YOUR FLEET',
                     style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                          color: AppColors.success,
-                          fontSize: 12,
-                          fontWeight: FontWeight.w800,
-                          letterSpacing: 0.8,
-                        ),
+                      color: AppColors.success,
+                      fontSize: 12,
+                      fontWeight: FontWeight.w800,
+                      letterSpacing: 0.8,
+                    ),
                   ),
                   const SizedBox(height: AppSpacing.sm),
                   Text(
                     'Garage',
                     style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                          fontSize: 25,
-                          fontWeight: FontWeight.w800,
-                          height: 1.05,
-                        ),
+                      fontSize: 25,
+                      fontWeight: FontWeight.w800,
+                      height: 1.05,
+                    ),
                   ),
                 ],
               ),

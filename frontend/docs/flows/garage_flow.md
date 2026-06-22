@@ -37,7 +37,9 @@ Each card should display:
 
 1. User taps add button.
 2. App opens add vehicle form.
-3. User enters brand, model, year, optional color, current mileage, engine type.
+3. User enters brand, model, year, optional color and VIN, current mileage,
+   engine type, and one engine specification field. The field accepts volume
+   for non-electric vehicles and power output for electric vehicles.
 4. Brand/model may come from catalog or manual input.
 5. Client validates fields.
 6. Client sends create vehicle request.
@@ -87,10 +89,18 @@ Required:
 - year;
 - current mileage;
 - engine type.
+- engine specification: volume or power output based on engine type.
+
+Optional:
+- color;
+- VIN.
 
 Rules:
 - mileage >= 0;
 - year should be realistic;
+- engine specification > 0;
+- volume and power output cannot be assigned at the same time;
+- VIN must contain exactly 17 characters when provided;
 - no duplicate submit.
 
 ## Acceptance Criteria

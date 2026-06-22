@@ -19,6 +19,9 @@ void main() {
           color: ' blue ',
           currentMileageKm: 124580,
           engineType: ' gasoline ',
+          engineVolumeLiters: 1.6,
+          enginePowerHp: null,
+          vin: ' xta21060012345678 ',
         ),
       );
 
@@ -27,6 +30,9 @@ void main() {
       expect(vehicle.color, 'blue');
       expect(vehicle.currentMileageKm, 124580);
       expect(vehicle.engineType, 'gasoline');
+      expect(vehicle.engineVolumeLiters, 1.6);
+      expect(vehicle.enginePowerHp, isNull);
+      expect(vehicle.vin, 'XTA21060012345678');
       expect(repository.createdDrafts.single.brand, 'Lada');
     });
 
@@ -41,6 +47,27 @@ void main() {
             year: 1700,
             currentMileageKm: -1,
             engineType: '',
+            engineVolumeLiters: 0,
+            enginePowerHp: null,
+          ),
+        ),
+        throwsA(isA<GarageValidationException>()),
+      );
+    });
+
+    test('rejects assigning both volume and power to one vehicle', () async {
+      final useCase = CreateVehicle(_FakeGarageRepository());
+
+      expect(
+        () => useCase(
+          const VehicleDraft(
+            brand: 'Lada',
+            model: '2106',
+            year: 1998,
+            currentMileageKm: 124580,
+            engineType: 'gasoline',
+            engineVolumeLiters: 1.6,
+            enginePowerHp: 75,
           ),
         ),
         throwsA(isA<GarageValidationException>()),
@@ -63,6 +90,9 @@ class _FakeGarageRepository implements GarageRepository {
       color: draft.color,
       currentMileageKm: draft.currentMileageKm,
       engineType: draft.engineType,
+      engineVolumeLiters: draft.engineVolumeLiters,
+      enginePowerHp: draft.enginePowerHp,
+      vin: draft.vin,
       photoUrl: null,
       status: GarageVehicleStatus.unknown,
       activeWarningsCount: 0,

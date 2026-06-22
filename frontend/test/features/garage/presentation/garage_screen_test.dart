@@ -12,8 +12,9 @@ import 'package:frontend/features/garage/presentation/widgets/vehicle_garage_car
 import 'package:go_router/go_router.dart';
 
 void main() {
-  testWidgets('empty garage content stays below the system status bar',
-      (tester) async {
+  testWidgets('empty garage content stays below the system status bar', (
+    tester,
+  ) async {
     const statusBarInset = 59.0;
     final repository = _FakeGarageRepository();
 
@@ -38,58 +39,66 @@ void main() {
   });
 
   testWidgets(
-      'empty garage background uses Flutter blur instead of SVG filters',
-      (tester) async {
-    final repository = _FakeGarageRepository();
+    'empty garage background uses Flutter blur instead of SVG filters',
+    (tester) async {
+      final repository = _FakeGarageRepository();
 
-    await _pumpGarage(tester, repository);
+      await _pumpGarage(tester, repository);
 
-    expect(find.byType(SvgPicture), findsNothing);
-    expect(
-      find.byWidgetPredicate(
-        (widget) => widget is ImageFiltered || widget is BackdropFilter,
-        description: 'ImageFiltered or BackdropFilter blur',
-      ),
-      findsWidgets,
-    );
-  });
+      expect(find.byType(SvgPicture), findsNothing);
+      expect(
+        find.byWidgetPredicate(
+          (widget) => widget is ImageFiltered || widget is BackdropFilter,
+          description: 'ImageFiltered or BackdropFilter blur',
+        ),
+        findsWidgets,
+      );
+    },
+  );
 
   testWidgets(
-      'vehicle cards show garage data and navigate with vehicleId route parameter',
-      (
-    tester,
-  ) async {
-    final repository = _FakeGarageRepository(
-      vehicles: [
-        _vehicle(
-          id: 'vehicle_123',
-          brand: 'Lada',
-          model: '2106',
-          year: 1998,
-          color: 'blue',
-          currentMileageKm: 124580,
-          engineType: 'gasoline',
-        ),
-      ],
-    );
+    'vehicle cards show garage data and navigate with vehicleId route parameter',
+    (tester) async {
+      final repository = _FakeGarageRepository(
+        vehicles: [
+          _vehicle(
+            id: 'vehicle_123',
+            brand: 'Lada',
+            model: '2106',
+            year: 1998,
+            color: 'blue',
+            currentMileageKm: 124580,
+            engineType: 'gasoline',
+          ),
+        ],
+      );
 
-    await _pumpGarage(tester, repository);
+      await _pumpGarage(tester, repository);
 
-    expect(find.textContaining('Lada'), findsOneWidget);
-    expect(find.textContaining('2106'), findsOneWidget);
-    expect(find.textContaining('1998'), findsOneWidget);
-    expect(find.textContaining('blue'), findsOneWidget);
-    expect(find.textContaining('gasoline'), findsOneWidget);
-    expect(find.textContaining('124'), findsOneWidget);
-    expect(
-        find.byKey(const ValueKey('garage_vehicle_photo_fallback_vehicle_123')),
-        findsOneWidget);
+      expect(find.textContaining('Lada'), findsOneWidget);
+      expect(find.textContaining('2106'), findsOneWidget);
+      expect(find.textContaining('1998'), findsOneWidget);
+      expect(find.textContaining('blue'), findsOneWidget);
+      expect(find.textContaining('gasoline'), findsOneWidget);
+      expect(find.textContaining('124'), findsOneWidget);
+      final fallbackFinder = find.byKey(
+        const ValueKey('garage_vehicle_photo_fallback_vehicle_123'),
+      );
+      expect(fallbackFinder, findsOneWidget);
+      final fallback = tester.widget<Container>(fallbackFinder);
+      expect((fallback.decoration as BoxDecoration).gradient, isNotNull);
+      expect(
+        find.descendant(of: fallbackFinder, matching: find.text('Lada 2106')),
+        findsNothing,
+      );
+      expect(find.text('Lada 2106'), findsOneWidget);
 
-    await tester.tap(find.textContaining('Lada'));
-    await tester.pumpAndSettle();
+      await tester.tap(find.textContaining('Lada'));
+      await tester.pumpAndSettle();
 
-    expect(find.text('chat:vehicle_123'), findsOneWidget);
-  });
+      expect(find.text('chat:vehicle_123'), findsOneWidget);
+    },
+  );
 
   testWidgets('swipe reveals edit and delete actions', (tester) async {
     final repository = _FakeGarageRepository(
@@ -102,15 +111,18 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(
-        find.byKey(const ValueKey('garage_swipe_action_edit')), findsOneWidget);
+      find.byKey(const ValueKey('garage_swipe_action_edit')),
+      findsOneWidget,
+    );
     expect(
       find.byKey(const ValueKey('garage_swipe_action_delete')),
       findsOneWidget,
     );
   });
 
-  testWidgets('edit action opens prefilled form and saves changes',
-      (tester) async {
+  testWidgets('edit action opens prefilled form and saves changes', (
+    tester,
+  ) async {
     final repository = _FakeGarageRepository(
       vehicles: [
         _vehicle(
@@ -133,6 +145,9 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('Edit car'), findsOneWidget);
+    expect(find.text('VIN NUMBER (OPTIONAL)'), findsOneWidget);
+    expect(find.text('ENGINE VOLUME (L)'), findsOneWidget);
+    expect(find.text('POWER OUTPUT (HP)'), findsNothing);
     final textFields = tester.widgetList<TextField>(find.byType(TextField));
     expect(textFields.elementAt(0).controller?.text, 'Lada');
     expect(textFields.elementAt(1).controller?.text, '2106');
@@ -149,8 +164,9 @@ void main() {
     expect(find.textContaining('2107'), findsOneWidget);
   });
 
-  testWidgets('delete action requires confirmation and supports cancel',
-      (tester) async {
+  testWidgets('delete action requires confirmation and supports cancel', (
+    tester,
+  ) async {
     final repository = _FakeGarageRepository(
       vehicles: [
         _vehicle(id: 'vehicle_123', brand: 'Lada', model: '2106'),
@@ -161,7 +177,9 @@ void main() {
     await _pumpGarage(tester, repository);
 
     await tester.drag(
-        find.byType(VehicleGarageCard).first, const Offset(-160, 0));
+      find.byType(VehicleGarageCard).first,
+      const Offset(-160, 0),
+    );
     await tester.pumpAndSettle();
     await tester.tap(find.byKey(const ValueKey('garage_swipe_action_delete')));
     await tester.pumpAndSettle();
@@ -176,7 +194,9 @@ void main() {
     expect(find.textContaining('Lada'), findsOneWidget);
 
     await tester.drag(
-        find.byType(VehicleGarageCard).first, const Offset(-160, 0));
+      find.byType(VehicleGarageCard).first,
+      const Offset(-160, 0),
+    );
     await tester.pumpAndSettle();
     await tester.tap(find.byKey(const ValueKey('garage_swipe_action_delete')));
     await tester.pumpAndSettle();
@@ -195,17 +215,19 @@ void main() {
 }
 
 Future<void> _pumpGarage(
-    WidgetTester tester, _FakeGarageRepository repository,
-    {double topPadding = 0}) async {
+  WidgetTester tester,
+  _FakeGarageRepository repository, {
+  double topPadding = 0,
+}) async {
   final router = GoRouter(
     initialLocation: '/garage',
     routes: [
       GoRoute(
         path: '/garage',
         builder: (context, state) => MediaQuery(
-          data: MediaQuery.of(context).copyWith(
-            padding: EdgeInsets.only(top: topPadding),
-          ),
+          data: MediaQuery.of(
+            context,
+          ).copyWith(padding: EdgeInsets.only(top: topPadding)),
           child: const GarageScreen(),
         ),
       ),
@@ -222,10 +244,10 @@ Future<void> _pumpGarage(
         },
       ),
       GoRoute(
-        path: '/vehicle/:vehicleId/chat',
+        path: '/vehicle/:vehicleId/parts',
         builder: (context, state) {
           final vehicleId = state.pathParameters['vehicleId'];
-          return Scaffold(body: Text('chat:$vehicleId'));
+          return Scaffold(body: Text('parts:$vehicleId'));
         },
       ),
     ],
@@ -248,6 +270,9 @@ GarageVehicle _vehicle({
   String? color,
   int currentMileageKm = 0,
   String engineType = 'gasoline',
+  double engineVolumeLiters = 1.6,
+  int? enginePowerHp,
+  String? vin,
   String? photoUrl,
 }) {
   return GarageVehicle(
@@ -258,6 +283,9 @@ GarageVehicle _vehicle({
     color: color,
     currentMileageKm: currentMileageKm,
     engineType: engineType,
+    engineVolumeLiters: engineVolumeLiters,
+    enginePowerHp: enginePowerHp,
+    vin: vin,
     photoUrl: photoUrl,
     status: GarageVehicleStatus.unknown,
     activeWarningsCount: 0,
@@ -266,7 +294,7 @@ GarageVehicle _vehicle({
 
 final class _FakeGarageRepository implements GarageRepository {
   _FakeGarageRepository({List<GarageVehicle> vehicles = const []})
-      : _vehicles = [...vehicles];
+    : _vehicles = [...vehicles];
 
   final List<GarageVehicle> _vehicles;
   final List<String> deletedVehicleIds = [];
@@ -285,6 +313,9 @@ final class _FakeGarageRepository implements GarageRepository {
       color: draft.color,
       currentMileageKm: draft.currentMileageKm,
       engineType: draft.engineType,
+      engineVolumeLiters: draft.engineVolumeLiters,
+      enginePowerHp: draft.enginePowerHp,
+      vin: draft.vin,
       photoUrl: null,
       status: GarageVehicleStatus.unknown,
       activeWarningsCount: 0,
@@ -310,6 +341,9 @@ final class _FakeGarageRepository implements GarageRepository {
       color: draft.color,
       currentMileageKm: draft.currentMileageKm,
       engineType: draft.engineType,
+      engineVolumeLiters: draft.engineVolumeLiters,
+      enginePowerHp: draft.enginePowerHp,
+      vin: draft.vin,
       photoUrl: null,
       status: GarageVehicleStatus.unknown,
       activeWarningsCount: 0,

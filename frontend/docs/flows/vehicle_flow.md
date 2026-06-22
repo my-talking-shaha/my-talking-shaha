@@ -29,6 +29,7 @@ Show:
 - brand/model;
 - current mileage;
 - engine type;
+- engine volume or engine power output, based on engine type;
 - VIN if available;
 - embedded parts feature widget with maintenance forecast and remaining lifetime indicators;
 - last 5 timeline events;
@@ -59,6 +60,7 @@ Priority: Could.
 
 ## Acceptance Criteria
 
-- Dashboard shows vehicle image, brand/model, current mileage, engine type, and VIN if available.
+- Dashboard shows vehicle image, brand/model, current mileage, engine type,
+  one engine specification, and VIN if available.
 - Parts feature widget is shown if implemented, otherwise it is safely placeholdered.
 - Last events update after new timeline records.

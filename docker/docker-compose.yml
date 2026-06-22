@@ -34,7 +34,7 @@ services:
       - SPRING_DATASOURCE_URL=jdbc:postgresql://postgres:5432/talking_shaha
       - SPRING_DATASOURCE_USERNAME=shaha_user
       - SPRING_DATASOURCE_PASSWORD=shaha_password
-      - SPRING_JPA_HIBERNATE_DDL_AUTO=create
+      - SPRING_JPA_HIBERNATE_DDL_AUTO=validate
     depends_on:
       postgres:
         condition: service_healthy

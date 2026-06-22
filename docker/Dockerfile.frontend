@@ -19,6 +19,7 @@ COPY frontend/pubspec.yaml frontend/pubspec.lock* ./
 RUN flutter pub get
 
 COPY frontend/lib ./lib
+COPY frontend/assets ./assets
 COPY frontend/web ./web
 
 RUN flutter build web --release
