@@ -55,6 +55,6 @@ docker-compose -f docker/docker-compose.yml logs -f frontend
 ## Accessing the Application
 
 - **Frontend**: http://localhost
-- **Backend API**: http://localhost:8080
+- **Backend API**: http://localhost:8080, bound to localhost only
 - **Health Check**: http://localhost/health
-- **Database**: postgres://localhost:5432/talking_shaha
+- **Database**: postgres://localhost:5432/talking_shaha, bound to localhost only

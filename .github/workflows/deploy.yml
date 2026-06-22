@@ -1,4 +1,4 @@
-name: Deploy
+name: Development deploy
 
 on:
   push:
@@ -6,7 +6,7 @@ on:
       - main
 
 concurrency:
-  group: deploy-main
+  group: development-deploy
   cancel-in-progress: true
 
 permissions:
@@ -80,7 +80,7 @@ jobs:
         run: docker compose -f docker/docker-compose.yml down -v --remove-orphans
 
   deploy:
-    name: Deploy to server
+    name: Deploy to development server
     needs: app-smoke-test
     runs-on: ubuntu-latest
     timeout-minutes: 60
@@ -140,7 +140,47 @@ jobs:
             exit 1
           fi
 
+          $COMPOSE -f docker/docker-compose.yml down -v --remove-orphans
           $COMPOSE -f docker/docker-compose.yml up -d --build --remove-orphans backend frontend
+
+          for attempt in {1..30}; do
+            if curl -fsS http://localhost:8080/actuator/health; then
+              backend_ready=1
+              break
+            fi
+
+            echo "Backend is not healthy yet, retry $attempt/30"
+            sleep 5
+          done
+
+          if [ "${backend_ready:-0}" != "1" ]; then
+            echo "Backend did not become healthy in time" >&2
+            $COMPOSE -f docker/docker-compose.yml ps postgres backend frontend
+            $COMPOSE -f docker/docker-compose.yml logs --no-color postgres backend frontend
+            exit 1
+          fi
+
+          for attempt in {1..30}; do
+            if curl -fsS http://localhost/health; then
+              frontend_ready=1
+              break
+            fi
+
+            echo "Frontend is not healthy yet, retry $attempt/30"
+            sleep 5
+          done
+
+          if [ "${frontend_ready:-0}" != "1" ]; then
+            echo "Frontend did not become healthy in time" >&2
+            $COMPOSE -f docker/docker-compose.yml ps postgres backend frontend
+            $COMPOSE -f docker/docker-compose.yml logs --no-color postgres backend frontend
+            exit 1
+          fi
+
+          curl -fsS http://localhost/v3/api-docs >/dev/null
+          curl -fsS http://localhost/swagger-ui.html | grep -q "SwaggerUIBundle"
+          curl -fsS http://localhost/webjars/swagger-ui/5.32.2/swagger-ui.css | grep -q "swagger-ui"
+
           $COMPOSE -f docker/docker-compose.yml ps postgres backend frontend
           docker image prune -f
           REMOTE

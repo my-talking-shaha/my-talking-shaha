@@ -1,6 +1,11 @@
-# Autodeploy
+# Development Autodeploy
 
 Autodeploy runs from GitHub Actions after every push to `main`.
+
+This deployment profile is for the shared development server only. It resets the
+Postgres Docker volume on each deploy so Flyway always applies the current
+migration set from a clean database. Do not use this flow for staging or
+production data.
 
 ## One-time server setup
 
@@ -23,7 +28,8 @@ Autodeploy runs from GitHub Actions after every push to `main`.
 4. Run the application once manually:
 
    ```bash
-   docker compose -f docker/docker-compose.yml up -d --build backend frontend
+   docker compose -f docker/docker-compose.yml down -v
+   docker compose -f docker/docker-compose.yml up -d --build --remove-orphans
    ```
 
 ## GitHub secrets
@@ -50,10 +56,16 @@ On every push to `main`, the workflow:
 8. Goes to `SERVER_APP_PATH`.
 9. Runs `git fetch --prune origin main`.
 10. Updates the server checkout with `git pull --ff-only origin main`.
-11. Rebuilds and restarts the backend and frontend services with their dependencies:
+11. Removes the previous development stack and Postgres volume.
+12. Rebuilds and restarts the stack from a clean database.
+13. Verifies backend health and generated OpenAPI docs.
 
    ```bash
-   docker compose -f docker/docker-compose.yml up -d --build --remove-orphans backend frontend
+   docker compose -f docker/docker-compose.yml down -v
+   docker compose -f docker/docker-compose.yml up -d --build --remove-orphans
+
+   curl --fail --retry 30 --retry-delay 2 --retry-all-errors http://localhost:8080/actuator/health
+   curl --fail --retry 30 --retry-delay 2 --retry-all-errors http://localhost/v3/api-docs
    ```
 
 After deployment, the web app should be available at `http://SERVER_HOST`.
@@ -63,4 +75,11 @@ The generated OpenAPI JSON should be available at `http://SERVER_HOST/v3/api-doc
 
 ## Database note
 
-The current Docker Compose file sets `SPRING_JPA_HIBERNATE_DDL_AUTO=validate` and leaves schema changes to Flyway migrations. The deployment workflow smoke-tests this path with Postgres before connecting to the server.
+The current Docker Compose file sets `SPRING_JPA_HIBERNATE_DDL_AUTO=validate`
+and leaves schema changes to Flyway migrations. Because this development
+deployment runs `docker compose down -v`, the `postgres-data` volume is deleted
+on each deploy. This is acceptable only while the server has no important data.
+
+For staging or production, remove the `down -v` step and never edit migrations
+that have already been applied to a shared database. Add schema changes as new
+versions, for example `V03__add_maintenance_name.sql`.
