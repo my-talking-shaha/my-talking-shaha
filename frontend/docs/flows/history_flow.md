@@ -9,10 +9,10 @@ Covers:
 
 - History timeline.
 - Add event type selector.
-- Add/edit trip form.
-- Add/edit refueling form.
-- Add/edit repair form.
-- Add/edit maintenance form.
+- Add trip form.
+- Add refueling form.
+- Add service form.
+- Add part event form.
 - Event details screen or bottom sheet.
 
 ## Timeline Flow
@@ -25,18 +25,18 @@ Covers:
 
 ## Event Types
 
-### Repair
+### Part replacement/update
 Fields:
-- date;
+- date and time;
 - mileage;
-- description;
-- cost;
-- replaced parts;
-- photos optional.
+- replaced/updated part name;
+- description optional;
+- cost optional;
+- photo optional.
 
 ### Refueling
 Fields:
-- date;
+- date and time;
 - mileage;
 - liters;
 - cost;
@@ -44,18 +44,20 @@ Fields:
 
 ### Trip
 Fields:
-- date;
-- start mileage;
+- date and time;
+- start mileage optional;
 - end mileage;
 - route optional.
+- duration.
 
-### Maintenance
+### Service
 Fields:
-- date;
+- date and time;
 - mileage;
-- description/service type;
-- cost;
-- replaced/serviced parts optional.
+- title;
+- description optional;
+- cost optional;
+- photo optional.
 
 ## Add Event Flow
 
@@ -68,13 +70,6 @@ Fields:
 7. Timeline updates without app restart.
 8. Vehicle dashboard and analytics may refresh/invalidate.
 
-## Edit/Delete Flow
-
-1. User makes long tap or swipe to left.
-2. User chooses edit or delete.
-3. Edit updates event and refreshes timeline.
-4. Delete requires confirmation and refreshes timeline.
-
 ## Mileage Validation
 
 - New mileage cannot be lower than previous known vehicle mileage unless backend explicitly supports corrections.
@@ -83,9 +78,8 @@ Fields:
 
 ## Acceptance Criteria
 
-- User can add repair, refueling, and trip records.
+- User can add refueling, trip, service, and part records.
 - Records are attached to selected vehicle.
 - Records are shown in chronological timeline.
-- User can edit/delete any record.
 - Timeline updates after adding without app restart.
 - Mileage fields are validated.

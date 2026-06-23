@@ -1,22 +1,23 @@
 # History / Timeline API Contract
 
-Base path: `/api/v1/vehicles/{vehicleId}/events`
+Base path: `/api/v1/vehicles/{vehicleId}/timeline`
 
 Auth: required.
 
 ## Event Types
 
 ```text
-trip
-refueling
-repair
-maintenance
-warning
+TRIP
+REFUEL
+MAINTENANCE
+PART_REPLACEMENT
 ```
 
 ## List Events
 
-`GET /api/v1/vehicles/{vehicleId}/events?type=repair&period=all&query=oil`
+`GET /api/v1/vehicles/{vehicleId}/timeline?type=REFUEL`
+
+`type` is optional. Events are returned newest first.
 
 Response:
 
@@ -24,102 +25,98 @@ Response:
 {
   "events": [
     {
-      "id": "event_123",
-      "type": "refueling",
-      "occurredAt": "2026-06-15T14:30:00Z",
-      "mileageKm": 124580,
-      "title": "Заправка АИ-95",
-      "description": "45.2 литра · АЗС Газпромнефть №14",
-      "cost": { "amount": 2450, "currency": "RUB" },
-      "payload": {
-        "liters": 45.2,
-        "fuelType": "AI-95",
-        "stationName": "Газпромнефть №14"
-      }
+      "id": "044c10dc-13d1-4587-9169-e9e79789ea45",
+      "type": "REFUEL",
+      "title": "Refill AI-95",
+      "eventDateTime": "2026-06-12T14:30:00Z",
+      "cost": 2000,
+      "mileageKm": 10000,
+      "liters": 30,
+      "fuelType": "GASOLINE",
+      "fuelName": "AI-95",
+      "stationName": "Test Station"
     }
   ]
 }
 ```
 
-## Create Event
+## Add Refuel Event
 
-`POST /api/v1/vehicles/{vehicleId}/events`
-
-### Repair
+`POST /api/v1/vehicles/{vehicleId}/timeline/refuel`
 
 ```json
 {
-  "type": "repair",
-  "occurredAt": "2026-06-08T11:00:00Z",
-  "mileageKm": 124000,
-  "description": "Замена масла и фильтров",
-  "cost": { "amount": 8900, "currency": "RUB" },
-  "replacedParts": ["oil", "oil_filter"]
+  "eventDateTime": "2026-06-12T14:30:00Z",
+  "mileageKm": 10000,
+  "liters": 30,
+  "cost": 2000,
+  "fuelType": "GASOLINE",
+  "fuelName": "AI-95",
+  "stationName": "Test Station"
 }
 ```
 
-### Refueling
+Validation: `mileageKm >= previous mileage`, `liters > 0`, `cost > 0`,
+`eventDateTime <= now`.
+
+## Add Trip Event
+
+`POST /api/v1/vehicles/{vehicleId}/timeline/trip`
 
 ```json
 {
-  "type": "refueling",
-  "occurredAt": "2026-06-15T14:30:00Z",
-  "mileageKm": 124580,
-  "liters": 45.2,
-  "fuelType": "AI-95",
-  "cost": { "amount": 2450, "currency": "RUB" },
-  "stationName": "Газпромнефть №14"
+  "eventDateTime": "2026-06-13T09:15:00Z",
+  "startMileageKm": 10000,
+  "endMileageKm": 10400,
+  "route": "Home -> University",
+  "durationMinutes": 60
 }
 ```
 
-### Trip
+Validation: `endMileageKm >= previous mileage`, `endMileageKm >= startMileageKm`,
+`durationMinutes > 0`, `eventDateTime <= now`. Trip has no cost.
+
+Trip response includes `distanceKm` and `averageFuelConsumptionLitersPerKm`.
+
+## Add Service Event
+
+`POST /api/v1/vehicles/{vehicleId}/timeline/maintenance`
 
 ```json
 {
-  "type": "trip",
-  "occurredAt": "2026-06-01T09:15:00Z",
-  "startMileageKm": 124000,
-  "endMileageKm": 124420,
-  "route": "Москва — Тула — Москва"
+  "eventDateTime": "2026-06-12T16:30:00Z",
+  "mileageKm": 10000,
+  "name": "Oil change",
+  "description": "Oil and filter replacement",
+  "cost": 3000,
+  "photoUrls": ["https://example.com/event-photo.jpg"]
 }
 ```
 
-### Maintenance
+Validation: `name` is required, `mileageKm >= previous mileage`, optional `cost > 0`,
+`eventDateTime <= now`.
+
+## Add Part Event
+
+`POST /api/v1/vehicles/{vehicleId}/timeline/part`
 
 ```json
 {
-  "type": "maintenance",
-  "occurredAt": "2026-06-10T10:00:00Z",
-  "mileageKm": 124500,
-  "description": "Плановое ТО",
-  "cost": { "amount": 12000, "currency": "RUB" }
+  "eventDateTime": "2026-06-14T10:00:00Z",
+  "mileageKm": 10400,
+  "name": "Brake pads",
+  "description": "Front axle replacement",
+  "cost": 4200,
+  "photoUrls": ["https://example.com/brake-pads.jpg"]
 }
 ```
 
-Response `201`: created event.
+Validation: `name` is required, `mileageKm >= previous mileage`, optional `cost > 0`,
+`eventDateTime <= now`. Response has `type = PART_REPLACEMENT`.
 
-## Update Event
+## Errors
 
-`PATCH /api/v1/vehicles/{vehicleId}/events/{eventId}`
-
-Request: same fields as create, partial allowed if backend supports it.
-
-Response: updated event.
-
-## Delete Event
-
-`DELETE /api/v1/vehicles/{vehicleId}/events/{eventId}`
-
-Response `204`.
-
-## Validation Errors
-
-Mileage cannot be lower than previous vehicle mileage:
-
-```json
-{
-  "code": "MILEAGE_REGRESSION",
-  "message": "Mileage cannot be lower than previous value",
-  "details": { "field": "mileageKm" }
-}
-```
+- `400 VALIDATION_ERROR`
+- `401 UNAUTHORIZED` after auth is enabled
+- `403 FORBIDDEN`
+- `404 NOT_FOUND`

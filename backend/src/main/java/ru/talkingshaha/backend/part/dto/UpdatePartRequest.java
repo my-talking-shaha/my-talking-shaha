@@ -2,22 +2,34 @@ package ru.talkingshaha.backend.part.dto;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.util.List;
 
 import jakarta.validation.constraints.Positive;
 import jakarta.validation.constraints.PositiveOrZero;
 import jakarta.validation.constraints.Size;
+import io.swagger.v3.oas.annotations.media.Schema;
 import ru.talkingshaha.backend.part.model.PartCategory;
 
-/**
- * Request to partially update an installed part. All fields are optional; only the non-null
- * fields are applied, after which the part's remaining lifetime is recalculated.
- */
 public record UpdatePartRequest(
-        @Size(max = 255) String name,
+        @Schema(example = "Brake pads")
+        @Size(max = 255, message = "must contain at most 255 characters")
+        String name,
+        @Schema(example = "BRAKE_PADS")
         PartCategory category,
+        @Schema(example = "2026-06-12")
         LocalDate installedAt,
-        @PositiveOrZero Integer installedMileageKm,
-        @Positive Integer expectedLifetimeKm,
-        @Size(max = 2000) String description,
-        @Positive BigDecimal cost) {
+        @Schema(example = "10000")
+        @PositiveOrZero(message = "must be greater than or equal to 0")
+        Integer installedMileageKm,
+        @Schema(example = "25000")
+        @Positive(message = "must be greater than 0")
+        Integer expectedLifetimeKm,
+        @Schema(example = "Front axle")
+        @Size(max = 2000, message = "must contain at most 2000 characters")
+        String description,
+        @Schema(example = "2500")
+        @Positive(message = "must be greater than 0")
+        BigDecimal cost,
+        @Schema(example = "[\"https://example.com/part-photo.jpg\"]")
+        List<String> photoUrls) {
 }

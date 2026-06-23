@@ -9,7 +9,7 @@ Covers:
 ## Screens
 
 - Analytics dashboard.
-- Period selector: month / year / all time.
+- Period selector: MONTH / YEAR / ALL_TIME.
 - Expense categories.
 - Mileage chart.
 - Repair frequency chart.
@@ -77,7 +77,7 @@ Client should not duplicate complex analytics, prediction, or reliability rules 
 
 - User can open analytics dashboard.
 - User can see expenses by category.
-- User can see mileage dynamics.
+- User can see cost per kilometer and history analysis metrics.
 - User can select period.
 - User can see empty states when data is insufficient.
 - Data updates when new timeline records are added.

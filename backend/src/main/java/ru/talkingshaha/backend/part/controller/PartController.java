@@ -2,6 +2,10 @@ package ru.talkingshaha.backend.part.controller;
 
 import java.util.UUID;
 
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -12,20 +16,29 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
+import ru.talkingshaha.backend.common.error.ApiError;
 import ru.talkingshaha.backend.part.dto.CreatePartRequest;
 import ru.talkingshaha.backend.part.dto.PartListResponse;
 import ru.talkingshaha.backend.part.dto.PartResponse;
 import ru.talkingshaha.backend.part.dto.UpdatePartRequest;
 import ru.talkingshaha.backend.part.service.PartService;
 
-/**
- * REST API for the installed parts of a vehicle.
- *
- * <p>Each part carries a computed remaining lifetime (kilometres, percent, and status)
- * derived from the vehicle's current mileage.
- */
 @RestController
 @RequestMapping("/api/v1/vehicles/{vehicleId}/parts")
+@ApiResponses({
+        @ApiResponse(
+                responseCode = "400",
+                description = "Validation error",
+                content = @Content(schema = @Schema(implementation = ApiError.class))),
+        @ApiResponse(
+                responseCode = "403",
+                description = "Vehicle belongs to another user",
+                content = @Content(schema = @Schema(implementation = ApiError.class))),
+        @ApiResponse(
+                responseCode = "404",
+                description = "Vehicle or part not found",
+                content = @Content(schema = @Schema(implementation = ApiError.class)))
+})
 public class PartController {
 
     private final PartService parts;
@@ -34,39 +47,17 @@ public class PartController {
         this.parts = parts;
     }
 
-    /**
-     * Lists the parts installed on a vehicle with their calculated lifetime.
-     *
-     * @param vehicleId the vehicle identifier
-     * @return the installed parts
-     */
     @GetMapping
     public PartListResponse listParts(@PathVariable UUID vehicleId) {
         return parts.listParts(vehicleId);
     }
 
-    /**
-     * Registers a new installed part and computes its initial lifetime.
-     *
-     * @param vehicleId the vehicle identifier
-     * @param request   the part data
-     * @return the created part
-     */
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
     public PartResponse createPart(@PathVariable UUID vehicleId, @Valid @RequestBody CreatePartRequest request) {
         return parts.createPart(vehicleId, request);
     }
 
-    /**
-     * Partially updates an installed part and recalculates its lifetime.
-     * Only the non-null fields of the request are applied.
-     *
-     * @param vehicleId the vehicle identifier
-     * @param partId    the part identifier
-     * @param request   the fields to update
-     * @return the updated part
-     */
     @PatchMapping("/{partId}")
     public PartResponse updatePart(
             @PathVariable UUID vehicleId, @PathVariable UUID partId, @Valid @RequestBody UpdatePartRequest request) {
