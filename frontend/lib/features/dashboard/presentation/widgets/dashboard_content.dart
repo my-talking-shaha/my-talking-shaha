@@ -40,7 +40,7 @@ final class DashboardContent extends StatelessWidget {
                   orElse: () => const SizedBox.shrink(),
                 ),
           ),
-          const SizedBox(height: AppSpacing.xxxl),
+          const SizedBox(height: AppSpacing.xl),
           DashboardLatestEvents(
             vehicleId: vehicle.id,
             eventsState: eventsState,

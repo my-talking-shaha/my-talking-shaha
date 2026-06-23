@@ -21,14 +21,15 @@ final class MaintenanceForecastCard extends StatelessWidget {
     final knownParts = parts
         .where((part) => part.remainingPercent != null)
         .toList(growable: false);
-    final aggregatePercent =
-        knownParts.isEmpty ? null : _averagePercent(knownParts);
+    final aggregatePercent = knownParts.isEmpty
+        ? null
+        : _averagePercent(knownParts);
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         Padding(
-          padding: const EdgeInsets.only(left: AppSpacing.xs),
+          padding: const EdgeInsets.symmetric(horizontal: AppSpacing.xs),
           child: Row(
             children: [
               Expanded(
@@ -37,11 +38,12 @@ final class MaintenanceForecastCard extends StatelessWidget {
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                   style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                        color: PartsDesignColors.headerText,
-                        fontSize: 11,
-                        fontWeight: FontWeight.w900,
-                        height: 1,
-                      ),
+                    color: PartsDesignColors.headerText,
+                    fontSize: 13,
+                    fontWeight: FontWeight.w700,
+                    letterSpacing: 0.8,
+                    height: 1,
+                  ),
                 ),
               ),
               const SizedBox(width: AppSpacing.sm),
@@ -52,29 +54,30 @@ final class MaintenanceForecastCard extends StatelessWidget {
                   overflow: TextOverflow.ellipsis,
                   textAlign: TextAlign.end,
                   style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                        color: PartsDesignColors.headerTextMuted,
-                        fontSize: 10,
-                        fontWeight: FontWeight.w900,
-                        height: 1,
-                      ),
+                    color: PartsDesignColors.headerTextMuted,
+                    fontSize: 11,
+                    fontWeight: FontWeight.w700,
+                    height: 1,
+                  ),
                 ),
               ),
             ],
           ),
         ),
-        const SizedBox(height: AppSpacing.sm),
+        const SizedBox(height: AppSpacing.md),
         DecoratedBox(
           key: const ValueKey('maintenance_forecast_card_body'),
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(PartsDesignMetrics.cardRadius),
             color: PartsDesignColors.cardBackground,
+            border: Border.all(color: AppColors.border),
           ),
           child: Padding(
             padding: const EdgeInsets.fromLTRB(
               AppSpacing.xl,
+              AppSpacing.xxl,
               AppSpacing.lg,
-              AppSpacing.lg,
-              AppSpacing.md,
+              AppSpacing.xxl,
             ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -87,10 +90,10 @@ final class MaintenanceForecastCard extends StatelessWidget {
                     ResourceBadge(percent: aggregatePercent),
                   ],
                 ),
-                const SizedBox(height: AppSpacing.xxl),
+                const SizedBox(height: AppSpacing.xxxl),
                 for (final part in parts) ...[
                   PartResourceRow(part: part),
-                  if (part != parts.last) const SizedBox(height: AppSpacing.sm),
+                  if (part != parts.last) const SizedBox(height: AppSpacing.lg),
                 ],
               ],
             ),
@@ -111,32 +114,30 @@ final class _ForecastSummary extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final criticalParts = parts
-        .where(
-          (part) => part.status == PartResourceStatus.critical,
-        )
+        .where((part) => part.status == PartResourceStatus.critical)
         .toList(growable: false);
     final nextPositiveRemainingKm = parts
         .map((part) => part.remainingKm)
         .whereType<int>()
         .where((remainingKm) => remainingKm > 0)
         .fold<int?>(null, (min, remainingKm) {
-      if (min == null || remainingKm < min) {
-        return remainingKm;
-      }
+          if (min == null || remainingKm < min) {
+            return remainingKm;
+          }
 
-      return min;
-    });
+          return min;
+        });
 
     final headline = criticalParts.isNotEmpty
         ? 'Service needed now'
         : nextPositiveRemainingKm != null
-            ? 'In ${_formatInt(nextPositiveRemainingKm)} km'
-            : 'Not enough data';
+        ? 'In ${_formatInt(nextPositiveRemainingKm)} km'
+        : 'Not enough data';
     final caption = criticalParts.isNotEmpty
         ? _criticalCaption(criticalParts)
         : nextPositiveRemainingKm != null
-            ? _approximateWindow(nextPositiveRemainingKm)
-            : 'Add lifetime data to forecast';
+        ? _approximateWindow(nextPositiveRemainingKm)
+        : 'Add lifetime data to forecast';
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -146,8 +147,8 @@ final class _ForecastSummary extends StatelessWidget {
           children: [
             SvgPicture.asset(
               'assets/icons/parts/maintenance.svg',
-              width: 15,
-              height: 15,
+              width: 24,
+              height: 24,
               colorFilter: const ColorFilter.mode(
                 PartsDesignColors.warning,
                 BlendMode.srcIn,
@@ -160,26 +161,27 @@ final class _ForecastSummary extends StatelessWidget {
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
                 style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                      color: PartsDesignColors.bodyText,
-                      fontSize: 13,
-                      fontWeight: FontWeight.w900,
-                      height: 1,
-                    ),
+                  color: PartsDesignColors.bodyText,
+                  fontSize: 14,
+                  fontWeight: FontWeight.w700,
+                  letterSpacing: 0.6,
+                  height: 1,
+                ),
               ),
             ),
           ],
         ),
-        const SizedBox(height: AppSpacing.md),
+        const SizedBox(height: AppSpacing.lg),
         Text(
           headline,
           maxLines: 2,
           overflow: TextOverflow.ellipsis,
           style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                color: PartsDesignColors.bodyText,
-                fontSize: 27,
-                fontWeight: FontWeight.w900,
-                height: 1.18,
-              ),
+            color: PartsDesignColors.bodyText,
+            fontSize: 30,
+            fontWeight: FontWeight.w700,
+            height: 1.25,
+          ),
         ),
         const SizedBox(height: AppSpacing.sm),
         Text(
@@ -187,11 +189,11 @@ final class _ForecastSummary extends StatelessWidget {
           maxLines: 2,
           overflow: TextOverflow.ellipsis,
           style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                color: PartsDesignColors.bodyTextMuted,
-                fontSize: 15,
-                fontWeight: FontWeight.w800,
-                height: 1.35,
-              ),
+            color: PartsDesignColors.bodyTextMuted,
+            fontSize: 16,
+            fontWeight: FontWeight.w400,
+            height: 1.45,
+          ),
         ),
       ],
     );
@@ -225,9 +227,9 @@ int _averagePercent(List<VehiclePart> knownParts) {
 String _formatInt(int value) {
   final prefix = value < 0 ? '-' : '';
   final formatted = value.abs().toString().replaceAllMapped(
-        RegExp(r'\B(?=(\d{3})+(?!\d))'),
-        (_) => ' ',
-      );
+    RegExp(r'\B(?=(\d{3})+(?!\d))'),
+    (_) => ' ',
+  );
 
   return '$prefix$formatted';
 }
