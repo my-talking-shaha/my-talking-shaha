@@ -1,6 +1,6 @@
 import 'package:frontend/features/analytics/domain/entities/analytics_period.dart';
 
-enum ExpenseCategory { investments, industry, payments, supplies }
+enum ExpenseCategory { fuel, maintenance, parts, other }
 
 enum AnalyticsMaintenanceUrgency { stable, warning, critical }
 

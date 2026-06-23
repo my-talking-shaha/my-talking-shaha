@@ -22,7 +22,7 @@ COPY frontend/lib ./lib
 COPY frontend/assets ./assets
 COPY frontend/web ./web
 
-RUN flutter build web --release
+RUN flutter build web --release --dart-define=API_BASE_URL=/api/v1
 
 FROM nginx:alpine
 

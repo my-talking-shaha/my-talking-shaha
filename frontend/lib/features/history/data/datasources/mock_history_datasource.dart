@@ -1,13 +1,15 @@
+import 'package:frontend/features/history/data/datasources/history_datasource.dart';
 import 'package:frontend/features/history/domain/entities/event_details.dart';
 import 'package:frontend/features/history/domain/entities/history_event.dart';
 import 'package:frontend/features/history/domain/entities/history_event_type.dart';
 
-final class MockHistoryDatasource {
+final class MockHistoryDatasource implements HistoryDatasource {
   MockHistoryDatasource({this.delay = const Duration(milliseconds: 600)});
 
   final Duration delay;
   final Map<String, List<HistoryEvent>> _eventsByVehicleId = {};
 
+  @override
   Future<List<HistoryEvent>> getEvents(String vehicleId) async {
     await Future<void>.delayed(delay);
 
@@ -16,6 +18,7 @@ final class MockHistoryDatasource {
     return List.unmodifiable(events);
   }
 
+  @override
   Future<void> addEvent(HistoryEvent event) async {
     await Future<void>.delayed(delay);
 

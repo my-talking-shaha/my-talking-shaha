@@ -1,14 +1,17 @@
+import 'package:frontend/features/garage/data/datasources/garage_datasource.dart';
 import 'package:frontend/features/garage/domain/entities/vehicle.dart';
 import 'package:frontend/features/garage/domain/entities/vehicle_draft.dart';
 
-final class InMemoryGarageDatasource {
+final class InMemoryGarageDatasource implements GarageDatasource {
   final List<Vehicle> _vehicles = [];
   int _nextVehicleNumber = 1;
 
+  @override
   Future<List<Vehicle>> getVehicles() async {
     return List.unmodifiable(_vehicles);
   }
 
+  @override
   Future<Vehicle> addVehicle(VehicleDraft draft) async {
     final normalizedDraft = draft.trimmed();
     final vehicle = Vehicle(
@@ -31,6 +34,7 @@ final class InMemoryGarageDatasource {
     return vehicle;
   }
 
+  @override
   Future<Vehicle> updateVehicle(String vehicleId, VehicleDraft draft) async {
     final index = _vehicles.indexWhere((vehicle) => vehicle.id == vehicleId);
     if (index == -1) {
@@ -58,6 +62,7 @@ final class InMemoryGarageDatasource {
     return updatedVehicle;
   }
 
+  @override
   Future<void> deleteVehicle(String vehicleId) async {
     _vehicles.removeWhere((vehicle) => vehicle.id == vehicleId);
   }

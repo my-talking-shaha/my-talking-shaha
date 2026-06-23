@@ -1,4 +1,4 @@
-import 'package:frontend/features/garage/data/datasources/in_memory_garage_datasource.dart';
+import 'package:frontend/features/garage/data/datasources/garage_datasource.dart';
 import 'package:frontend/features/garage/domain/entities/vehicle.dart';
 import 'package:frontend/features/garage/domain/entities/vehicle_draft.dart';
 import 'package:frontend/features/garage/domain/repositories/garage_repository.dart';
@@ -6,7 +6,7 @@ import 'package:frontend/features/garage/domain/repositories/garage_repository.d
 final class GarageRepositoryImpl implements GarageRepository {
   const GarageRepositoryImpl(this._datasource);
 
-  final InMemoryGarageDatasource _datasource;
+  final GarageDatasource _datasource;
 
   @override
   Future<Vehicle> addVehicle(VehicleDraft draft) {

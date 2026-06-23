@@ -10,6 +10,7 @@ import ru.talkingshaha.backend.user.repository.AppUserRepository;
 public class CurrentUserService {
 
     private static final String DEMO_USERNAME = "demo-user";
+    private static final String DEMO_EMAIL = "demo@talkingshaha.local";
 
     private final AppUserRepository users;
 
@@ -18,13 +19,17 @@ public class CurrentUserService {
     }
 
     @Transactional(propagation = Propagation.REQUIRES_NEW)
-    public AppUser currentUser() {
-        return users.findByUsername(DEMO_USERNAME).orElseGet(this::createDemoUser);
+    public synchronized AppUser currentUser() {
+        return findDemoUser().orElseGet(this::createDemoUser);
+    }
+
+    private java.util.Optional<AppUser> findDemoUser() {
+        return users.findByUsername(DEMO_USERNAME).or(() -> users.findByEmail(DEMO_EMAIL));
     }
 
     private AppUser createDemoUser() {
         AppUser user = new AppUser();
-        user.setEmail("demo@talkingshaha.local");
+        user.setEmail(DEMO_EMAIL);
         user.setUsername(DEMO_USERNAME);
         user.setPasswordHash("auth-is-not-enabled-yet");
         user.setDisplayName("Demo User");

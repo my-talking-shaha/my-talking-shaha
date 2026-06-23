@@ -1,11 +1,13 @@
+import 'package:frontend/features/analytics/data/datasources/analytics_datasource.dart';
 import 'package:frontend/features/analytics/domain/entities/analytics_period.dart';
 import 'package:frontend/features/analytics/domain/entities/analytics_summary.dart';
 
-final class MockAnalyticsDatasource {
+final class MockAnalyticsDatasource implements AnalyticsDatasource {
   MockAnalyticsDatasource({this.delay = const Duration(milliseconds: 500)});
 
   final Duration delay;
 
+  @override
   Future<AnalyticsSummary> getSummary({
     required String vehicleId,
     required AnalyticsPeriod period,
@@ -31,13 +33,14 @@ final class MockAnalyticsDatasource {
       trendPercent: 4.2,
       expensesByCategory: const [
         ExpenseCategoryAmount(
-          category: ExpenseCategory.investments,
+          category: ExpenseCategory.parts,
           amount: 6200,
         ),
-        ExpenseCategoryAmount(category: ExpenseCategory.industry, amount: 3100),
-        ExpenseCategoryAmount(category: ExpenseCategory.payments, amount: 2450),
         ExpenseCategoryAmount(
-          category: ExpenseCategory.supplies,
+            category: ExpenseCategory.maintenance, amount: 3100),
+        ExpenseCategoryAmount(category: ExpenseCategory.fuel, amount: 2450),
+        ExpenseCategoryAmount(
+          category: ExpenseCategory.other,
           amount: 3900,
         ),
       ],
@@ -97,15 +100,14 @@ final class MockAnalyticsDatasource {
       trendPercent: 4.2,
       expensesByCategory: const [
         ExpenseCategoryAmount(
-          category: ExpenseCategory.investments,
+          category: ExpenseCategory.parts,
           amount: 145000,
         ),
+        ExpenseCategoryAmount(category: ExpenseCategory.fuel, amount: 112500),
         ExpenseCategoryAmount(
-            category: ExpenseCategory.industry, amount: 112500),
+            category: ExpenseCategory.maintenance, amount: 56000),
         ExpenseCategoryAmount(
-            category: ExpenseCategory.payments, amount: 56000),
-        ExpenseCategoryAmount(
-          category: ExpenseCategory.supplies,
+          category: ExpenseCategory.other,
           amount: 29000,
         ),
       ],
@@ -165,15 +167,14 @@ final class MockAnalyticsDatasource {
       trendPercent: 8.7,
       expensesByCategory: const [
         ExpenseCategoryAmount(
-          category: ExpenseCategory.investments,
+          category: ExpenseCategory.parts,
           amount: 384000,
         ),
+        ExpenseCategoryAmount(category: ExpenseCategory.fuel, amount: 292300),
         ExpenseCategoryAmount(
-            category: ExpenseCategory.industry, amount: 292300),
+            category: ExpenseCategory.maintenance, amount: 151500),
         ExpenseCategoryAmount(
-            category: ExpenseCategory.payments, amount: 151500),
-        ExpenseCategoryAmount(
-          category: ExpenseCategory.supplies,
+          category: ExpenseCategory.other,
           amount: 89000,
         ),
       ],

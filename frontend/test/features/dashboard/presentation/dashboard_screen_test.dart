@@ -3,11 +3,13 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:frontend/app/theme/app_theme.dart';
+import 'package:frontend/features/dashboard/domain/entities/dashboard_data.dart';
+import 'package:frontend/features/dashboard/domain/repositories/dashboard_repository.dart';
+import 'package:frontend/features/dashboard/presentation/providers/dashboard_providers.dart';
 import 'package:frontend/features/dashboard/presentation/screens/dashboard_screen.dart';
 import 'package:frontend/features/garage/domain/entities/vehicle.dart';
-import 'package:frontend/features/garage/domain/entities/vehicle_draft.dart';
-import 'package:frontend/features/garage/domain/repositories/garage_repository.dart';
-import 'package:frontend/features/garage/presentation/providers/garage_providers.dart';
+import 'package:frontend/features/history/domain/entities/history_event_type.dart';
+import 'package:frontend/features/parts/domain/entities/vehicle_part.dart';
 
 void main() {
   testWidgets('shows vehicle summary and latest events', (tester) async {
@@ -37,8 +39,8 @@ void main() {
 
     await _pumpDashboard(
       tester,
-      vehicles: const [
-        Vehicle(
+      dashboard: DashboardData(
+        vehicle: const Vehicle(
           id: 'vehicle_1',
           brand: 'Lada',
           model: '2106',
@@ -52,7 +54,30 @@ void main() {
           status: 'ok',
           activeWarningsCount: 0,
         ),
-      ],
+        maintenanceParts: [
+          VehiclePart(
+            id: 'part_1',
+            vehicleId: 'vehicle_1',
+            name: 'Engine oil',
+            catalogKey: 'engine_oil',
+            installedAt: DateTime.utc(2026, 6, 1),
+            installedAtMileageKm: 120000,
+            lifetimeKm: 10000,
+            remainingKm: 5420,
+            remainingPercent: 54,
+            status: PartResourceStatus.ok,
+          ),
+        ],
+        recentEvents: [
+          DashboardRecentEvent(
+            id: 'event_1',
+            type: HistoryEventType.fuel,
+            title: 'Refueling AI-95',
+            subtitle: '32 L at 124,580 km',
+            occurredAt: DateTime.now(),
+          ),
+        ],
+      ),
     );
 
     expect(find.text('My Shaha'), findsOneWidget);
@@ -67,26 +92,30 @@ void main() {
     expect(copiedVin, 'XTA21060012345678');
     expect(find.text('VIN copied'), findsOneWidget);
     expect(find.text('Refueling AI-95'), findsOneWidget);
+    expect(find.text('Engine oil'), findsOneWidget);
     expect(tester.takeException(), isNull);
   });
 
-  testWidgets('shows unavailable state for an unknown vehicle', (tester) async {
-    await _pumpDashboard(tester, vehicles: const []);
+  testWidgets('shows unavailable state when dashboard cannot load', (
+    tester,
+  ) async {
+    await _pumpDashboard(tester, error: Exception('Vehicle not found'));
 
-    expect(find.text('Vehicle not found'), findsOneWidget);
-    expect(find.text('Open garage'), findsOneWidget);
+    expect(find.text('Could not load the dashboard'), findsOneWidget);
+    expect(find.text('Retry'), findsOneWidget);
   });
 }
 
 Future<void> _pumpDashboard(
   WidgetTester tester, {
-  required List<Vehicle> vehicles,
+  DashboardData? dashboard,
+  Object? error,
 }) async {
   await tester.pumpWidget(
     ProviderScope(
       overrides: [
-        garageRepositoryProvider.overrideWithValue(
-          _FakeGarageRepository(vehicles),
+        dashboardRepositoryProvider.overrideWithValue(
+          _FakeDashboardRepository(dashboard: dashboard, error: error),
         ),
       ],
       child: MaterialApp(
@@ -98,26 +127,22 @@ Future<void> _pumpDashboard(
   await tester.pumpAndSettle();
 }
 
-final class _FakeGarageRepository implements GarageRepository {
-  const _FakeGarageRepository(this.vehicles);
+final class _FakeDashboardRepository implements DashboardRepository {
+  const _FakeDashboardRepository({this.dashboard, this.error});
 
-  final List<Vehicle> vehicles;
-
-  @override
-  Future<List<Vehicle>> getVehicles() async => vehicles;
+  final DashboardData? dashboard;
+  final Object? error;
 
   @override
-  Future<Vehicle> addVehicle(VehicleDraft draft) {
-    throw UnsupportedError('Not used by dashboard tests');
-  }
+  Future<DashboardData> getDashboard(String vehicleId) async {
+    final error = this.error;
+    if (error != null) throw error;
 
-  @override
-  Future<void> deleteVehicle(String vehicleId) {
-    throw UnsupportedError('Not used by dashboard tests');
-  }
+    final dashboard = this.dashboard;
+    if (dashboard == null) {
+      throw StateError('Dashboard data was not provided');
+    }
 
-  @override
-  Future<Vehicle> updateVehicle(String vehicleId, VehicleDraft draft) {
-    throw UnsupportedError('Not used by dashboard tests');
+    return dashboard;
   }
 }
