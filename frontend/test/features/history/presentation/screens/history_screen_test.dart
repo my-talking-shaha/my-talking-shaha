@@ -13,7 +13,7 @@ void main() {
     await tester.pumpWidget(
       ProviderScope(
         overrides: [
-          mockHistoryDatasourceProvider.overrideWithValue(
+          historyDatasourceProvider.overrideWithValue(
             MockHistoryDatasource(delay: Duration.zero),
           ),
         ],
