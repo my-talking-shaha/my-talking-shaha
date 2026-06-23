@@ -118,7 +118,14 @@ void main() {
       find.byType(AddHistoryEventScreen),
     );
     expect(screen.vehicleId, 'vehicle_123');
-    expect(screen.initialMileageKm, 124580);
+    expect(screen.initialMileageKm, 0);
+    final mileageField = tester.widget<TextFormField>(
+      find.descendant(
+        of: find.byKey(const ValueKey('fuel-mileage')),
+        matching: find.byType(TextFormField),
+      ),
+    );
+    expect(mileageField.controller?.text, isEmpty);
   });
 
   testWidgets('history add button opens the form and saves an event', (

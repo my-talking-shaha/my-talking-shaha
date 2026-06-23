@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:frontend/app/providers/vehicle_mileage_provider.dart';
 import 'package:frontend/core/ui/navigation_shell.dart';
 import 'package:frontend/features/analytics/presentation/screens/analytics_screen.dart';
 import 'package:frontend/features/chat/presentation/screens/chat_placeholder_screen.dart';
@@ -33,17 +34,10 @@ final routerProvider = Provider<GoRouter>((ref) {
           final vehicleId = state.pathParameters['vehicleId'] ?? '';
           return Consumer(
             builder: (context, ref, _) {
-              final eventsState = ref.watch(historyEventsProvider(vehicleId));
+              final mileageState = ref.watch(vehicleMileageProvider(vehicleId));
 
-              return eventsState.when(
-                data: (events) {
-                  final currentMileageKm = events.fold<int>(
-                    0,
-                    (maximum, event) => event.currentMileageKm > maximum
-                        ? event.currentMileageKm
-                        : maximum,
-                  );
-
+              return mileageState.when(
+                data: (currentMileageKm) {
                   return AddHistoryEventScreen(
                     vehicleId: vehicleId,
                     initialMileageKm: currentMileageKm,
@@ -64,7 +58,7 @@ final routerProvider = Provider<GoRouter>((ref) {
                   body: Center(
                     child: TextButton(
                       onPressed: () {
-                        ref.invalidate(historyEventsProvider(vehicleId));
+                        ref.invalidate(vehicleMileageProvider(vehicleId));
                       },
                       child: const Text('Retry'),
                     ),
