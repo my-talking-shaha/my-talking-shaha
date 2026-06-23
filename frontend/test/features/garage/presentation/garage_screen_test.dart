@@ -96,7 +96,7 @@ void main() {
       await tester.tap(find.textContaining('Lada'));
       await tester.pumpAndSettle();
 
-      expect(find.text('chat:vehicle_123'), findsOneWidget);
+      expect(find.text('dashboard:vehicle_123'), findsOneWidget);
     },
   );
 
@@ -244,10 +244,10 @@ Future<void> _pumpGarage(
         },
       ),
       GoRoute(
-        path: '/vehicle/:vehicleId/parts',
+        path: '/vehicle/:vehicleId/dashboard',
         builder: (context, state) {
           final vehicleId = state.pathParameters['vehicleId'];
-          return Scaffold(body: Text('parts:$vehicleId'));
+          return Scaffold(body: Text('dashboard:$vehicleId'));
         },
       ),
     ],
@@ -294,7 +294,7 @@ GarageVehicle _vehicle({
 
 final class _FakeGarageRepository implements GarageRepository {
   _FakeGarageRepository({List<GarageVehicle> vehicles = const []})
-    : _vehicles = [...vehicles];
+      : _vehicles = [...vehicles];
 
   final List<GarageVehicle> _vehicles;
   final List<String> deletedVehicleIds = [];
