@@ -26,7 +26,7 @@ A one-time purchase model was considered but is not recommended for the followin
 
 ### Subscription Model — Adopted as Core Strategy
 
-A freemium subscription model is the recommended foundation of the monetization strategy. It provides predictable recurring revenue, aligns with how the product delivers value, and is well-understood by investors.
+A freemium (functionality is partially free, more opportunities require payment) subscription model is the recommended foundation of the monetization strategy. It provides predictable recurring revenue, aligns with how the product delivers value, and is well-understood by investors.
 
 **Proposed Tier Structure:**
 
@@ -86,6 +86,8 @@ Aggregated and anonymized data on part failure patterns, maintenance intervals, 
 - Requires explicit opt-in consent from users, separate from the core app terms.
 - Data must be fully anonymized and aggregated — no individual user or vehicle can be identifiable.
 - Compliance with applicable data protection regulations (GDPR and equivalents) is mandatory and must be verified by legal counsel before launch.
+
+(GDPR (General Data Protection Regulation) — the European Union's data protection law. It requires explicit user consent for data collection, grants users the right to access and delete their data, and mandates breach notifications. Fines reach up to €20 million or 4% of annual global turnover. It applies to any app with users in the EU, regardless of where the business is registered.)
 
 **What is explicitly excluded:**
 
