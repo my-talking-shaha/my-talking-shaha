@@ -54,12 +54,9 @@ android/**/key.properties
 *.keystore
 
 # iOS
-ios/Pods/
-ios/.symlinks/
 ios/Flutter/.last_build_id
 ios/Flutter/App.framework
 ios/Flutter/Flutter.framework
-ios/Flutter/Flutter.podspec
 ios/Flutter/Generated.xcconfig
 ios/Flutter/ephemeral/
 ios/Flutter/app.flx
@@ -72,7 +69,6 @@ ios/**/DerivedData/
 ios/**/xcuserdata/
 
 # macOS
-macos/Pods/
 macos/Flutter/ephemeral/
 macos/Flutter/GeneratedPluginRegistrant.swift
 macos/**/DerivedData/
