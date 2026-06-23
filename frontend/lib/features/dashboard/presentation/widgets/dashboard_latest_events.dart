@@ -1,22 +1,21 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:frontend/app/theme/app_theme.dart';
+import 'package:frontend/features/dashboard/domain/entities/dashboard_data.dart';
 import 'package:frontend/features/dashboard/presentation/utils/dashboard_utils.dart';
 import 'package:frontend/features/dashboard/presentation/widgets/dashboard_section_header.dart';
-import 'package:frontend/features/history/domain/entities/history_event.dart';
 import 'package:frontend/features/history/domain/entities/history_event_type.dart';
 import 'package:go_router/go_router.dart';
 
 final class DashboardLatestEvents extends StatelessWidget {
   const DashboardLatestEvents({
     required this.vehicleId,
-    required this.eventsState,
+    required this.events,
     super.key,
   });
 
   final String vehicleId;
-  final AsyncValue<List<HistoryEvent>> eventsState;
+  final List<DashboardRecentEvent> events;
 
   @override
   Widget build(BuildContext context) {
@@ -31,30 +30,18 @@ final class DashboardLatestEvents extends StatelessWidget {
           ),
         ),
         const SizedBox(height: AppSpacing.sm),
-        eventsState.when(
-          data: (events) {
-            if (events.isEmpty) {
-              return const _EventsMessage(message: 'No events yet');
-            }
-
-            final latestEvents = events.take(5).toList(growable: false);
-            return Column(
-              children: [
-                for (var index = 0; index < latestEvents.length; index++) ...[
-                  _RecentEventTile(event: latestEvents[index]),
-                  if (index < latestEvents.length - 1)
-                    const SizedBox(height: AppSpacing.sm),
-                ],
+        if (events.isEmpty)
+          const _EventsMessage(message: 'No events yet')
+        else
+          Column(
+            children: [
+              for (var index = 0; index < events.length; index++) ...[
+                _RecentEventTile(event: events[index]),
+                if (index < events.length - 1)
+                  const SizedBox(height: AppSpacing.sm),
               ],
-            );
-          },
-          loading: () => const _EventsMessage(
-            message: 'Loading recent events...',
-            showProgress: true,
+            ],
           ),
-          error: (error, stackTrace) =>
-              const _EventsMessage(message: 'Recent events are unavailable'),
-        ),
       ],
     );
   }
@@ -63,7 +50,7 @@ final class DashboardLatestEvents extends StatelessWidget {
 final class _RecentEventTile extends StatelessWidget {
   const _RecentEventTile({required this.event});
 
-  final HistoryEvent event;
+  final DashboardRecentEvent event;
 
   @override
   Widget build(BuildContext context) {
@@ -109,12 +96,12 @@ final class _RecentEventTile extends StatelessWidget {
                 ),
                 const SizedBox(height: AppSpacing.xs),
                 Text(
-                  DashboardUtils.eventSubtitle(event),
+                  event.subtitle,
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                   style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                    color: AppColors.textSecondary,
-                  ),
+                        color: AppColors.textSecondary,
+                      ),
                 ),
               ],
             ),
@@ -131,10 +118,9 @@ final class _RecentEventTile extends StatelessWidget {
 }
 
 final class _EventsMessage extends StatelessWidget {
-  const _EventsMessage({required this.message, this.showProgress = false});
+  const _EventsMessage({required this.message});
 
   final String message;
-  final bool showProgress;
 
   @override
   Widget build(BuildContext context) {
@@ -146,15 +132,7 @@ final class _EventsMessage extends StatelessWidget {
         borderRadius: AppRadius.card,
         border: Border.all(color: AppColors.border),
       ),
-      child: Column(
-        children: [
-          if (showProgress) ...[
-            const LinearProgressIndicator(),
-            const SizedBox(height: AppSpacing.md),
-          ],
-          Text(message, style: Theme.of(context).textTheme.bodyMedium),
-        ],
-      ),
+      child: Text(message, style: Theme.of(context).textTheme.bodyMedium),
     );
   }
 }
@@ -173,20 +151,20 @@ final class _RecentEventPresentation {
   factory _RecentEventPresentation.from(HistoryEventType type) {
     return switch (type) {
       HistoryEventType.fuel => const _RecentEventPresentation(
-        assetPath: 'assets/icons/events/gas.svg',
-        iconColor: AppColors.warning,
-        backgroundColor: Color(0xFF30291F),
-      ),
+          assetPath: 'assets/icons/events/gas.svg',
+          iconColor: AppColors.warning,
+          backgroundColor: Color(0xFF30291F),
+        ),
       HistoryEventType.maintenance => const _RecentEventPresentation(
-        assetPath: 'assets/icons/events/spanner.svg',
-        iconColor: AppColors.success,
-        backgroundColor: Color(0xFF123138),
-      ),
+          assetPath: 'assets/icons/events/spanner.svg',
+          iconColor: AppColors.success,
+          backgroundColor: Color(0xFF123138),
+        ),
       HistoryEventType.trip => const _RecentEventPresentation(
-        assetPath: 'assets/icons/events/trip.svg',
-        iconColor: AppColors.primaryLight,
-        backgroundColor: AppColors.surfaceHighest,
-      ),
+          assetPath: 'assets/icons/events/trip.svg',
+          iconColor: AppColors.primaryLight,
+          backgroundColor: AppColors.surfaceHighest,
+        ),
     };
   }
 }
