@@ -16,7 +16,7 @@ final class AnalyticsApiDatasource implements AnalyticsDatasource {
     final response = await _dio.get<Map<String, dynamic>>(
       '/vehicles/$vehicleId/analytics',
       queryParameters: {
-        'period': AnalyticsApiSummaryMapper.periodQuery(period)
+        'period': AnalyticsApiSummaryMapper.periodQuery(period),
       },
     );
 
@@ -80,7 +80,8 @@ abstract final class AnalyticsApiSummaryMapper {
         totalLiters: _doubleValue(fuel['totalLiters']),
       ),
       repairs: RepairAnalytics(
-        count: _intValue(historyAnalysis['maintenanceCount']) +
+        count:
+            _intValue(historyAnalysis['maintenanceCount']) +
             _intValue(historyAnalysis['partEventCount']),
         mostFrequentTypes: [
           RepairTypeMetric(
@@ -178,16 +179,19 @@ abstract final class AnalyticsApiSummaryMapper {
   static List<AnalyticsChartPoint> _monthlyRepairPoints(
     List<Map<String, dynamic>> months,
   ) {
-    return months.map((json) {
-      final breakdown = _mapValue(json['breakdownByCategory']);
-      final repairTotal = _doubleValue(breakdown['MAINTENANCE']) +
-          _doubleValue(breakdown['PARTS']);
+    return months
+        .map((json) {
+          final breakdown = _mapValue(json['breakdownByCategory']);
+          final repairTotal =
+              _doubleValue(breakdown['MAINTENANCE']) +
+              _doubleValue(breakdown['PARTS']);
 
-      return AnalyticsChartPoint(
-        label: _monthLabel(json['month']),
-        value: repairTotal,
-      );
-    }).toList(growable: false);
+          return AnalyticsChartPoint(
+            label: _monthLabel(json['month']),
+            value: repairTotal,
+          );
+        })
+        .toList(growable: false);
   }
 
   static AnalyticsPeriod? _periodValue(Object? value) {

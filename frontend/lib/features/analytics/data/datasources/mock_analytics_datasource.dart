@@ -32,17 +32,13 @@ final class MockAnalyticsDatasource implements AnalyticsDatasource {
       totalExpenses: const MoneyAmount(amount: 15650, currency: 'RUB'),
       trendPercent: 4.2,
       expensesByCategory: const [
+        ExpenseCategoryAmount(category: ExpenseCategory.parts, amount: 6200),
         ExpenseCategoryAmount(
-          category: ExpenseCategory.parts,
-          amount: 6200,
+          category: ExpenseCategory.maintenance,
+          amount: 3100,
         ),
-        ExpenseCategoryAmount(
-            category: ExpenseCategory.maintenance, amount: 3100),
         ExpenseCategoryAmount(category: ExpenseCategory.fuel, amount: 2450),
-        ExpenseCategoryAmount(
-          category: ExpenseCategory.other,
-          amount: 3900,
-        ),
+        ExpenseCategoryAmount(category: ExpenseCategory.other, amount: 3900),
       ],
       mileage: const MileageAnalytics(
         totalKm: 1240,
@@ -99,17 +95,13 @@ final class MockAnalyticsDatasource implements AnalyticsDatasource {
       totalExpenses: const MoneyAmount(amount: 342500, currency: 'RUB'),
       trendPercent: 4.2,
       expensesByCategory: const [
-        ExpenseCategoryAmount(
-          category: ExpenseCategory.parts,
-          amount: 145000,
-        ),
+        ExpenseCategoryAmount(category: ExpenseCategory.parts, amount: 145000),
         ExpenseCategoryAmount(category: ExpenseCategory.fuel, amount: 112500),
         ExpenseCategoryAmount(
-            category: ExpenseCategory.maintenance, amount: 56000),
-        ExpenseCategoryAmount(
-          category: ExpenseCategory.other,
-          amount: 29000,
+          category: ExpenseCategory.maintenance,
+          amount: 56000,
         ),
+        ExpenseCategoryAmount(category: ExpenseCategory.other, amount: 29000),
       ],
       mileage: const MileageAnalytics(
         totalKm: 23840,
@@ -166,17 +158,13 @@ final class MockAnalyticsDatasource implements AnalyticsDatasource {
       totalExpenses: const MoneyAmount(amount: 916800, currency: 'RUB'),
       trendPercent: 8.7,
       expensesByCategory: const [
-        ExpenseCategoryAmount(
-          category: ExpenseCategory.parts,
-          amount: 384000,
-        ),
+        ExpenseCategoryAmount(category: ExpenseCategory.parts, amount: 384000),
         ExpenseCategoryAmount(category: ExpenseCategory.fuel, amount: 292300),
         ExpenseCategoryAmount(
-            category: ExpenseCategory.maintenance, amount: 151500),
-        ExpenseCategoryAmount(
-          category: ExpenseCategory.other,
-          amount: 89000,
+          category: ExpenseCategory.maintenance,
+          amount: 151500,
         ),
+        ExpenseCategoryAmount(category: ExpenseCategory.other, amount: 89000),
       ],
       mileage: const MileageAnalytics(
         totalKm: 67420,

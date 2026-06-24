@@ -13,7 +13,7 @@ final dashboardRepositoryProvider = Provider<DashboardRepository>((ref) {
   return DashboardRepositoryImpl(ref.watch(dashboardApiDatasourceProvider));
 });
 
-final vehicleDashboardProvider =
-    FutureProvider.autoDispose.family<DashboardData, String>((ref, vehicleId) {
-  return ref.watch(dashboardRepositoryProvider).getDashboard(vehicleId);
-});
+final vehicleDashboardProvider = FutureProvider.autoDispose
+    .family<DashboardData, String>((ref, vehicleId) {
+      return ref.watch(dashboardRepositoryProvider).getDashboard(vehicleId);
+    });

@@ -10,18 +10,25 @@ void main() {
     final container = await _containerWithMileage(120000);
     addTearDown(container.dispose);
 
-    expect(
-      await container.read(vehicleMileageProvider('vehicle_1').future),
-      120000,
-    );
+    expect(await _readMileage(container, 'vehicle_1'), 120000);
   });
 
   test('returns zero when the selected vehicle does not exist', () async {
     final container = await _containerWithMileage(120000);
     addTearDown(container.dispose);
 
-    expect(await container.read(vehicleMileageProvider('missing').future), 0);
+    expect(await _readMileage(container, 'missing'), 0);
   });
+}
+
+Future<int> _readMileage(ProviderContainer container, String vehicleId) async {
+  final provider = vehicleMileageProvider(vehicleId);
+  final subscription = container.listen(provider, (_, _) {});
+  try {
+    return await container.read(provider.future);
+  } finally {
+    subscription.close();
+  }
 }
 
 Future<ProviderContainer> _containerWithMileage(int mileageKm) async {
@@ -39,8 +46,6 @@ Future<ProviderContainer> _containerWithMileage(int mileageKm) async {
   );
 
   return ProviderContainer(
-    overrides: [
-      inMemoryGarageDatasourceProvider.overrideWithValue(garageDatasource),
-    ],
+    overrides: [garageDatasourceProvider.overrideWithValue(garageDatasource)],
   );
 }

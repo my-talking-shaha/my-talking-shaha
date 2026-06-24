@@ -9,9 +9,7 @@ final class ChatPlaceholderScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Shaha Chat'),
-      ),
+      appBar: AppBar(title: const Text('Shaha Chat')),
       body: SafeArea(
         child: Padding(
           padding: const EdgeInsets.all(AppSpacing.xl),

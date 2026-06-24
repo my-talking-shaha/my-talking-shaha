@@ -1,5 +1,1 @@
-enum HistoryEventType {
-  fuel,
-  maintenance,
-  trip,
-}
+enum HistoryEventType { fuel, maintenance, trip }

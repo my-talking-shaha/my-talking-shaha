@@ -12,6 +12,20 @@ import 'package:frontend/features/garage/presentation/widgets/vehicle_garage_car
 import 'package:go_router/go_router.dart';
 
 void main() {
+  testWidgets('shows an error without automatically retrying a failed load', (
+    tester,
+  ) async {
+    final repository = _FakeGarageRepository(
+      loadError: Exception('Backend unavailable'),
+    );
+
+    await _pumpGarage(tester, repository);
+
+    expect(find.text('Could not load garage'), findsOneWidget);
+    expect(find.text('Retry'), findsOneWidget);
+    expect(repository.getVehiclesCalls, 1);
+  });
+
   testWidgets('empty garage content stays below the system status bar', (
     tester,
   ) async {
@@ -293,15 +307,23 @@ GarageVehicle _vehicle({
 }
 
 final class _FakeGarageRepository implements GarageRepository {
-  _FakeGarageRepository({List<GarageVehicle> vehicles = const []})
-      : _vehicles = [...vehicles];
+  _FakeGarageRepository({
+    List<GarageVehicle> vehicles = const [],
+    this.loadError,
+  }) : _vehicles = [...vehicles];
 
   final List<GarageVehicle> _vehicles;
+  final Object? loadError;
   final List<String> deletedVehicleIds = [];
+  int getVehiclesCalls = 0;
 
   @override
-  Future<List<GarageVehicle>> getVehicles() async =>
-      List.unmodifiable(_vehicles);
+  Future<List<GarageVehicle>> getVehicles() async {
+    getVehiclesCalls++;
+    final loadError = this.loadError;
+    if (loadError != null) throw loadError;
+    return List.unmodifiable(_vehicles);
+  }
 
   @override
   Future<GarageVehicle> addVehicle(VehicleDraft draft) async {

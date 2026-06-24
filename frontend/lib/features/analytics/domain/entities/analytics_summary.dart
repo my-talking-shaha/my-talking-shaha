@@ -43,10 +43,7 @@ final class FuelAnalytics {
 }
 
 final class RepairAnalytics {
-  const RepairAnalytics({
-    required this.count,
-    required this.mostFrequentTypes,
-  });
+  const RepairAnalytics({required this.count, required this.mostFrequentTypes});
 
   final int count;
   final List<RepairTypeMetric> mostFrequentTypes;

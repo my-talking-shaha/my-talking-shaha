@@ -4,6 +4,9 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:frontend/app/app.dart';
 import 'package:frontend/app/router.dart';
 import 'package:frontend/features/dashboard/presentation/screens/dashboard_screen.dart';
+import 'package:frontend/features/garage/data/datasources/in_memory_garage_datasource.dart';
+import 'package:frontend/features/garage/presentation/providers/garage_providers.dart';
+import 'package:frontend/features/history/data/datasources/mock_history_datasource.dart';
 import 'package:frontend/features/history/presentation/providers/history_providers.dart';
 import 'package:frontend/features/history/presentation/screens/add_history_event_screen.dart';
 import 'package:go_router/go_router.dart';
@@ -176,7 +179,14 @@ Future<_TestApp> _pumpApp(
   WidgetTester tester, {
   String? initialLocation,
 }) async {
-  final container = ProviderContainer();
+  final garageDatasource = InMemoryGarageDatasource();
+  final historyDatasource = MockHistoryDatasource(delay: Duration.zero);
+  final container = ProviderContainer(
+    overrides: [
+      garageDatasourceProvider.overrideWithValue(garageDatasource),
+      historyDatasourceProvider.overrideWithValue(historyDatasource),
+    ],
+  );
   addTearDown(container.dispose);
 
   final router = container.read(routerProvider);
