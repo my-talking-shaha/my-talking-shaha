@@ -1,0 +1,14 @@
+services:
+  backend:
+    build:
+      cache_from:
+        - type=gha,scope=talking-shaha-backend
+      cache_to:
+        - type=gha,mode=max,scope=talking-shaha-backend
+
+  frontend:
+    build:
+      cache_from:
+        - type=gha,scope=talking-shaha-frontend
+      cache_to:
+        - type=gha,mode=max,scope=talking-shaha-frontend

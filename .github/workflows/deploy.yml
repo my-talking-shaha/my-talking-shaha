@@ -22,8 +22,13 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
       - name: Build and start application stack
-        run: docker compose -f docker/docker-compose.yml up -d --build --remove-orphans backend frontend
+        env:
+          DOCKER_BUILDKIT: 1
+        run: docker compose -f docker/docker-compose.yml -f docker/docker-compose.ci.yml up -d --build --remove-orphans backend frontend
 
       - name: Wait for backend health
         run: |

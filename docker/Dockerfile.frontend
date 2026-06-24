@@ -1,28 +1,70 @@
-FROM debian:bookworm as builder
+# syntax=docker/dockerfile:1.7
 
-RUN apt-get update && apt-get install -y \
-    curl \
-    git \
-    unzip \
-    && rm -rf /var/lib/apt/lists/*
+FROM debian:bookworm AS builder
 
-RUN git clone https://github.com/flutter/flutter.git /flutter && \
-    /flutter/bin/flutter config --no-analytics && \
-    /flutter/bin/flutter precache
+ARG DEBIAN_FRONTEND=noninteractive
+ARG FLUTTER_CHANNEL=stable
+ARG RETRY_ATTEMPTS=5
+ARG RETRY_DELAY_SECONDS=10
 
-ENV PATH="/flutter/bin:/flutter/bin/cache/dart-sdk/bin:$PATH"
+RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
+    --mount=type=cache,target=/var/lib/apt/lists,sharing=locked \
+    set -eux; \
+    apt-get -o Acquire::Retries="$RETRY_ATTEMPTS" update; \
+    apt-get -o Acquire::Retries="$RETRY_ATTEMPTS" install -y --no-install-recommends \
+        ca-certificates \
+        curl \
+        git \
+        unzip
+
+RUN set -eux; \
+    retry() { \
+        attempt=1; \
+        until "$@"; do \
+            if [ "$attempt" -ge "$RETRY_ATTEMPTS" ]; then \
+                echo "Command failed after ${attempt} attempts: $*" >&2; \
+                return 1; \
+            fi; \
+            delay=$((attempt * RETRY_DELAY_SECONDS)); \
+            echo "Command failed, retrying in ${delay}s (${attempt}/${RETRY_ATTEMPTS}): $*" >&2; \
+            sleep "$delay"; \
+            attempt=$((attempt + 1)); \
+        done; \
+    }; \
+    retry git -c http.lowSpeedLimit=1000 -c http.lowSpeedTime=60 clone --depth 1 --single-branch --branch "$FLUTTER_CHANNEL" https://github.com/flutter/flutter.git /flutter; \
+    retry /flutter/bin/flutter config --no-analytics; \
+    retry /flutter/bin/flutter precache --web
+
+ENV PUB_CACHE="/root/.pub-cache" \
+    PATH="/flutter/bin:/flutter/bin/cache/dart-sdk/bin:/root/.pub-cache/bin:$PATH"
 
 WORKDIR /app
 
 COPY frontend/pubspec.yaml frontend/pubspec.lock* ./
 
-RUN flutter pub get
+RUN --mount=type=cache,target=/root/.pub-cache \
+    set -eux; \
+    retry() { \
+        attempt=1; \
+        until "$@"; do \
+            if [ "$attempt" -ge "$RETRY_ATTEMPTS" ]; then \
+                echo "Command failed after ${attempt} attempts: $*" >&2; \
+                return 1; \
+            fi; \
+            delay=$((attempt * RETRY_DELAY_SECONDS)); \
+            echo "Command failed, retrying in ${delay}s (${attempt}/${RETRY_ATTEMPTS}): $*" >&2; \
+            sleep "$delay"; \
+            attempt=$((attempt + 1)); \
+        done; \
+    }; \
+    retry flutter pub get
 
 COPY frontend/lib ./lib
 COPY frontend/assets ./assets
 COPY frontend/web ./web
 
-RUN flutter build web --release --dart-define=API_BASE_URL=/api/v1
+RUN --mount=type=cache,target=/root/.pub-cache \
+    flutter build web --release --dart-define=API_BASE_URL=/api/v1
 
 FROM nginx:alpine
 
