@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:io';
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_svg/flutter_svg.dart';
@@ -81,7 +82,7 @@ final class _AddHistoryEventScreenState extends State<AddHistoryEventScreen> {
       _mileageController.text = widget.initialMileageKm.toString();
       _tripStartController.text = widget.initialMileageKm.toString();
     }
-    if (widget.pickPhoto == null && Platform.isAndroid) {
+    if (!kIsWeb && widget.pickPhoto == null && Platform.isAndroid) {
       unawaited(_restoreLostPhoto());
     }
   }
@@ -333,15 +334,17 @@ final class _AddHistoryEventScreenState extends State<AddHistoryEventScreen> {
           ),
         ),
       ),
-      const SizedBox(height: AppSpacing.md),
-      _PhotoCard(
-        photo: _selectedPhoto,
-        isPicking: _isPickingPhoto,
-        onPick: _pickPhoto,
-        onRemove: _selectedPhoto == null
-            ? null
-            : () => setState(() => _selectedPhoto = null),
-      ),
+      if (!kIsWeb) ...[
+        const SizedBox(height: AppSpacing.md),
+        _PhotoCard(
+          photo: _selectedPhoto,
+          isPicking: _isPickingPhoto,
+          onPick: _pickPhoto,
+          onRemove: _selectedPhoto == null
+              ? null
+              : () => setState(() => _selectedPhoto = null),
+        ),
+      ],
     ];
   }
 

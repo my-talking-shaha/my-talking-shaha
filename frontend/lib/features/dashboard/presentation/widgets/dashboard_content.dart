@@ -27,8 +27,15 @@ final class DashboardContent extends StatelessWidget {
         children: [
           DashboardVehicleSummary(vehicle: dashboard.vehicle),
           const SizedBox(height: AppSpacing.xxxl),
-          MaintenanceForecastCard(parts: dashboard.maintenanceParts),
-          const SizedBox(height: AppSpacing.xxxl),
+          Consumer(
+            builder: (context, ref, child) => ref
+                .watch(vehiclePartsProvider(vehicle.id))
+                .maybeWhen(
+                  data: (parts) => MaintenanceForecastCard(parts: parts),
+                  orElse: () => const SizedBox.shrink(),
+                ),
+          ),
+          const SizedBox(height: AppSpacing.xl),
           DashboardLatestEvents(
             vehicleId: dashboard.vehicle.id,
             events: dashboard.recentEvents,

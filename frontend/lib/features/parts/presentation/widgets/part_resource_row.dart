@@ -25,43 +25,34 @@ final class PartResourceRow extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Expanded(
-                child: Row(
-                  children: [
-                    Flexible(
-                      child: Text(
-                        part.name,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style:
-                            Theme.of(context).textTheme.titleMedium?.copyWith(
-                                  color: statusColor,
-                                  fontSize: 16,
-                                  fontWeight: FontWeight.w900,
-                                  height: 1.15,
-                                ),
-                      ),
-                    ),
-                  ],
+                child: Text(
+                  part.name,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                    color: statusColor,
+                    fontSize: 17,
+                    fontWeight: FontWeight.w700,
+                    height: 1.15,
+                  ),
                 ),
               ),
               const SizedBox(width: AppSpacing.md),
-              Flexible(
-                child: Text(
-                  _resourceText(part),
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  textAlign: TextAlign.end,
-                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                        color: statusColor,
-                        fontSize: 12,
-                        fontWeight: FontWeight.w900,
-                        height: 1.15,
-                      ),
+              Text(
+                _resourceText(part),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                textAlign: TextAlign.end,
+                style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                  color: statusColor,
+                  fontSize: 14,
+                  fontWeight: FontWeight.w700,
+                  height: 1.15,
                 ),
               ),
             ],
           ),
-          const SizedBox(height: AppSpacing.sm),
+          const SizedBox(height: AppSpacing.md),
           if (progressValue != null)
             ClipRRect(
               borderRadius: BorderRadius.circular(
@@ -116,9 +107,9 @@ Color _statusColor(PartResourceStatus status) {
 String _formatInt(int value) {
   final prefix = value < 0 ? '-' : '';
   final formatted = value.abs().toString().replaceAllMapped(
-        RegExp(r'\B(?=(\d{3})+(?!\d))'),
-        (_) => ' ',
-      );
+    RegExp(r'\B(?=(\d{3})+(?!\d))'),
+    (_) => ' ',
+  );
 
   return '$prefix$formatted';
 }

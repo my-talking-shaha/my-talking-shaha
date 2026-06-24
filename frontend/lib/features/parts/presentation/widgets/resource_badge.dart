@@ -12,12 +12,13 @@ final class ResourceBadge extends StatelessWidget {
     final percent = this.percent;
 
     return Container(
-      width: 82,
-      height: 72,
-      padding: const EdgeInsets.all(AppSpacing.sm),
+      width: 92,
+      height: 86,
+      padding: const EdgeInsets.all(AppSpacing.md),
       decoration: BoxDecoration(
-        color: PartsDesignColors.accent,
+        color: PartsDesignColors.badgeBackground,
         borderRadius: BorderRadius.circular(PartsDesignMetrics.cardRadius),
+        border: Border.all(color: PartsDesignColors.badgeBorder),
       ),
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
@@ -27,11 +28,11 @@ final class ResourceBadge extends StatelessWidget {
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
             style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                  color: AppColors.white,
-                  fontSize: 26,
-                  fontWeight: FontWeight.w900,
-                  height: 1,
-                ),
+              color: PartsDesignColors.warning,
+              fontSize: 30,
+              fontWeight: FontWeight.w900,
+              height: 1,
+            ),
           ),
           const SizedBox(height: AppSpacing.xs),
           Text(
@@ -39,11 +40,11 @@ final class ResourceBadge extends StatelessWidget {
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
             style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                  color: AppColors.white.withValues(alpha: 0.82),
-                  fontSize: 9,
-                  fontWeight: FontWeight.w900,
-                  height: 1,
-                ),
+              color: PartsDesignColors.warning,
+              fontSize: 10,
+              fontWeight: FontWeight.w900,
+              height: 1,
+            ),
           ),
         ],
       ),
