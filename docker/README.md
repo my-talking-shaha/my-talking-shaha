@@ -27,7 +27,7 @@ The app will be available at [http://localhost](http://localhost)
 Docker Compose will automatically build:
 
 - **Backend**: Multi-stage Maven build for Spring Boot application
-- **Frontend**: Clones the stable Flutter SDK with retry protection, installs dependencies, and builds the web app
+- **Frontend**: Uses a prebuilt Flutter SDK image, installs dependencies, and builds the web app
 
 The Dockerfiles use BuildKit cache mounts for downloaded dependencies:
 
@@ -37,10 +37,10 @@ The Dockerfiles use BuildKit cache mounts for downloaded dependencies:
 
 GitHub Actions smoke tests additionally use `docker/docker-compose.ci.yml` with the GitHub Actions BuildKit cache backend, so unchanged Docker layers can be reused across workflow runs.
 
-The frontend build uses a shallow Flutter SDK clone from the `stable` channel by default and retries transient network steps such as SDK clone, SDK precache, and `flutter pub get`. Override the channel when needed:
+The frontend build uses `ghcr.io/cirruslabs/flutter:stable` by default and retries transient network steps such as Flutter web precache and `flutter pub get`. Override the Flutter SDK image when needed:
 
 ```bash
-docker-compose -f docker/docker-compose.yml build --build-arg FLUTTER_CHANNEL=stable frontend
+docker-compose -f docker/docker-compose.yml build --build-arg FLUTTER_IMAGE=ghcr.io/cirruslabs/flutter:stable frontend
 ```
 
 Use `--no-cache` only when you intentionally want to redownload everything.

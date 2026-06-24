@@ -145,8 +145,38 @@ jobs:
             exit 1
           fi
 
+          dump_deploy_diagnostics() {
+            status=$?
+            echo "Remote deploy failed with exit code ${status}" >&2
+            echo "Disk usage:" >&2
+            df -h >&2 || true
+            echo "Memory usage:" >&2
+            free -h >&2 || true
+            echo "Docker disk usage:" >&2
+            docker system df >&2 || true
+            echo "Docker containers:" >&2
+            docker ps -a >&2 || true
+            echo "Compose status:" >&2
+            $COMPOSE -f docker/docker-compose.yml ps postgres backend frontend >&2 || true
+            echo "Compose logs:" >&2
+            $COMPOSE -f docker/docker-compose.yml logs --no-color --tail=200 postgres backend frontend >&2 || true
+            exit "$status"
+          }
+
+          trap dump_deploy_diagnostics ERR
+
+          export DOCKER_BUILDKIT=1
+          export BUILDKIT_PROGRESS=plain
+          export COMPOSE_PROGRESS=plain
+
+          BUILD_PROGRESS_ARGS=""
+          if $COMPOSE -f docker/docker-compose.yml build --help 2>&1 | grep -q -- "--progress"; then
+            BUILD_PROGRESS_ARGS="--progress=plain"
+          fi
+
+          $COMPOSE -f docker/docker-compose.yml build $BUILD_PROGRESS_ARGS backend frontend
           $COMPOSE -f docker/docker-compose.yml down -v --remove-orphans
-          $COMPOSE -f docker/docker-compose.yml up -d --build --remove-orphans backend frontend
+          $COMPOSE -f docker/docker-compose.yml up -d --no-build --remove-orphans backend frontend
 
           for attempt in {1..30}; do
             if curl -fsS http://localhost:8080/actuator/health; then

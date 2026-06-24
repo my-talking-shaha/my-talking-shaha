@@ -1,23 +1,21 @@
 # syntax=docker/dockerfile:1.7
 
-FROM debian:bookworm AS builder
+ARG FLUTTER_IMAGE=ghcr.io/cirruslabs/flutter:stable
 
-ARG DEBIAN_FRONTEND=noninteractive
-ARG FLUTTER_CHANNEL=stable
+FROM ${FLUTTER_IMAGE} AS builder
+
+USER root
+
 ARG RETRY_ATTEMPTS=5
 ARG RETRY_DELAY_SECONDS=10
 
-RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
-    --mount=type=cache,target=/var/lib/apt/lists,sharing=locked \
-    set -eux; \
-    apt-get -o Acquire::Retries="$RETRY_ATTEMPTS" update; \
-    apt-get -o Acquire::Retries="$RETRY_ATTEMPTS" install -y --no-install-recommends \
-        ca-certificates \
-        curl \
-        git \
-        unzip
+ENV CI=true \
+    FLUTTER_SUPPRESS_ANALYTICS=true \
+    PUB_CACHE="/root/.pub-cache" \
+    PATH="/root/.pub-cache/bin:$PATH"
 
-RUN set -eux; \
+RUN --mount=type=cache,target=/root/.pub-cache \
+    set -eux; \
     retry() { \
         attempt=1; \
         until "$@"; do \
@@ -31,12 +29,7 @@ RUN set -eux; \
             attempt=$((attempt + 1)); \
         done; \
     }; \
-    retry git -c http.lowSpeedLimit=1000 -c http.lowSpeedTime=60 clone --depth 1 --single-branch --branch "$FLUTTER_CHANNEL" https://github.com/flutter/flutter.git /flutter; \
-    retry /flutter/bin/flutter config --no-analytics; \
-    retry /flutter/bin/flutter precache --web
-
-ENV PUB_CACHE="/root/.pub-cache" \
-    PATH="/flutter/bin:/flutter/bin/cache/dart-sdk/bin:/root/.pub-cache/bin:$PATH"
+    retry flutter precache --web
 
 WORKDIR /app
 
