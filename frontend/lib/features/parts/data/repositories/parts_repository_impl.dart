@@ -8,7 +8,7 @@ final class PartsRepositoryImpl implements PartsRepository {
     this._datasource, {
     CalculatePartResource? calculatePartResource,
   }) : _calculatePartResource =
-            calculatePartResource ?? CalculatePartResource();
+           calculatePartResource ?? CalculatePartResource();
 
   final PartsDatasource _datasource;
   final CalculatePartResource _calculatePartResource;

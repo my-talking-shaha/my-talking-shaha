@@ -100,8 +100,8 @@ final class _RecentEventTile extends StatelessWidget {
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                   style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                        color: AppColors.textSecondary,
-                      ),
+                    color: AppColors.textSecondary,
+                  ),
                 ),
               ],
             ),
@@ -151,20 +151,20 @@ final class _RecentEventPresentation {
   factory _RecentEventPresentation.from(HistoryEventType type) {
     return switch (type) {
       HistoryEventType.fuel => const _RecentEventPresentation(
-          assetPath: 'assets/icons/events/gas.svg',
-          iconColor: AppColors.warning,
-          backgroundColor: Color(0xFF30291F),
-        ),
+        assetPath: 'assets/icons/events/gas.svg',
+        iconColor: AppColors.warning,
+        backgroundColor: Color(0xFF30291F),
+      ),
       HistoryEventType.maintenance => const _RecentEventPresentation(
-          assetPath: 'assets/icons/events/spanner.svg',
-          iconColor: AppColors.success,
-          backgroundColor: Color(0xFF123138),
-        ),
+        assetPath: 'assets/icons/events/spanner.svg',
+        iconColor: AppColors.success,
+        backgroundColor: Color(0xFF123138),
+      ),
       HistoryEventType.trip => const _RecentEventPresentation(
-          assetPath: 'assets/icons/events/trip.svg',
-          iconColor: AppColors.primaryLight,
-          backgroundColor: AppColors.surfaceHighest,
-        ),
+        assetPath: 'assets/icons/events/trip.svg',
+        iconColor: AppColors.primaryLight,
+        backgroundColor: AppColors.surfaceHighest,
+      ),
     };
   }
 }

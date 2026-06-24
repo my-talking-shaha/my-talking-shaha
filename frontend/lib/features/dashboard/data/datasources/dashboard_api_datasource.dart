@@ -22,11 +22,12 @@ final class DashboardApiDatasource {
       vehicle: GarageApiVehicleMapper.fromJson(_mapValue(data['vehicle'])),
       maintenanceParts: _listValue(parts)
           .map(
-              (json) => PartsApiPartMapper.fromJson(json, vehicleId: vehicleId))
+            (json) => PartsApiPartMapper.fromJson(json, vehicleId: vehicleId),
+          )
           .toList(growable: false),
-      recentEvents: _listValue(recentEvents)
-          .map(DashboardApiEventMapper.fromJson)
-          .toList(growable: false),
+      recentEvents: _listValue(
+        recentEvents,
+      ).map(DashboardApiEventMapper.fromJson).toList(growable: false),
     );
   }
 
@@ -48,7 +49,8 @@ abstract final class DashboardApiEventMapper {
       title:
           _nullableStringValue(json['title']) ?? _fallbackTitle(json['type']),
       subtitle: _nullableStringValue(json['subtitle']) ?? '',
-      occurredAt: DateTime.tryParse(_stringValue(json['eventDateTime'])) ??
+      occurredAt:
+          DateTime.tryParse(_stringValue(json['eventDateTime'])) ??
           DateTime.now(),
     );
   }
@@ -59,8 +61,7 @@ abstract final class DashboardApiEventMapper {
       'TRIP' => HistoryEventType.trip,
       'MAINTENANCE' ||
       'PART_REPLACEMENT' ||
-      'REPAIR' =>
-        HistoryEventType.maintenance,
+      'REPAIR' => HistoryEventType.maintenance,
       _ => HistoryEventType.maintenance,
     };
   }

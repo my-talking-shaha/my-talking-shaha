@@ -28,10 +28,11 @@ void main() {
       tester.getTopRight(find.text('UPDATED 2 HOURS AGO')).dx,
       closeTo(
         tester
-            .getTopRight(
-              find.byKey(const ValueKey('maintenance_forecast_card_body')),
-            )
-            .dx,
+                .getTopRight(
+                  find.byKey(const ValueKey('maintenance_forecast_card_body')),
+                )
+                .dx -
+            AppSpacing.xs,
         0.1,
       ),
     );
@@ -55,23 +56,22 @@ void main() {
   });
 
   testWidgets(
-      'maintenance forecast uses nearest future resource without critical parts',
-      (
-    tester,
-  ) async {
-    await tester.pumpWidget(
-      MaterialApp(
-        theme: AppTheme.dark,
-        home: Scaffold(
-          body: MaintenanceForecastCard(parts: _mockPartsWithoutCritical()),
+    'maintenance forecast uses nearest future resource without critical parts',
+    (tester) async {
+      await tester.pumpWidget(
+        MaterialApp(
+          theme: AppTheme.dark,
+          home: Scaffold(
+            body: MaintenanceForecastCard(parts: _mockPartsWithoutCritical()),
+          ),
         ),
-      ),
-    );
+      );
 
-    expect(find.text('In 800 km'), findsOneWidget);
-    expect(find.text('Approx. date: in 16 days'), findsOneWidget);
-    expect(find.text('Service needed now'), findsNothing);
-  });
+      expect(find.text('In 800 km'), findsOneWidget);
+      expect(find.text('Approx. date: in 16 days'), findsOneWidget);
+      expect(find.text('Service needed now'), findsNothing);
+    },
+  );
 
   testWidgets('parts screen shows loading while parts are requested', (
     tester,

@@ -36,9 +36,10 @@ void main() {
         everyElement('vehicle_456'),
       );
       expect(
-        shahaParts.map((part) => part.id).toSet().intersection(
-              otherVehicleParts.map((part) => part.id).toSet(),
-            ),
+        shahaParts
+            .map((part) => part.id)
+            .toSet()
+            .intersection(otherVehicleParts.map((part) => part.id).toSet()),
         isEmpty,
       );
       expect(shahaParts.map((part) => part.name), contains('Engine oil'));

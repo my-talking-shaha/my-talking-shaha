@@ -38,9 +38,7 @@ final class PartsScreen extends ConsumerWidget {
                 AppSpacing.xl,
                 AppSpacing.xxxl,
               ),
-              children: [
-                MaintenanceForecastCard(parts: parts),
-              ],
+              children: [MaintenanceForecastCard(parts: parts)],
             ),
           );
         },

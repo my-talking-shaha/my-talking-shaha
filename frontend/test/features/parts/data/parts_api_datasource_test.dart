@@ -5,23 +5,20 @@ import 'package:frontend/features/parts/domain/entities/vehicle_part.dart';
 void main() {
   group('PartsApiPartMapper', () {
     test('maps backend part response to parts domain model', () {
-      final part = PartsApiPartMapper.fromJson(
-        const {
-          'id': '023c10cc-13d1-4567-9109-e9e79789ea21',
-          'name': 'Brake pads',
-          'category': 'BRAKE_PADS',
-          'installedAt': '2026-06-12',
-          'installedMileageKm': 10000,
-          'expectedLifetimeKm': 25000,
-          'remainingKm': 500,
-          'remainingPercent': 8,
-          'status': 'ATTENTION',
-          'description': 'Front axle',
-          'cost': 2500,
-          'photoUrls': <String>[],
-        },
-        vehicleId: '096c10bb-13d1-4599-9109-e9e79789ea88',
-      );
+      final part = PartsApiPartMapper.fromJson(const {
+        'id': '023c10cc-13d1-4567-9109-e9e79789ea21',
+        'name': 'Brake pads',
+        'category': 'BRAKE_PADS',
+        'installedAt': '2026-06-12',
+        'installedMileageKm': 10000,
+        'expectedLifetimeKm': 25000,
+        'remainingKm': 500,
+        'remainingPercent': 8,
+        'status': 'ATTENTION',
+        'description': 'Front axle',
+        'cost': 2500,
+        'photoUrls': <String>[],
+      }, vehicleId: '096c10bb-13d1-4599-9109-e9e79789ea88');
 
       expect(part.id, '023c10cc-13d1-4567-9109-e9e79789ea21');
       expect(part.vehicleId, '096c10bb-13d1-4599-9109-e9e79789ea88');
@@ -36,20 +33,17 @@ void main() {
     });
 
     test('keeps unknown resource fields nullable', () {
-      final part = PartsApiPartMapper.fromJson(
-        const {
-          'id': 'part_unknown',
-          'name': 'Cabin filter',
-          'category': 'OTHER',
-          'installedAt': '2026-06-01',
-          'installedMileageKm': 103500,
-          'expectedLifetimeKm': null,
-          'remainingKm': null,
-          'remainingPercent': null,
-          'status': 'UNKNOWN',
-        },
-        vehicleId: 'vehicle_123',
-      );
+      final part = PartsApiPartMapper.fromJson(const {
+        'id': 'part_unknown',
+        'name': 'Cabin filter',
+        'category': 'OTHER',
+        'installedAt': '2026-06-01',
+        'installedMileageKm': 103500,
+        'expectedLifetimeKm': null,
+        'remainingKm': null,
+        'remainingPercent': null,
+        'status': 'UNKNOWN',
+      }, vehicleId: 'vehicle_123');
 
       expect(part.catalogKey, 'other');
       expect(part.lifetimeKm, isNull);

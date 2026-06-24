@@ -9,8 +9,9 @@ import 'package:frontend/features/parts/domain/repositories/parts_repository.dar
 import 'package:frontend/features/parts/domain/use_cases/calculate_part_resource.dart';
 import 'package:frontend/features/parts/domain/use_cases/get_vehicle_parts.dart';
 
-final inMemoryPartsDatasourceProvider =
-    Provider<InMemoryPartsDatasource>((ref) {
+final inMemoryPartsDatasourceProvider = Provider<InMemoryPartsDatasource>((
+  ref,
+) {
   return InMemoryPartsDatasource();
 });
 
@@ -37,10 +38,7 @@ final getVehiclePartsProvider = Provider<GetVehicleParts>((ref) {
   return GetVehicleParts(ref.watch(partsRepositoryProvider));
 });
 
-final vehiclePartsProvider =
-    FutureProvider.autoDispose.family<List<VehiclePart>, String>((
-  ref,
-  vehicleId,
-) {
-  return ref.watch(getVehiclePartsProvider).call(vehicleId: vehicleId);
-});
+final vehiclePartsProvider = FutureProvider.autoDispose
+    .family<List<VehiclePart>, String>((ref, vehicleId) {
+      return ref.watch(getVehiclePartsProvider).call(vehicleId: vehicleId);
+    });

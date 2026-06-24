@@ -10,8 +10,9 @@ import 'package:frontend/features/analytics/domain/repositories/analytics_reposi
 
 typedef AnalyticsSummaryRequest = ({String vehicleId, AnalyticsPeriod period});
 
-final mockAnalyticsDatasourceProvider =
-    Provider<MockAnalyticsDatasource>((ref) {
+final mockAnalyticsDatasourceProvider = Provider<MockAnalyticsDatasource>((
+  ref,
+) {
   return MockAnalyticsDatasource();
 });
 
@@ -29,7 +30,7 @@ final analyticsRepositoryProvider = Provider<AnalyticsRepository>((ref) {
 
 final analyticsSummaryProvider = FutureProvider.autoDispose
     .family<AnalyticsSummary, AnalyticsSummaryRequest>((ref, request) {
-  return ref
-      .watch(analyticsRepositoryProvider)
-      .getSummary(vehicleId: request.vehicleId, period: request.period);
-});
+      return ref
+          .watch(analyticsRepositoryProvider)
+          .getSummary(vehicleId: request.vehicleId, period: request.period);
+    });
