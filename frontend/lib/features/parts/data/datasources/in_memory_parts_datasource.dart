@@ -1,6 +1,7 @@
+import 'package:frontend/features/parts/data/datasources/parts_datasource.dart';
 import 'package:frontend/features/parts/domain/entities/vehicle_part.dart';
 
-final class InMemoryPartsDatasource {
+final class InMemoryPartsDatasource implements PartsDatasource {
   static final Map<String, int> _currentMileageByVehicle = {
     'vehicle_1': 105000,
     'vehicle_2': 72800,
@@ -145,12 +146,14 @@ final class InMemoryPartsDatasource {
     ],
   };
 
+  @override
   Future<List<VehiclePart>> getParts({required String vehicleId}) async {
     return List<VehiclePart>.unmodifiable(
       _partsByVehicle[vehicleId] ?? const [],
     );
   }
 
+  @override
   Future<int?> getCurrentVehicleMileageKm({required String vehicleId}) async {
     return _currentMileageByVehicle[vehicleId];
   }

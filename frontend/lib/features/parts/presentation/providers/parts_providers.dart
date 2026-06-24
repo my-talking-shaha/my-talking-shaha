@@ -1,5 +1,8 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:frontend/core/network/api_client.dart';
 import 'package:frontend/features/parts/data/datasources/in_memory_parts_datasource.dart';
+import 'package:frontend/features/parts/data/datasources/parts_api_datasource.dart';
+import 'package:frontend/features/parts/data/datasources/parts_datasource.dart';
 import 'package:frontend/features/parts/data/repositories/parts_repository_impl.dart';
 import 'package:frontend/features/parts/domain/entities/vehicle_part.dart';
 import 'package:frontend/features/parts/domain/repositories/parts_repository.dart';
@@ -11,13 +14,21 @@ final inMemoryPartsDatasourceProvider =
   return InMemoryPartsDatasource();
 });
 
+final partsApiDatasourceProvider = Provider<PartsApiDatasource>((ref) {
+  return PartsApiDatasource(ref.watch(dioProvider));
+});
+
+final partsDatasourceProvider = Provider<PartsDatasource>((ref) {
+  return ref.watch(partsApiDatasourceProvider);
+});
+
 final calculatePartResourceProvider = Provider<CalculatePartResource>((ref) {
   return CalculatePartResource();
 });
 
 final partsRepositoryProvider = Provider<PartsRepository>((ref) {
   return PartsRepositoryImpl(
-    ref.watch(inMemoryPartsDatasourceProvider),
+    ref.watch(partsDatasourceProvider),
     calculatePartResource: ref.watch(calculatePartResourceProvider),
   );
 });

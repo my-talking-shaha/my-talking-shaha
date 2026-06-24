@@ -1,22 +1,17 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:frontend/app/theme/app_theme.dart';
+import 'package:frontend/features/dashboard/domain/entities/dashboard_data.dart';
 import 'package:frontend/features/dashboard/presentation/widgets/dashboard_latest_events.dart';
 import 'package:frontend/features/dashboard/presentation/widgets/dashboard_vehicle_summary.dart';
-import 'package:frontend/features/garage/domain/entities/vehicle.dart';
-import 'package:frontend/features/history/domain/entities/history_event.dart';
-import 'package:frontend/features/parts/presentation/providers/parts_providers.dart';
 import 'package:frontend/features/parts/presentation/widgets/maintenance_forecast_card.dart';
 
 final class DashboardContent extends StatelessWidget {
   const DashboardContent({
-    required this.vehicle,
-    required this.eventsState,
+    required this.dashboard,
     super.key,
   });
 
-  final Vehicle vehicle;
-  final AsyncValue<List<HistoryEvent>> eventsState;
+  final DashboardData dashboard;
 
   @override
   Widget build(BuildContext context) {
@@ -30,7 +25,7 @@ final class DashboardContent extends StatelessWidget {
           AppSpacing.xxxl,
         ),
         children: [
-          DashboardVehicleSummary(vehicle: vehicle),
+          DashboardVehicleSummary(vehicle: dashboard.vehicle),
           const SizedBox(height: AppSpacing.xxxl),
           Consumer(
             builder: (context, ref, child) => ref
@@ -42,8 +37,8 @@ final class DashboardContent extends StatelessWidget {
           ),
           const SizedBox(height: AppSpacing.xl),
           DashboardLatestEvents(
-            vehicleId: vehicle.id,
-            eventsState: eventsState,
+            vehicleId: dashboard.vehicle.id,
+            events: dashboard.recentEvents,
           ),
         ],
       ),

@@ -1,4 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:frontend/core/network/api_client.dart';
+import 'package:frontend/features/history/data/datasources/history_api_datasource.dart';
+import 'package:frontend/features/history/data/datasources/history_datasource.dart';
 import 'package:frontend/features/history/data/datasources/history_photo_storage.dart';
 import 'package:frontend/features/history/data/datasources/mock_history_datasource.dart';
 import 'package:frontend/features/history/data/repositories/history_repository_impl.dart';
@@ -9,12 +12,20 @@ final mockHistoryDatasourceProvider = Provider<MockHistoryDatasource>((ref) {
   return MockHistoryDatasource();
 });
 
+final historyApiDatasourceProvider = Provider<HistoryApiDatasource>((ref) {
+  return HistoryApiDatasource(ref.watch(dioProvider));
+});
+
+final historyDatasourceProvider = Provider<HistoryDatasource>((ref) {
+  return ref.watch(historyApiDatasourceProvider);
+});
+
 final historyPhotoStorageProvider = Provider<HistoryPhotoStorage>((ref) {
   return const HistoryPhotoStorage();
 });
 
 final historyRepositoryProvider = Provider<HistoryRepository>((ref) {
-  return HistoryRepositoryImpl(ref.watch(mockHistoryDatasourceProvider));
+  return HistoryRepositoryImpl(ref.watch(historyDatasourceProvider));
 });
 
 final historyEventsProvider = FutureProvider.autoDispose

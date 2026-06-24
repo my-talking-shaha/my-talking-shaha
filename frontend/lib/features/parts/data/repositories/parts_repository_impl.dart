@@ -1,4 +1,4 @@
-import 'package:frontend/features/parts/data/datasources/in_memory_parts_datasource.dart';
+import 'package:frontend/features/parts/data/datasources/parts_datasource.dart';
 import 'package:frontend/features/parts/domain/entities/vehicle_part.dart';
 import 'package:frontend/features/parts/domain/repositories/parts_repository.dart';
 import 'package:frontend/features/parts/domain/use_cases/calculate_part_resource.dart';
@@ -10,7 +10,7 @@ final class PartsRepositoryImpl implements PartsRepository {
   }) : _calculatePartResource =
             calculatePartResource ?? CalculatePartResource();
 
-  final InMemoryPartsDatasource _datasource;
+  final PartsDatasource _datasource;
   final CalculatePartResource _calculatePartResource;
 
   @override

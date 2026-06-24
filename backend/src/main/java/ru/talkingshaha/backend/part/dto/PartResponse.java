@@ -1,6 +1,8 @@
 package ru.talkingshaha.backend.part.dto;
 
 import java.time.LocalDate;
+import java.math.BigDecimal;
+import java.util.List;
 import java.util.UUID;
 
 import ru.talkingshaha.backend.part.model.PartCategory;
@@ -15,5 +17,8 @@ public record PartResponse(
         Integer expectedLifetimeKm,
         Integer remainingKm,
         Integer remainingPercent,
-        PartStatus status) {
+        PartStatus status,
+        String description,
+        BigDecimal cost,
+        List<String> photoUrls) {
 }

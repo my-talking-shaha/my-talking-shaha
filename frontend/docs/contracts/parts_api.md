@@ -22,7 +22,10 @@ Response:
       "expectedLifetimeKm": 10000,
       "remainingKm": 7500,
       "remainingPercent": 75,
-      "status": "OK"
+      "status": "OK",
+      "description": "Front axle",
+      "cost": 2500,
+      "photoUrls": []
     }
   ]
 }
@@ -49,11 +52,15 @@ Request:
   "category": "ENGINE_OIL",
   "installedAt": "2026-06-08",
   "installedMileageKm": 123000,
-  "expectedLifetimeKm": 10000
+  "expectedLifetimeKm": 10000,
+  "description": "Shell Helix Ultra 5W-40",
+  "cost": 8900,
+  "photoUrls": ["https://example.com/part-photo.jpg"]
 }
 ```
 
-Response `201`: created part.
+`expectedLifetimeKm`, `description`, `cost`, and `photoUrls` are optional. Response `201`:
+created part.
 
 ## Update Part
 
@@ -69,29 +76,13 @@ Request example:
 
 Response: updated part.
 
-## Replace Part
+## Add Part Replacement Event
 
-`POST /api/v1/vehicles/{vehicleId}/parts/{partId}/replace`
+Part replacement in service history is created through
+`POST /api/v1/vehicles/{vehicleId}/timeline/part`.
 
-Request:
-
-```json
-{
-  "installedAt": "2026-07-01",
-  "installedMileageKm": 130000,
-  "expectedLifetimeKm": 10000,
-  "createTimelineEvent": true
-}
-```
-
-Response:
-
-```json
-{
-  "part": { "id": "part_456" },
-  "createdEventId": "event_789"
-}
-```
+Use it when the user enters date + time, mileage, replaced/updated part name, optional
+description, optional cost, and optional photo.
 
 ## Catalog
 

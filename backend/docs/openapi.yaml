@@ -245,6 +245,53 @@ paths:
           $ref: '#/components/responses/ValidationError'
         '404':
           $ref: '#/components/responses/NotFound'
+  /vehicles/{vehicleId}/timeline/part:
+    post:
+      summary: Add part replacement event
+      tags: [ Timeline ]
+      parameters:
+        - $ref: '#/components/parameters/VehicleId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreatePartEventRequest'
+      responses:
+        '201':
+          description: Created part replacement event
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TimelineEvent'
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /vehicles/{vehicleId}/analytics:
+    get:
+      summary: Get analytics overview
+      tags: [ Analytics ]
+      parameters:
+        - $ref: '#/components/parameters/VehicleId'
+        - name: period
+          in: query
+          required: false
+          schema:
+            $ref: '#/components/schemas/AnalyticsPeriod'
+      responses:
+        '200':
+          description: Analytics overview
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AnalyticsOverview'
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
 components:
   parameters:
     VehicleId:
@@ -412,6 +459,11 @@ components:
           minimum: 0
           exclusiveMinimum: true
           nullable: true
+        photoUrls:
+          type: array
+          nullable: true
+          items:
+            type: string
     UpdatePartRequest:
       type: object
       properties:
@@ -436,6 +488,11 @@ components:
           type: number
           minimum: 0
           exclusiveMinimum: true
+        photoUrls:
+          type: array
+          nullable: true
+          items:
+            type: string
     Part:
       type: object
       required: [ id, name, category, installedAt, installedMileageKm, remainingKm, remainingPercent, status ]
@@ -463,6 +520,16 @@ components:
           nullable: true
         status:
           $ref: '#/components/schemas/PartStatus'
+        description:
+          type: string
+          nullable: true
+        cost:
+          type: number
+          nullable: true
+        photoUrls:
+          type: array
+          items:
+            type: string
     UpdateVehicleRequest:
       type: object
       description: Partial vehicle update; only the provided fields are applied.
@@ -508,7 +575,7 @@ components:
         liters:
           type: number
           minimum: 0
-          maximum: 1000
+          exclusiveMinimum: true
         cost:
           type: number
           minimum: 0
@@ -542,6 +609,32 @@ components:
           type: integer
           minimum: 1
     CreateMaintenanceEventRequest:
+      type: object
+      required: [ eventDateTime, mileageKm, name ]
+      properties:
+        eventDateTime:
+          type: string
+          format: date-time
+        mileageKm:
+          type: integer
+          minimum: 0
+        name:
+          type: string
+          maxLength: 255
+        description:
+          type: string
+          nullable: true
+        cost:
+          type: number
+          minimum: 0
+          exclusiveMinimum: true
+          nullable: true
+        photoUrls:
+          type: array
+          nullable: true
+          items:
+            type: string
+    CreatePartEventRequest:
       type: object
       required: [ eventDateTime, mileageKm, name ]
       properties:
@@ -629,6 +722,9 @@ components:
         durationMinutes:
           type: integer
           nullable: true
+        averageFuelConsumptionLitersPerKm:
+          type: number
+          nullable: true
         name:
           type: string
           nullable: true
@@ -652,3 +748,95 @@ components:
     TimelineEventType:
       type: string
       enum: [ TRIP, REFUEL, REPAIR, MAINTENANCE, PART_REPLACEMENT, WARNING ]
+    AnalyticsPeriod:
+      type: string
+      enum: [ MONTH, YEAR, ALL_TIME ]
+    AnalyticsOverview:
+      type: object
+      required: [ period, totalExpenses, currency, expensesByCategory, monthlyExpenses, seasonalExpenses, costPerKilometer, fuel, historyAnalysis, hasData ]
+      properties:
+        period:
+          $ref: '#/components/schemas/AnalyticsPeriod'
+        totalExpenses:
+          type: number
+        currency:
+          type: string
+          example: RUB
+        expensesByCategory:
+          type: object
+          additionalProperties:
+            type: number
+        monthlyExpenses:
+          type: array
+          items:
+            $ref: '#/components/schemas/MonthlyExpense'
+        seasonalExpenses:
+          type: array
+          items:
+            $ref: '#/components/schemas/SeasonalExpense'
+        costPerKilometer:
+          $ref: '#/components/schemas/CostPerKilometer'
+        fuel:
+          $ref: '#/components/schemas/FuelAnalytics'
+        historyAnalysis:
+          $ref: '#/components/schemas/HistoryAnalysis'
+        hasData:
+          type: boolean
+    MonthlyExpense:
+      type: object
+      required: [ month, total, breakdownByCategory ]
+      properties:
+        month:
+          type: string
+          example: 2026-06
+        total:
+          type: number
+        breakdownByCategory:
+          type: object
+          additionalProperties:
+            type: number
+    SeasonalExpense:
+      type: object
+      required: [ season, total ]
+      properties:
+        season:
+          type: string
+          enum: [ WINTER, SPRING, SUMMER, AUTUMN ]
+        total:
+          type: number
+    CostPerKilometer:
+      type: object
+      required: [ totalKm, totalExpenses, costPerKm ]
+      properties:
+        totalKm:
+          type: integer
+        totalExpenses:
+          type: number
+        costPerKm:
+          type: number
+    FuelAnalytics:
+      type: object
+      required: [ totalLiters, averageConsumptionLitersPer100Km ]
+      properties:
+        totalLiters:
+          type: number
+        averageConsumptionLitersPer100Km:
+          type: number
+    HistoryAnalysis:
+      type: object
+      required: [ eventCount, refuelCount, tripCount, maintenanceCount, partEventCount, totalTripKm, averageTripKm ]
+      properties:
+        eventCount:
+          type: integer
+        refuelCount:
+          type: integer
+        tripCount:
+          type: integer
+        maintenanceCount:
+          type: integer
+        partEventCount:
+          type: integer
+        totalTripKm:
+          type: integer
+        averageTripKm:
+          type: number

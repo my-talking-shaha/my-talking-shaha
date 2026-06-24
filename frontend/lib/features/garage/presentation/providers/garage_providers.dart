@@ -1,4 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:frontend/core/network/api_client.dart';
+import 'package:frontend/features/garage/data/datasources/garage_api_datasource.dart';
+import 'package:frontend/features/garage/data/datasources/garage_datasource.dart';
 import 'package:frontend/features/garage/data/datasources/in_memory_garage_datasource.dart';
 import 'package:frontend/features/garage/data/repositories/garage_repository_impl.dart';
 import 'package:frontend/features/garage/domain/entities/vehicle.dart';
@@ -14,8 +17,16 @@ final inMemoryGarageDatasourceProvider = Provider<InMemoryGarageDatasource>((
   return InMemoryGarageDatasource();
 });
 
+final garageApiDatasourceProvider = Provider<GarageApiDatasource>((ref) {
+  return GarageApiDatasource(ref.watch(dioProvider));
+});
+
+final garageDatasourceProvider = Provider<GarageDatasource>((ref) {
+  return ref.watch(garageApiDatasourceProvider);
+});
+
 final garageRepositoryProvider = Provider<GarageRepository>((ref) {
-  return GarageRepositoryImpl(ref.watch(inMemoryGarageDatasourceProvider));
+  return GarageRepositoryImpl(ref.watch(garageDatasourceProvider));
 });
 
 final getGarageVehiclesProvider = Provider<GetGarageVehicles>((ref) {

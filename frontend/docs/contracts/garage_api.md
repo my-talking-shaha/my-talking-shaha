@@ -20,7 +20,7 @@ Response `200`:
     "color": "blue",
     "mileageKm": 124580,
     "fuelType": "GASOLINE",
-    "engineVolumeLiters": 1.6,
+    "engineDescription": "1.6 L",
     "vin": "XTA21060012345678",
     "photoUrl": null
   }
@@ -47,7 +47,7 @@ Request:
   "color": "blue",
   "mileageKm": 124580,
   "fuelType": "GASOLINE",
-  "engineVolumeLiters": 1.6,
+  "engineDescription": "1.6 L",
   "vin": "XTA21060012345678"
 }
 ```
@@ -63,7 +63,7 @@ Response `201`:
   "color": "blue",
   "mileageKm": 124580,
   "fuelType": "GASOLINE",
-  "engineVolumeLiters": 1.6,
+  "engineDescription": "1.6 L",
   "vin": "XTA21060012345678",
   "photoUrl": null
 }
@@ -75,9 +75,7 @@ Validation:
 - productionYear required;
 - mileageKm >= 0;
 - fuelType required;
-- non-electric vehicles require `engineVolumeLiters > 0`;
-- electric vehicles require `enginePowerHp > 0`;
-- `engineVolumeLiters` and `enginePowerHp` are mutually exclusive;
+- `engineDescription` optional, e.g. `1.6 L` or `283 hp`;
 - color optional;
 - VIN optional, exactly 17 symbols if provided.
 

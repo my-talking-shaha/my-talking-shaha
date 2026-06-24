@@ -5,6 +5,7 @@ import 'package:frontend/app/theme/app_theme.dart';
 import 'package:frontend/features/analytics/data/datasources/mock_analytics_datasource.dart';
 import 'package:frontend/features/analytics/presentation/providers/analytics_providers.dart';
 import 'package:frontend/features/analytics/presentation/screens/analytics_screen.dart';
+import 'package:frontend/features/parts/presentation/providers/parts_providers.dart';
 
 void main() {
   testWidgets('renders mocked analytics dashboard and switches periods', (
@@ -15,8 +16,8 @@ void main() {
     expect(find.text('Intelligence'), findsOneWidget);
     expect(find.text('Analytics'), findsOneWidget);
     expect(find.text('342,500 ₽'), findsOneWidget);
-    expect(find.text('PERIOD EXPENSES'), findsOneWidget);
-    expect(find.text('REPAIR'), findsOneWidget);
+    expect(find.text('ANNUAL EXPENSES'), findsOneWidget);
+    expect(find.text('MAINTENANCE'), findsOneWidget);
     expect(find.text('FUEL'), findsOneWidget);
     expect(find.textContaining('Forecast'), findsNothing);
 
@@ -51,9 +52,10 @@ Future<void> _pumpAnalyticsScreen(
   await tester.pumpWidget(
     ProviderScope(
       overrides: [
-        mockAnalyticsDatasourceProvider.overrideWithValue(
+        analyticsDatasourceProvider.overrideWithValue(
           MockAnalyticsDatasource(delay: Duration.zero),
         ),
+        vehiclePartsProvider(vehicleId).overrideWith((ref) async => const []),
       ],
       child: MaterialApp(
         theme: AppTheme.dark,

@@ -10,14 +10,8 @@ import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 
-/**
- * Translates application exceptions into the common {@link ApiError} response.
- *
- * <p>Mapping: bean-validation failures and {@link IllegalArgumentException} → 400
- * {@code VALIDATION_ERROR}; {@link ResourceNotFoundException} → 404 {@code NOT_FOUND};
- * {@link ForbiddenException} → 403 {@code FORBIDDEN}.
- */
 @RestControllerAdvice
 public class GlobalExceptionHandler {
 
@@ -37,6 +31,16 @@ public class GlobalExceptionHandler {
     public ResponseEntity<ApiError> handleIllegalArgument(IllegalArgumentException exception) {
         log.warn("API error code=VALIDATION_ERROR message={}", exception.getMessage());
         return ResponseEntity.badRequest().body(ApiError.of("VALIDATION_ERROR", exception.getMessage()));
+    }
+
+    @ExceptionHandler(MethodArgumentTypeMismatchException.class)
+    public ResponseEntity<ApiError> handleTypeMismatch(MethodArgumentTypeMismatchException exception) {
+        log.warn("API error code=VALIDATION_ERROR parameter={}", exception.getName());
+        return ResponseEntity.badRequest()
+                .body(new ApiError(
+                        "VALIDATION_ERROR",
+                        "Request contains invalid fields",
+                        Map.of(exception.getName(), "Invalid value")));
     }
 
     @ExceptionHandler(ResourceNotFoundException.class)

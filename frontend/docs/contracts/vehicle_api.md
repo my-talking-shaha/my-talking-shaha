@@ -21,7 +21,7 @@ Response:
     "vin": "XTA21060012345678",
     "mileageKm": 124580,
     "fuelType": "GASOLINE",
-    "engineVolumeLiters": 1.6,
+    "engineDescription": "1.6 L",
     "photoUrl": null
   },
   "maintenanceForecast": {
@@ -54,14 +54,13 @@ Request example:
   "color": "dark blue",
   "vin": "XTA21060012345678",
   "mileageKm": 125000,
-  "engineVolumeLiters": 1.6
+  "engineDescription": "1.6 L"
 }
 ```
 
-Response: updated vehicle dashboard object or basic vehicle object.
+Response: basic vehicle object.
 
-Engine specification fields are mutually exclusive: non-electric vehicles use
-`engineVolumeLiters`, while electric vehicles use `enginePowerHp`.
+Backend stores engine details in `engineDescription`.
 
 ## Upload Vehicle Photo
 

@@ -18,7 +18,7 @@ final class GarageValidationException implements Exception {
 }
 
 abstract final class VehicleDraftValidator {
-  static const int _firstCarYear = 1886;
+  static const int _firstSupportedCarYear = 1900;
 
   static VehicleDraftValidationResult validate(VehicleDraft draft) {
     final errors = <String, String>{};
@@ -30,8 +30,8 @@ abstract final class VehicleDraftValidator {
     if (draft.model.trim().isEmpty) {
       errors['model'] = 'Enter a model';
     }
-    if (draft.year < _firstCarYear || draft.year > currentYear) {
-      errors['year'] = 'Enter a realistic production year';
+    if (draft.year < _firstSupportedCarYear || draft.year > currentYear) {
+      errors['year'] = 'Enter a production year from 1900 to $currentYear';
     }
     if (draft.currentMileageKm < 0) {
       errors['currentMileageKm'] = 'Mileage cannot be negative';
