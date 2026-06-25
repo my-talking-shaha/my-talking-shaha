@@ -3,6 +3,10 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:frontend/app/app.dart';
 import 'package:frontend/app/router.dart';
+import 'package:frontend/features/auth/domain/entities/auth_credentials.dart';
+import 'package:frontend/features/auth/domain/entities/auth_session.dart';
+import 'package:frontend/features/auth/domain/repositories/auth_repository.dart';
+import 'package:frontend/features/auth/presentation/providers/auth_providers.dart';
 import 'package:frontend/features/dashboard/presentation/screens/dashboard_screen.dart';
 import 'package:frontend/features/garage/data/datasources/in_memory_garage_datasource.dart';
 import 'package:frontend/features/garage/presentation/providers/garage_providers.dart';
@@ -165,9 +169,8 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.byType(AddHistoryEventScreen), findsNothing);
-    final eventsFuture = app.container
-        .read(historyRepositoryProvider)
-        .getEvents('vehicle_123');
+    final eventsFuture =
+        app.container.read(historyRepositoryProvider).getEvents('vehicle_123');
     await tester.pump(const Duration(milliseconds: 600));
     final events = await eventsFuture;
     expect(events.any((event) => event.title == 'Highway refueling'), isTrue);
@@ -183,6 +186,8 @@ Future<_TestApp> _pumpApp(
   final historyDatasource = MockHistoryDatasource(delay: Duration.zero);
   final container = ProviderContainer(
     overrides: [
+      authRepositoryProvider
+          .overrideWithValue(const _AuthenticatedRepository()),
       garageDatasourceProvider.overrideWithValue(garageDatasource),
       historyDatasourceProvider.overrideWithValue(historyDatasource),
     ],
@@ -222,4 +227,30 @@ final class _TestApp {
 
   final GoRouter router;
   final ProviderContainer container;
+}
+
+final class _AuthenticatedRepository implements AuthRepository {
+  const _AuthenticatedRepository();
+
+  @override
+  Future<AuthSession?> restoreSession() async {
+    return const AuthSession(
+      token: 'test-token',
+      email: 'driver@example.com',
+      fullName: 'Test Driver',
+    );
+  }
+
+  @override
+  Future<AuthSession> register(RegistrationCredentials credentials) {
+    throw UnimplementedError();
+  }
+
+  @override
+  Future<AuthSession> login(LoginCredentials credentials) {
+    throw UnimplementedError();
+  }
+
+  @override
+  Future<void> logout() async {}
 }
