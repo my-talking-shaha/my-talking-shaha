@@ -1,0 +1,151 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  backend:
+    name: Backend build and tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    defaults:
+      run:
+        working-directory: backend
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+          cache: maven
+          cache-dependency-path: backend/pom.xml
+
+      - name: Make Maven wrapper executable
+        run: chmod +x mvnw
+
+      - name: Run backend-team tests and build package
+        run: ./mvnw -B -ntp verify
+
+  frontend:
+    name: Frontend lint, build, and tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    defaults:
+      run:
+        working-directory: frontend
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.38.4'
+          channel: stable
+          cache: true
+
+      - name: Install frontend dependencies
+        run: flutter pub get
+
+      - name: Check Dart formatting
+        run: dart format --set-exit-if-changed .
+
+      - name: Analyze Flutter code
+        run: flutter analyze
+
+      - name: Run Flutter tests
+        run: flutter test
+
+      - name: Build Flutter web app
+        run: flutter build web --release --dart-define=API_BASE_URL=/api/v1
+
+  docker-smoke-test:
+    name: Application Docker smoke test
+    needs:
+      - backend
+      - frontend
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build and start application stack
+        env:
+          DOCKER_BUILDKIT: 1
+        run: docker compose -f docker/docker-compose.yml -f docker/docker-compose.ci.yml up -d --build --remove-orphans backend frontend
+
+      - name: Wait for backend health
+        run: |
+          set -euo pipefail
+
+          for attempt in {1..30}; do
+            if curl -fsS http://localhost:8080/actuator/health; then
+              exit 0
+            fi
+
+            echo "Backend is not healthy yet, retry $attempt/30"
+            sleep 5
+          done
+
+          echo "Backend did not become healthy in time" >&2
+          docker compose -f docker/docker-compose.yml -f docker/docker-compose.ci.yml ps postgres backend frontend
+          docker compose -f docker/docker-compose.yml -f docker/docker-compose.ci.yml logs --no-color postgres backend frontend
+          exit 1
+
+      - name: Wait for frontend health
+        run: |
+          set -euo pipefail
+
+          for attempt in {1..30}; do
+            if curl -fsS http://localhost/health; then
+              exit 0
+            fi
+
+            echo "Frontend is not healthy yet, retry $attempt/30"
+            sleep 5
+          done
+
+          echo "Frontend did not become healthy in time" >&2
+          docker compose -f docker/docker-compose.yml -f docker/docker-compose.ci.yml ps postgres backend frontend
+          docker compose -f docker/docker-compose.yml -f docker/docker-compose.ci.yml logs --no-color postgres backend frontend
+          exit 1
+
+      - name: Verify OpenAPI docs
+        run: curl -fsS http://localhost/v3/api-docs >/dev/null
+
+      - name: Verify Swagger UI
+        run: |
+          set -euo pipefail
+
+          curl -fsS http://localhost/swagger-ui.html | grep -q "SwaggerUIBundle"
+          curl -fsS http://localhost/webjars/swagger-ui/5.32.2/swagger-ui.css | grep -q "swagger-ui"
+
+      - name: Dump application stack logs
+        if: always()
+        run: docker compose -f docker/docker-compose.yml -f docker/docker-compose.ci.yml logs --no-color postgres backend frontend || true
+
+      - name: Stop application stack
+        if: always()
+        run: docker compose -f docker/docker-compose.yml -f docker/docker-compose.ci.yml down -v --remove-orphans
