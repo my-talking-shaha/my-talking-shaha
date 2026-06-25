@@ -4,6 +4,7 @@ import 'package:frontend/app/theme/app_theme.dart';
 import 'package:frontend/features/auth/domain/entities/auth_credentials.dart';
 import 'package:frontend/features/auth/presentation/providers/auth_providers.dart';
 import 'package:frontend/features/auth/presentation/widgets/auth_error_banner.dart';
+import 'package:frontend/features/auth/presentation/widgets/auth_screen_scaffold.dart';
 import 'package:go_router/go_router.dart';
 
 final class LoginScreen extends ConsumerStatefulWidget {
@@ -32,105 +33,114 @@ final class _LoginScreenState extends ConsumerState<LoginScreen> {
     final authState = ref.watch(authControllerProvider);
     final isSubmitting = authState.isLoading;
 
-    return Scaffold(
-      body: SafeArea(
-        child: Center(
-          child: SingleChildScrollView(
-            padding: const EdgeInsets.all(AppSpacing.xl),
-            child: ConstrainedBox(
-              constraints: const BoxConstraints(maxWidth: 420),
-              child: Form(
-                key: _formKey,
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    Text(
-                      'My Talking Shaha',
-                      style: Theme.of(context).textTheme.headlineLarge,
-                    ),
-                    const SizedBox(height: AppSpacing.sm),
-                    Text(
-                      'Log in to continue to your garage.',
-                      style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                            color: AppColors.textSecondary,
-                          ),
-                    ),
-                    const SizedBox(height: AppSpacing.xxxl),
-                    if (_errorMessage != null) ...[
-                      AuthErrorBanner(message: _errorMessage!),
-                      const SizedBox(height: AppSpacing.lg),
-                    ],
-                    TextFormField(
-                      controller: _loginController,
-                      enabled: !isSubmitting,
-                      textInputAction: TextInputAction.next,
-                      decoration: const InputDecoration(
-                        labelText: 'Login',
-                        prefixIcon: Icon(Icons.account_circle_outlined),
-                      ),
-                      validator: _requiredValidator('Enter your login'),
-                      onChanged: (_) => _clearError(),
-                    ),
+    return AuthScreenScaffold(
+      useLoginBackground: true,
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Text(
+            'My Talking\nShaha',
+            textAlign: TextAlign.center,
+            style: Theme.of(context).textTheme.headlineLarge?.copyWith(
+                  color: AppColors.primaryLight,
+                  fontSize: 46,
+                  fontWeight: FontWeight.w900,
+                  height: 1.12,
+                ),
+          ),
+          const SizedBox(height: 52),
+          AuthFormCard(
+            child: Form(
+              key: _formKey,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  if (_errorMessage != null) ...[
+                    AuthErrorBanner(message: _errorMessage!),
                     const SizedBox(height: AppSpacing.lg),
-                    TextFormField(
-                      controller: _passwordController,
-                      enabled: !isSubmitting,
-                      obscureText: _obscurePassword,
-                      textInputAction: TextInputAction.done,
-                      decoration: InputDecoration(
-                        labelText: 'Password',
-                        helperText: 'At least 8 characters',
-                        prefixIcon: const Icon(Icons.lock_outline),
-                        suffixIcon: IconButton(
-                          tooltip: _obscurePassword
-                              ? 'Show password'
-                              : 'Hide password',
-                          onPressed: isSubmitting
-                              ? null
-                              : () {
-                                  setState(() {
-                                    _obscurePassword = !_obscurePassword;
-                                  });
-                                },
-                          icon: Icon(
-                            _obscurePassword
-                                ? Icons.visibility_outlined
-                                : Icons.visibility_off_outlined,
-                          ),
-                        ),
-                      ),
-                      validator: _requiredValidator('Enter your password'),
-                      onChanged: (_) => _clearError(),
-                      onFieldSubmitted: (_) => _submit(),
-                    ),
-                    const SizedBox(height: AppSpacing.xxl),
-                    SizedBox(
-                      height: 52,
-                      child: ElevatedButton(
-                        onPressed: isSubmitting ? null : _submit,
-                        child: isSubmitting
-                            ? const SizedBox.square(
-                                dimension: 20,
-                                child: CircularProgressIndicator(
-                                  strokeWidth: 2.4,
-                                ),
-                              )
-                            : const Text('Log in'),
-                      ),
-                    ),
-                    const SizedBox(height: AppSpacing.lg),
-                    TextButton(
+                  ],
+                  AuthTextField(
+                    label: 'Login',
+                    controller: _loginController,
+                    enabled: !isSubmitting,
+                    hintText: 'Enter your login',
+                    prefixIcon: const Icon(Icons.person_outline),
+                    textInputAction: TextInputAction.next,
+                    validator: _requiredValidator('Enter your login'),
+                    onChanged: (_) => _clearError(),
+                  ),
+                  const SizedBox(height: AppSpacing.lg),
+                  AuthTextField(
+                    label: 'Password',
+                    controller: _passwordController,
+                    enabled: !isSubmitting,
+                    hintText: 'At least 8 characters',
+                    helperText: 'At least 8 characters',
+                    prefixIcon: const Icon(Icons.lock_outline),
+                    suffixIcon: IconButton(
+                      tooltip:
+                          _obscurePassword ? 'Show password' : 'Hide password',
                       onPressed: isSubmitting
                           ? null
-                          : () => context.go('/registration'),
-                      child: const Text('Create an account'),
+                          : () {
+                              setState(() {
+                                _obscurePassword = !_obscurePassword;
+                              });
+                            },
+                      icon: Icon(
+                        _obscurePassword
+                            ? Icons.visibility_outlined
+                            : Icons.visibility_off_outlined,
+                      ),
                     ),
-                  ],
-                ),
+                    obscureText: _obscurePassword,
+                    textInputAction: TextInputAction.done,
+                    validator: _requiredValidator('Enter your password'),
+                    onChanged: (_) => _clearError(),
+                    onFieldSubmitted: (_) => _submit(),
+                  ),
+                  Align(
+                    alignment: Alignment.centerRight,
+                    child: TextButton(
+                      onPressed: isSubmitting ? null : () {},
+                      child: const Text('Forgot password?'),
+                    ),
+                  ),
+                  const SizedBox(height: AppSpacing.md),
+                  AuthPrimaryButton(
+                    label: 'Log in',
+                    isLoading: isSubmitting,
+                    onPressed: _submit,
+                    showArrow: true,
+                  ),
+                  const SizedBox(height: AppSpacing.xxxl),
+                  const AuthSocialDivider(),
+                  const SizedBox(height: AppSpacing.xxl),
+                  AuthYandexButton(enabled: !isSubmitting),
+                ],
               ),
             ),
           ),
-        ),
+          const SizedBox(height: AppSpacing.xxl),
+          Wrap(
+            alignment: WrapAlignment.center,
+            crossAxisAlignment: WrapCrossAlignment.center,
+            children: [
+              Text(
+                'No account?',
+                style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                      color: AppColors.textSecondary,
+                    ),
+              ),
+              TextButton(
+                onPressed:
+                    isSubmitting ? null : () => context.go('/registration'),
+                child: const Text('Register'),
+              ),
+            ],
+          ),
+        ],
       ),
     );
   }
