@@ -11,6 +11,8 @@ import org.springframework.transaction.annotation.Transactional;
 import ru.talkingshaha.backend.common.error.ForbiddenException;
 import ru.talkingshaha.backend.common.error.ResourceNotFoundException;
 import ru.talkingshaha.backend.common.model.BaseEvent;
+import ru.talkingshaha.backend.chat.repository.ChatMessageRepository;
+import ru.talkingshaha.backend.chat.repository.ChatSessionRepository;
 import ru.talkingshaha.backend.part.dto.PartResponse;
 import ru.talkingshaha.backend.part.model.PartStatus;
 import ru.talkingshaha.backend.part.repository.PartRepository;
@@ -37,16 +39,22 @@ public class VehicleService {
     private final VehicleRepository vehicles;
     private final PartRepository parts;
     private final TimelineEventRepository events;
+    private final ChatSessionRepository chatSessions;
+    private final ChatMessageRepository chatMessages;
     private final CurrentUserService currentUserService;
 
     public VehicleService(
             VehicleRepository vehicles,
             PartRepository parts,
             TimelineEventRepository events,
+            ChatSessionRepository chatSessions,
+            ChatMessageRepository chatMessages,
             CurrentUserService currentUserService) {
         this.vehicles = vehicles;
         this.parts = parts;
         this.events = events;
+        this.chatSessions = chatSessions;
+        this.chatMessages = chatMessages;
         this.currentUserService = currentUserService;
     }
 
@@ -94,6 +102,10 @@ public class VehicleService {
     @Transactional
     public void deleteVehicle(UUID vehicleId) {
         Vehicle vehicle = requireOwnedVehicle(vehicleId);
+        chatSessions.findByVehicle(vehicle).ifPresent(session -> {
+            chatMessages.deleteAll(chatMessages.findAllBySessionOrderByCreatedAtAsc(session));
+            chatSessions.delete(session);
+        });
         events.deleteAll(events.findAllByVehicleOrderByEventDateTimeDesc(vehicle));
         parts.deleteAll(parts.findAllByVehicleOrderByInstalledAtDescNameAsc(vehicle));
         vehicles.delete(vehicle);
