@@ -20,7 +20,7 @@ final garageDatasourceProvider = Provider<GarageDatasource>((ref) {
   ref.watch(
     authControllerProvider.select(
       (state) => state.maybeWhen(
-        data: (session) => session?.email,
+        data: (session) => session?.login,
         orElse: () => null,
       ),
     ),

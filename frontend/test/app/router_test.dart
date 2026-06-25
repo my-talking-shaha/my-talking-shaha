@@ -236,7 +236,7 @@ final class _AuthenticatedRepository implements AuthRepository {
   Future<AuthSession?> restoreSession() async {
     return const AuthSession(
       token: 'test-token',
-      email: 'driver@example.com',
+      login: 'driver',
       fullName: 'Test Driver',
     );
   }

@@ -15,14 +15,14 @@ final class LoginScreen extends ConsumerStatefulWidget {
 
 final class _LoginScreenState extends ConsumerState<LoginScreen> {
   final _formKey = GlobalKey<FormState>();
-  final _emailController = TextEditingController();
+  final _loginController = TextEditingController();
   final _passwordController = TextEditingController();
   String? _errorMessage;
   bool _obscurePassword = true;
 
   @override
   void dispose() {
-    _emailController.dispose();
+    _loginController.dispose();
     _passwordController.dispose();
     super.dispose();
   }
@@ -61,15 +61,14 @@ final class _LoginScreenState extends ConsumerState<LoginScreen> {
                       const SizedBox(height: AppSpacing.lg),
                     ],
                     TextFormField(
-                      controller: _emailController,
+                      controller: _loginController,
                       enabled: !isSubmitting,
-                      keyboardType: TextInputType.emailAddress,
                       textInputAction: TextInputAction.next,
                       decoration: const InputDecoration(
-                        labelText: 'Email',
-                        prefixIcon: Icon(Icons.mail_outline),
+                        labelText: 'Login',
+                        prefixIcon: Icon(Icons.account_circle_outlined),
                       ),
-                      validator: _requiredValidator('Enter your email'),
+                      validator: _requiredValidator('Enter your login'),
                       onChanged: (_) => _clearError(),
                     ),
                     const SizedBox(height: AppSpacing.lg),
@@ -80,6 +79,7 @@ final class _LoginScreenState extends ConsumerState<LoginScreen> {
                       textInputAction: TextInputAction.done,
                       decoration: InputDecoration(
                         labelText: 'Password',
+                        helperText: 'At least 8 characters',
                         prefixIcon: const Icon(Icons.lock_outline),
                         suffixIcon: IconButton(
                           tooltip: _obscurePassword
@@ -156,7 +156,7 @@ final class _LoginScreenState extends ConsumerState<LoginScreen> {
 
     final message = await ref.read(authControllerProvider.notifier).login(
           LoginCredentials(
-            email: _emailController.text,
+            login: _loginController.text,
             password: _passwordController.text,
           ),
         );

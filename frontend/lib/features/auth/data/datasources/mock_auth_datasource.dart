@@ -8,9 +8,9 @@ final class MockAuthDatasource implements AuthDatasource {
 
   final Duration delay;
   final Map<String, _MockAccount> _accounts = {
-    'driver@example.com': const _MockAccount(
+    'driver': const _MockAccount(
       fullName: 'Demo Driver',
-      email: 'driver@example.com',
+      login: 'driver',
       password: 'password123',
     ),
   };
@@ -19,7 +19,7 @@ final class MockAuthDatasource implements AuthDatasource {
   Future<AuthSession> register(RegistrationCredentials credentials) async {
     await Future<void>.delayed(delay);
     final normalized = credentials.trimmed();
-    final email = normalized.email.toLowerCase();
+    final login = normalized.login.toLowerCase();
 
     if (!_isStrongPassword(normalized.password)) {
       throw const AuthException(
@@ -28,19 +28,19 @@ final class MockAuthDatasource implements AuthDatasource {
       );
     }
 
-    if (email == 'existing@example.com' || _accounts.containsKey(email)) {
+    if (login == 'existing' || _accounts.containsKey(login)) {
       throw const AuthException(
         AuthErrorCode.conflict,
-        'Email already exists',
+        'Login already exists',
       );
     }
 
     final account = _MockAccount(
       fullName: normalized.fullName,
-      email: email,
+      login: login,
       password: normalized.password,
     );
-    _accounts[email] = account;
+    _accounts[login] = account;
 
     return _sessionFor(account);
   }
@@ -49,16 +49,16 @@ final class MockAuthDatasource implements AuthDatasource {
   Future<AuthSession> login(LoginCredentials credentials) async {
     await Future<void>.delayed(delay);
     final normalized = credentials.trimmed();
-    final email = normalized.email.toLowerCase();
+    final login = normalized.login.toLowerCase();
 
-    if (email == 'network@example.com') {
+    if (login == 'network') {
       throw const AuthException(
         AuthErrorCode.network,
         'Network error. Please try again later',
       );
     }
 
-    final account = _accounts[email];
+    final account = _accounts[login];
     if (account == null || account.password != normalized.password) {
       throw const AuthException(
         AuthErrorCode.unauthorized,
@@ -80,8 +80,8 @@ final class MockAuthDatasource implements AuthDatasource {
 
   AuthSession _sessionFor(_MockAccount account) {
     return AuthSession(
-      token: 'mock-token-${account.email}',
-      email: account.email,
+      token: 'mock-token-${account.login}',
+      login: account.login,
       fullName: account.fullName,
     );
   }
@@ -90,11 +90,11 @@ final class MockAuthDatasource implements AuthDatasource {
 final class _MockAccount {
   const _MockAccount({
     required this.fullName,
-    required this.email,
+    required this.login,
     required this.password,
   });
 
   final String fullName;
-  final String email;
+  final String login;
   final String password;
 }

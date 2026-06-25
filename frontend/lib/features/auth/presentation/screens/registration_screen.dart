@@ -16,7 +16,7 @@ final class RegistrationScreen extends ConsumerStatefulWidget {
 final class _RegistrationScreenState extends ConsumerState<RegistrationScreen> {
   final _formKey = GlobalKey<FormState>();
   final _fullNameController = TextEditingController();
-  final _emailController = TextEditingController();
+  final _loginController = TextEditingController();
   final _passwordController = TextEditingController();
   String? _errorMessage;
   bool _obscurePassword = true;
@@ -24,7 +24,7 @@ final class _RegistrationScreenState extends ConsumerState<RegistrationScreen> {
   @override
   void dispose() {
     _fullNameController.dispose();
-    _emailController.dispose();
+    _loginController.dispose();
     _passwordController.dispose();
     super.dispose();
   }
@@ -75,15 +75,14 @@ final class _RegistrationScreenState extends ConsumerState<RegistrationScreen> {
                     ),
                     const SizedBox(height: AppSpacing.lg),
                     TextFormField(
-                      controller: _emailController,
+                      controller: _loginController,
                       enabled: !isSubmitting,
-                      keyboardType: TextInputType.emailAddress,
                       textInputAction: TextInputAction.next,
                       decoration: const InputDecoration(
-                        labelText: 'Email',
-                        prefixIcon: Icon(Icons.mail_outline),
+                        labelText: 'Login',
+                        prefixIcon: Icon(Icons.account_circle_outlined),
                       ),
-                      validator: _requiredValidator('Enter your email'),
+                      validator: _requiredValidator('Enter your login'),
                       onChanged: (_) => _clearError(),
                     ),
                     const SizedBox(height: AppSpacing.lg),
@@ -94,6 +93,7 @@ final class _RegistrationScreenState extends ConsumerState<RegistrationScreen> {
                       textInputAction: TextInputAction.done,
                       decoration: InputDecoration(
                         labelText: 'Password',
+                        helperText: 'At least 8 characters',
                         prefixIcon: const Icon(Icons.lock_outline),
                         suffixIcon: IconButton(
                           tooltip: _obscurePassword
@@ -170,7 +170,7 @@ final class _RegistrationScreenState extends ConsumerState<RegistrationScreen> {
     final message = await ref.read(authControllerProvider.notifier).register(
           RegistrationCredentials(
             fullName: _fullNameController.text,
-            email: _emailController.text,
+            login: _loginController.text,
             password: _passwordController.text,
           ),
         );
