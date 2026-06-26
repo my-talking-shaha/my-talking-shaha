@@ -17,49 +17,48 @@ final class _SettingsScreenState extends State<SettingsScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Profile')),
+      appBar: AppBar(
+        centerTitle: true,
+        title: Text(
+          'Profile',
+          style: Theme.of(context).textTheme.headlineMedium,
+        ),
+      ),
       body: SafeArea(
         child: ListView(
-          padding: const EdgeInsets.all(AppSpacing.xl),
+          padding: const EdgeInsets.fromLTRB(
+            AppSpacing.xl,
+            AppSpacing.xxl,
+            AppSpacing.xl,
+            AppSpacing.xxl,
+          ),
           children: [
             const _ProfileHeaderCard(
               fullName: 'Alex Driver',
               email: 'alex.driver@example.com',
             ),
-            const SizedBox(height: AppSpacing.xl),
+            const SizedBox(height: AppSpacing.xxxl),
+            _ThemeSection(
+              selectedTheme: _theme,
+              onChanged: (value) {
+                setState(() {
+                  _theme = value;
+                });
+              },
+            ),
+            const SizedBox(height: AppSpacing.xxl),
             _SettingsSection(
-              title: 'Preferences',
+              title: 'General',
               children: [
                 _SettingsTile(
-                  icon: Icons.dark_mode_outlined,
-                  title: 'Theme',
-                  trailing: SegmentedButton<String>(
-                    segments: const [
-                      ButtonSegment(value: 'Dark', label: Text('Dark')),
-                      ButtonSegment(value: 'Light', label: Text('Light')),
-                    ],
-                    selected: {_theme},
-                    showSelectedIcon: false,
-                    onSelectionChanged: (selection) {
-                      setState(() {
-                        _theme = selection.first;
-                      });
-                    },
-                  ),
-                ),
-                _SettingsTile(
                   icon: Icons.language_rounded,
-                  title: 'Language',
-                  trailing: SegmentedButton<String>(
-                    segments: const [
-                      ButtonSegment(value: 'ENG', label: Text('ENG')),
-                      ButtonSegment(value: 'RU', label: Text('RU')),
-                    ],
-                    selected: {_language},
-                    showSelectedIcon: false,
-                    onSelectionChanged: (selection) {
+                  title: 'App language',
+                  subtitle: _language == 'ENG' ? 'English' : 'Russian',
+                  trailing: _LanguageChoice(
+                    selectedLanguage: _language,
+                    onChanged: (value) {
                       setState(() {
-                        _language = selection.first;
+                        _language = value;
                       });
                     },
                   ),
@@ -78,9 +77,9 @@ final class _SettingsScreenState extends State<SettingsScreen> {
                 ),
               ],
             ),
-            const SizedBox(height: AppSpacing.xl),
+            const SizedBox(height: AppSpacing.xxl),
             _SettingsSection(
-              title: 'Notifications',
+              title: 'Vehicle',
               children: [
                 _SettingsTile(
                   actionKey: const ValueKey('profile_all_notifications_action'),
@@ -94,9 +93,8 @@ final class _SettingsScreenState extends State<SettingsScreen> {
                 ),
               ],
             ),
-            const SizedBox(height: AppSpacing.xl),
-            OutlinedButton.icon(
-              key: const ValueKey('profile_logout_action'),
+            const SizedBox(height: AppSpacing.xxxl),
+            _LogoutTile(
               onPressed: () {
                 ScaffoldMessenger.of(context).showSnackBar(
                   const SnackBar(
@@ -104,12 +102,6 @@ final class _SettingsScreenState extends State<SettingsScreen> {
                   ),
                 );
               },
-              icon: const Icon(Icons.logout_rounded),
-              label: const Text('Log out'),
-              style: OutlinedButton.styleFrom(
-                foregroundColor: AppColors.error,
-                side: const BorderSide(color: AppColors.error),
-              ),
             ),
           ],
         ),
@@ -126,42 +118,33 @@ final class _ProfileHeaderCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(AppSpacing.xl),
-        child: Row(
-          children: [
-            Container(
-              width: 72,
-              height: 72,
-              alignment: Alignment.center,
-              decoration: BoxDecoration(
-                color: AppColors.surfaceHighest,
-                borderRadius: BorderRadius.circular(AppRadius.lg),
-                border: Border.all(color: AppColors.border),
-              ),
-              child: Text(
-                _initials(fullName),
-                style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                      color: AppColors.primaryLight,
+    return _SurfaceCard(
+      child: ConstrainedBox(
+        constraints: const BoxConstraints(minHeight: 104),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(
+            horizontal: AppSpacing.xl,
+            vertical: AppSpacing.lg,
+          ),
+          child: Row(
+            children: [
+              _ProfileAvatar(initials: _initials(fullName)),
+              const SizedBox(width: AppSpacing.lg),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      fullName,
+                      style: Theme.of(context).textTheme.titleLarge,
                     ),
+                    const SizedBox(height: AppSpacing.xs),
+                    Text(email, style: Theme.of(context).textTheme.bodyMedium),
+                  ],
+                ),
               ),
-            ),
-            const SizedBox(width: AppSpacing.lg),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    fullName,
-                    style: Theme.of(context).textTheme.titleLarge,
-                  ),
-                  const SizedBox(height: AppSpacing.xs),
-                  Text(email, style: Theme.of(context).textTheme.bodyMedium),
-                ],
-              ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );
@@ -178,6 +161,191 @@ final class _ProfileHeaderCard extends StatelessWidget {
   }
 }
 
+final class _SurfaceCard extends StatelessWidget {
+  const _SurfaceCard({required this.child, this.borderColor});
+
+  final Widget child;
+  final Color? borderColor;
+
+  @override
+  Widget build(BuildContext context) {
+    return Card(
+      shape: RoundedRectangleBorder(
+        borderRadius: AppRadius.card,
+        side: BorderSide(color: borderColor ?? AppColors.border),
+      ),
+      child: child,
+    );
+  }
+}
+
+final class _ProfileAvatar extends StatelessWidget {
+  const _ProfileAvatar({required this.initials});
+
+  final String initials;
+
+  @override
+  Widget build(BuildContext context) {
+    return Stack(
+      clipBehavior: Clip.none,
+      children: [
+        Container(
+          width: 64,
+          height: 64,
+          alignment: Alignment.center,
+          decoration: BoxDecoration(
+            color: AppColors.surfaceHighest,
+            shape: BoxShape.circle,
+            border: Border.all(color: AppColors.border),
+          ),
+          child: Text(
+            initials,
+            style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                  color: AppColors.primaryLight,
+                ),
+          ),
+        ),
+        Positioned(
+          right: -1,
+          bottom: 4,
+          child: Container(
+            width: 18,
+            height: 18,
+            decoration: BoxDecoration(
+              color: AppColors.primary,
+              shape: BoxShape.circle,
+              border: Border.all(color: AppColors.surface, width: 2),
+            ),
+            child: const Icon(
+              Icons.check_rounded,
+              color: AppColors.white,
+              size: 11,
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+final class _ThemeSection extends StatelessWidget {
+  const _ThemeSection({
+    required this.selectedTheme,
+    required this.onChanged,
+  });
+
+  final String selectedTheme;
+  final ValueChanged<String> onChanged;
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const _SectionLabel('Theme'),
+        const SizedBox(height: AppSpacing.md),
+        Container(
+          padding: const EdgeInsets.all(AppSpacing.xs),
+          decoration: BoxDecoration(
+            color: AppColors.surface,
+            borderRadius: AppRadius.input,
+            border: Border.all(color: AppColors.border),
+          ),
+          child: Row(
+            children: [
+              _ThemeSegment(
+                label: 'Light',
+                selected: selectedTheme == 'Light',
+                onTap: () => onChanged('Light'),
+              ),
+              _ThemeSegment(
+                label: 'Dark',
+                selected: selectedTheme == 'Dark',
+                onTap: () => onChanged('Dark'),
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+final class _ThemeSegment extends StatelessWidget {
+  const _ThemeSegment({
+    required this.label,
+    required this.selected,
+    required this.onTap,
+  });
+
+  final String label;
+  final bool selected;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return Expanded(
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: AppRadius.input,
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 160),
+          alignment: Alignment.center,
+          padding: const EdgeInsets.symmetric(vertical: AppSpacing.md),
+          decoration: BoxDecoration(
+            color: selected ? AppColors.primary : Colors.transparent,
+            borderRadius: AppRadius.input,
+          ),
+          child: Text(
+            label,
+            style: Theme.of(context).textTheme.labelLarge?.copyWith(
+                  color: selected ? AppColors.white : AppColors.textSecondary,
+                ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+final class _LanguageChoice extends StatelessWidget {
+  const _LanguageChoice({
+    required this.selectedLanguage,
+    required this.onChanged,
+  });
+
+  final String selectedLanguage;
+  final ValueChanged<String> onChanged;
+
+  @override
+  Widget build(BuildContext context) {
+    return PopupMenuButton<String>(
+      initialValue: selectedLanguage,
+      color: AppColors.surfaceHighest,
+      shape: const RoundedRectangleBorder(borderRadius: AppRadius.input),
+      onSelected: onChanged,
+      itemBuilder: (context) => const [
+        PopupMenuItem(value: 'ENG', child: Text('ENG')),
+        PopupMenuItem(value: 'RU', child: Text('RU')),
+      ],
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text(
+            selectedLanguage,
+            style: Theme.of(context).textTheme.labelLarge,
+          ),
+          const SizedBox(width: AppSpacing.xs),
+          const Icon(
+            Icons.chevron_right_rounded,
+            color: AppColors.textMuted,
+          ),
+        ],
+      ),
+    );
+  }
+}
+
 final class _SettingsSection extends StatelessWidget {
   const _SettingsSection({required this.title, required this.children});
 
@@ -189,21 +357,36 @@ final class _SettingsSection extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(title.toUpperCase(),
-            style: Theme.of(context).textTheme.labelMedium),
-        const SizedBox(height: AppSpacing.sm),
-        Card(
+        _SectionLabel(title),
+        const SizedBox(height: AppSpacing.md),
+        _SurfaceCard(
           child: Column(
             children: [
-              for (var index = 0; index < children.length; index++) ...[
-                children[index],
-                if (index != children.length - 1)
-                  const Divider(height: 1, indent: 56),
-              ],
+              for (final child in children) child,
             ],
           ),
         ),
       ],
+    );
+  }
+}
+
+final class _SectionLabel extends StatelessWidget {
+  const _SectionLabel(this.title);
+
+  final String title;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.only(left: AppSpacing.xs),
+      child: Text(
+        title.toUpperCase(),
+        style: Theme.of(context).textTheme.labelMedium?.copyWith(
+              letterSpacing: 1.8,
+              color: AppColors.textSecondary,
+            ),
+      ),
     );
   }
 }
@@ -215,11 +398,13 @@ final class _SettingsTile extends StatelessWidget {
     required this.trailing,
     this.actionKey,
     this.onTap,
+    this.subtitle,
   });
 
   final Key? actionKey;
   final IconData icon;
   final String title;
+  final String? subtitle;
   final Widget trailing;
   final VoidCallback? onTap;
 
@@ -232,19 +417,67 @@ final class _SettingsTile extends StatelessWidget {
       child: Padding(
         padding: const EdgeInsets.symmetric(
           horizontal: AppSpacing.lg,
-          vertical: AppSpacing.md,
+          vertical: AppSpacing.lg,
         ),
         child: Row(
           children: [
-            Icon(icon, color: AppColors.primaryLight),
+            Icon(icon, color: AppColors.textPrimary, size: 24),
             const SizedBox(width: AppSpacing.md),
             Expanded(
-              child:
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
                   Text(title, style: Theme.of(context).textTheme.titleMedium),
+                  if (subtitle != null) ...[
+                    const SizedBox(height: AppSpacing.xs),
+                    Text(
+                      subtitle!,
+                      style: Theme.of(context).textTheme.bodySmall,
+                    ),
+                  ],
+                ],
+              ),
             ),
             const SizedBox(width: AppSpacing.md),
             trailing,
           ],
+        ),
+      ),
+    );
+  }
+}
+
+final class _LogoutTile extends StatelessWidget {
+  const _LogoutTile({required this.onPressed});
+
+  final VoidCallback onPressed;
+
+  @override
+  Widget build(BuildContext context) {
+    return _SurfaceCard(
+      borderColor: AppColors.error.withValues(alpha: 0.4),
+      child: InkWell(
+        key: const ValueKey('profile_logout_action'),
+        onTap: onPressed,
+        borderRadius: AppRadius.card,
+        child: Padding(
+          padding: const EdgeInsets.symmetric(
+            horizontal: AppSpacing.lg,
+            vertical: AppSpacing.lg,
+          ),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              const Icon(Icons.logout_rounded, color: AppColors.error),
+              const SizedBox(width: AppSpacing.md),
+              Text(
+                'Log out',
+                style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                      color: AppColors.error,
+                    ),
+              ),
+            ],
+          ),
         ),
       ),
     );

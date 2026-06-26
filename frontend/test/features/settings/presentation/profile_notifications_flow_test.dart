@@ -13,15 +13,25 @@ void main() {
     expect(find.text('Profile'), findsOneWidget);
     expect(find.text('Alex Driver'), findsOneWidget);
     expect(find.text('alex.driver@example.com'), findsOneWidget);
-    expect(find.text('Theme'), findsOneWidget);
+    expect(find.text('THEME'), findsOneWidget);
     expect(find.text('Dark'), findsOneWidget);
     expect(find.text('Light'), findsOneWidget);
-    expect(find.text('Language'), findsOneWidget);
+    expect(find.text('GENERAL'), findsOneWidget);
+    expect(find.text('App language'), findsOneWidget);
+    expect(find.text('English'), findsOneWidget);
     expect(find.text('ENG'), findsOneWidget);
-    expect(find.text('RU'), findsOneWidget);
     expect(find.text('Notifications'), findsWidgets);
     expect(find.byType(Switch), findsOneWidget);
+    expect(find.text('VEHICLE'), findsOneWidget);
     expect(find.text('All notifications'), findsOneWidget);
+    await tester.tap(find.text('ENG'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('RU'), findsOneWidget);
+
+    await tester.tap(find.text('RU'));
+    await tester.pumpAndSettle();
+    expect(find.text('Russian'), findsOneWidget);
 
     await tester.dragUntilVisible(
       find.text('Log out'),
@@ -45,8 +55,11 @@ void main() {
     await tester.ensureVisible(
       find.byKey(const ValueKey('profile_all_notifications_action')),
     );
-    await tester
-        .tap(find.byKey(const ValueKey('profile_all_notifications_action')));
+    tester
+        .widget<InkWell>(
+          find.byKey(const ValueKey('profile_all_notifications_action')),
+        )
+        .onTap!();
     await tester.pumpAndSettle();
 
     expect(find.text('Notifications'), findsWidgets);
@@ -77,6 +90,11 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('Profile'), findsOneWidget);
+    await tester.dragUntilVisible(
+      find.text('Alex Driver'),
+      find.byType(ListView),
+      const Offset(0, 320),
+    );
     expect(find.text('Alex Driver'), findsOneWidget);
   });
 }
