@@ -114,10 +114,10 @@ Expenses, mileage dynamics, fuel consumption, cost per km, repair/refueling/main
 Per-vehicle AI assistant, chat history, grounded responses, insufficient-data fallback, optional voice input.
 
 ### notifications
-Warning/reminder list, push notification preferences, notification center.
+Warning/reminder list, read/unread state, push/deep-link handling, notification details, and notification center history.
 
 ### settings
-Theme, localization, profile actions, logout, notification toggles.
+Signed-in user profile header, theme, localization, profile actions, logout, notification toggles, and notification center entry point.
 
 ## State Management
 
