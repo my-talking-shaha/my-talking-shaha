@@ -579,12 +579,19 @@ If there is not enough data:
 
 ```json
 {
+  "userMessage": {
+    "id": "533c17vc-13d5-6857-5269-e9e80739ea42",
+    "role": "USER",
+    "text": "How much did I spend?",
+    "createdAt": "2026-06-12T10:00:00Z",
+    "action": null
+  },
   "assistantMessage": {
+    "id": "784v15jc-15d3-4957-9189-u8e79789ea66",
     "role": "ASSISTANT",
     "text": "There is not enough data to answer.",
-    "metadata": {
-      "reason": "NO_TRIPS_FOR_PERIOD"
-    }
+    "createdAt": "2026-06-12T10:00:01Z",
+    "action": null
   }
 }
 ```
