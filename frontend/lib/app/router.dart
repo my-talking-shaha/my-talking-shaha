@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:frontend/app/providers/vehicle_mileage_provider.dart';
 import 'package:frontend/core/ui/navigation_shell.dart';
 import 'package:frontend/features/analytics/presentation/screens/analytics_screen.dart';
+import 'package:frontend/features/auth/domain/entities/auth_session.dart';
 import 'package:frontend/features/auth/presentation/providers/auth_providers.dart';
 import 'package:frontend/features/auth/presentation/screens/login_screen.dart';
 import 'package:frontend/features/auth/presentation/screens/registration_screen.dart';
@@ -209,13 +210,41 @@ final _routerRefreshListenableProvider = Provider<Listenable>((ref) {
   return notifier;
 });
 
-final class _AuthLoadingScreen extends StatelessWidget {
+final class _AuthLoadingScreen extends ConsumerWidget {
   const _AuthLoadingScreen();
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final authState = ref.watch(authControllerProvider);
+    ref.listen(authControllerProvider, (_, next) {
+      _leaveAuthLoadingScreen(context, next);
+    });
+    _leaveAuthLoadingScreen(context, authState);
+
     return const Scaffold(body: Center(child: CircularProgressIndicator()));
   }
+}
+
+void _leaveAuthLoadingScreen(
+  BuildContext context,
+  AsyncValue<AuthSession?> authState,
+) {
+  if (authState.isLoading && !authState.hasValue) {
+    return;
+  }
+
+  final session = authState.maybeWhen(
+    data: (session) => session,
+    orElse: () => null,
+  );
+
+  WidgetsBinding.instance.addPostFrameCallback((_) {
+    if (!context.mounted) {
+      return;
+    }
+
+    context.go(session == null ? '/login' : '/garage');
+  });
 }
 
 NoTransitionPage<void> _tabPage({

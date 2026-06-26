@@ -35,4 +35,5 @@ flutter:
   - assets/icons/navigation/
   - assets/icons/events/
   - assets/icons/parts/
+  - assets/icons/auth/
   
