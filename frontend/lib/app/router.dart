@@ -3,7 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:frontend/app/providers/vehicle_mileage_provider.dart';
 import 'package:frontend/core/ui/navigation_shell.dart';
 import 'package:frontend/features/analytics/presentation/screens/analytics_screen.dart';
-import 'package:frontend/features/chat/presentation/screens/chat_placeholder_screen.dart';
+import 'package:frontend/features/chat/presentation/screens/chat_screen.dart';
 import 'package:frontend/features/dashboard/presentation/screens/dashboard_screen.dart';
 import 'package:frontend/features/garage/presentation/screens/add_vehicle_screen.dart';
 import 'package:frontend/features/garage/presentation/screens/garage_screen.dart';
@@ -123,7 +123,7 @@ final routerProvider = Provider<GoRouter>((ref) {
                   final vehicleId = state.pathParameters['vehicleId'] ?? '';
                   return _tabPage(
                     state: state,
-                    child: ChatPlaceholderScreen(vehicleId: vehicleId),
+                    child: ChatScreen(vehicleId: vehicleId),
                   );
                 },
               ),
