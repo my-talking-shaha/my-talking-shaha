@@ -34,3 +34,14 @@ Thumbs.db
 
 ### Claude Code (local only) ###
 .claude/
+
+### ML ###
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+*.pyw
+*.pyz
+*.pywz
+*.pyzw
+*.pyzwz

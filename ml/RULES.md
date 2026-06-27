@@ -1,5 +1,3 @@
-# RULES.md
-
 # Vehicle Maintenance Prediction Rules
 
 ## Purpose
