@@ -36,10 +36,7 @@ final class AuthApiDatasource implements AuthDatasource {
     try {
       final response = await _dio.post<Map<String, dynamic>>(
         '/auth/login',
-        data: {
-          'email': normalized.login,
-          'password': normalized.password,
-        },
+        data: {'email': normalized.login, 'password': normalized.password},
       );
 
       return AuthApiSessionMapper.fromJson(response.data ?? const {});

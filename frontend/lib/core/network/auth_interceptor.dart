@@ -7,8 +7,8 @@ final class AuthInterceptor extends Interceptor {
   AuthInterceptor({
     FlutterSecureStorage secureStorage = const FlutterSecureStorage(),
     SharedPreferencesAsync? sharedPreferences,
-  })  : _secureStorage = secureStorage,
-        _sharedPreferences = sharedPreferences;
+  }) : _secureStorage = secureStorage,
+       _sharedPreferences = sharedPreferences;
 
   static const _tokenKey = 'auth_token';
 
