@@ -2,6 +2,7 @@ package ru.talkingshaha.backend.common.error;
 
 import java.util.Map;
 import java.util.stream.Collectors;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
@@ -53,6 +54,18 @@ public class GlobalExceptionHandler {
     public ResponseEntity<ApiError> handleForbidden(ForbiddenException exception) {
         log.warn("API error code=FORBIDDEN message={}", exception.getMessage());
         return ResponseEntity.status(HttpStatus.FORBIDDEN).body(ApiError.of("FORBIDDEN", exception.getMessage()));
+    }
+
+    @ExceptionHandler(EmailAlreadyExistsException.class)
+    public ResponseEntity<ApiError> handleEmailExists(EmailAlreadyExistsException exception) {
+        log.warn("API error code=EMAIL_ALREADY_EXISTS message={}", exception.getMessage());
+        return ResponseEntity.status(HttpStatus.CONFLICT).body(ApiError.of("EMAIL_ALREADY_EXISTS", exception.getMessage()));
+    }
+
+    @ExceptionHandler(InvalidCredentialsException.class)
+    public ResponseEntity<ApiError> handleInvalidCredentials(InvalidCredentialsException exception) {
+        log.warn("API error code=INVALID_CREDENTIALS");
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(ApiError.of("INVALID_CREDENTIALS", exception.getMessage()));
     }
 
     private String fieldMessage(FieldError fieldError) {

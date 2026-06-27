@@ -19,18 +19,13 @@ import ru.talkingshaha.backend.common.model.BaseEntity;
 @Entity
 @Table(
         name = "app_users",
-        uniqueConstraints = @UniqueConstraint(name = "uk_app_users_username", columnNames = "username"))
+        uniqueConstraints = @UniqueConstraint(name = "uk_app_users_email", columnNames = "email"))
 public class AppUser extends BaseEntity {
 
     @NotBlank
     @Size(max = 255)
     @Column(nullable = false, length = 255)
     private String email;
-
-    @NotBlank
-    @Size(max = 50)
-    @Column(nullable = false, length = 50)
-    private String username;
 
     @NotBlank
     @Size(max = 255)

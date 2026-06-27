@@ -7,8 +7,10 @@ Base path: `/api/v1/auth`
 ```json
 {
   "code": "VALIDATION_ERROR",
-  "message": "Validation failed",
-  "details": {}
+  "message": "Request contains invalid fields",
+  "fields": {
+    "password": "Password must be between 6 and 72 characters"
+  }
 }
 ```
 
@@ -21,7 +23,8 @@ Request:
 ```json
 {
   "email": "user@example.com",
-  "password": "secret123"
+  "password": "secret123",
+  "displayName": "Test User"
 }
 ```
 
@@ -30,9 +33,9 @@ Response `201`:
 ```json
 {
   "user": {
-    "id": "user_123",
+    "id": "045c10aa-13d1-4599-9109-e9e79789ea91",
     "email": "user@example.com",
-    "displayName": null
+    "displayName": "Test User"
   },
   "accessToken": "jwt-access-token",
   "refreshToken": "jwt-refresh-token"
@@ -40,8 +43,10 @@ Response `201`:
 ```
 
 Client notes:
-- password min length: 6;
-- after success, backend must create empty garage;
+- `displayName` is required;
+- password rules: 6–72 characters; allowed characters are letters (a-z, A-Z), digits, and `()[]$#*-_?!.%+<>/`;
+- after success, the backend creates the account; the garage starts empty (vehicles are owned per user);
+- the user is signed in automatically;
 - client stores tokens and navigates to `/garage`.
 
 Errors:
