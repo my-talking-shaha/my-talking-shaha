@@ -5,33 +5,35 @@ import 'package:frontend/features/notifications/data/repositories/notifications_
 import 'package:frontend/features/notifications/domain/entities/app_notification.dart';
 import 'package:frontend/features/notifications/domain/repositories/notifications_repository.dart';
 
-final notificationsDatasourceProvider =
-    Provider<NotificationsDatasource>((ref) {
+final notificationsDatasourceProvider = Provider<NotificationsDatasource>((
+  ref,
+) {
   return const MockNotificationsDatasource();
 });
 
-final notificationsRepositoryProvider =
-    Provider<NotificationsRepository>((ref) {
-  return NotificationsRepositoryImpl(
-      ref.watch(notificationsDatasourceProvider));
-});
-
-final notificationsProvider =
-    FutureProvider.autoDispose<List<AppNotification>>((
+final notificationsRepositoryProvider = Provider<NotificationsRepository>((
   ref,
 ) {
-  return ref.watch(notificationsRepositoryProvider).getNotifications();
+  return NotificationsRepositoryImpl(
+    ref.watch(notificationsDatasourceProvider),
+  );
 });
+
+final notificationsProvider = FutureProvider.autoDispose<List<AppNotification>>(
+  (ref) {
+    return ref.watch(notificationsRepositoryProvider).getNotifications();
+  },
+);
 
 final notificationByIdProvider = FutureProvider.autoDispose
     .family<AppNotification?, String>((ref, notificationId) async {
-  final notifications = await ref.watch(notificationsProvider.future);
+      final notifications = await ref.watch(notificationsProvider.future);
 
-  for (final notification in notifications) {
-    if (notification.id == notificationId) {
-      return notification;
-    }
-  }
+      for (final notification in notifications) {
+        if (notification.id == notificationId) {
+          return notification;
+        }
+      }
 
-  return null;
-});
+      return null;
+    });

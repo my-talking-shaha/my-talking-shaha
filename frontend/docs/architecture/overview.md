@@ -93,7 +93,7 @@ presentation -> domain -> data
 ## Feature Responsibilities
 
 ### auth
-Registration, login, logout, session state, YandexID auth hook, token storage integration.
+Registration, login, logout, session restoration, route guard state, Yandex ID UI hook, secure token/login/full-name storage.
 
 ### garage
 List of user's vehicles, empty garage, add vehicle entry point, delete confirmation, vehicle selection.
@@ -137,17 +137,16 @@ Use GoRouter.
 Important routes:
 
 ```text
-/auth/login
-/auth/register
+/auth
+/login
+/registration
 /garage
 /garage/add
-/vehicle/:vehicleId
+/vehicle/:vehicleId/dashboard
 /vehicle/:vehicleId/history
 /vehicle/:vehicleId/history/add
-/vehicle/:vehicleId/parts
 /vehicle/:vehicleId/analytics
 /vehicle/:vehicleId/chat
-/notifications
 /settings
 ```
 

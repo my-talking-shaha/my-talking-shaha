@@ -28,8 +28,10 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('Network error'), findsOneWidget);
-    expect(find.byKey(const ValueKey('notifications_retry_action')),
-        findsOneWidget);
+    expect(
+      find.byKey(const ValueKey('notifications_retry_action')),
+      findsOneWidget,
+    );
   });
 }
 

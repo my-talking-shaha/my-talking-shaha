@@ -96,7 +96,7 @@ Glass-like card containing fields and actions.
 ### `SocialAuthButton`
 
 Generic social auth button.
-Do not hardcode provider logic inside UI. Current mockup shows YandexID.
+Do not hardcode provider logic inside UI. Current auth UI shows a Yandex ID placeholder until OAuth/backend integration is implemented.
 
 ## Garage Components
 

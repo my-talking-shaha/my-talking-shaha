@@ -1,8 +1,4 @@
-enum AppNotificationType {
-  partLifetimeWarning,
-  maintenanceReminder,
-  system,
-}
+enum AppNotificationType { partLifetimeWarning, maintenanceReminder, system }
 
 final class AppNotification {
   const AppNotification({

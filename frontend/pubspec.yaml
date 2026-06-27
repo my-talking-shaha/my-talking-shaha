@@ -23,6 +23,7 @@ dev_dependencies:
   flutter_test:
     sdk: flutter
   flutter_lints: ^6.0.0
+  flutter_secure_storage_platform_interface: ^2.0.1
 
 flutter:
   config:
@@ -35,4 +36,5 @@ flutter:
   - assets/icons/navigation/
   - assets/icons/events/
   - assets/icons/parts/
+  - assets/icons/auth/
   
