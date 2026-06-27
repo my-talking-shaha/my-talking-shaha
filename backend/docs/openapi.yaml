@@ -2,7 +2,7 @@ openapi: 3.0.3
 info:
   title: My Talking Shaha Core Garage API
   version: 0.1.0
-  description: Core garage, vehicle dashboard, vehicle parts, and timeline (service history) API for the backend flow.
+  description: Core garage, vehicle dashboard, vehicle parts, timeline, analytics, and AI chat API for the backend flow.
 servers:
   - url: /api/v1
 paths:
@@ -286,6 +286,68 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/AnalyticsOverview'
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /vehicles/{vehicleId}/chat:
+    get:
+      summary: Get AI chat state
+      description: Returns the vehicle-scoped chat session, previous messages, and three quick questions.
+      tags: [ Chat ]
+      parameters:
+        - $ref: '#/components/parameters/VehicleId'
+      responses:
+        '200':
+          description: Chat state
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ChatState'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /vehicles/{vehicleId}/chat/messages:
+    get:
+      summary: Get AI chat message history
+      tags: [ Chat ]
+      parameters:
+        - $ref: '#/components/parameters/VehicleId'
+      responses:
+        '200':
+          description: Chat messages, oldest first
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ChatMessages'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+    post:
+      summary: Send message to AI chat
+      description: >-
+        Stores the user message, classifies the natural-language intent, generates a grounded assistant
+        answer, and returns a validated frontend action when a form or screen should be opened.
+      tags: [ Chat ]
+      parameters:
+        - $ref: '#/components/parameters/VehicleId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SendChatMessageRequest'
+      responses:
+        '201':
+          description: User and assistant messages
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SendChatMessageResponse'
         '400':
           $ref: '#/components/responses/ValidationError'
         '403':
@@ -840,3 +902,91 @@ components:
           type: integer
         averageTripKm:
           type: number
+    ChatState:
+      type: object
+      required: [ sessionId, quickQuestions, messages ]
+      properties:
+        sessionId:
+          type: string
+          format: uuid
+        quickQuestions:
+          type: array
+          minItems: 3
+          maxItems: 3
+          items:
+            type: string
+          example:
+            - Vehicle status
+            - What are my total expenses?
+            - What can break soon?
+        messages:
+          type: array
+          items:
+            $ref: '#/components/schemas/ChatMessage'
+    ChatMessages:
+      type: object
+      required: [ messages ]
+      properties:
+        messages:
+          type: array
+          items:
+            $ref: '#/components/schemas/ChatMessage'
+    SendChatMessageRequest:
+      type: object
+      required: [ text ]
+      properties:
+        text:
+          type: string
+          minLength: 1
+          maxLength: 2000
+          example: What can break soon?
+    SendChatMessageResponse:
+      type: object
+      required: [ userMessage, assistantMessage ]
+      properties:
+        userMessage:
+          $ref: '#/components/schemas/ChatMessage'
+        assistantMessage:
+          $ref: '#/components/schemas/ChatMessage'
+    ChatMessage:
+      type: object
+      required: [ id, role, text, createdAt ]
+      properties:
+        id:
+          type: string
+          format: uuid
+        role:
+          $ref: '#/components/schemas/ChatMessageRole'
+        text:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+        action:
+          allOf:
+            - $ref: '#/components/schemas/ChatAction'
+          nullable: true
+    ChatAction:
+      type: object
+      description: Frontend action validated by the backend.
+      required: [ type, prefill ]
+      properties:
+        type:
+          type: string
+          enum: [ OPEN_FORM, OPEN_SCREEN ]
+        form:
+          type: string
+          nullable: true
+          enum: [ REFUEL, TRIP, PART_REPLACEMENT, MAINTENANCE ]
+        screen:
+          type: string
+          nullable: true
+          enum: [ ANALYTICS, MAINTENANCE_FORECAST, DASHBOARD ]
+        prefill:
+          type: object
+          additionalProperties: true
+          example:
+            mileageKm: 10000
+    ChatMessageRole:
+      type: string
+      enum: [ USER, ASSISTANT, SYSTEM ]

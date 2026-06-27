@@ -2,8 +2,8 @@
 
 API prefix: `/api/v1`
 
-> Status: the Garage/Vehicles, Parts, Timeline, and Analytics sections are implemented. Auth,
-> Chat, Prediction, and Notifications are planned and described here as the
+> Status: the Garage/Vehicles, Parts, Timeline, Analytics, and Chat sections are implemented. Auth,
+> Prediction, and Notifications are planned and described here as the
 > target contract. The machine-readable spec in `openapi.yaml` covers the implemented
 > endpoints only.
 
@@ -503,6 +503,25 @@ Response `200`:
 }
 ```
 
+### Get chat history
+
+`GET /api/v1/vehicles/{vehicleId}/chat/messages`
+
+Response `200`:
+
+```json
+{
+  "messages": [
+    {
+      "id": "125c13vj-13d2-4557-9149-e9e79789ea83",
+      "role": "ASSISTANT",
+      "text": "The assistant is ready.",
+      "createdAt": "2026-06-12T10:00:00Z"
+    }
+  ]
+}
+```
+
 ### Send message
 
 `POST /api/v1/vehicles/{vehicleId}/chat/messages`
@@ -515,7 +534,7 @@ Request:
 }
 ```
 
-Response `200`:
+Response `201`:
 
 ```json
 {
@@ -533,6 +552,7 @@ Response `200`:
     "action": {
       "type": "OPEN_FORM",
       "form": "PART_REPLACEMENT",
+      "screen": null,
       "prefill": {
         "partName": "Engine oil",
         "mileageKm": 10000
@@ -542,16 +562,36 @@ Response `200`:
 }
 ```
 
+For screen redirects, the assistant message uses:
+
+```json
+{
+  "action": {
+    "type": "OPEN_SCREEN",
+    "form": null,
+    "screen": "ANALYTICS",
+    "prefill": {}
+  }
+}
+```
+
 If there is not enough data:
 
 ```json
 {
+  "userMessage": {
+    "id": "533c17vc-13d5-6857-5269-e9e80739ea42",
+    "role": "USER",
+    "text": "How much did I spend?",
+    "createdAt": "2026-06-12T10:00:00Z",
+    "action": null
+  },
   "assistantMessage": {
+    "id": "784v15jc-15d3-4957-9189-u8e79789ea66",
     "role": "ASSISTANT",
     "text": "There is not enough data to answer.",
-    "metadata": {
-      "reason": "NO_TRIPS_FOR_PERIOD"
-    }
+    "createdAt": "2026-06-12T10:00:01Z",
+    "action": null
   }
 }
 ```
