@@ -135,6 +135,8 @@ Response `204`.
 
 `GET /api/v1/users/me`
 
+Returns the profile of the authenticated user. Requires a valid access token.
+
 Response `200`:
 
 ```json
@@ -144,6 +146,11 @@ Response `200`:
   "displayName": "Test User"
 }
 ```
+
+Errors:
+
+- `401 AUTHENTICATION_REQUIRED` if the access token is missing or invalid
+- `404 NOT_FOUND` if the authenticated user no longer exists
 
 ## Garage and vehicles
 

@@ -5,6 +5,7 @@ import org.springframework.security.authentication.AuthenticationCredentialsNotF
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
+import ru.talkingshaha.backend.common.error.ResourceNotFoundException;
 import ru.talkingshaha.backend.user.model.AppUser;
 import ru.talkingshaha.backend.user.repository.AppUserRepository;
 
@@ -23,6 +24,6 @@ public class CurrentUserService {
             throw new AuthenticationCredentialsNotFoundException("Authentication is required");
         }
         return users.findById(userId)
-                .orElseThrow(() -> new AuthenticationCredentialsNotFoundException("Authenticated user not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("User not found"));
     }
 }
