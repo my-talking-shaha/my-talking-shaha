@@ -15,8 +15,8 @@ void main() {
     await _pumpApp(tester);
 
     expect(find.text('Profile'), findsOneWidget);
-    expect(find.text('Alex Driver'), findsOneWidget);
-    expect(find.text('alex.driver@example.com'), findsOneWidget);
+    expect(find.text('Test Driver'), findsOneWidget);
+    expect(find.text('driver'), findsOneWidget);
     expect(find.text('THEME'), findsOneWidget);
     expect(find.text('Dark'), findsOneWidget);
     expect(find.text('Light'), findsOneWidget);
@@ -95,11 +95,11 @@ void main() {
 
     expect(find.text('Profile'), findsOneWidget);
     await tester.dragUntilVisible(
-      find.text('Alex Driver'),
+      find.text('Test Driver'),
       find.byType(ListView),
       const Offset(0, 320),
     );
-    expect(find.text('Alex Driver'), findsOneWidget);
+    expect(find.text('Test Driver'), findsOneWidget);
   });
 }
 
