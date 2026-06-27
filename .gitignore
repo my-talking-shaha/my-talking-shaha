@@ -11,6 +11,8 @@ target/
 ### Spring Boot ###
 application-local.properties
 application-local.yml
+.env
+*.env
 
 ### IntelliJ IDEA ###
 .idea/
