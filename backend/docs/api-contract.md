@@ -54,19 +54,22 @@ Response `201`:
 
 ```json
 {
-  "accessToken": "test-token",
   "user": {
     "id": "045c10aa-13d1-4599-9109-e9e79789ea91",
     "email": "test@example.com",
     "displayName": "Test User"
-  }
+  },
+  "accessToken": "jwt-access-token",
+  "refreshToken": "jwt-refresh-token"
 }
 ```
+
+Password rules: 6-72 characters; letters (a-z, A-Z), digits, and `()[]$#*-_?!.%+<>/`.
 
 Errors:
 
 - `400 VALIDATION_ERROR`
-- `409 CONFLICT` if email already exists
+- `409 EMAIL_ALREADY_EXISTS` if email already exists
 
 ### Login
 
@@ -82,6 +85,51 @@ Request:
 ```
 
 Response `200`: same as register.
+
+Errors:
+
+- `401 INVALID_CREDENTIALS`
+
+### Refresh
+
+`POST /api/v1/auth/refresh`
+
+Request:
+
+```json
+{
+  "refreshToken": "jwt-refresh-token"
+}
+```
+
+Response `200`:
+
+```json
+{
+  "accessToken": "new-access-token",
+  "refreshToken": "new-refresh-token"
+}
+```
+
+The presented refresh token is rotated out (single use).
+
+Errors:
+
+- `401 INVALID_CREDENTIALS` if the refresh token is invalid or expired
+
+### Logout
+
+`POST /api/v1/auth/logout`
+
+Request:
+
+```json
+{
+  "refreshToken": "jwt-refresh-token"
+}
+```
+
+Response `204`.
 
 ### Current user
 
