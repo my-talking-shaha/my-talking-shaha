@@ -4,38 +4,49 @@ Base path: `/api/v1/vehicles/{vehicleId}/chat`
 
 Auth: required.
 
+## Get Chat State
+
+`GET /api/v1/vehicles/{vehicleId}/chat`
+
+Returns the vehicle-scoped chat session, three quick questions, and previous messages.
+
+Response `200`:
+
+```json
+{
+  "sessionId": "034c13vc-13d2-4557-9169-e9e79789ea49",
+  "quickQuestions": [
+    "Vehicle status",
+    "What are my total expenses?",
+    "What can break soon?"
+  ],
+  "messages": [
+    {
+      "id": "125c13vj-13d2-4557-9149-e9e79789ea83",
+      "role": "ASSISTANT",
+      "text": "The assistant is ready.",
+      "createdAt": "2026-06-12T10:00:00Z",
+      "action": null
+    }
+  ]
+}
+```
+
 ## Get Chat History
 
 `GET /api/v1/vehicles/{vehicleId}/chat/messages`
 
-Response:
+Response `200`:
 
 ```json
 {
   "messages": [
     {
-      "id": "msg_1",
-      "role": "user",
-      "text": "Когда менять масло?",
-      "createdAt": "2026-06-10T14:20:00Z"
-    },
-    {
-      "id": "msg_2",
-      "role": "assistant",
-      "text": "Судя по пробегу, через 1500 км стоит заменить масло.",
-      "createdAt": "2026-06-10T14:21:00Z",
-      "grounded": true,
-      "cards": [
-        {
-          "type": "maintenance_recommendation",
-          "title": "Ближайшее действие",
-          "description": "Замена масла через 1500 км",
-          "action": {
-            "type": "open_part",
-            "partId": "part_123"
-          }
-        }
-      ]
+      "id": "125c13vj-13d2-4557-9149-e9e79789ea83",
+      "role": "ASSISTANT",
+      "text": "The assistant is ready.",
+      "createdAt": "2026-06-12T10:00:00Z",
+      "action": null
     }
   ]
 }
@@ -49,7 +60,7 @@ Request:
 
 ```json
 {
-  "text": "Когда менять масло?"
+  "text": "I refueled the car today"
 }
 ```
 
@@ -58,45 +69,80 @@ Response `201`:
 ```json
 {
   "userMessage": {
-    "id": "msg_1",
-    "role": "user",
-    "text": "Когда менять масло?",
-    "createdAt": "2026-06-10T14:20:00Z"
+    "id": "533c17vc-13d5-6857-5269-e9e80739ea42",
+    "role": "USER",
+    "text": "I refueled the car today",
+    "createdAt": "2026-06-12T10:00:00Z",
+    "action": null
   },
   "assistantMessage": {
-    "id": "msg_2",
-    "role": "assistant",
-    "text": "Судя по пробегу, через 1500 км стоит заменить масло.",
-    "createdAt": "2026-06-10T14:21:00Z",
-    "grounded": true,
-    "cards": []
+    "id": "784v15jc-15d3-4957-9189-u8e79789ea66",
+    "role": "ASSISTANT",
+    "text": "This looks like something to record in the vehicle history. I can open the REFUEL form and pass the extracted data.",
+    "createdAt": "2026-06-12T10:00:01Z",
+    "action": {
+      "type": "OPEN_FORM",
+      "form": "REFUEL",
+      "screen": null,
+      "prefill": {}
+    }
   }
 }
 ```
 
-## Insufficient Data
+## Actions
 
-If the AI cannot answer:
+The backend validates all frontend actions. The client should not invent app routes.
+
+Open form:
 
 ```json
 {
-  "userMessage": { "id": "msg_1", "role": "user", "text": "..." },
-  "assistantMessage": {
-    "id": "msg_2",
-    "role": "assistant",
-    "text": "Недостаточно данных для ответа",
-    "grounded": false,
-    "cards": []
+  "type": "OPEN_FORM",
+  "form": "REFUEL",
+  "screen": null,
+  "prefill": {
+    "mileageKm": 10000
   }
 }
 ```
+
+Supported forms:
+
+- `REFUEL`
+- `TRIP`
+- `PART_REPLACEMENT`
+- `MAINTENANCE`
+
+Open screen:
+
+```json
+{
+  "type": "OPEN_SCREEN",
+  "form": null,
+  "screen": "ANALYTICS",
+  "prefill": {}
+}
+```
+
+Supported screens:
+
+- `ANALYTICS`
+- `MAINTENANCE_FORECAST`
+- `DASHBOARD`
+
+## Fallbacks
+
+If there is not enough data, the assistant message contains a localized fallback text and no unsupported facts.
+
+If the question is unclear, the assistant message contains suggestions about what the user might have meant.
 
 ## Client Rules
 
 - Chat is scoped by vehicle.
 - Do not share messages across vehicles.
-- Do not generate local AI answers.
-- Render backend cards if provided.
+- Use `GET /chat` when opening the screen so quick questions are available.
+- Render `assistantMessage.action` when present.
 - Show retry on network failure.
 
 ## Voice Input
