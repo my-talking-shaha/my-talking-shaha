@@ -14,6 +14,8 @@ import 'package:frontend/features/garage/presentation/screens/garage_screen.dart
 import 'package:frontend/features/history/presentation/providers/history_providers.dart';
 import 'package:frontend/features/history/presentation/screens/add_history_event_screen.dart';
 import 'package:frontend/features/history/presentation/screens/history_screen.dart';
+import 'package:frontend/features/notifications/presentation/screens/notification_details_screen.dart';
+import 'package:frontend/features/notifications/presentation/screens/notifications_screen.dart';
 import 'package:frontend/features/settings/presentation/screens/settings_screen.dart';
 import 'package:go_router/go_router.dart';
 
@@ -191,6 +193,24 @@ final routerProvider = Provider<GoRouter>((ref) {
                 path: '/settings',
                 pageBuilder: (context, state) =>
                     _tabPage(state: state, child: const SettingsScreen()),
+              ),
+              GoRoute(
+                path: '/notifications',
+                pageBuilder: (context, state) =>
+                    _tabPage(state: state, child: const NotificationsScreen()),
+              ),
+              GoRoute(
+                path: '/notifications/:notificationId',
+                pageBuilder: (context, state) {
+                  final notificationId =
+                      state.pathParameters['notificationId'] ?? '';
+                  return _tabPage(
+                    state: state,
+                    child: NotificationDetailsScreen(
+                      notificationId: notificationId,
+                    ),
+                  );
+                },
               ),
             ],
           ),
