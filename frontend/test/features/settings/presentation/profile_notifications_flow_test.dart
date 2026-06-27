@@ -106,8 +106,9 @@ void main() {
 Future<void> _pumpApp(WidgetTester tester) async {
   final container = ProviderContainer(
     overrides: [
-      authRepositoryProvider
-          .overrideWithValue(const _AuthenticatedRepository()),
+      authRepositoryProvider.overrideWithValue(
+        const _AuthenticatedRepository(),
+      ),
       notificationsDatasourceProvider.overrideWithValue(
         const MockNotificationsDatasource(delay: Duration.zero),
       ),

@@ -11,8 +11,9 @@ final class NotificationDetailsScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final notificationState =
-        ref.watch(notificationByIdProvider(notificationId));
+    final notificationState = ref.watch(
+      notificationByIdProvider(notificationId),
+    );
 
     return Scaffold(
       appBar: AppBar(title: const Text('Notification details')),

@@ -2,8 +2,9 @@ import 'package:frontend/features/notifications/data/datasources/notifications_d
 import 'package:frontend/features/notifications/domain/entities/app_notification.dart';
 
 final class MockNotificationsDatasource implements NotificationsDatasource {
-  const MockNotificationsDatasource(
-      {this.delay = const Duration(milliseconds: 300)});
+  const MockNotificationsDatasource({
+    this.delay = const Duration(milliseconds: 300),
+  });
 
   final Duration delay;
 

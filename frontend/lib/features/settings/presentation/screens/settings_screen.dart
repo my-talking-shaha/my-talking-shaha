@@ -183,17 +183,16 @@ final class _ProfileHeaderCard extends StatelessWidget {
 }
 
 final class _SurfaceCard extends StatelessWidget {
-  const _SurfaceCard({required this.child, this.borderColor});
+  const _SurfaceCard({required this.child});
 
   final Widget child;
-  final Color? borderColor;
 
   @override
   Widget build(BuildContext context) {
     return Card(
-      shape: RoundedRectangleBorder(
+      shape: const RoundedRectangleBorder(
         borderRadius: AppRadius.card,
-        side: BorderSide(color: borderColor ?? AppColors.border),
+        side: BorderSide(color: AppColors.border),
       ),
       child: child,
     );
@@ -221,9 +220,9 @@ final class _ProfileAvatar extends StatelessWidget {
           ),
           child: Text(
             initials,
-            style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                  color: AppColors.primaryLight,
-                ),
+            style: Theme.of(
+              context,
+            ).textTheme.titleLarge?.copyWith(color: AppColors.primaryLight),
           ),
         ),
         Positioned(
@@ -250,10 +249,7 @@ final class _ProfileAvatar extends StatelessWidget {
 }
 
 final class _ThemeSection extends StatelessWidget {
-  const _ThemeSection({
-    required this.selectedTheme,
-    required this.onChanged,
-  });
+  const _ThemeSection({required this.selectedTheme, required this.onChanged});
 
   final String selectedTheme;
   final ValueChanged<String> onChanged;
@@ -320,8 +316,8 @@ final class _ThemeSegment extends StatelessWidget {
           child: Text(
             label,
             style: Theme.of(context).textTheme.labelLarge?.copyWith(
-                  color: selected ? AppColors.white : AppColors.textSecondary,
-                ),
+              color: selected ? AppColors.white : AppColors.textSecondary,
+            ),
           ),
         ),
       ),
@@ -352,15 +348,9 @@ final class _LanguageChoice extends StatelessWidget {
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Text(
-            selectedLanguage,
-            style: Theme.of(context).textTheme.labelLarge,
-          ),
+          Text(selectedLanguage, style: Theme.of(context).textTheme.labelLarge),
           const SizedBox(width: AppSpacing.xs),
-          const Icon(
-            Icons.chevron_right_rounded,
-            color: AppColors.textMuted,
-          ),
+          const Icon(Icons.chevron_right_rounded, color: AppColors.textMuted),
         ],
       ),
     );
@@ -381,11 +371,7 @@ final class _SettingsSection extends StatelessWidget {
         _SectionLabel(title),
         const SizedBox(height: AppSpacing.md),
         _SurfaceCard(
-          child: Column(
-            children: [
-              for (final child in children) child,
-            ],
-          ),
+          child: Column(children: [for (final child in children) child]),
         ),
       ],
     );
@@ -404,9 +390,9 @@ final class _SectionLabel extends StatelessWidget {
       child: Text(
         title.toUpperCase(),
         style: Theme.of(context).textTheme.labelMedium?.copyWith(
-              letterSpacing: 1.8,
-              color: AppColors.textSecondary,
-            ),
+          letterSpacing: 1.8,
+          color: AppColors.textSecondary,
+        ),
       ),
     );
   }
