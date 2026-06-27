@@ -1,21 +1,26 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:frontend/app/theme/app_theme.dart';
+import 'package:frontend/features/auth/presentation/providers/auth_providers.dart';
 import 'package:go_router/go_router.dart';
 
-final class SettingsScreen extends StatefulWidget {
+final class SettingsScreen extends ConsumerStatefulWidget {
   const SettingsScreen({super.key});
 
   @override
-  State<SettingsScreen> createState() => _SettingsScreenState();
+  ConsumerState<SettingsScreen> createState() => _SettingsScreenState();
 }
 
-final class _SettingsScreenState extends State<SettingsScreen> {
+final class _SettingsScreenState extends ConsumerState<SettingsScreen> {
   String _theme = 'Dark';
   String _language = 'ENG';
   bool _notificationsEnabled = true;
 
   @override
   Widget build(BuildContext context) {
+    final authState = ref.watch(authControllerProvider);
+    final isLoggingOut = authState.isLoading && authState.hasValue;
+
     return Scaffold(
       appBar: AppBar(
         centerTitle: true,
@@ -94,14 +99,30 @@ final class _SettingsScreenState extends State<SettingsScreen> {
               ],
             ),
             const SizedBox(height: AppSpacing.xxxl),
-            _LogoutTile(
-              onPressed: () {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(
-                    content: Text('Logout will be connected with auth.'),
-                  ),
-                );
-              },
+            SizedBox(
+              width: double.infinity,
+              child: OutlinedButton.icon(
+                onPressed: isLoggingOut
+                    ? null
+                    : () async {
+                        final messenger = ScaffoldMessenger.of(context);
+                        final message = await ref
+                            .read(authControllerProvider.notifier)
+                            .logout();
+                        if (message != null) {
+                          messenger.showSnackBar(
+                            SnackBar(content: Text(message)),
+                          );
+                        }
+                      },
+                icon: isLoggingOut
+                    ? const SizedBox.square(
+                        dimension: 18,
+                        child: CircularProgressIndicator(strokeWidth: 2),
+                      )
+                    : const Icon(Icons.logout),
+                label: const Text('Log out'),
+              ),
             ),
           ],
         ),
@@ -441,43 +462,6 @@ final class _SettingsTile extends StatelessWidget {
             const SizedBox(width: AppSpacing.md),
             trailing,
           ],
-        ),
-      ),
-    );
-  }
-}
-
-final class _LogoutTile extends StatelessWidget {
-  const _LogoutTile({required this.onPressed});
-
-  final VoidCallback onPressed;
-
-  @override
-  Widget build(BuildContext context) {
-    return _SurfaceCard(
-      borderColor: AppColors.error.withValues(alpha: 0.4),
-      child: InkWell(
-        key: const ValueKey('profile_logout_action'),
-        onTap: onPressed,
-        borderRadius: AppRadius.card,
-        child: Padding(
-          padding: const EdgeInsets.symmetric(
-            horizontal: AppSpacing.lg,
-            vertical: AppSpacing.lg,
-          ),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              const Icon(Icons.logout_rounded, color: AppColors.error),
-              const SizedBox(width: AppSpacing.md),
-              Text(
-                'Log out',
-                style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                      color: AppColors.error,
-                    ),
-              ),
-            ],
-          ),
         ),
       ),
     );

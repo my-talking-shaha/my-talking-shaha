@@ -3,6 +3,10 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:frontend/app/app.dart';
 import 'package:frontend/app/router.dart';
+import 'package:frontend/features/auth/domain/entities/auth_credentials.dart';
+import 'package:frontend/features/auth/domain/entities/auth_session.dart';
+import 'package:frontend/features/auth/domain/repositories/auth_repository.dart';
+import 'package:frontend/features/auth/presentation/providers/auth_providers.dart';
 import 'package:frontend/features/notifications/data/datasources/mock_notifications_datasource.dart';
 import 'package:frontend/features/notifications/presentation/providers/notifications_providers.dart';
 
@@ -102,6 +106,8 @@ void main() {
 Future<void> _pumpApp(WidgetTester tester) async {
   final container = ProviderContainer(
     overrides: [
+      authRepositoryProvider
+          .overrideWithValue(const _AuthenticatedRepository()),
       notificationsDatasourceProvider.overrideWithValue(
         const MockNotificationsDatasource(delay: Duration.zero),
       ),
@@ -117,4 +123,30 @@ Future<void> _pumpApp(WidgetTester tester) async {
 
   router.go('/settings');
   await tester.pumpAndSettle();
+}
+
+final class _AuthenticatedRepository implements AuthRepository {
+  const _AuthenticatedRepository();
+
+  @override
+  Future<AuthSession?> restoreSession() async {
+    return const AuthSession(
+      token: 'test-token',
+      login: 'driver',
+      fullName: 'Test Driver',
+    );
+  }
+
+  @override
+  Future<AuthSession> register(RegistrationCredentials credentials) {
+    throw UnimplementedError();
+  }
+
+  @override
+  Future<AuthSession> login(LoginCredentials credentials) {
+    throw UnimplementedError();
+  }
+
+  @override
+  Future<void> logout() async {}
 }
