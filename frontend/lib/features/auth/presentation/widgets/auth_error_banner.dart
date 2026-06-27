@@ -19,18 +19,14 @@ final class AuthErrorBanner extends StatelessWidget {
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Icon(
-            Icons.error_outline,
-            color: AppColors.error,
-            size: 20,
-          ),
+          const Icon(Icons.error_outline, color: AppColors.error, size: 20),
           const SizedBox(width: AppSpacing.sm),
           Expanded(
             child: Text(
               message,
-              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                    color: AppColors.textPrimary,
-                  ),
+              style: Theme.of(
+                context,
+              ).textTheme.bodyMedium?.copyWith(color: AppColors.textPrimary),
             ),
           ),
         ],

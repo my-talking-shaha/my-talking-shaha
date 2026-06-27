@@ -18,8 +18,9 @@ final class AuthController extends AsyncNotifier<AuthSession?> {
     state = const AsyncLoading<AuthSession?>();
 
     try {
-      final session =
-          await ref.read(authRepositoryProvider).register(credentials);
+      final session = await ref
+          .read(authRepositoryProvider)
+          .register(credentials);
       state = AsyncData(session);
       return null;
     } on AuthException catch (error) {

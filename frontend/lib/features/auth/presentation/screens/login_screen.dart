@@ -43,11 +43,11 @@ final class _LoginScreenState extends ConsumerState<LoginScreen> {
             'My Talking\nShaha',
             textAlign: TextAlign.center,
             style: Theme.of(context).textTheme.headlineLarge?.copyWith(
-                  color: AppColors.primaryLight,
-                  fontSize: 46,
-                  fontWeight: FontWeight.w900,
-                  height: 1.12,
-                ),
+              color: AppColors.primaryLight,
+              fontSize: 46,
+              fontWeight: FontWeight.w900,
+              height: 1.12,
+            ),
           ),
           const SizedBox(height: 52),
           AuthFormCard(
@@ -79,8 +79,9 @@ final class _LoginScreenState extends ConsumerState<LoginScreen> {
                     helperText: 'At least 8 characters',
                     prefixIcon: const Icon(Icons.lock_outline),
                     suffixIcon: IconButton(
-                      tooltip:
-                          _obscurePassword ? 'Show password' : 'Hide password',
+                      tooltip: _obscurePassword
+                          ? 'Show password'
+                          : 'Hide password',
                       onPressed: isSubmitting
                           ? null
                           : () {
@@ -129,13 +130,14 @@ final class _LoginScreenState extends ConsumerState<LoginScreen> {
             children: [
               Text(
                 'No account?',
-                style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                      color: AppColors.textSecondary,
-                    ),
+                style: Theme.of(
+                  context,
+                ).textTheme.bodyLarge?.copyWith(color: AppColors.textSecondary),
               ),
               TextButton(
-                onPressed:
-                    isSubmitting ? null : () => context.go('/registration'),
+                onPressed: isSubmitting
+                    ? null
+                    : () => context.go('/registration'),
                 child: const Text('Register'),
               ),
             ],
@@ -164,7 +166,9 @@ final class _LoginScreenState extends ConsumerState<LoginScreen> {
       return;
     }
 
-    final message = await ref.read(authControllerProvider.notifier).login(
+    final message = await ref
+        .read(authControllerProvider.notifier)
+        .login(
           LoginCredentials(
             login: _loginController.text,
             password: _passwordController.text,

@@ -42,9 +42,9 @@ final deleteVehicleProvider = Provider<DeleteVehicle>((ref) {
 
 final garageControllerProvider =
     AsyncNotifierProvider<GarageController, List<Vehicle>>(
-  GarageController.new,
-  retry: (_, _) => null,
-);
+      GarageController.new,
+      retry: (_, _) => null,
+    );
 
 final addVehicleControllerProvider = Provider.autoDispose<AddVehicleController>(
   (ref) =>
