@@ -9,33 +9,38 @@
 The auth screens use a dark abstract background with a large centered brand title and a glass-like form card.
 
 Login content:
-- brand title `Моя говорящая Шаха`;
-- login/email input;
+- brand title `My Talking Shaha`;
+- login input;
 - password input with visibility toggle;
 - forgot password link;
-- primary CTA `Войти в систему`;
+- primary CTA `Log in`;
 - social auth divider;
-- social auth button;
+- Yandex ID button placeholder;
 - link to registration.
 
 Registration content:
-- title `Регистрация`;
-- subtitle for account creation;
-- name/login input;
-- email input;
+- title `Registration`;
+- subtitle `Create your profile`;
+- full name input;
+- login input;
 - password input;
 - confirm password input;
-- primary CTA `Зарегистрироваться`;
-- social auth button;
+- primary CTA `Register`;
+- Yandex ID button placeholder;
 - link to login.
 
 ## Implementation Notes
 
 - Use a shared `AuthFormCard`.
-- Use `ShahaTextField` for all fields.
-- Use `ShahaButton.primary` for the main CTA.
-- Social auth provider should not be hardcoded in business logic. The current design shows YandexID. Use a `YandexID` and align provider text with backend/product decision.
+- Use `AuthTextField` for all fields.
+- Use `AuthPrimaryButton` for the main CTA.
+- Use `AuthErrorBanner` for auth errors returned by `AuthController`.
+- Use `AuthScreenScaffold` for the background and auth page layout.
+- The login screen uses the brand-heavy layout with `useLoginBackground: true`.
+- The registration screen keeps the form card as the primary focus.
+- Social auth provider should not be hardcoded in business logic. The current UI shows Yandex ID, but it is a placeholder until OAuth/backend integration is implemented.
 - Keep validation messages friendly and short.
+- Visible copy should stay in English.
 
 ## States To Support
 
@@ -44,3 +49,27 @@ Registration content:
 - validation error;
 - backend auth error;
 - password visibility on/off.
+- restored session;
+- unauthenticated redirect;
+- authenticated redirect.
+
+## Current Copy
+
+Login:
+- `Login`
+- `Password`
+- `Forgot password?`
+- `Log in`
+- `No account?`
+- `Register`
+
+Registration:
+- `Registration`
+- `Create your profile`
+- `Full name`
+- `Login`
+- `Password`
+- `Confirm password`
+- `Register`
+- `Already have an account?`
+- `Log in`
