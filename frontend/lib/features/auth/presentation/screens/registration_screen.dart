@@ -5,6 +5,7 @@ import 'package:frontend/features/auth/domain/entities/auth_credentials.dart';
 import 'package:frontend/features/auth/presentation/providers/auth_providers.dart';
 import 'package:frontend/features/auth/presentation/widgets/auth_error_banner.dart';
 import 'package:frontend/features/auth/presentation/widgets/auth_screen_scaffold.dart';
+import 'package:frontend/features/auth/utils/validator.dart';
 import 'package:go_router/go_router.dart';
 
 final class RegistrationScreen extends ConsumerStatefulWidget {
@@ -70,7 +71,7 @@ final class _RegistrationScreenState extends ConsumerState<RegistrationScreen> {
                 hintText: 'John Smith',
                 prefixIcon: const Icon(Icons.person_outline),
                 textInputAction: TextInputAction.next,
-                validator: _requiredValidator('Enter your full name'),
+                validator: AuthValidator.fullName,
                 onChanged: (_) => _clearError(),
               ),
               const SizedBox(height: AppSpacing.lg),
@@ -81,7 +82,7 @@ final class _RegistrationScreenState extends ConsumerState<RegistrationScreen> {
                 hintText: 'Enter your login',
                 prefixIcon: const Icon(Icons.account_circle_outlined),
                 textInputAction: TextInputAction.next,
-                validator: _requiredValidator('Enter your login'),
+                validator: AuthValidator.login,
                 onChanged: (_) => _clearError(),
               ),
               const SizedBox(height: AppSpacing.lg),
@@ -109,7 +110,7 @@ final class _RegistrationScreenState extends ConsumerState<RegistrationScreen> {
                 ),
                 obscureText: _obscurePassword,
                 textInputAction: TextInputAction.next,
-                validator: _requiredValidator('Enter your password'),
+                validator: AuthValidator.password,
                 onChanged: (_) => _clearError(),
               ),
               const SizedBox(height: AppSpacing.lg),
@@ -121,7 +122,10 @@ final class _RegistrationScreenState extends ConsumerState<RegistrationScreen> {
                 prefixIcon: const Icon(Icons.admin_panel_settings_outlined),
                 obscureText: _obscurePassword,
                 textInputAction: TextInputAction.done,
-                validator: _confirmPasswordValidator,
+                validator: (value) => AuthValidator.confirmPassword(
+                  value,
+                  _passwordController.text,
+                ),
                 onChanged: (_) => _clearError(),
                 onFieldSubmitted: (_) => _submit(),
               ),
@@ -157,22 +161,6 @@ final class _RegistrationScreenState extends ConsumerState<RegistrationScreen> {
         ),
       ),
     );
-  }
-
-  FormFieldValidator<String> _requiredValidator(String message) {
-    return (value) => value == null || value.trim().isEmpty ? message : null;
-  }
-
-  String? _confirmPasswordValidator(String? value) {
-    if (value == null || value.trim().isEmpty) {
-      return 'Confirm your password';
-    }
-
-    if (value != _passwordController.text) {
-      return 'Passwords do not match';
-    }
-
-    return null;
   }
 
   void _clearError() {

@@ -5,6 +5,7 @@ import 'package:frontend/features/auth/domain/entities/auth_credentials.dart';
 import 'package:frontend/features/auth/presentation/providers/auth_providers.dart';
 import 'package:frontend/features/auth/presentation/widgets/auth_error_banner.dart';
 import 'package:frontend/features/auth/presentation/widgets/auth_screen_scaffold.dart';
+import 'package:frontend/features/auth/utils/validator.dart';
 import 'package:go_router/go_router.dart';
 
 final class LoginScreen extends ConsumerStatefulWidget {
@@ -67,7 +68,7 @@ final class _LoginScreenState extends ConsumerState<LoginScreen> {
                     hintText: 'Enter your login',
                     prefixIcon: const Icon(Icons.person_outline),
                     textInputAction: TextInputAction.next,
-                    validator: _requiredValidator('Enter your login'),
+                    validator: AuthValidator.login,
                     onChanged: (_) => _clearError(),
                   ),
                   const SizedBox(height: AppSpacing.lg),
@@ -96,7 +97,7 @@ final class _LoginScreenState extends ConsumerState<LoginScreen> {
                     ),
                     obscureText: _obscurePassword,
                     textInputAction: TextInputAction.done,
-                    validator: _requiredValidator('Enter your password'),
+                    validator: AuthValidator.password,
                     onChanged: (_) => _clearError(),
                     onFieldSubmitted: (_) => _submit(),
                   ),
@@ -143,10 +144,6 @@ final class _LoginScreenState extends ConsumerState<LoginScreen> {
         ],
       ),
     );
-  }
-
-  FormFieldValidator<String> _requiredValidator(String message) {
-    return (value) => value == null || value.trim().isEmpty ? message : null;
   }
 
   void _clearError() {
