@@ -20,10 +20,7 @@ final class AuthScreenScaffold extends StatelessWidget {
         children: [
           const ColoredBox(color: AppColors.background),
           if (useLoginBackground)
-            SvgPicture.asset(
-              'assets/images/auth_bg.svg',
-              fit: BoxFit.cover,
-            ),
+            SvgPicture.asset('assets/images/auth_bg.svg', fit: BoxFit.cover),
           SafeArea(
             child: LayoutBuilder(
               builder: (context, constraints) {
@@ -119,9 +116,9 @@ final class AuthTextField extends StatelessWidget {
         Text(
           label.toUpperCase(),
           style: Theme.of(context).textTheme.labelMedium?.copyWith(
-                color: AppColors.primaryLight,
-                letterSpacing: 0,
-              ),
+            color: AppColors.primaryLight,
+            letterSpacing: 0,
+          ),
         ),
         const SizedBox(height: AppSpacing.sm),
         TextFormField(
@@ -198,9 +195,9 @@ final class AuthSocialDivider extends StatelessWidget {
           child: Text(
             'OR CONTINUE WITH',
             style: Theme.of(context).textTheme.labelMedium?.copyWith(
-                  color: AppColors.textDisabled,
-                  fontWeight: FontWeight.w800,
-                ),
+              color: AppColors.textDisabled,
+              fontWeight: FontWeight.w800,
+            ),
           ),
         ),
         const Expanded(child: Divider()),

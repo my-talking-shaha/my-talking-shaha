@@ -23,8 +23,10 @@ abstract final class AuthValidator {
   }
 
   static String? confirmPassword(String? value, String password) {
-    final requiredError =
-        requiredField(value, message: 'Confirm your password');
+    final requiredError = requiredField(
+      value,
+      message: 'Confirm your password',
+    );
     if (requiredError != null) {
       return requiredError;
     }

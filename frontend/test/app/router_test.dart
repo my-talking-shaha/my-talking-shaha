@@ -38,10 +38,7 @@ void main() {
     );
     await tester.pump();
 
-    expect(
-      app.container.read(authControllerProvider).hasValue,
-      isTrue,
-    );
+    expect(app.container.read(authControllerProvider).hasValue, isTrue);
     expect(app.router.routeInformationProvider.value.uri.path, '/login');
   });
 
@@ -198,8 +195,9 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.byType(AddHistoryEventScreen), findsNothing);
-    final eventsFuture =
-        app.container.read(historyRepositoryProvider).getEvents('vehicle_123');
+    final eventsFuture = app.container
+        .read(historyRepositoryProvider)
+        .getEvents('vehicle_123');
     await tester.pump(const Duration(milliseconds: 600));
     final events = await eventsFuture;
     expect(events.any((event) => event.title == 'Highway refueling'), isTrue);

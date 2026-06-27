@@ -50,10 +50,7 @@ final routerProvider = Provider<GoRouter>((ref) {
         path: '/auth',
         builder: (context, state) => const _AuthLoadingScreen(),
       ),
-      GoRoute(
-        path: '/login',
-        builder: (context, state) => const LoginScreen(),
-      ),
+      GoRoute(path: '/login', builder: (context, state) => const LoginScreen()),
       GoRoute(
         path: '/registration',
         builder: (context, state) => const RegistrationScreen(),
@@ -83,10 +80,12 @@ final routerProvider = Provider<GoRouter>((ref) {
                     vehicleId: vehicleId,
                     initialMileageKm: currentMileageKm,
                     onSave: ref.read(addHistoryEventProvider),
-                    persistPhoto:
-                        ref.read(historyPhotoStorageProvider).persistPhoto,
-                    deletePhoto:
-                        ref.read(historyPhotoStorageProvider).deletePhoto,
+                    persistPhoto: ref
+                        .read(historyPhotoStorageProvider)
+                        .persistPhoto,
+                    deletePhoto: ref
+                        .read(historyPhotoStorageProvider)
+                        .deletePhoto,
                   );
                 },
                 loading: () => const Scaffold(

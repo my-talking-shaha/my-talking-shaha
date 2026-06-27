@@ -36,18 +36,20 @@ void main() {
     expect(session?.fullName, 'Demo Driver');
   });
 
-  test('readSession returns null when secure storage does not respond',
-      () async {
-    FlutterSecureStoragePlatform.instance = _HangingSecureStoragePlatform();
-    final storage = AuthSecureStorage(
-      const FlutterSecureStorage(),
-      restoreSessionTimeout: const Duration(milliseconds: 10),
-    );
+  test(
+    'readSession returns null when secure storage does not respond',
+    () async {
+      FlutterSecureStoragePlatform.instance = _HangingSecureStoragePlatform();
+      final storage = AuthSecureStorage(
+        const FlutterSecureStorage(),
+        restoreSessionTimeout: const Duration(milliseconds: 10),
+      );
 
-    final session = await storage.readSession();
+      final session = await storage.readSession();
 
-    expect(session, isNull);
-  });
+      expect(session, isNull);
+    },
+  );
 }
 
 final class _HangingSecureStoragePlatform

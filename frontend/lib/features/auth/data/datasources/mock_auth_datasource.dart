@@ -30,10 +30,7 @@ final class MockAuthDatasource implements AuthDatasource {
     }
 
     if (login == 'existing' || _accounts.containsKey(login)) {
-      throw const AuthException(
-        AuthErrorCode.conflict,
-        'Login already exists',
-      );
+      throw const AuthException(AuthErrorCode.conflict, 'Login already exists');
     }
 
     final account = _MockAccount(

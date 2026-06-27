@@ -1,10 +1,4 @@
-enum AuthErrorCode {
-  validation,
-  conflict,
-  unauthorized,
-  network,
-  unknown,
-}
+enum AuthErrorCode { validation, conflict, unauthorized, network, unknown }
 
 final class AuthException implements Exception {
   const AuthException(this.code, this.message);
