@@ -8,8 +8,8 @@ final class AuthRepositoryImpl implements AuthRepository {
   const AuthRepositoryImpl({
     required AuthDatasource datasource,
     required AuthSessionStorage storage,
-  }) : _datasource = datasource,
-       _storage = storage;
+  })  : _datasource = datasource,
+        _storage = storage;
 
   final AuthDatasource _datasource;
   final AuthSessionStorage _storage;
@@ -37,7 +37,7 @@ final class AuthRepositoryImpl implements AuthRepository {
   Future<void> logout() async {
     final session = await _storage.readSession();
     if (session != null) {
-      await _datasource.logout(session.token);
+      await _datasource.logout(session.refreshToken);
     }
     await _storage.clearSession();
   }

@@ -68,13 +68,14 @@ final class MockAuthDatasource implements AuthDatasource {
   }
 
   @override
-  Future<void> logout(String token) async {
+  Future<void> logout(String refreshToken) async {
     await Future<void>.delayed(const Duration(milliseconds: 350));
   }
 
   AuthSession _sessionFor(_MockAccount account) {
     return AuthSession(
       token: 'mock-token-${account.login}',
+      refreshToken: 'mock-refresh-token-${account.login}',
       login: account.login,
       fullName: account.fullName,
     );

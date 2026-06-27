@@ -26,6 +26,7 @@ void main() {
     await storage.saveSession(
       const AuthSession(
         token: 'token',
+        refreshToken: 'refresh-token',
         login: 'driver',
         fullName: 'Demo Driver',
       ),
@@ -34,6 +35,7 @@ void main() {
     final session = await storage.readSession();
 
     expect(session?.token, 'token');
+    expect(session?.refreshToken, 'refresh-token');
     expect(session?.login, 'driver');
     expect(session?.fullName, 'Demo Driver');
   });
@@ -46,6 +48,7 @@ void main() {
     await storage.saveSession(
       const AuthSession(
         token: 'token',
+        refreshToken: 'refresh-token',
         login: 'driver',
         fullName: 'Demo Driver',
       ),

@@ -44,11 +44,11 @@ final class _LoginScreenState extends ConsumerState<LoginScreen> {
             'My Talking\nShaha',
             textAlign: TextAlign.center,
             style: Theme.of(context).textTheme.headlineLarge?.copyWith(
-              color: AppColors.primaryLight,
-              fontSize: 46,
-              fontWeight: FontWeight.w900,
-              height: 1.12,
-            ),
+                  color: AppColors.primaryLight,
+                  fontSize: 46,
+                  fontWeight: FontWeight.w900,
+                  height: 1.12,
+                ),
           ),
           const SizedBox(height: 52),
           AuthFormCard(
@@ -62,11 +62,11 @@ final class _LoginScreenState extends ConsumerState<LoginScreen> {
                     const SizedBox(height: AppSpacing.lg),
                   ],
                   AuthTextField(
-                    label: 'Login',
+                    label: 'Email',
                     controller: _loginController,
                     enabled: !isSubmitting,
-                    hintText: 'Enter your login',
-                    prefixIcon: const Icon(Icons.person_outline),
+                    hintText: 'Enter your email',
+                    prefixIcon: const Icon(Icons.email_outlined),
                     textInputAction: TextInputAction.next,
                     validator: AuthValidator.login,
                     onChanged: (_) => _clearError(),
@@ -76,13 +76,12 @@ final class _LoginScreenState extends ConsumerState<LoginScreen> {
                     label: 'Password',
                     controller: _passwordController,
                     enabled: !isSubmitting,
-                    hintText: 'At least 8 characters',
-                    helperText: 'At least 8 characters',
+                    hintText: 'At least 6 characters',
+                    helperText: 'At least 6 characters',
                     prefixIcon: const Icon(Icons.lock_outline),
                     suffixIcon: IconButton(
-                      tooltip: _obscurePassword
-                          ? 'Show password'
-                          : 'Hide password',
+                      tooltip:
+                          _obscurePassword ? 'Show password' : 'Hide password',
                       onPressed: isSubmitting
                           ? null
                           : () {
@@ -136,9 +135,8 @@ final class _LoginScreenState extends ConsumerState<LoginScreen> {
                 ).textTheme.bodyLarge?.copyWith(color: AppColors.textSecondary),
               ),
               TextButton(
-                onPressed: isSubmitting
-                    ? null
-                    : () => context.go('/registration'),
+                onPressed:
+                    isSubmitting ? null : () => context.go('/registration'),
                 child: const Text('Register'),
               ),
             ],
@@ -163,9 +161,7 @@ final class _LoginScreenState extends ConsumerState<LoginScreen> {
       return;
     }
 
-    final message = await ref
-        .read(authControllerProvider.notifier)
-        .login(
+    final message = await ref.read(authControllerProvider.notifier).login(
           LoginCredentials(
             login: _loginController.text,
             password: _passwordController.text,

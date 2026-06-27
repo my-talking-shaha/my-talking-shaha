@@ -48,9 +48,9 @@ final class _RegistrationScreenState extends ConsumerState<RegistrationScreen> {
               Text(
                 'Registration',
                 style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                  fontSize: 28,
-                  fontWeight: FontWeight.w800,
-                ),
+                      fontSize: 28,
+                      fontWeight: FontWeight.w800,
+                    ),
               ),
               const SizedBox(height: AppSpacing.md),
               Text(
@@ -76,11 +76,11 @@ final class _RegistrationScreenState extends ConsumerState<RegistrationScreen> {
               ),
               const SizedBox(height: AppSpacing.lg),
               AuthTextField(
-                label: 'Login',
+                label: 'Email',
                 controller: _loginController,
                 enabled: !isSubmitting,
-                hintText: 'Enter your login',
-                prefixIcon: const Icon(Icons.account_circle_outlined),
+                hintText: 'Enter your email',
+                prefixIcon: const Icon(Icons.email_outlined),
                 textInputAction: TextInputAction.next,
                 validator: AuthValidator.login,
                 onChanged: (_) => _clearError(),
@@ -90,8 +90,8 @@ final class _RegistrationScreenState extends ConsumerState<RegistrationScreen> {
                 label: 'Password',
                 controller: _passwordController,
                 enabled: !isSubmitting,
-                hintText: 'At least 8 characters',
-                helperText: 'At least 8 characters',
+                hintText: 'At least 6 characters',
+                helperText: 'At least 6 characters',
                 prefixIcon: const Icon(Icons.lock_outline),
                 suffixIcon: IconButton(
                   tooltip: _obscurePassword ? 'Show password' : 'Hide password',
@@ -147,8 +147,8 @@ final class _RegistrationScreenState extends ConsumerState<RegistrationScreen> {
                   Text(
                     'Already have an account?',
                     style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                      color: AppColors.textSecondary,
-                    ),
+                          color: AppColors.textSecondary,
+                        ),
                   ),
                   TextButton(
                     onPressed: isSubmitting ? null : () => context.go('/login'),
@@ -178,9 +178,7 @@ final class _RegistrationScreenState extends ConsumerState<RegistrationScreen> {
       return;
     }
 
-    final message = await ref
-        .read(authControllerProvider.notifier)
-        .register(
+    final message = await ref.read(authControllerProvider.notifier).register(
           RegistrationCredentials(
             fullName: _fullNameController.text,
             login: _loginController.text,

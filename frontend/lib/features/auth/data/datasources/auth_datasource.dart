@@ -6,5 +6,5 @@ abstract interface class AuthDatasource {
 
   Future<AuthSession> login(LoginCredentials credentials);
 
-  Future<void> logout(String token);
+  Future<void> logout(String refreshToken);
 }

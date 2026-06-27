@@ -1,12 +1,22 @@
 abstract final class AuthValidator {
-  static const int minPasswordLength = 8;
+  static const int minPasswordLength = 6;
 
   static String? fullName(String? value) {
     return requiredField(value, message: 'Enter your full name');
   }
 
   static String? login(String? value) {
-    return requiredField(value, message: 'Enter your login');
+    final requiredError = requiredField(value, message: 'Enter your email');
+    if (requiredError != null) {
+      return requiredError;
+    }
+
+    final emailPattern = RegExp(r'^[^@\s]+@[^@\s]+\.[^@\s]+$');
+    if (!emailPattern.hasMatch(value!.trim())) {
+      return 'Enter a valid email';
+    }
+
+    return null;
   }
 
   static String? password(String? value) {

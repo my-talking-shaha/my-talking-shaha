@@ -1,6 +1,7 @@
 import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:frontend/core/network/auth_interceptor.dart';
 
 const _configuredApiBaseUrl = String.fromEnvironment('API_BASE_URL');
 
@@ -20,7 +21,7 @@ final apiBaseUrlProvider = Provider<String>((ref) {
 });
 
 final dioProvider = Provider<Dio>((ref) {
-  return Dio(
+  final dio = Dio(
     BaseOptions(
       baseUrl: ref.watch(apiBaseUrlProvider),
       connectTimeout: const Duration(seconds: 10),
@@ -29,4 +30,6 @@ final dioProvider = Provider<Dio>((ref) {
       responseType: ResponseType.json,
     ),
   );
+  dio.interceptors.add(AuthInterceptor());
+  return dio;
 });

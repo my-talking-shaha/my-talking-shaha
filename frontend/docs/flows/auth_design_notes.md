@@ -10,7 +10,7 @@ The auth screens use a dark abstract background with a large centered brand titl
 
 Login content:
 - brand title `My Talking Shaha`;
-- login input;
+- email input;
 - password input with visibility toggle;
 - forgot password link;
 - primary CTA `Log in`;
@@ -22,7 +22,7 @@ Registration content:
 - title `Registration`;
 - subtitle `Create your profile`;
 - full name input;
-- login input;
+- email input;
 - password input;
 - confirm password input;
 - primary CTA `Register`;
@@ -56,7 +56,7 @@ Registration content:
 ## Current Copy
 
 Login:
-- `Login`
+- `Email`
 - `Password`
 - `Forgot password?`
 - `Log in`
@@ -67,7 +67,7 @@ Registration:
 - `Registration`
 - `Create your profile`
 - `Full name`
-- `Login`
+- `Email`
 - `Password`
 - `Confirm password`
 - `Register`
