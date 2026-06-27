@@ -39,7 +39,7 @@ Covers:
 ## Login Flow
 
 1. User opens login screen.
-2. User enters email and password.
+2. User enters login and password.
 3. Client validates required fields.
 4. Client sends login request to the current auth datasource.
 5. On success:

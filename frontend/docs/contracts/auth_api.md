@@ -113,7 +113,7 @@ Client notes:
 - client stores the session and navigates to `/garage`.
 
 Errors:
-- `409 EMAIL_ALREADY_EXISTS`;
+- `409 LOGIN_ALREADY_EXISTS`;
 - `400 VALIDATION_ERROR`.
 
 ## Login
