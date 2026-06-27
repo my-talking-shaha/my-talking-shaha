@@ -24,9 +24,9 @@ void main() {
       'auth_full_name': 'Demo Driver',
     });
 
-    final storage = AuthSecureStorage(
-      const FlutterSecureStorage(),
-      restoreSessionTimeout: const Duration(milliseconds: 50),
+    const storage = AuthSecureStorage(
+      FlutterSecureStorage(),
+      restoreSessionTimeout: Duration(milliseconds: 50),
     );
 
     final session = await storage.readSession();
@@ -40,9 +40,9 @@ void main() {
     'readSession returns null when secure storage does not respond',
     () async {
       FlutterSecureStoragePlatform.instance = _HangingSecureStoragePlatform();
-      final storage = AuthSecureStorage(
-        const FlutterSecureStorage(),
-        restoreSessionTimeout: const Duration(milliseconds: 10),
+      const storage = AuthSecureStorage(
+        FlutterSecureStorage(),
+        restoreSessionTimeout: Duration(milliseconds: 10),
       );
 
       final session = await storage.readSession();
