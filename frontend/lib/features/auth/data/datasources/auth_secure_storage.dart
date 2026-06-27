@@ -1,16 +1,30 @@
+import 'dart:async';
+
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:frontend/features/auth/domain/entities/auth_session.dart';
 
 final class AuthSecureStorage {
-  const AuthSecureStorage(this._storage);
+  const AuthSecureStorage(
+    this._storage, {
+    this.restoreSessionTimeout = const Duration(seconds: 3),
+  });
 
   static const _tokenKey = 'auth_token';
   static const _loginKey = 'auth_login';
   static const _fullNameKey = 'auth_full_name';
 
   final FlutterSecureStorage _storage;
+  final Duration restoreSessionTimeout;
 
   Future<AuthSession?> readSession() async {
+    try {
+      return await _readSession().timeout(restoreSessionTimeout);
+    } on TimeoutException {
+      return null;
+    }
+  }
+
+  Future<AuthSession?> _readSession() async {
     final token = await _storage.read(key: _tokenKey);
     if (token == null || token.isEmpty) {
       return null;

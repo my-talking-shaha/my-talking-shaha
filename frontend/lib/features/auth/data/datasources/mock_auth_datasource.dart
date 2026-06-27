@@ -2,6 +2,7 @@ import 'package:frontend/features/auth/data/datasources/auth_datasource.dart';
 import 'package:frontend/features/auth/domain/entities/auth_credentials.dart';
 import 'package:frontend/features/auth/domain/entities/auth_exception.dart';
 import 'package:frontend/features/auth/domain/entities/auth_session.dart';
+import 'package:frontend/features/auth/utils/validator.dart';
 
 final class MockAuthDatasource implements AuthDatasource {
   MockAuthDatasource({this.delay = const Duration(milliseconds: 700)});
@@ -21,7 +22,7 @@ final class MockAuthDatasource implements AuthDatasource {
     final normalized = credentials.trimmed();
     final login = normalized.login.toLowerCase();
 
-    if (!_isStrongPassword(normalized.password)) {
+    if (!AuthValidator.isStrongPassword(normalized.password)) {
       throw const AuthException(
         AuthErrorCode.validation,
         'The password does not satisfy the requirements',
@@ -69,10 +70,6 @@ final class MockAuthDatasource implements AuthDatasource {
   @override
   Future<void> logout(String token) async {
     await Future<void>.delayed(const Duration(milliseconds: 350));
-  }
-
-  bool _isStrongPassword(String password) {
-    return password.length >= 8;
   }
 
   AuthSession _sessionFor(_MockAccount account) {

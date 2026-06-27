@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -6,6 +8,7 @@ import 'package:frontend/app/router.dart';
 import 'package:frontend/features/auth/domain/entities/auth_credentials.dart';
 import 'package:frontend/features/auth/domain/entities/auth_session.dart';
 import 'package:frontend/features/auth/domain/repositories/auth_repository.dart';
+import 'package:frontend/features/auth/presentation/controllers/auth_controller.dart';
 import 'package:frontend/features/auth/presentation/providers/auth_providers.dart';
 import 'package:frontend/features/dashboard/presentation/screens/dashboard_screen.dart';
 import 'package:frontend/features/garage/data/datasources/in_memory_garage_datasource.dart';
@@ -16,6 +19,29 @@ import 'package:frontend/features/history/presentation/screens/add_history_event
 import 'package:go_router/go_router.dart';
 
 void main() {
+  testWidgets('auth loading route times out to login when restore hangs', (
+    tester,
+  ) async {
+    final app = await _pumpApp(
+      tester,
+      authRepository: const _HangingAuthRepository(),
+      settle: false,
+    );
+
+    await tester.pump();
+
+    expect(app.router.routeInformationProvider.value.uri.path, '/auth');
+    expect(find.byType(CircularProgressIndicator), findsOneWidget);
+
+    await tester.pump(
+      AuthController.restoreSessionTimeout + const Duration(milliseconds: 1),
+    );
+    await tester.pump();
+
+    expect(app.container.read(authControllerProvider).hasValue, isTrue);
+    expect(app.router.routeInformationProvider.value.uri.path, '/login');
+  });
+
   testWidgets('tab routes are hosted in an indexed stack', (tester) async {
     await _pumpApp(tester, initialLocation: '/vehicle/vehicle_123/chat');
 
@@ -182,14 +208,14 @@ void main() {
 Future<_TestApp> _pumpApp(
   WidgetTester tester, {
   String? initialLocation,
+  AuthRepository authRepository = const _AuthenticatedRepository(),
+  bool settle = true,
 }) async {
   final garageDatasource = InMemoryGarageDatasource();
   final historyDatasource = MockHistoryDatasource(delay: Duration.zero);
   final container = ProviderContainer(
     overrides: [
-      authRepositoryProvider.overrideWithValue(
-        const _AuthenticatedRepository(),
-      ),
+      authRepositoryProvider.overrideWithValue(authRepository),
       garageDatasourceProvider.overrideWithValue(garageDatasource),
       historyDatasourceProvider.overrideWithValue(historyDatasource),
     ],
@@ -206,7 +232,9 @@ Future<_TestApp> _pumpApp(
     router.go(initialLocation);
   }
 
-  await tester.pumpAndSettle();
+  if (settle) {
+    await tester.pumpAndSettle();
+  }
   return _TestApp(router, container);
 }
 
@@ -241,6 +269,28 @@ final class _AuthenticatedRepository implements AuthRepository {
       login: 'driver',
       fullName: 'Test Driver',
     );
+  }
+
+  @override
+  Future<AuthSession> register(RegistrationCredentials credentials) {
+    throw UnimplementedError();
+  }
+
+  @override
+  Future<AuthSession> login(LoginCredentials credentials) {
+    throw UnimplementedError();
+  }
+
+  @override
+  Future<void> logout() async {}
+}
+
+final class _HangingAuthRepository implements AuthRepository {
+  const _HangingAuthRepository();
+
+  @override
+  Future<AuthSession?> restoreSession() {
+    return Completer<AuthSession?>().future;
   }
 
   @override

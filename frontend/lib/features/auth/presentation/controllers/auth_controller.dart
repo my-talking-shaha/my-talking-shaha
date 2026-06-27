@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:frontend/features/auth/domain/entities/auth_credentials.dart';
 import 'package:frontend/features/auth/domain/entities/auth_exception.dart';
@@ -5,9 +7,18 @@ import 'package:frontend/features/auth/domain/entities/auth_session.dart';
 import 'package:frontend/features/auth/presentation/providers/auth_providers.dart';
 
 final class AuthController extends AsyncNotifier<AuthSession?> {
+  static const restoreSessionTimeout = Duration(seconds: 3);
+
   @override
-  Future<AuthSession?> build() {
-    return ref.watch(authRepositoryProvider).restoreSession();
+  Future<AuthSession?> build() async {
+    try {
+      return await ref
+          .watch(authRepositoryProvider)
+          .restoreSession()
+          .timeout(restoreSessionTimeout);
+    } on TimeoutException {
+      return null;
+    }
   }
 
   Future<String?> register(RegistrationCredentials credentials) async {
