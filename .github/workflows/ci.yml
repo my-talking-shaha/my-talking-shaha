@@ -146,7 +146,15 @@ jobs:
         run: |
           set -euo pipefail
 
+          smoke_email="smoke-$(date +%s)@example.com"
+          token="$(curl -fsS -X POST http://localhost/api/v1/auth/register \
+            -H 'Content-Type: application/json' \
+            --data "{\"email\": \"$smoke_email\", \"password\": \"secret123\", \"displayName\": \"Smoke Test\"}" \
+            | python3 -c 'import json, sys; print(json.load(sys.stdin)["accessToken"])')"
+          auth_header="Authorization: Bearer $token"
+
           vehicle_response="$(curl -fsS -X POST http://localhost/api/v1/vehicles \
+            -H "$auth_header" \
             -H 'Content-Type: application/json' \
             --data '{
               "brand": "Smoke",
@@ -160,9 +168,11 @@ jobs:
           vehicle_id="$(printf '%s' "$vehicle_response" | python3 -c 'import json, sys; print(json.load(sys.stdin)["id"])')"
 
           curl -fsS http://localhost/api/v1/vehicles \
+            -H "$auth_header" \
             | python3 -c 'import json, sys; vehicle_id = sys.argv[1]; vehicles = json.load(sys.stdin); assert any(vehicle.get("id") == vehicle_id for vehicle in vehicles), "created vehicle is missing from garage list"' "$vehicle_id"
 
           curl -fsS -X POST "http://localhost/api/v1/vehicles/$vehicle_id/timeline/refuel" \
+            -H "$auth_header" \
             -H 'Content-Type: application/json' \
             --data '{
               "eventDateTime": "2026-06-12T14:30:00Z",
@@ -175,6 +185,7 @@ jobs:
             }' >/dev/null
 
           curl -fsS "http://localhost/api/v1/vehicles/$vehicle_id/analytics?period=ALL_TIME" \
+            -H "$auth_header" \
             | python3 -c 'import json, sys; from decimal import Decimal; data = json.load(sys.stdin); assert data["period"] == "ALL_TIME"; assert Decimal(str(data["totalExpenses"])) == Decimal("3200"); assert Decimal(str(data["expensesByCategory"]["FUEL"])) == Decimal("3200"); assert data["historyAnalysis"]["refuelCount"] == 1; assert data["hasData"] is True'
 
       - name: Dump application stack logs
