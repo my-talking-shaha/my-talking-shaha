@@ -8,8 +8,8 @@ final class AuthRepositoryImpl implements AuthRepository {
   const AuthRepositoryImpl({
     required AuthDatasource datasource,
     required AuthSessionStorage storage,
-  })  : _datasource = datasource,
-        _storage = storage;
+  }) : _datasource = datasource,
+       _storage = storage;
 
   final AuthDatasource _datasource;
   final AuthSessionStorage _storage;

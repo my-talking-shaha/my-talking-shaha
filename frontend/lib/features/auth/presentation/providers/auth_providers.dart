@@ -43,6 +43,6 @@ final authRepositoryProvider = Provider<AuthRepository>((ref) {
 
 final authControllerProvider =
     AsyncNotifierProvider<AuthController, AuthSession?>(
-  AuthController.new,
-  retry: (_, _) => null,
-);
+      AuthController.new,
+      retry: (_, _) => null,
+    );

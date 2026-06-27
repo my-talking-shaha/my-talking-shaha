@@ -28,8 +28,8 @@ final class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     final login = session?.login.trim();
     final profileName = fullName == null || fullName.isEmpty
         ? login == null || login.isEmpty
-            ? 'Driver'
-            : login
+              ? 'Driver'
+              : login
         : fullName;
     final profileLogin = login == null || login.isEmpty ? 'Signed in' : login;
 
@@ -50,10 +50,7 @@ final class _SettingsScreenState extends ConsumerState<SettingsScreen> {
             AppSpacing.xxl,
           ),
           children: [
-            _ProfileHeaderCard(
-              fullName: profileName,
-              login: profileLogin,
-            ),
+            _ProfileHeaderCard(fullName: profileName, login: profileLogin),
             const SizedBox(height: AppSpacing.xxxl),
             _ThemeSection(
               selectedTheme: _theme,
@@ -328,8 +325,8 @@ final class _ThemeSegment extends StatelessWidget {
           child: Text(
             label,
             style: Theme.of(context).textTheme.labelLarge?.copyWith(
-                  color: selected ? AppColors.white : AppColors.textSecondary,
-                ),
+              color: selected ? AppColors.white : AppColors.textSecondary,
+            ),
           ),
         ),
       ),
@@ -402,9 +399,9 @@ final class _SectionLabel extends StatelessWidget {
       child: Text(
         title.toUpperCase(),
         style: Theme.of(context).textTheme.labelMedium?.copyWith(
-              letterSpacing: 1.8,
-              color: AppColors.textSecondary,
-            ),
+          letterSpacing: 1.8,
+          color: AppColors.textSecondary,
+        ),
       ),
     );
   }
