@@ -1,5 +1,5 @@
 import 'package:frontend/features/auth/data/datasources/auth_datasource.dart';
-import 'package:frontend/features/auth/data/datasources/auth_secure_storage.dart';
+import 'package:frontend/features/auth/data/datasources/auth_session_storage.dart';
 import 'package:frontend/features/auth/domain/entities/auth_credentials.dart';
 import 'package:frontend/features/auth/domain/entities/auth_session.dart';
 import 'package:frontend/features/auth/domain/repositories/auth_repository.dart';
@@ -7,12 +7,12 @@ import 'package:frontend/features/auth/domain/repositories/auth_repository.dart'
 final class AuthRepositoryImpl implements AuthRepository {
   const AuthRepositoryImpl({
     required AuthDatasource datasource,
-    required AuthSecureStorage storage,
+    required AuthSessionStorage storage,
   }) : _datasource = datasource,
        _storage = storage;
 
   final AuthDatasource _datasource;
-  final AuthSecureStorage _storage;
+  final AuthSessionStorage _storage;
 
   @override
   Future<AuthSession?> restoreSession() {

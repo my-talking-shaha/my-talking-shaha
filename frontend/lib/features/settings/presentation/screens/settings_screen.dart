@@ -19,7 +19,19 @@ final class _SettingsScreenState extends ConsumerState<SettingsScreen> {
   @override
   Widget build(BuildContext context) {
     final authState = ref.watch(authControllerProvider);
+    final session = authState.maybeWhen(
+      data: (session) => session,
+      orElse: () => null,
+    );
     final isLoggingOut = authState.isLoading && authState.hasValue;
+    final fullName = session?.fullName.trim();
+    final login = session?.login.trim();
+    final profileName = fullName == null || fullName.isEmpty
+        ? login == null || login.isEmpty
+              ? 'Driver'
+              : login
+        : fullName;
+    final profileLogin = login == null || login.isEmpty ? 'Signed in' : login;
 
     return Scaffold(
       appBar: AppBar(
@@ -38,10 +50,7 @@ final class _SettingsScreenState extends ConsumerState<SettingsScreen> {
             AppSpacing.xxl,
           ),
           children: [
-            const _ProfileHeaderCard(
-              fullName: 'Alex Driver',
-              email: 'alex.driver@example.com',
-            ),
+            _ProfileHeaderCard(fullName: profileName, login: profileLogin),
             const SizedBox(height: AppSpacing.xxxl),
             _ThemeSection(
               selectedTheme: _theme,
@@ -132,10 +141,10 @@ final class _SettingsScreenState extends ConsumerState<SettingsScreen> {
 }
 
 final class _ProfileHeaderCard extends StatelessWidget {
-  const _ProfileHeaderCard({required this.fullName, required this.email});
+  const _ProfileHeaderCard({required this.fullName, required this.login});
 
   final String fullName;
-  final String email;
+  final String login;
 
   @override
   Widget build(BuildContext context) {
@@ -160,7 +169,7 @@ final class _ProfileHeaderCard extends StatelessWidget {
                       style: Theme.of(context).textTheme.titleLarge,
                     ),
                     const SizedBox(height: AppSpacing.xs),
-                    Text(email, style: Theme.of(context).textTheme.bodyMedium),
+                    Text(login, style: Theme.of(context).textTheme.bodyMedium),
                   ],
                 ),
               ),
