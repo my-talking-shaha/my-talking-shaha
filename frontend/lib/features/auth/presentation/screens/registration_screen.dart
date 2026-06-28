@@ -136,10 +136,6 @@ final class _RegistrationScreenState extends ConsumerState<RegistrationScreen> {
                 onPressed: _submit,
               ),
               const SizedBox(height: AppSpacing.xxl),
-              const AuthSocialDivider(),
-              const SizedBox(height: AppSpacing.xxl),
-              AuthYandexButton(enabled: !isSubmitting),
-              const SizedBox(height: AppSpacing.xxl),
               Wrap(
                 alignment: WrapAlignment.center,
                 crossAxisAlignment: WrapCrossAlignment.center,
