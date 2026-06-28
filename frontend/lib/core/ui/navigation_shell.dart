@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:frontend/core/ui/bottom_nav_bar.dart';
+import 'package:frontend/core/utils/uuid_format.dart';
 import 'package:go_router/go_router.dart';
 
 final class NavigationShell extends StatelessWidget {
@@ -33,11 +34,11 @@ final class NavigationShell extends StatelessWidget {
 
   String? get _vehicleId {
     if (uri.pathSegments case ['vehicle', final vehicleId, ...]) {
-      return vehicleId.isEmpty ? null : vehicleId;
+      return isUuid(vehicleId) ? vehicleId : null;
     }
 
     final vehicleId = uri.queryParameters['vehicleId'];
-    return vehicleId == null || vehicleId.isEmpty ? null : vehicleId;
+    return vehicleId != null && isUuid(vehicleId) ? vehicleId : null;
   }
 
   String? _locationFor(Destination destination, String? vehicleId) {

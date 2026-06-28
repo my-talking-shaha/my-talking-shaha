@@ -52,13 +52,19 @@ void main() {
   });
 
   testWidgets('tab routes are hosted in an indexed stack', (tester) async {
-    await _pumpApp(tester, initialLocation: '/vehicle/vehicle_123/chat');
+    await _pumpApp(
+      tester,
+      initialLocation: '/vehicle/096c10bb-13d1-4599-9109-e9e79789ea88/chat',
+    );
 
     expect(find.byType(IndexedStack), findsOneWidget);
   });
 
   testWidgets('five destination bar uses a fixed layout', (tester) async {
-    await _pumpApp(tester, initialLocation: '/vehicle/vehicle_123/chat');
+    await _pumpApp(
+      tester,
+      initialLocation: '/vehicle/096c10bb-13d1-4599-9109-e9e79789ea88/chat',
+    );
 
     expect(_navigationBar(tester).items, hasLength(5));
     expect(_navigationBar(tester).type, BottomNavigationBarType.fixed);
@@ -93,12 +99,25 @@ void main() {
     expect(_navigationBar(tester).currentIndex, 1);
   });
 
+  testWidgets('invalid vehicle route falls back to garage before API screens', (
+    tester,
+  ) async {
+    final app = await _pumpApp(
+      tester,
+      initialLocation: '/vehicle/vehicle_123/dashboard',
+    );
+
+    expect(app.router.routeInformationProvider.value.uri.path, '/garage');
+    expect(find.byType(DashboardScreen), findsNothing);
+    expect(_destinationLabels(tester), ['Garage', 'Settings']);
+  });
+
   testWidgets(
     'vehicle routes select their tab and preserve vehicle context through settings',
     (tester) async {
       final app = await _pumpApp(
         tester,
-        initialLocation: '/vehicle/vehicle_123/chat',
+        initialLocation: '/vehicle/096c10bb-13d1-4599-9109-e9e79789ea88/chat',
       );
 
       expect(_navigationBar(tester).currentIndex, 2);
@@ -108,7 +127,7 @@ void main() {
 
       expect(
         app.router.routeInformationProvider.value.uri.path,
-        '/vehicle/vehicle_123/dashboard',
+        '/vehicle/096c10bb-13d1-4599-9109-e9e79789ea88/dashboard',
       );
       expect(_navigationBar(tester).currentIndex, 0);
       expect(find.byType(DashboardScreen), findsOneWidget);
@@ -118,7 +137,7 @@ void main() {
 
       expect(
         app.router.routeInformationProvider.value.uri.path,
-        '/vehicle/vehicle_123/history',
+        '/vehicle/096c10bb-13d1-4599-9109-e9e79789ea88/history',
       );
       expect(_navigationBar(tester).currentIndex, 1);
 
@@ -127,7 +146,7 @@ void main() {
 
       expect(
         app.router.routeInformationProvider.value.uri.path,
-        '/vehicle/vehicle_123/analytics',
+        '/vehicle/096c10bb-13d1-4599-9109-e9e79789ea88/analytics',
       );
       expect(_navigationBar(tester).currentIndex, 3);
 
@@ -136,7 +155,12 @@ void main() {
 
       expect(
         app.router.routeInformationProvider.value.uri,
-        Uri(path: '/settings', queryParameters: {'vehicleId': 'vehicle_123'}),
+        Uri(
+          path: '/settings',
+          queryParameters: {
+            'vehicleId': '096c10bb-13d1-4599-9109-e9e79789ea88',
+          },
+        ),
       );
       expect(_navigationBar(tester).currentIndex, 4);
 
@@ -145,21 +169,25 @@ void main() {
 
       expect(
         app.router.routeInformationProvider.value.uri.path,
-        '/vehicle/vehicle_123/chat',
+        '/vehicle/096c10bb-13d1-4599-9109-e9e79789ea88/chat',
       );
       expect(_navigationBar(tester).currentIndex, 2);
     },
   );
 
   testWidgets('history add route opens outside the tab shell', (tester) async {
-    await _pumpApp(tester, initialLocation: '/vehicle/vehicle_123/history/add');
+    await _pumpApp(
+      tester,
+      initialLocation:
+          '/vehicle/096c10bb-13d1-4599-9109-e9e79789ea88/history/add',
+    );
 
     expect(find.byType(AddHistoryEventScreen), findsOneWidget);
     expect(find.byType(BottomNavigationBar), findsNothing);
     final screen = tester.widget<AddHistoryEventScreen>(
       find.byType(AddHistoryEventScreen),
     );
-    expect(screen.vehicleId, 'vehicle_123');
+    expect(screen.vehicleId, '096c10bb-13d1-4599-9109-e9e79789ea88');
     expect(screen.initialMileageKm, 0);
     final mileageField = tester.widget<TextFormField>(
       find.descendant(
@@ -175,7 +203,7 @@ void main() {
   ) async {
     final app = await _pumpApp(
       tester,
-      initialLocation: '/vehicle/vehicle_123/history',
+      initialLocation: '/vehicle/096c10bb-13d1-4599-9109-e9e79789ea88/history',
     );
 
     await tester.tap(find.byType(FloatingActionButton));
@@ -206,7 +234,7 @@ void main() {
     expect(find.byType(AddHistoryEventScreen), findsNothing);
     final eventsFuture = app.container
         .read(historyRepositoryProvider)
-        .getEvents('vehicle_123');
+        .getEvents('096c10bb-13d1-4599-9109-e9e79789ea88');
     await tester.pump(const Duration(milliseconds: 600));
     final events = await eventsFuture;
     expect(events.any((event) => event.title == 'Highway refueling'), isTrue);
