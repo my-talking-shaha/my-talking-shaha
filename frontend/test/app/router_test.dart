@@ -1,25 +1,70 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:frontend/app/app.dart';
 import 'package:frontend/app/router.dart';
+import 'package:frontend/features/analytics/domain/entities/analytics_period.dart';
+import 'package:frontend/features/analytics/domain/entities/analytics_summary.dart';
+import 'package:frontend/features/analytics/presentation/providers/analytics_providers.dart';
+import 'package:frontend/features/auth/domain/entities/auth_credentials.dart';
+import 'package:frontend/features/auth/domain/entities/auth_session.dart';
+import 'package:frontend/features/auth/domain/repositories/auth_repository.dart';
+import 'package:frontend/features/auth/presentation/controllers/auth_controller.dart';
+import 'package:frontend/features/auth/presentation/providers/auth_providers.dart';
+import 'package:frontend/features/dashboard/domain/entities/dashboard_data.dart';
+import 'package:frontend/features/dashboard/presentation/providers/dashboard_providers.dart';
 import 'package:frontend/features/dashboard/presentation/screens/dashboard_screen.dart';
 import 'package:frontend/features/garage/data/datasources/in_memory_garage_datasource.dart';
+import 'package:frontend/features/garage/domain/entities/vehicle.dart';
 import 'package:frontend/features/garage/presentation/providers/garage_providers.dart';
 import 'package:frontend/features/history/data/datasources/mock_history_datasource.dart';
+import 'package:frontend/features/history/domain/entities/history_event_type.dart';
 import 'package:frontend/features/history/presentation/providers/history_providers.dart';
 import 'package:frontend/features/history/presentation/screens/add_history_event_screen.dart';
+import 'package:frontend/features/parts/domain/entities/vehicle_part.dart';
+import 'package:frontend/features/parts/presentation/providers/parts_providers.dart';
 import 'package:go_router/go_router.dart';
 
 void main() {
+  testWidgets('auth loading route times out to login when restore hangs', (
+    tester,
+  ) async {
+    final app = await _pumpApp(
+      tester,
+      authRepository: const _HangingAuthRepository(),
+      settle: false,
+    );
+
+    await tester.pump();
+
+    expect(app.router.routeInformationProvider.value.uri.path, '/auth');
+    expect(find.byType(CircularProgressIndicator), findsOneWidget);
+
+    await tester.pump(
+      AuthController.restoreSessionTimeout + const Duration(milliseconds: 1),
+    );
+    await tester.pump();
+
+    expect(app.container.read(authControllerProvider).hasValue, isTrue);
+    expect(app.router.routeInformationProvider.value.uri.path, '/login');
+  });
+
   testWidgets('tab routes are hosted in an indexed stack', (tester) async {
-    await _pumpApp(tester, initialLocation: '/vehicle/vehicle_123/chat');
+    await _pumpApp(
+      tester,
+      initialLocation: '/vehicle/096c10bb-13d1-4599-9109-e9e79789ea88/chat',
+    );
 
     expect(find.byType(IndexedStack), findsOneWidget);
   });
 
   testWidgets('five destination bar uses a fixed layout', (tester) async {
-    await _pumpApp(tester, initialLocation: '/vehicle/vehicle_123/chat');
+    await _pumpApp(
+      tester,
+      initialLocation: '/vehicle/096c10bb-13d1-4599-9109-e9e79789ea88/chat',
+    );
 
     expect(_navigationBar(tester).items, hasLength(5));
     expect(_navigationBar(tester).type, BottomNavigationBarType.fixed);
@@ -54,12 +99,25 @@ void main() {
     expect(_navigationBar(tester).currentIndex, 1);
   });
 
+  testWidgets('invalid vehicle route falls back to garage before API screens', (
+    tester,
+  ) async {
+    final app = await _pumpApp(
+      tester,
+      initialLocation: '/vehicle/vehicle_123/dashboard',
+    );
+
+    expect(app.router.routeInformationProvider.value.uri.path, '/garage');
+    expect(find.byType(DashboardScreen), findsNothing);
+    expect(_destinationLabels(tester), ['Garage', 'Settings']);
+  });
+
   testWidgets(
     'vehicle routes select their tab and preserve vehicle context through settings',
     (tester) async {
       final app = await _pumpApp(
         tester,
-        initialLocation: '/vehicle/vehicle_123/chat',
+        initialLocation: '/vehicle/096c10bb-13d1-4599-9109-e9e79789ea88/chat',
       );
 
       expect(_navigationBar(tester).currentIndex, 2);
@@ -69,7 +127,7 @@ void main() {
 
       expect(
         app.router.routeInformationProvider.value.uri.path,
-        '/vehicle/vehicle_123/dashboard',
+        '/vehicle/096c10bb-13d1-4599-9109-e9e79789ea88/dashboard',
       );
       expect(_navigationBar(tester).currentIndex, 0);
       expect(find.byType(DashboardScreen), findsOneWidget);
@@ -79,7 +137,7 @@ void main() {
 
       expect(
         app.router.routeInformationProvider.value.uri.path,
-        '/vehicle/vehicle_123/history',
+        '/vehicle/096c10bb-13d1-4599-9109-e9e79789ea88/history',
       );
       expect(_navigationBar(tester).currentIndex, 1);
 
@@ -88,7 +146,7 @@ void main() {
 
       expect(
         app.router.routeInformationProvider.value.uri.path,
-        '/vehicle/vehicle_123/analytics',
+        '/vehicle/096c10bb-13d1-4599-9109-e9e79789ea88/analytics',
       );
       expect(_navigationBar(tester).currentIndex, 3);
 
@@ -97,7 +155,12 @@ void main() {
 
       expect(
         app.router.routeInformationProvider.value.uri,
-        Uri(path: '/settings', queryParameters: {'vehicleId': 'vehicle_123'}),
+        Uri(
+          path: '/settings',
+          queryParameters: {
+            'vehicleId': '096c10bb-13d1-4599-9109-e9e79789ea88',
+          },
+        ),
       );
       expect(_navigationBar(tester).currentIndex, 4);
 
@@ -106,21 +169,25 @@ void main() {
 
       expect(
         app.router.routeInformationProvider.value.uri.path,
-        '/vehicle/vehicle_123/chat',
+        '/vehicle/096c10bb-13d1-4599-9109-e9e79789ea88/chat',
       );
       expect(_navigationBar(tester).currentIndex, 2);
     },
   );
 
   testWidgets('history add route opens outside the tab shell', (tester) async {
-    await _pumpApp(tester, initialLocation: '/vehicle/vehicle_123/history/add');
+    await _pumpApp(
+      tester,
+      initialLocation:
+          '/vehicle/096c10bb-13d1-4599-9109-e9e79789ea88/history/add',
+    );
 
     expect(find.byType(AddHistoryEventScreen), findsOneWidget);
     expect(find.byType(BottomNavigationBar), findsNothing);
     final screen = tester.widget<AddHistoryEventScreen>(
       find.byType(AddHistoryEventScreen),
     );
-    expect(screen.vehicleId, 'vehicle_123');
+    expect(screen.vehicleId, '096c10bb-13d1-4599-9109-e9e79789ea88');
     expect(screen.initialMileageKm, 0);
     final mileageField = tester.widget<TextFormField>(
       find.descendant(
@@ -136,7 +203,7 @@ void main() {
   ) async {
     final app = await _pumpApp(
       tester,
-      initialLocation: '/vehicle/vehicle_123/history',
+      initialLocation: '/vehicle/096c10bb-13d1-4599-9109-e9e79789ea88/history',
     );
 
     await tester.tap(find.byType(FloatingActionButton));
@@ -167,7 +234,7 @@ void main() {
     expect(find.byType(AddHistoryEventScreen), findsNothing);
     final eventsFuture = app.container
         .read(historyRepositoryProvider)
-        .getEvents('vehicle_123');
+        .getEvents('096c10bb-13d1-4599-9109-e9e79789ea88');
     await tester.pump(const Duration(milliseconds: 600));
     final events = await eventsFuture;
     expect(events.any((event) => event.title == 'Highway refueling'), isTrue);
@@ -178,13 +245,25 @@ void main() {
 Future<_TestApp> _pumpApp(
   WidgetTester tester, {
   String? initialLocation,
+  AuthRepository authRepository = const _AuthenticatedRepository(),
+  bool settle = true,
 }) async {
   final garageDatasource = InMemoryGarageDatasource();
   final historyDatasource = MockHistoryDatasource(delay: Duration.zero);
   final container = ProviderContainer(
     overrides: [
+      authRepositoryProvider.overrideWithValue(authRepository),
       garageDatasourceProvider.overrideWithValue(garageDatasource),
       historyDatasourceProvider.overrideWithValue(historyDatasource),
+      vehicleDashboardProvider.overrideWith((ref, vehicleId) {
+        return _dashboardData(vehicleId);
+      }),
+      analyticsSummaryProvider.overrideWith((ref, request) {
+        return _analyticsSummary(request.period);
+      }),
+      vehiclePartsProvider.overrideWith((ref, vehicleId) {
+        return const <VehiclePart>[];
+      }),
     ],
   );
   addTearDown(container.dispose);
@@ -199,7 +278,9 @@ Future<_TestApp> _pumpApp(
     router.go(initialLocation);
   }
 
-  await tester.pumpAndSettle();
+  if (settle) {
+    await tester.pumpAndSettle();
+  }
   return _TestApp(router, container);
 }
 
@@ -222,4 +303,100 @@ final class _TestApp {
 
   final GoRouter router;
   final ProviderContainer container;
+}
+
+DashboardData _dashboardData(String vehicleId) {
+  return DashboardData(
+    vehicle: _vehicle(vehicleId),
+    maintenanceParts: const [],
+    recentEvents: [
+      DashboardRecentEvent(
+        id: 'event_1',
+        type: HistoryEventType.maintenance,
+        title: 'Oil change',
+        subtitle: 'Today',
+        occurredAt: DateTime(2026, 6, 28),
+      ),
+    ],
+  );
+}
+
+AnalyticsSummary _analyticsSummary(AnalyticsPeriod period) {
+  return AnalyticsSummary(
+    period: period,
+    hasEnoughData: false,
+    totalExpenses: null,
+    expensesByCategory: const [],
+    mileage: null,
+    fuel: null,
+    repairs: null,
+    maintenanceForecast: null,
+    history: null,
+    charts: null,
+    trendPercent: null,
+    message: 'Not enough data for analytics yet.',
+  );
+}
+
+Vehicle _vehicle(String vehicleId) {
+  return Vehicle(
+    id: vehicleId,
+    brand: 'Lada',
+    model: '2106',
+    year: 2002,
+    currentMileageKm: 124000,
+    engineType: 'gasoline',
+    engineVolumeLiters: 1.6,
+    enginePowerHp: null,
+    status: 'ok',
+    activeWarningsCount: 0,
+  );
+}
+
+final class _AuthenticatedRepository implements AuthRepository {
+  const _AuthenticatedRepository();
+
+  @override
+  Future<AuthSession?> restoreSession() async {
+    return const AuthSession(
+      token: 'test-token',
+      login: 'driver',
+      fullName: 'Test Driver',
+    );
+  }
+
+  @override
+  Future<AuthSession> register(RegistrationCredentials credentials) {
+    throw UnimplementedError();
+  }
+
+  @override
+  Future<AuthSession> login(LoginCredentials credentials) {
+    throw UnimplementedError();
+  }
+
+  @override
+  Future<void> logout() async {}
+}
+
+final class _HangingAuthRepository implements AuthRepository {
+  const _HangingAuthRepository();
+
+  @override
+  Future<AuthSession?> restoreSession() {
+    return Completer<AuthSession?>().future;
+  }
+
+  @override
+  Future<AuthSession> register(RegistrationCredentials credentials) {
+    throw UnimplementedError();
+  }
+
+  @override
+  Future<AuthSession> login(LoginCredentials credentials) {
+    throw UnimplementedError();
+  }
+
+  @override
+  Future<void> logout() async {}
 }

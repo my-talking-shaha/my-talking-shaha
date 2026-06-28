@@ -6,6 +6,8 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+import java.util.UUID;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
@@ -24,9 +26,30 @@ class VehicleGarageFlowTest {
     @Autowired
     private MockMvc mockMvc;
 
+    private String token;
+
+    @BeforeEach
+    void registerAndAuthenticate() throws Exception {
+        String email = "test-" + UUID.randomUUID() + "@example.com";
+        String body = mockMvc.perform(post("/api/v1/auth/register")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"email\":\"" + email
+                                + "\",\"password\":\"secret123\",\"displayName\":\"Test User\"}"))
+                .andExpect(status().isCreated())
+                .andReturn()
+                .getResponse()
+                .getContentAsString();
+        token = body.replaceAll(".*\"accessToken\":\"([^\"]+)\".*", "$1");
+    }
+
+    private String bearer() {
+        return "Bearer " + token;
+    }
+
     @Test
     void createsVehicleAddsPartAndReturnsDashboard() throws Exception {
         String vehicleJson = mockMvc.perform(post("/api/v1/vehicles")
+                        .header("Authorization", bearer())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(
                                 """
@@ -46,11 +69,12 @@ class VehicleGarageFlowTest {
                 .getResponse()
                 .getContentAsString();
         String vehicleId = vehicleJson.replaceAll(".*\"id\":\"([^\"]+)\".*", "$1");
-        mockMvc.perform(get("/api/v1/vehicles"))
+        mockMvc.perform(get("/api/v1/vehicles").header("Authorization", bearer()))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$", hasSize(1)))
                 .andExpect(jsonPath("$[0].id").value(vehicleId));
         mockMvc.perform(post("/api/v1/vehicles/{vehicleId}/parts", vehicleId)
+                        .header("Authorization", bearer())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(
                                 """
@@ -66,7 +90,8 @@ class VehicleGarageFlowTest {
                 .andExpect(jsonPath("$.remainingKm").value(24000))
                 .andExpect(jsonPath("$.remainingPercent").value(96))
                 .andExpect(jsonPath("$.status").value("OK"));
-        mockMvc.perform(get("/api/v1/vehicles/{vehicleId}/dashboard", vehicleId))
+        mockMvc.perform(get("/api/v1/vehicles/{vehicleId}/dashboard", vehicleId)
+                        .header("Authorization", bearer()))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.vehicle.id").value(vehicleId))
                 .andExpect(jsonPath("$.maintenanceForecast.overallStatus").value("OK"))
@@ -77,6 +102,7 @@ class VehicleGarageFlowTest {
     @Test
     void rejectsVehicleFromFutureYear() throws Exception {
         mockMvc.perform(post("/api/v1/vehicles")
+                        .header("Authorization", bearer())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(
                                 """
@@ -96,6 +122,7 @@ class VehicleGarageFlowTest {
     void createsPartEventAndReturnsAnalytics() throws Exception {
         String vehicleId = createVehicle();
         mockMvc.perform(post("/api/v1/vehicles/{vehicleId}/timeline/refuel", vehicleId)
+                        .header("Authorization", bearer())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(
                                 """
@@ -110,6 +137,7 @@ class VehicleGarageFlowTest {
                                         """))
                 .andExpect(status().isCreated());
         mockMvc.perform(post("/api/v1/vehicles/{vehicleId}/timeline/trip", vehicleId)
+                        .header("Authorization", bearer())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(
                                 """
@@ -125,6 +153,7 @@ class VehicleGarageFlowTest {
                 .andExpect(jsonPath("$.cost").doesNotExist())
                 .andExpect(jsonPath("$.averageFuelConsumptionLitersPerKm").value(0.1));
         mockMvc.perform(post("/api/v1/vehicles/{vehicleId}/timeline/part", vehicleId)
+                        .header("Authorization", bearer())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(
                                 """
@@ -141,7 +170,8 @@ class VehicleGarageFlowTest {
                 .andExpect(jsonPath("$.type").value("PART_REPLACEMENT"))
                 .andExpect(jsonPath("$.name").value("Brake pads"))
                 .andExpect(jsonPath("$.photoUrls[0]").value("https://example.com/brake-pads.jpg"));
-        mockMvc.perform(get("/api/v1/vehicles/{vehicleId}/analytics?period=ALL_TIME", vehicleId))
+        mockMvc.perform(get("/api/v1/vehicles/{vehicleId}/analytics?period=ALL_TIME", vehicleId)
+                        .header("Authorization", bearer()))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.period").value("ALL_TIME"))
                 .andExpect(jsonPath("$.totalExpenses").value(6200))
@@ -157,6 +187,7 @@ class VehicleGarageFlowTest {
     void rejectsZeroRefuelLitersAndInvalidAnalyticsPeriod() throws Exception {
         String vehicleId = createVehicle();
         mockMvc.perform(post("/api/v1/vehicles/{vehicleId}/timeline/refuel", vehicleId)
+                        .header("Authorization", bearer())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(
                                 """
@@ -170,10 +201,12 @@ class VehicleGarageFlowTest {
                                         """))
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.code").value("VALIDATION_ERROR"));
-        mockMvc.perform(get("/api/v1/vehicles/{vehicleId}/analytics?period=WEEK", vehicleId))
+        mockMvc.perform(get("/api/v1/vehicles/{vehicleId}/analytics?period=WEEK", vehicleId)
+                        .header("Authorization", bearer()))
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.code").value("VALIDATION_ERROR"));
         mockMvc.perform(post("/api/v1/vehicles/{vehicleId}/timeline/part", vehicleId)
+                        .header("Authorization", bearer())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(
                                 """
@@ -190,6 +223,7 @@ class VehicleGarageFlowTest {
 
     private String createVehicle() throws Exception {
         String vehicleJson = mockMvc.perform(post("/api/v1/vehicles")
+                        .header("Authorization", bearer())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(
                                 """

@@ -93,7 +93,7 @@ presentation -> domain -> data
 ## Feature Responsibilities
 
 ### auth
-Registration, login, logout, session state, YandexID auth hook, token storage integration.
+Registration, login, logout, session restoration, route guard state, Yandex ID UI hook, secure token/login/full-name storage.
 
 ### garage
 List of user's vehicles, empty garage, add vehicle entry point, delete confirmation, vehicle selection.
@@ -114,10 +114,10 @@ Expenses, mileage dynamics, fuel consumption, cost per km, repair/refueling/main
 Per-vehicle AI assistant, chat history, grounded responses, insufficient-data fallback, optional voice input.
 
 ### notifications
-Warning/reminder list, push notification preferences, notification center.
+Warning/reminder list, read/unread state, push/deep-link handling, notification details, and notification center history.
 
 ### settings
-Theme, localization, profile actions, logout, notification toggles.
+Signed-in user profile header, theme, localization, profile actions, logout, notification toggles, and notification center entry point.
 
 ## State Management
 
@@ -137,17 +137,16 @@ Use GoRouter.
 Important routes:
 
 ```text
-/auth/login
-/auth/register
+/auth
+/login
+/registration
 /garage
 /garage/add
-/vehicle/:vehicleId
+/vehicle/:vehicleId/dashboard
 /vehicle/:vehicleId/history
 /vehicle/:vehicleId/history/add
-/vehicle/:vehicleId/parts
 /vehicle/:vehicleId/analytics
 /vehicle/:vehicleId/chat
-/notifications
 /settings
 ```
 

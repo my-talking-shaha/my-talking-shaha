@@ -9,33 +9,35 @@
 The auth screens use a dark abstract background with a large centered brand title and a glass-like form card.
 
 Login content:
-- brand title `Моя говорящая Шаха`;
-- login/email input;
+- brand title `My Talking Shaha`;
+- email input;
 - password input with visibility toggle;
 - forgot password link;
-- primary CTA `Войти в систему`;
-- social auth divider;
-- social auth button;
+- primary CTA `Log in`;
 - link to registration.
 
 Registration content:
-- title `Регистрация`;
-- subtitle for account creation;
-- name/login input;
+- title `Registration`;
+- subtitle `Create your profile`;
+- full name input;
 - email input;
 - password input;
 - confirm password input;
-- primary CTA `Зарегистрироваться`;
-- social auth button;
+- primary CTA `Register`;
 - link to login.
 
 ## Implementation Notes
 
 - Use a shared `AuthFormCard`.
-- Use `ShahaTextField` for all fields.
-- Use `ShahaButton.primary` for the main CTA.
-- Social auth provider should not be hardcoded in business logic. The current design shows YandexID. Use a `YandexID` and align provider text with backend/product decision.
+- Use `AuthTextField` for all fields.
+- Use `AuthPrimaryButton` for the main CTA.
+- Use `AuthErrorBanner` for auth errors returned by `AuthController`.
+- Use `AuthScreenScaffold` for the background and auth page layout.
+- The login screen uses the brand-heavy layout with `useLoginBackground: true`.
+- The registration screen keeps the form card as the primary focus.
+- Yandex ID is future work and should not appear in the current auth UI until OAuth/backend integration is planned.
 - Keep validation messages friendly and short.
+- Visible copy should stay in English.
 
 ## States To Support
 
@@ -44,3 +46,27 @@ Registration content:
 - validation error;
 - backend auth error;
 - password visibility on/off.
+- restored session;
+- unauthenticated redirect;
+- authenticated redirect.
+
+## Current Copy
+
+Login:
+- `Email`
+- `Password`
+- `Forgot password?`
+- `Log in`
+- `No account?`
+- `Register`
+
+Registration:
+- `Registration`
+- `Create your profile`
+- `Full name`
+- `Email`
+- `Password`
+- `Confirm password`
+- `Register`
+- `Already have an account?`
+- `Log in`

@@ -96,7 +96,7 @@ Glass-like card containing fields and actions.
 ### `SocialAuthButton`
 
 Generic social auth button.
-Do not hardcode provider logic inside UI. Current mockup shows YandexID.
+Do not hardcode provider logic inside UI. Current auth UI shows a Yandex ID placeholder until OAuth/backend integration is implemented.
 
 ## Garage Components
 
@@ -259,10 +259,13 @@ Bottom input bar with text field and mic/send action.
 Warning/recommendation card.
 
 Displays:
+
 - severity icon;
 - title;
 - description;
+- related vehicle/part when available;
 - time/date;
+- read/unread state;
 - recommended action;
 - optional CTA.
 
@@ -270,7 +273,7 @@ Displays:
 
 ### `ProfileHeaderCard`
 
-Displays user avatar/name/email.
+Displays signed-in user avatar or initials, display name, and email.
 
 ### `SettingsSection`
 
