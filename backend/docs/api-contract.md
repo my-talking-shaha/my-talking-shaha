@@ -2,8 +2,8 @@
 
 API prefix: `/api/v1`
 
-> Status: the Garage/Vehicles, Parts, Timeline, Analytics, and Chat sections are implemented. Auth,
-> Prediction, and Notifications are planned and described here as the
+> Status: the Auth, Garage/Vehicles, Parts, Timeline, and Analytics sections are implemented.
+> Chat, Prediction, and Notifications are planned and described here as the
 > target contract. The machine-readable spec in `openapi.yaml` covers the implemented
 > endpoints only.
 
@@ -29,7 +29,7 @@ Common error:
   "code": "VALIDATION_ERROR",
   "message": "Request contains invalid fields",
   "fields": {
-    "password": "Password must contain at least 6 characters"
+    "password": "Password must be between 6 and 72 characters"
   }
 }
 ```
@@ -147,6 +147,10 @@ Response `200`:
 }
 ```
 
+Errors:
+
+- `401 AUTHENTICATION_REQUIRED` if the access token is missing or invalid
+- `404 NOT_FOUND` if the authenticated user no longer exists
 Client usage:
 
 - The profile/settings header should use this response for signed-in user identity.

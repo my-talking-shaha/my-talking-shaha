@@ -99,7 +99,7 @@ public class AuthService {
         }
 
         AppUser user = stored.getUser();
-        refreshTokens.delete(stored);                 // ротация: старый refresh одноразовый
+        refreshTokens.delete(stored);
         String accessToken = jwtService.generateAccessToken(user);
         String newRefreshToken = createRefreshToken(user);
         return new TokenResponse(accessToken, newRefreshToken);

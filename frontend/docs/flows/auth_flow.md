@@ -3,8 +3,8 @@
 ## User Stories
 
 Covers:
-- ACC-01 Registration with email/password.
-- ACC-02 Yandex ID auth, visible as a UI entry point but not connected yet.
+- ACC-01 Registration with login/password.
+- ACC-02 Yandex ID auth, future work.
 
 ## Current Implementation Status
 
@@ -20,7 +20,7 @@ Covers:
 - Registration screen.
 - Session restoration loading screen at `/auth`.
 - Forgot password link placeholder.
-- Yandex ID button placeholder.
+- Yandex ID is out of the current UI scope.
 
 ## Registration Flow
 
@@ -57,13 +57,9 @@ Covers:
 
 ## Yandex ID Auth Flow
 
-Status: UI placeholder only.
+Status: future work. There is no Yandex ID UI flow and no backend endpoint in the current MVP scope.
 
-1. Login and registration screens show the Yandex ID button.
-2. The button is not connected to OAuth or backend auth yet.
-3. Do not treat Yandex ID as a completed auth path until OAuth and backend integration are implemented.
-
-Do not implement Yandex ID auth before the backend-backed login/register integration unless explicitly requested.
+Do not add Yandex ID UI or backend contract details until OAuth and backend integration are explicitly planned.
 
 ## Logout Flow
 
@@ -101,4 +97,14 @@ Do not implement Yandex ID auth before the backend-backed login/register integra
 - Existing stored session is restored on app launch.
 - Protected routes redirect unauthenticated users to `/login`.
 - Auth routes redirect authenticated users to `/garage`.
-- Yandex ID button is visible but remains a placeholder until OAuth/backend integration is in scope.
+- Yandex ID is documented as future work and is not part of the current UI/API scope.
+
+## Demo Credentials
+
+- Login: `driver`
+- Password: `password123`
+
+## Mock Error Triggers
+
+- Registering login `existing` shows `Login already exists`.
+- Logging in as `network` shows `Network error. Please try again later`.
