@@ -120,7 +120,7 @@ Client notes:
 - client stores tokens and navigates to `/garage`.
 
 Errors:
-- `409 LOGIN_ALREADY_EXISTS`;
+- `409 EMAIL_ALREADY_EXISTS`;
 - `400 VALIDATION_ERROR`.
 
 ## Login
@@ -131,8 +131,8 @@ Request:
 
 ```json
 {
-  "login": "john",
-  "password": "password123"
+  "email": "user@example.com",
+  "password": "secret123"
 }
 ```
 
@@ -143,23 +143,9 @@ Errors:
 
 ## Yandex ID Auth
 
-Status: future integration. The mobile UI currently shows the button, but no OAuth/backend flow is connected.
+Status: future work. There is no Yandex ID UI flow and no backend endpoint in the current MVP scope.
 
-`POST /api/v1/auth/yandexid`
-
-Request:
-
-```json
-{
-  "idToken": "yandex-id-token"
-}
-```
-
-Response `200`: same as login.
-
-Client notes:
-- Yandex ID auth creates account if not present;
-- login/full name mapping must be agreed with backend/product before implementation.
+When the feature is implemented later, product, frontend, and backend should agree the OAuth flow, endpoint shape, and user identity mapping before adding UI or API contract details.
 
 ## Refresh Token
 
@@ -173,7 +159,7 @@ Request:
 }
 ```
 
-Response:
+Response `200`:
 
 ```json
 {
@@ -185,8 +171,6 @@ Response:
 ## Logout
 
 `POST /api/v1/auth/logout`
-
-Headers: `Authorization: Bearer <token>`
 
 Request:
 

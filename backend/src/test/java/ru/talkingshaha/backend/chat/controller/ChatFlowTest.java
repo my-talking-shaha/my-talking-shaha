@@ -7,6 +7,8 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+import java.util.UUID;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
@@ -25,16 +27,38 @@ class ChatFlowTest {
     @Autowired
     private MockMvc mockMvc;
 
+    private String token;
+
+    @BeforeEach
+    void registerAndAuthenticate() throws Exception {
+        String email = "test-" + UUID.randomUUID() + "@example.com";
+        String body = mockMvc.perform(post("/api/v1/auth/register")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"email\":\"" + email
+                                + "\",\"password\":\"secret123\",\"displayName\":\"Test User\"}"))
+                .andExpect(status().isCreated())
+                .andReturn()
+                .getResponse()
+                .getContentAsString();
+        token = body.replaceAll(".*\"accessToken\":\"([^\"]+)\".*", "$1");
+    }
+
+    private String bearer() {
+        return "Bearer " + token;
+    }
+
     @Test
     void opensChatWithHistoryAndQuickQuestions() throws Exception {
         String vehicleId = createVehicle();
-        mockMvc.perform(get("/api/v1/vehicles/{vehicleId}/chat", vehicleId))
+        mockMvc.perform(get("/api/v1/vehicles/{vehicleId}/chat", vehicleId)
+                        .header("Authorization", bearer()))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.sessionId").exists())
                 .andExpect(jsonPath("$.quickQuestions", hasSize(3)))
                 .andExpect(jsonPath("$.messages", hasSize(1)))
                 .andExpect(jsonPath("$.messages[0].role").value("ASSISTANT"));
-        mockMvc.perform(get("/api/v1/vehicles/{vehicleId}/chat/messages", vehicleId))
+        mockMvc.perform(get("/api/v1/vehicles/{vehicleId}/chat/messages", vehicleId)
+                        .header("Authorization", bearer()))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.messages", hasSize(1)));
     }
@@ -43,6 +67,7 @@ class ChatFlowTest {
     void answersRussianAnalyticsQuestionWithRedirect() throws Exception {
         String vehicleId = createVehicleWithAnalytics();
         mockMvc.perform(post("/api/v1/vehicles/{vehicleId}/chat/messages", vehicleId)
+                        .header("Authorization", bearer())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("{\"text\":\"покажи статистику расхдов\"}"))
                 .andExpect(status().isCreated())
@@ -51,7 +76,8 @@ class ChatFlowTest {
                 .andExpect(jsonPath("$.assistantMessage.text", containsString("Расходы")))
                 .andExpect(jsonPath("$.assistantMessage.action.type").value("OPEN_SCREEN"))
                 .andExpect(jsonPath("$.assistantMessage.action.screen").value("ANALYTICS"));
-        mockMvc.perform(get("/api/v1/vehicles/{vehicleId}/chat", vehicleId))
+        mockMvc.perform(get("/api/v1/vehicles/{vehicleId}/chat", vehicleId)
+                        .header("Authorization", bearer()))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.messages", hasSize(3)))
                 .andExpect(jsonPath("$.quickQuestions[0]").value("Состояние авто"));
@@ -61,6 +87,7 @@ class ChatFlowTest {
     void redirectsEnglishRefuelQuestionWithTypoToForm() throws Exception {
         String vehicleId = createVehicle();
         mockMvc.perform(post("/api/v1/vehicles/{vehicleId}/chat/messages", vehicleId)
+                        .header("Authorization", bearer())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("{\"text\":\"I refuled the car today\"}"))
                 .andExpect(status().isCreated())
@@ -72,6 +99,7 @@ class ChatFlowTest {
     void reportsRepairNeedAndRedirectsToMaintenanceForecast() throws Exception {
         String vehicleId = createVehicle();
         mockMvc.perform(post("/api/v1/vehicles/{vehicleId}/parts", vehicleId)
+                        .header("Authorization", bearer())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(
                                 """
@@ -85,6 +113,7 @@ class ChatFlowTest {
                                         """))
                 .andExpect(status().isCreated());
         mockMvc.perform(post("/api/v1/vehicles/{vehicleId}/chat/messages", vehicleId)
+                        .header("Authorization", bearer())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("{\"text\":\"Что может сломаться скоро?\"}"))
                 .andExpect(status().isCreated())
@@ -97,6 +126,7 @@ class ChatFlowTest {
     void returnsFallbackWithSuggestionsForUnclearQuestion() throws Exception {
         String vehicleId = createVehicle();
         mockMvc.perform(post("/api/v1/vehicles/{vehicleId}/chat/messages", vehicleId)
+                        .header("Authorization", bearer())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("{\"text\":\"синяя луна вчера\"}"))
                 .andExpect(status().isCreated())
@@ -107,6 +137,7 @@ class ChatFlowTest {
     private String createVehicleWithAnalytics() throws Exception {
         String vehicleId = createVehicle();
         mockMvc.perform(post("/api/v1/vehicles/{vehicleId}/timeline/refuel", vehicleId)
+                        .header("Authorization", bearer())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(
                                 """
@@ -121,6 +152,7 @@ class ChatFlowTest {
                                         """))
                 .andExpect(status().isCreated());
         mockMvc.perform(post("/api/v1/vehicles/{vehicleId}/timeline/trip", vehicleId)
+                        .header("Authorization", bearer())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(
                                 """
@@ -138,6 +170,7 @@ class ChatFlowTest {
 
     private String createVehicle() throws Exception {
         String vehicleJson = mockMvc.perform(post("/api/v1/vehicles")
+                        .header("Authorization", bearer())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(
                                 """

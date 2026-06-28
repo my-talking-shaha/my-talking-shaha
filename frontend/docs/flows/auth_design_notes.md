@@ -14,8 +14,6 @@ Login content:
 - password input with visibility toggle;
 - forgot password link;
 - primary CTA `Log in`;
-- social auth divider;
-- Yandex ID button placeholder;
 - link to registration.
 
 Registration content:
@@ -26,7 +24,6 @@ Registration content:
 - password input;
 - confirm password input;
 - primary CTA `Register`;
-- Yandex ID button placeholder;
 - link to login.
 
 ## Implementation Notes
@@ -38,7 +35,7 @@ Registration content:
 - Use `AuthScreenScaffold` for the background and auth page layout.
 - The login screen uses the brand-heavy layout with `useLoginBackground: true`.
 - The registration screen keeps the form card as the primary focus.
-- Social auth provider should not be hardcoded in business logic. The current UI shows Yandex ID, but it is a placeholder until OAuth/backend integration is implemented.
+- Yandex ID is future work and should not appear in the current auth UI until OAuth/backend integration is planned.
 - Keep validation messages friendly and short.
 - Visible copy should stay in English.
 

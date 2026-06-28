@@ -29,7 +29,7 @@ Common error:
   "code": "VALIDATION_ERROR",
   "message": "Request contains invalid fields",
   "fields": {
-    "password": "Password must contain at least 6 characters"
+    "password": "Password must be between 6 and 72 characters"
   }
 }
 ```

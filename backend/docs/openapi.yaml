@@ -107,7 +107,7 @@ paths:
           $ref: '#/components/responses/NotFound'
   /vehicles:
     get:
-      summary: List demo user's garage vehicles
+      summary: List current user's garage vehicles
       tags: [ Vehicles ]
       responses:
         '200':
