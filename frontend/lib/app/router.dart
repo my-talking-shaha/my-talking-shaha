@@ -12,6 +12,7 @@ import 'package:frontend/features/chat/presentation/screens/chat_screen.dart';
 import 'package:frontend/features/dashboard/presentation/screens/dashboard_screen.dart';
 import 'package:frontend/features/garage/presentation/screens/add_vehicle_screen.dart';
 import 'package:frontend/features/garage/presentation/screens/garage_screen.dart';
+import 'package:frontend/features/history/domain/entities/history_event_type.dart';
 import 'package:frontend/features/history/presentation/providers/history_providers.dart';
 import 'package:frontend/features/history/presentation/screens/add_history_event_screen.dart';
 import 'package:frontend/features/history/presentation/screens/history_screen.dart';
@@ -78,15 +79,24 @@ final routerProvider = Provider<GoRouter>((ref) {
         path: '/vehicle/:vehicleId/history/add',
         builder: (context, state) {
           final vehicleId = state.pathParameters['vehicleId'] ?? '';
+          final query = state.uri.queryParameters;
+          final initialType = _historyEventTypeFromQuery(query['type']);
+          final prefillMileageKm = int.tryParse(query['mileageKm'] ?? '');
           return Consumer(
             builder: (context, ref, _) {
               final mileageState = ref.watch(vehicleMileageProvider(vehicleId));
 
               return mileageState.when(
                 data: (currentMileageKm) {
+                  final initialMileageKm = prefillMileageKm == null
+                      ? currentMileageKm
+                      : prefillMileageKm < currentMileageKm
+                      ? currentMileageKm
+                      : prefillMileageKm;
                   return AddHistoryEventScreen(
                     vehicleId: vehicleId,
-                    initialMileageKm: currentMileageKm,
+                    initialMileageKm: initialMileageKm,
+                    initialType: initialType,
                     onSave: ref.read(addHistoryEventProvider),
                     persistPhoto: ref
                         .read(historyPhotoStorageProvider)
@@ -302,4 +312,12 @@ String? _invalidVehicleRedirect(Uri uri) {
   }
 
   return null;
+}
+
+HistoryEventType _historyEventTypeFromQuery(String? value) {
+  return switch (value?.toLowerCase()) {
+    'trip' => HistoryEventType.trip,
+    'maintenance' || 'part_replacement' => HistoryEventType.maintenance,
+    _ => HistoryEventType.fuel,
+  };
 }

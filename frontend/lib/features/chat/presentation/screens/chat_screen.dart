@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:frontend/app/theme/app_theme.dart';
+import 'package:frontend/features/chat/domain/entities/chat_action.dart';
 import 'package:frontend/features/chat/domain/entities/chat_message.dart';
 import 'package:frontend/features/chat/presentation/providers/chat_providers.dart';
 import 'package:frontend/features/chat/presentation/state/chat_screen_state.dart';
@@ -60,6 +61,7 @@ final class _ChatScreenState extends ConsumerState<ChatScreen> {
       ),
       body: chatState.when(
         data: (state) => _ChatLoadedBody(
+          vehicleId: widget.vehicleId,
           state: state,
           controller: _messageController,
           scrollController: _scrollController,
@@ -101,12 +103,14 @@ final class _ChatScreenState extends ConsumerState<ChatScreen> {
 
 final class _ChatLoadedBody extends StatelessWidget {
   const _ChatLoadedBody({
+    required this.vehicleId,
     required this.state,
     required this.controller,
     required this.scrollController,
     required this.onSend,
   });
 
+  final String vehicleId;
   final ChatScreenState state;
   final TextEditingController controller;
   final ScrollController scrollController;
@@ -115,7 +119,7 @@ final class _ChatLoadedBody extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final messages = _visibleMessages(state.messages);
-    final quickQuestions = _englishQuickQuestions(state.quickQuestions);
+    final quickQuestions = _quickQuestionsFromBackend(state.quickQuestions);
 
     return SafeArea(
       top: false,
@@ -128,6 +132,7 @@ final class _ChatLoadedBody extends StatelessWidget {
                     onQuestionSelected: onSend,
                   )
                 : _MessageList(
+                    vehicleId: vehicleId,
                     messages: messages,
                     scrollController: scrollController,
                     isSending: state.isSending,
@@ -159,30 +164,17 @@ final class _ChatLoadedBody extends StatelessWidget {
         message.text.trim().toLowerCase() == 'the assistant is ready.';
   }
 
-  List<String> _englishQuickQuestions(List<String> questions) {
+  List<String> _quickQuestionsFromBackend(List<String> questions) {
     final result = <String>[];
 
     for (final question in questions) {
-      final translated = _translateQuickQuestion(question);
-      if (translated.isNotEmpty && !result.contains(translated)) {
-        result.add(translated);
+      final trimmedQuestion = question.trim();
+      if (trimmedQuestion.isNotEmpty && !result.contains(trimmedQuestion)) {
+        result.add(trimmedQuestion);
       }
     }
 
     return result;
-  }
-
-  String _translateQuickQuestion(String question) {
-    final normalized = question.trim().toLowerCase();
-    return switch (normalized) {
-      'состояние авто' => 'Vehicle status',
-      'какие расходы за всё время?' => 'What are my total expenses?',
-      'что может сломаться скоро?' => 'What can break soon?',
-      'когда то?' || 'когда то' => 'When is the next service?',
-      'добавить заправку' => 'Add refuel',
-      'записать ремонт' => 'Log repair',
-      _ => question.trim(),
-    };
   }
 }
 
@@ -244,11 +236,13 @@ final class _ChatEmptyState extends StatelessWidget {
 
 final class _MessageList extends StatelessWidget {
   const _MessageList({
+    required this.vehicleId,
     required this.messages,
     required this.scrollController,
     required this.isSending,
   });
 
+  final String vehicleId;
   final List<ChatMessage> messages;
   final ScrollController scrollController;
   final bool isSending;
@@ -269,15 +263,16 @@ final class _MessageList extends StatelessWidget {
           return const _TypingBubble();
         }
 
-        return _ChatBubble(message: messages[index]);
+        return _ChatBubble(vehicleId: vehicleId, message: messages[index]);
       },
     );
   }
 }
 
 final class _ChatBubble extends StatelessWidget {
-  const _ChatBubble({required this.message});
+  const _ChatBubble({required this.vehicleId, required this.message});
 
+  final String vehicleId;
   final ChatMessage message;
 
   @override
@@ -286,57 +281,73 @@ final class _ChatBubble extends StatelessWidget {
 
     return LayoutBuilder(
       builder: (context, constraints) {
-        final maxBubbleWidth = constraints.maxWidth * 0.78;
+        final widthFactor = isUser ? 0.76 : 0.82;
+        final maxBubbleWidth = (constraints.maxWidth * widthFactor).clamp(
+          0.0,
+          620.0,
+        );
         final bubble = Flexible(
           child: ConstrainedBox(
             constraints: BoxConstraints(maxWidth: maxBubbleWidth),
-            child: DecoratedBox(
-              decoration: BoxDecoration(
-                color: isUser ? AppColors.primary : AppColors.surfaceHigh,
-                borderRadius: BorderRadius.only(
-                  topLeft: const Radius.circular(AppRadius.lg),
-                  topRight: const Radius.circular(AppRadius.lg),
-                  bottomLeft: Radius.circular(
-                    isUser ? AppRadius.lg : AppSpacing.xs,
-                  ),
-                  bottomRight: Radius.circular(
-                    isUser ? AppSpacing.xs : AppRadius.lg,
-                  ),
-                ),
-                border: Border.all(
-                  color: isUser ? AppColors.primaryPressed : AppColors.border,
-                ),
-              ),
-              child: Padding(
-                padding: const EdgeInsets.fromLTRB(
-                  AppSpacing.lg,
-                  AppSpacing.md,
-                  AppSpacing.lg,
-                  AppSpacing.sm,
-                ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Text(
-                      message.text,
-                      style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                        color: AppColors.textPrimary,
-                      ),
+            child: IntrinsicWidth(
+              child: DecoratedBox(
+                decoration: BoxDecoration(
+                  color: isUser ? AppColors.primary : AppColors.surfaceHigh,
+                  borderRadius: BorderRadius.only(
+                    topLeft: const Radius.circular(AppRadius.lg),
+                    topRight: const Radius.circular(AppRadius.lg),
+                    bottomLeft: Radius.circular(
+                      isUser ? AppRadius.lg : AppSpacing.xs,
                     ),
-                    const SizedBox(height: AppSpacing.xs),
-                    Align(
-                      alignment: Alignment.centerRight,
-                      child: Text(
-                        _formatTime(message.createdAt),
-                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                          color: isUser
-                              ? AppColors.primaryLight
-                              : AppColors.textMuted,
+                    bottomRight: Radius.circular(
+                      isUser ? AppSpacing.xs : AppRadius.lg,
+                    ),
+                  ),
+                  border: Border.all(
+                    color: isUser ? AppColors.primaryPressed : AppColors.border,
+                  ),
+                ),
+                child: Padding(
+                  padding: EdgeInsets.fromLTRB(
+                    isUser ? AppSpacing.xl : AppSpacing.lg,
+                    AppSpacing.lg,
+                    isUser ? AppSpacing.xl : AppSpacing.lg,
+                    AppSpacing.sm,
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(
+                        message.text,
+                        style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                          color: AppColors.textPrimary,
+                          height: 1.35,
                         ),
                       ),
-                    ),
-                  ],
+                      if (!isUser && message.action != null) ...[
+                        const SizedBox(height: AppSpacing.md),
+                        _ChatActionPill(
+                          vehicleId: vehicleId,
+                          action: message.action!,
+                        ),
+                      ],
+                      const SizedBox(height: AppSpacing.xs),
+                      Align(
+                        alignment: Alignment.centerRight,
+                        child: Text(
+                          _formatTime(message.createdAt),
+                          style: Theme.of(context).textTheme.bodySmall
+                              ?.copyWith(
+                                color: isUser
+                                    ? AppColors.white.withValues(alpha: 0.7)
+                                    : AppColors.textMuted,
+                                height: 1,
+                              ),
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
               ),
             ),
@@ -367,6 +378,144 @@ final class _ChatBubble extends StatelessWidget {
     final hour = value.hour.toString().padLeft(2, '0');
     final minute = value.minute.toString().padLeft(2, '0');
     return '$hour:$minute';
+  }
+}
+
+final class _ChatActionPill extends StatelessWidget {
+  const _ChatActionPill({required this.vehicleId, required this.action});
+
+  final String vehicleId;
+  final ChatAction action;
+
+  @override
+  Widget build(BuildContext context) {
+    final destination = _destination();
+    if (destination == null) {
+      return const SizedBox.shrink();
+    }
+
+    return Align(
+      alignment: Alignment.centerLeft,
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          key: const ValueKey('chat_message_action'),
+          onTap: () => context.go(destination),
+          borderRadius: BorderRadius.circular(18),
+          child: Ink(
+            padding: const EdgeInsets.fromLTRB(
+              AppSpacing.sm,
+              AppSpacing.xs,
+              AppSpacing.md,
+              AppSpacing.xs,
+            ),
+            decoration: BoxDecoration(
+              color: AppColors.primary.withValues(alpha: 0.12),
+              borderRadius: BorderRadius.circular(18),
+              border: Border.all(
+                color: AppColors.primaryLight.withValues(alpha: 0.22),
+              ),
+            ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Container(
+                  width: 26,
+                  height: 26,
+                  decoration: BoxDecoration(
+                    color: AppColors.primary.withValues(alpha: 0.22),
+                    shape: BoxShape.circle,
+                  ),
+                  child: Icon(_icon(), size: 16, color: AppColors.primaryLight),
+                ),
+                const SizedBox(width: AppSpacing.sm),
+                Text(
+                  _label(),
+                  style: Theme.of(context).textTheme.labelLarge?.copyWith(
+                    color: AppColors.primaryLight,
+                    fontWeight: FontWeight.w700,
+                    height: 1.1,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  String? _destination() {
+    final type = action.type.toUpperCase();
+    if (type == 'OPEN_SCREEN') {
+      return switch (action.screen?.toUpperCase()) {
+        'ANALYTICS' => '/vehicle/$vehicleId/analytics',
+        'DASHBOARD' ||
+        'MAINTENANCE_FORECAST' => '/vehicle/$vehicleId/dashboard',
+        _ => null,
+      };
+    }
+
+    if (type == 'OPEN_FORM') {
+      final form = action.form?.toUpperCase();
+      final routeType = switch (form) {
+        'TRIP' => 'trip',
+        'MAINTENANCE' || 'PART_REPLACEMENT' => 'maintenance',
+        _ => 'fuel',
+      };
+      final query = <String, String>{'type': routeType};
+      final mileageKm = action.prefill['mileageKm']?.toString();
+      if (mileageKm != null && mileageKm.isNotEmpty) {
+        query['mileageKm'] = mileageKm;
+      }
+
+      return Uri(
+        path: '/vehicle/$vehicleId/history/add',
+        queryParameters: query,
+      ).toString();
+    }
+
+    return null;
+  }
+
+  String _label() {
+    final type = action.type.toUpperCase();
+    if (type == 'OPEN_SCREEN') {
+      return switch (action.screen?.toUpperCase()) {
+        'ANALYTICS' => 'Open analytics',
+        'MAINTENANCE_FORECAST' => 'Open forecast',
+        'DASHBOARD' => 'Open dashboard',
+        _ => 'Open',
+      };
+    }
+
+    return switch (action.form?.toUpperCase()) {
+      'REFUEL' => 'Add refuel',
+      'TRIP' => 'Add trip',
+      'PART_REPLACEMENT' => 'Add part record',
+      'MAINTENANCE' => 'Add maintenance',
+      _ => 'Open form',
+    };
+  }
+
+  IconData _icon() {
+    final type = action.type.toUpperCase();
+    if (type == 'OPEN_SCREEN') {
+      return switch (action.screen?.toUpperCase()) {
+        'ANALYTICS' => Icons.bar_chart_rounded,
+        'MAINTENANCE_FORECAST' => Icons.build_circle_outlined,
+        'DASHBOARD' => Icons.directions_car_filled_rounded,
+        _ => Icons.open_in_new_rounded,
+      };
+    }
+
+    return switch (action.form?.toUpperCase()) {
+      'REFUEL' => Icons.local_gas_station_rounded,
+      'TRIP' => Icons.route_rounded,
+      'PART_REPLACEMENT' => Icons.build_circle_outlined,
+      'MAINTENANCE' => Icons.handyman_rounded,
+      _ => Icons.open_in_new_rounded,
+    };
   }
 }
 
@@ -591,30 +740,28 @@ final class _TypingBubble extends StatefulWidget {
   State<_TypingBubble> createState() => _TypingBubbleState();
 }
 
-final class _TypingBubbleState extends State<_TypingBubble> {
-  late final Timer _timer;
-  int _dotCount = 1;
+final class _TypingBubbleState extends State<_TypingBubble>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _controller;
 
   @override
   void initState() {
     super.initState();
-    _timer = Timer.periodic(const Duration(milliseconds: 360), (_) {
-      setState(() {
-        _dotCount = _dotCount == 3 ? 1 : _dotCount + 1;
-      });
-    });
+    _controller = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 1100),
+    );
+    unawaited(_controller.repeat());
   }
 
   @override
   void dispose() {
-    _timer.cancel();
+    _controller.dispose();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
-    final dots = '.'.padRight(_dotCount, '.');
-
     return Padding(
       padding: const EdgeInsets.only(bottom: AppSpacing.md),
       child: Row(
@@ -633,31 +780,60 @@ final class _TypingBubbleState extends State<_TypingBubble> {
                 horizontal: AppSpacing.lg,
                 vertical: AppSpacing.md,
               ),
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  SizedBox(
-                    width: 24,
-                    child: AnimatedSwitcher(
-                      duration: const Duration(milliseconds: 180),
-                      child: Text(
-                        dots,
-                        key: ValueKey(dots),
-                        style: Theme.of(context).textTheme.titleMedium
-                            ?.copyWith(color: AppColors.primaryLight),
-                      ),
-                    ),
-                  ),
-                  const SizedBox(width: AppSpacing.sm),
-                  Text(
-                    'Shaha is thinking',
-                    style: Theme.of(context).textTheme.bodyMedium,
-                  ),
-                ],
+              child: Semantics(
+                label: 'Assistant is thinking',
+                child: AnimatedBuilder(
+                  animation: _controller,
+                  builder: (context, _) {
+                    return Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        _ThinkingWaveText(progress: _controller.value),
+                      ],
+                    );
+                  },
+                ),
               ),
             ),
           ),
         ],
+      ),
+    );
+  }
+}
+
+final class _ThinkingWaveText extends StatelessWidget {
+  const _ThinkingWaveText({required this.progress});
+
+  final double progress;
+
+  @override
+  Widget build(BuildContext context) {
+    final waveStart = -1.4 + progress * 2.8;
+
+    return ShaderMask(
+      blendMode: BlendMode.srcIn,
+      shaderCallback: (bounds) {
+        return LinearGradient(
+          begin: Alignment(waveStart, 0),
+          end: Alignment(waveStart + 1.1, 0),
+          colors: const [
+            AppColors.textSecondary,
+            AppColors.primaryLight,
+            AppColors.textPrimary,
+            AppColors.primaryLight,
+            AppColors.textSecondary,
+          ],
+          stops: const [0, 0.28, 0.5, 0.72, 1],
+        ).createShader(bounds);
+      },
+      child: Text(
+        'Shaha is thinking',
+        style: Theme.of(context).textTheme.titleMedium?.copyWith(
+          color: AppColors.textSecondary,
+          fontWeight: FontWeight.w500,
+          height: 1.1,
+        ),
       ),
     );
   }
