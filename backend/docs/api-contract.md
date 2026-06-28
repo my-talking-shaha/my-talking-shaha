@@ -151,6 +151,11 @@ Errors:
 
 - `401 AUTHENTICATION_REQUIRED` if the access token is missing or invalid
 - `404 NOT_FOUND` if the authenticated user no longer exists
+Client usage:
+
+- The profile/settings header should use this response for signed-in user identity.
+- Profile editing is outside the current MVP contract unless a dedicated account endpoint is added.
+- Vehicle profile data belongs to the vehicle/dashboard endpoints, not `/users/me`.
 
 ## Garage and vehicles
 
@@ -558,6 +563,25 @@ Response `200`:
 }
 ```
 
+### Get chat history
+
+`GET /api/v1/vehicles/{vehicleId}/chat/messages`
+
+Response `200`:
+
+```json
+{
+  "messages": [
+    {
+      "id": "125c13vj-13d2-4557-9149-e9e79789ea83",
+      "role": "ASSISTANT",
+      "text": "The assistant is ready.",
+      "createdAt": "2026-06-12T10:00:00Z"
+    }
+  ]
+}
+```
+
 ### Send message
 
 `POST /api/v1/vehicles/{vehicleId}/chat/messages`
@@ -570,7 +594,7 @@ Request:
 }
 ```
 
-Response `200`:
+Response `201`:
 
 ```json
 {
@@ -588,6 +612,7 @@ Response `200`:
     "action": {
       "type": "OPEN_FORM",
       "form": "PART_REPLACEMENT",
+      "screen": null,
       "prefill": {
         "partName": "Engine oil",
         "mileageKm": 10000
@@ -597,16 +622,36 @@ Response `200`:
 }
 ```
 
+For screen redirects, the assistant message uses:
+
+```json
+{
+  "action": {
+    "type": "OPEN_SCREEN",
+    "form": null,
+    "screen": "ANALYTICS",
+    "prefill": {}
+  }
+}
+```
+
 If there is not enough data:
 
 ```json
 {
+  "userMessage": {
+    "id": "533c17vc-13d5-6857-5269-e9e80739ea42",
+    "role": "USER",
+    "text": "How much did I spend?",
+    "createdAt": "2026-06-12T10:00:00Z",
+    "action": null
+  },
   "assistantMessage": {
+    "id": "784v15jc-15d3-4957-9189-u8e79789ea66",
     "role": "ASSISTANT",
     "text": "There is not enough data to answer.",
-    "metadata": {
-      "reason": "NO_TRIPS_FOR_PERIOD"
-    }
+    "createdAt": "2026-06-12T10:00:01Z",
+    "action": null
   }
 }
 ```
@@ -651,9 +696,13 @@ Response `200`:
     {
       "id": "306w17hc-23o2-8597-6390-l9u83789ea47",
       "vehicleId": "096c10bb-13d1-4599-9109-e9e79789ea88",
+      "type": "PART_LIFETIME_WARNING",
       "title": "Brake pads need attention",
       "message": "About 500 km of lifetime remains.",
       "severity": "WARNING",
+      "partId": "091f14fc-83d2-4157-9566-j2e63789ea84",
+      "remainingKm": 500,
+      "recommendedAction": "Plan a brake pad inspection.",
       "read": false,
       "createdAt": "2026-06-12T10:00:00Z"
     }
@@ -663,3 +712,62 @@ Response `200`:
   "totalElements": 1
 }
 ```
+
+### Get notification
+
+`GET /api/v1/notifications/{notificationId}`
+
+Response `200`: notification object.
+
+Errors:
+
+- `404 NOT_FOUND`
+
+### Mark notification as read
+
+`PATCH /api/v1/notifications/{notificationId}`
+
+Request:
+
+```json
+{
+  "read": true
+}
+```
+
+Response `200`: updated notification object.
+
+### Notification settings
+
+Notification preferences may be part of a general settings endpoint. If kept
+under notifications:
+
+`GET /api/v1/notifications/settings`
+
+Response `200`:
+
+```json
+{
+  "enabled": true,
+  "partLifetimeThresholdKm": 500
+}
+```
+
+`PATCH /api/v1/notifications/settings`
+
+Request:
+
+```json
+{
+  "enabled": true,
+  "partLifetimeThresholdKm": 500
+}
+```
+
+Response `200`: updated notification settings.
+
+Rules:
+
+- Disabled notifications stop future delivery but do not delete notification history.
+- The notification center remains readable when delivery is disabled.
+- Non-urgent notifications for the same part should not be sent more than once per day.
