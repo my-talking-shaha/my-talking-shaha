@@ -72,12 +72,33 @@ Base error codes:
 - `ACCESS_DENIED`
 - `NOT_FOUND`
 - `CONFLICT`
+- `EMAIL_ALREADY_EXISTS`
+- `INVALID_CREDENTIALS`
 - `INSUFFICIENT_DATA`
 - `INTERNAL_ERROR`
 
 ## Authentication
 
-MVP uses email and password authentication. After login, the client receives an access token and sends it in `Authorization: Bearer <token>`. Yandex ID is an extension for a later stage.
+MVP uses email and password authentication.
+
+Endpoints (`/api/v1/auth`):
+
+- `POST /register` — create an account from `email`, `password`, and `displayName`. Returns `201` with the user and a token pair. The user is signed in automatically; the garage starts empty (vehicles are owned per user, no separate garage entity).
+- `POST /login` — authenticate by `email` and `password`. Returns `200` with the user and a token pair.
+- `POST /refresh` — exchange a valid refresh token for a new token pair. The presented refresh token is rotated out (single use).
+- `POST /logout` — invalidate the supplied refresh token. Returns `204`.
+
+Tokens: register and login return a short-lived **access token** (JWT, sent as `Authorization: Bearer <token>`) and a longer-lived **refresh token** (stored server-side and revoked on logout/rotation).
+
+Passwords are stored as BCrypt hashes. A valid password is 6–72 characters and may contain letters (a-z, A-Z), digits, and the special characters `()[]$#*-_?!.%+<>/`.
+
+Auth error codes:
+
+- `400 VALIDATION_ERROR` — invalid request fields (including password rules);
+- `409 EMAIL_ALREADY_EXISTS` — email already registered;
+- `401 INVALID_CREDENTIALS` — wrong email/password, or invalid/expired refresh token.
+
+Yandex ID is an extension for a later stage.
 
 ## Validation
 

@@ -22,8 +22,9 @@ import ru.talkingshaha.backend.timeline.model.RefuelEvent;
 import ru.talkingshaha.backend.timeline.model.TimelineEventType;
 import ru.talkingshaha.backend.timeline.model.TripEvent;
 import ru.talkingshaha.backend.timeline.repository.TimelineEventRepository;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import ru.talkingshaha.backend.user.model.AppUser;
-import ru.talkingshaha.backend.user.service.CurrentUserService;
+import ru.talkingshaha.backend.user.repository.AppUserRepository;
 import ru.talkingshaha.backend.vehicle.model.FuelType;
 import ru.talkingshaha.backend.vehicle.model.Vehicle;
 import ru.talkingshaha.backend.vehicle.repository.VehicleRepository;
@@ -31,8 +32,11 @@ import ru.talkingshaha.backend.vehicle.repository.VehicleRepository;
 @Component
 public class DemoDataSeeder implements ApplicationRunner {
 
+    private static final String DEMO_EMAIL = "demo@talkingshaha.local";
+
     private final boolean enabled;
-    private final CurrentUserService currentUserService;
+    private final AppUserRepository users;
+    private final PasswordEncoder passwordEncoder;
     private final VehicleRepository vehicles;
     private final PartRepository parts;
     private final TimelineEventRepository events;
@@ -40,13 +44,15 @@ public class DemoDataSeeder implements ApplicationRunner {
 
     public DemoDataSeeder(
             @Value("${app.demo-data.enabled:true}") boolean enabled,
-            CurrentUserService currentUserService,
+            AppUserRepository users,
+            PasswordEncoder passwordEncoder,
             VehicleRepository vehicles,
             PartRepository parts,
             TimelineEventRepository events,
             PartLifetimeService lifetimeService) {
         this.enabled = enabled;
-        this.currentUserService = currentUserService;
+        this.users = users;
+        this.passwordEncoder = passwordEncoder;
         this.vehicles = vehicles;
         this.parts = parts;
         this.events = events;
@@ -60,7 +66,7 @@ public class DemoDataSeeder implements ApplicationRunner {
             return;
         }
 
-        AppUser demoUser = currentUserService.currentUser();
+        AppUser demoUser = findOrCreateDemoUser();
         if (!vehicles.findAllByOwnerOrderByBrandAscModelAsc(demoUser).isEmpty()) {
             return;
         }
@@ -95,6 +101,16 @@ public class DemoDataSeeder implements ApplicationRunner {
                 maintenance(vehicle, TimelineEventType.PART_REPLACEMENT, at(2026, 5, 22, 16, 45),
                         "Brake pad replacement", "Front Brembo pads, caliper cleaning", 122900, "4200"),
                 refuel(vehicle, at(2026, 5, 12, 20, 0), 122340, "39", "2100", "AI-95", "Lukoil Station")));
+    }
+
+    private AppUser findOrCreateDemoUser() {
+        return users.findByEmail(DEMO_EMAIL).orElseGet(() -> {
+            AppUser user = new AppUser();
+            user.setEmail(DEMO_EMAIL);
+            user.setDisplayName("Demo User");
+            user.setPasswordHash(passwordEncoder.encode("demo1234"));
+            return users.save(user);
+        });
     }
 
     private Part part(
