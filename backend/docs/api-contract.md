@@ -2,7 +2,7 @@
 
 API prefix: `/api/v1`
 
-> Status: the Garage/Vehicles, Parts, Timeline, and Analytics sections are implemented. Auth,
+> Status: the Auth, Garage/Vehicles, Parts, Timeline, and Analytics sections are implemented.
 > Chat, Prediction, and Notifications are planned and described here as the
 > target contract. The machine-readable spec in `openapi.yaml` covers the implemented
 > endpoints only.

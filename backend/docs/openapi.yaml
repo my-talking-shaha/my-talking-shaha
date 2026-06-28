@@ -2,10 +2,109 @@ openapi: 3.0.3
 info:
   title: My Talking Shaha Core Garage API
   version: 0.1.0
-  description: Core garage, vehicle dashboard, vehicle parts, and timeline (service history) API for the backend flow.
+  description: Authentication, user profile, core garage, vehicle dashboard, vehicle parts, and timeline (service history) API for the backend flow.
 servers:
   - url: /api/v1
+security:
+  - bearerAuth: []
 paths:
+  /auth/register:
+    post:
+      summary: Register a new account
+      tags: [ Auth ]
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RegisterRequest'
+      responses:
+        '201':
+          description: Created account with the signed-in user and issued token pair
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthResponse'
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '409':
+          $ref: '#/components/responses/Conflict'
+  /auth/login:
+    post:
+      summary: Authenticate by email and password
+      tags: [ Auth ]
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LoginRequest'
+      responses:
+        '200':
+          description: Authenticated user with issued token pair
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthResponse'
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+  /auth/refresh:
+    post:
+      summary: Exchange a refresh token for a new token pair
+      tags: [ Auth ]
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RefreshTokenRequest'
+      responses:
+        '200':
+          description: New token pair; the presented refresh token is rotated out
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TokenResponse'
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+  /auth/logout:
+    post:
+      summary: Invalidate the supplied refresh token
+      tags: [ Auth ]
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RefreshTokenRequest'
+      responses:
+        '204':
+          description: Refresh token invalidated
+        '400':
+          $ref: '#/components/responses/ValidationError'
+  /users/me:
+    get:
+      summary: Get the profile of the authenticated user
+      tags: [ Users ]
+      responses:
+        '200':
+          description: Profile of the authenticated user
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
   /vehicles:
     get:
       summary: List demo user's garage vehicles
@@ -293,6 +392,11 @@ paths:
         '404':
           $ref: '#/components/responses/NotFound'
 components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
   parameters:
     VehicleId:
       name: vehicleId
@@ -320,6 +424,18 @@ components:
         application/json:
           schema:
             $ref: '#/components/schemas/ApiError'
+    Unauthorized:
+      description: Access token is missing or invalid, or credentials are invalid
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ApiError'
+    Conflict:
+      description: Email already registered
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ApiError'
   schemas:
     ApiError:
       type: object
@@ -335,6 +451,72 @@ components:
           type: object
           additionalProperties:
             type: string
+    RegisterRequest:
+      type: object
+      required: [ email, password, displayName ]
+      properties:
+        email:
+          type: string
+          format: email
+          maxLength: 255
+          example: user@example.com
+        password:
+          type: string
+          minLength: 6
+          maxLength: 72
+          description: 6-72 characters; letters (a-z, A-Z), digits, and ()[]$#*-_?!.%+<>/
+          example: secret123
+        displayName:
+          type: string
+          maxLength: 120
+          example: Test User
+    LoginRequest:
+      type: object
+      required: [ email, password ]
+      properties:
+        email:
+          type: string
+          format: email
+          example: user@example.com
+        password:
+          type: string
+          example: secret123
+    RefreshTokenRequest:
+      type: object
+      required: [ refreshToken ]
+      properties:
+        refreshToken:
+          type: string
+    AuthResponse:
+      type: object
+      required: [ user, accessToken, refreshToken ]
+      properties:
+        user:
+          $ref: '#/components/schemas/UserResponse'
+        accessToken:
+          type: string
+        refreshToken:
+          type: string
+    TokenResponse:
+      type: object
+      required: [ accessToken, refreshToken ]
+      properties:
+        accessToken:
+          type: string
+        refreshToken:
+          type: string
+    UserResponse:
+      type: object
+      required: [ id, email, displayName ]
+      properties:
+        id:
+          type: string
+          format: uuid
+        email:
+          type: string
+          format: email
+        displayName:
+          type: string
     CreateVehicleRequest:
       type: object
       required: [ brand, model, productionYear, mileageKm, fuelType ]
