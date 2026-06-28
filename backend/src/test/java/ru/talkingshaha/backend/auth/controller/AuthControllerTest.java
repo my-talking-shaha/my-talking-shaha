@@ -1,5 +1,6 @@
 package ru.talkingshaha.backend.auth.controller;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.hamcrest.Matchers.empty;
 import static org.hamcrest.Matchers.emptyString;
 import static org.hamcrest.Matchers.not;
@@ -45,8 +46,8 @@ class AuthControllerTest {
         String email = uniqueEmail();
         JsonNode response = register(email, "secret123", "Test User");
         assertThat(response.get("user").get("email").asText()).isEqualTo(email);
-        Assertions.assertThat(response.get("accessToken").asText()).isNotBlank();
-        Assertions.assertThat(response.get("refreshToken").asText()).isNotBlank();
+        assertThat(response.get("accessToken").asText()).isNotBlank();
+        assertThat(response.get("refreshToken").asText()).isNotBlank();
         mockMvc.perform(get("/api/v1/vehicles")
                         .header("Authorization", "Bearer " + response.get("accessToken").asText()))
                 .andExpect(status().isOk())
