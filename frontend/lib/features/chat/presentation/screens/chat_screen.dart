@@ -53,7 +53,7 @@ final class _ChatScreenState extends ConsumerState<ChatScreen> {
         leading: IconButton(
           onPressed: () => context.go('/garage'),
           tooltip: 'Open garage',
-          icon: const Icon(Icons.menu_rounded),
+          icon: const Icon(Icons.chevron_left_rounded, size: 32),
         ),
         titleSpacing: 0,
         title: const _ChatTitle(),
