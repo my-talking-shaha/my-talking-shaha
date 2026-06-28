@@ -120,6 +120,11 @@ final class _ChatLoadedBody extends StatelessWidget {
   Widget build(BuildContext context) {
     final messages = _visibleMessages(state.messages);
     final quickQuestions = _quickQuestionsFromBackend(state.quickQuestions);
+    final bottomSuggestions = _bottomSuggestions(
+      messages: messages,
+      quickQuestions: quickQuestions,
+      isSending: state.isSending,
+    );
 
     return SafeArea(
       top: false,
@@ -138,10 +143,10 @@ final class _ChatLoadedBody extends StatelessWidget {
                     isSending: state.isSending,
                   ),
           ),
-          if (messages.isNotEmpty && quickQuestions.isNotEmpty)
-            _QuickQuestionStrip(
-              questions: quickQuestions,
-              onQuestionSelected: onSend,
+          if (messages.isNotEmpty && bottomSuggestions.isNotEmpty)
+            _SuggestionStrip(
+              suggestions: bottomSuggestions,
+              onSelected: onSend,
             ),
           _ChatInputBar(
             controller: controller,
@@ -175,6 +180,49 @@ final class _ChatLoadedBody extends StatelessWidget {
     }
 
     return result;
+  }
+
+  List<String> _bottomSuggestions({
+    required List<ChatMessage> messages,
+    required List<String> quickQuestions,
+    required bool isSending,
+  }) {
+    if (isSending || messages.isEmpty) {
+      return const [];
+    }
+
+    final latestMessage = messages.last;
+    final fallbackSuggestions = _fallbackSuggestionsFor(latestMessage);
+    if (fallbackSuggestions.isNotEmpty) {
+      return fallbackSuggestions;
+    }
+
+    return quickQuestions;
+  }
+
+  List<String> _fallbackSuggestionsFor(ChatMessage message) {
+    if (message.role == ChatMessageRole.user || message.action != null) {
+      return const [];
+    }
+
+    final text = message.text.trim();
+    final normalized = text.toLowerCase();
+    final shouldSuggest =
+        normalized.contains('did not fully understand') ||
+        normalized.contains('you may have meant') ||
+        normalized.contains('не до конца понял') ||
+        normalized.contains('возможно, вы хотели');
+    if (!shouldSuggest) {
+      return const [];
+    }
+
+    return _isRussian(text)
+        ? const ['Показать аналитику', 'Состояние авто', 'Добавить заправку']
+        : const ['Show analytics', 'Vehicle status', 'Add refuel'];
+  }
+
+  bool _isRussian(String text) {
+    return text.runes.any((rune) => rune >= 0x0400 && rune <= 0x04FF);
   }
 }
 
@@ -400,7 +448,7 @@ final class _ChatActionPill extends StatelessWidget {
         color: Colors.transparent,
         child: InkWell(
           key: const ValueKey('chat_message_action'),
-          onTap: () => context.go(destination),
+          onTap: () => context.push(destination),
           borderRadius: BorderRadius.circular(18),
           child: Ink(
             padding: const EdgeInsets.fromLTRB(
@@ -519,14 +567,11 @@ final class _ChatActionPill extends StatelessWidget {
   }
 }
 
-final class _QuickQuestionStrip extends StatelessWidget {
-  const _QuickQuestionStrip({
-    required this.questions,
-    required this.onQuestionSelected,
-  });
+final class _SuggestionStrip extends StatelessWidget {
+  const _SuggestionStrip({required this.suggestions, required this.onSelected});
 
-  final List<String> questions;
-  final ValueChanged<String> onQuestionSelected;
+  final List<String> suggestions;
+  final ValueChanged<String> onSelected;
 
   @override
   Widget build(BuildContext context) {
@@ -537,17 +582,22 @@ final class _QuickQuestionStrip extends StatelessWidget {
         child: ListView.separated(
           padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg),
           scrollDirection: Axis.horizontal,
-          itemCount: questions.length,
+          itemCount: suggestions.length,
           separatorBuilder: (context, index) =>
               const SizedBox(width: AppSpacing.sm),
           itemBuilder: (context, index) {
-            final question = questions[index];
+            final suggestion = suggestions[index];
             return ActionChip(
-              onPressed: () => onQuestionSelected(question),
-              label: Text(question),
+              onPressed: () => onSelected(suggestion),
+              label: Text(suggestion),
               backgroundColor: AppColors.surfaceHigh,
-              side: const BorderSide(color: AppColors.border),
-              labelStyle: Theme.of(context).textTheme.labelMedium,
+              side: BorderSide(
+                color: AppColors.primaryLight.withValues(alpha: 0.22),
+              ),
+              labelStyle: Theme.of(context).textTheme.labelMedium?.copyWith(
+                color: AppColors.textSecondary,
+                fontWeight: FontWeight.w700,
+              ),
               shape: const StadiumBorder(),
             );
           },
@@ -686,9 +736,7 @@ final class _ChatInputBarState extends State<_ChatInputBar> {
                 onPressed: canSend
                     ? () => widget.onSend(widget.controller.text)
                     : null,
-                icon: widget.isSending
-                    ? const Icon(Icons.smart_toy_rounded)
-                    : const Icon(Icons.send_rounded),
+                icon: const Icon(Icons.arrow_upward),
                 tooltip: 'Send message',
               ),
             ),

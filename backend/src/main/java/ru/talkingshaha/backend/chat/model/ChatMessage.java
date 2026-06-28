@@ -30,4 +30,16 @@ public class ChatMessage extends BaseEntity {
 
     @Column(name = "created_at", nullable = false)
     private OffsetDateTime createdAt;
+
+    @Column(name = "action_type")
+    private String actionType;
+
+    @Column(name = "action_form")
+    private String actionForm;
+
+    @Column(name = "action_screen")
+    private String actionScreen;
+
+    @Column(name = "action_prefill", columnDefinition = "TEXT")
+    private String actionPrefill;
 }

@@ -1,5 +1,8 @@
 package ru.talkingshaha.backend.chat.service;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import java.math.BigDecimal;
 import java.time.OffsetDateTime;
 import java.util.Comparator;
@@ -43,6 +46,7 @@ public class ChatService {
     private final ChatMessageRepository messages;
     private final ChatIntentResolver intentResolver;
     private final AiChatClient aiChatClient;
+    private final ObjectMapper objectMapper;
 
     public ChatService(
             VehicleService vehicles,
@@ -50,13 +54,15 @@ public class ChatService {
             ChatSessionRepository sessions,
             ChatMessageRepository messages,
             ChatIntentResolver intentResolver,
-            AiChatClient aiChatClient) {
+            AiChatClient aiChatClient,
+            ObjectMapper objectMapper) {
         this.vehicles = vehicles;
         this.analytics = analytics;
         this.sessions = sessions;
         this.messages = messages;
         this.intentResolver = intentResolver;
         this.aiChatClient = aiChatClient;
+        this.objectMapper = objectMapper;
     }
 
     @Transactional
@@ -64,7 +70,7 @@ public class ChatService {
         Vehicle vehicle = vehicles.requireOwnedVehicle(vehicleId);
         ChatSession session = getOrCreateSession(vehicle);
         List<ChatMessageResponse> history = messages.findAllBySessionOrderByCreatedAtAsc(session).stream()
-                .map(message -> toResponse(message, null))
+                .map(this::toResponse)
                 .toList();
         return new ChatStateResponse(session.getId(), quickQuestions(history), history);
     }
@@ -85,11 +91,15 @@ public class ChatService {
         String baseContext = context(dashboard, analyticsOverview);
         ChatDecision decision = intentResolver.resolve(request.text(), baseContext);
         AssistantDraft assistantDraft = assistantDraft(request.text(), decision, dashboard, analyticsOverview);
-        ChatMessage assistantMessage = saveMessage(session, ChatMessageRole.ASSISTANT, assistantDraft.text());
+        ChatMessage assistantMessage = saveMessage(
+                session,
+                ChatMessageRole.ASSISTANT,
+                assistantDraft.text(),
+                assistantDraft.action());
 
         return new SendMessageResponse(
-                toResponse(userMessage, null),
-                toResponse(assistantMessage, assistantDraft.action()));
+                toResponse(userMessage),
+                toResponse(assistantMessage));
     }
 
     private AssistantDraft assistantDraft(
@@ -281,11 +291,16 @@ public class ChatService {
     }
 
     private ChatMessage saveMessage(ChatSession session, ChatMessageRole role, String text) {
+        return saveMessage(session, role, text, null);
+    }
+
+    private ChatMessage saveMessage(ChatSession session, ChatMessageRole role, String text, ChatActionResponse action) {
         ChatMessage message = new ChatMessage();
         message.setSession(session);
         message.setRole(role);
         message.setText(text);
         message.setCreatedAt(OffsetDateTime.now());
+        applyAction(message, action);
         return messages.save(message);
     }
 
@@ -303,13 +318,60 @@ public class ChatService {
                 : List.of("Vehicle status", "What are my total expenses?", "What can break soon?");
     }
 
-    private ChatMessageResponse toResponse(ChatMessage message, ChatActionResponse action) {
+    private ChatMessageResponse toResponse(ChatMessage message) {
         return new ChatMessageResponse(
                 message.getId(),
                 message.getRole(),
                 message.getText(),
                 message.getCreatedAt(),
-                action);
+                actionFromMessage(message));
+    }
+
+    private void applyAction(ChatMessage message, ChatActionResponse action) {
+        if (action == null) {
+            return;
+        }
+
+        message.setActionType(action.type());
+        message.setActionForm(action.form());
+        message.setActionScreen(action.screen());
+        message.setActionPrefill(prefillToJson(action.prefill()));
+    }
+
+    private ChatActionResponse actionFromMessage(ChatMessage message) {
+        if (message.getActionType() == null || message.getActionType().isBlank()) {
+            return null;
+        }
+
+        return new ChatActionResponse(
+                message.getActionType(),
+                message.getActionForm(),
+                message.getActionScreen(),
+                prefillFromJson(message.getActionPrefill()));
+    }
+
+    private String prefillToJson(Map<String, Object> prefill) {
+        if (prefill == null || prefill.isEmpty()) {
+            return "{}";
+        }
+
+        try {
+            return objectMapper.writeValueAsString(prefill);
+        } catch (JsonProcessingException exception) {
+            return "{}";
+        }
+    }
+
+    private Map<String, Object> prefillFromJson(String json) {
+        if (json == null || json.isBlank()) {
+            return Map.of();
+        }
+
+        try {
+            return objectMapper.readValue(json, new TypeReference<>() {});
+        } catch (JsonProcessingException exception) {
+            return Map.of();
+        }
     }
 
     private record AssistantDraft(String text, ChatActionResponse action) {
