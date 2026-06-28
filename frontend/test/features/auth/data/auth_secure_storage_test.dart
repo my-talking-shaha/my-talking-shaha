@@ -20,6 +20,7 @@ void main() {
   test('readSession restores a saved session', () async {
     FlutterSecureStoragePlatform.instance = TestFlutterSecureStoragePlatform({
       'auth_token': 'token',
+      'auth_refresh_token': 'refresh-token',
       'auth_login': 'driver',
       'auth_full_name': 'Demo Driver',
     });
@@ -32,6 +33,7 @@ void main() {
     final session = await storage.readSession();
 
     expect(session?.token, 'token');
+    expect(session?.refreshToken, 'refresh-token');
     expect(session?.login, 'driver');
     expect(session?.fullName, 'Demo Driver');
   });

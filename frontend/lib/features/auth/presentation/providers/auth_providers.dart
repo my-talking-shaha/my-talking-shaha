@@ -1,10 +1,11 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import 'package:frontend/core/network/api_client.dart';
+import 'package:frontend/features/auth/data/datasources/auth_api_datasource.dart';
 import 'package:frontend/features/auth/data/datasources/auth_datasource.dart';
 import 'package:frontend/features/auth/data/datasources/auth_secure_storage.dart';
 import 'package:frontend/features/auth/data/datasources/auth_session_storage.dart';
-import 'package:frontend/features/auth/data/datasources/mock_auth_datasource.dart';
 import 'package:frontend/features/auth/data/datasources/shared_preferences_auth_session_storage.dart';
 import 'package:frontend/features/auth/data/repositories/auth_repository_impl.dart';
 import 'package:frontend/features/auth/domain/entities/auth_session.dart';
@@ -31,7 +32,7 @@ final authSessionStorageProvider = Provider<AuthSessionStorage>((ref) {
 });
 
 final authDatasourceProvider = Provider<AuthDatasource>((ref) {
-  return MockAuthDatasource();
+  return AuthApiDatasource(ref.watch(dioProvider));
 });
 
 final authRepositoryProvider = Provider<AuthRepository>((ref) {

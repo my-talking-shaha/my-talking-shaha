@@ -1,9 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:frontend/core/network/api_client.dart';
-import 'package:frontend/features/auth/presentation/providers/auth_providers.dart';
 import 'package:frontend/features/garage/data/datasources/garage_api_datasource.dart';
 import 'package:frontend/features/garage/data/datasources/garage_datasource.dart';
-import 'package:frontend/features/garage/data/datasources/in_memory_garage_datasource.dart';
 import 'package:frontend/features/garage/data/repositories/garage_repository_impl.dart';
 import 'package:frontend/features/garage/domain/entities/vehicle.dart';
 import 'package:frontend/features/garage/domain/repositories/garage_repository.dart';
@@ -17,15 +15,7 @@ final garageApiDatasourceProvider = Provider<GarageApiDatasource>((ref) {
 });
 
 final garageDatasourceProvider = Provider<GarageDatasource>((ref) {
-  ref.watch(
-    authControllerProvider.select(
-      (state) => state.maybeWhen(
-        data: (session) => session?.login,
-        orElse: () => null,
-      ),
-    ),
-  );
-  return InMemoryGarageDatasource();
+  return ref.watch(garageApiDatasourceProvider);
 });
 
 final garageRepositoryProvider = Provider<GarageRepository>((ref) {

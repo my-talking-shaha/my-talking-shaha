@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:frontend/app/providers/vehicle_mileage_provider.dart';
 import 'package:frontend/core/ui/navigation_shell.dart';
+import 'package:frontend/core/utils/uuid_format.dart';
 import 'package:frontend/features/analytics/presentation/screens/analytics_screen.dart';
 import 'package:frontend/features/auth/domain/entities/auth_session.dart';
 import 'package:frontend/features/auth/presentation/providers/auth_providers.dart';
@@ -43,6 +44,11 @@ final routerProvider = Provider<GoRouter>((ref) {
       final isAuthenticated = session != null;
       if (!isAuthenticated) {
         return isAuthRoute ? null : '/login';
+      }
+
+      final invalidVehicleRedirect = _invalidVehicleRedirect(state.uri);
+      if (invalidVehicleRedirect != null) {
+        return invalidVehicleRedirect;
       }
 
       return isAuthRoute ? '/garage' : null;
@@ -271,4 +277,29 @@ NoTransitionPage<void> _tabPage({
   required Widget child,
 }) {
   return NoTransitionPage<void>(key: state.pageKey, child: child);
+}
+
+String? _invalidVehicleRedirect(Uri uri) {
+  if (uri.pathSegments case [
+    'vehicle',
+    final vehicleId,
+    ...,
+  ] when !isUuid(vehicleId)) {
+    return '/garage';
+  }
+
+  if (uri.pathSegments case [
+    'garage',
+    'edit',
+    final vehicleId,
+  ] when !isUuid(vehicleId)) {
+    return '/garage';
+  }
+
+  final queryVehicleId = uri.queryParameters['vehicleId'];
+  if (queryVehicleId != null && !isUuid(queryVehicleId)) {
+    return Uri(path: uri.path).toString();
+  }
+
+  return null;
 }
