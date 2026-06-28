@@ -80,7 +80,9 @@ class ChatFlowTest {
                         .header("Authorization", bearer()))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.messages", hasSize(3)))
-                .andExpect(jsonPath("$.quickQuestions[0]").value("Состояние авто"));
+                .andExpect(jsonPath("$.quickQuestions[0]").value("Состояние авто"))
+                .andExpect(jsonPath("$.messages[2].action.type").value("OPEN_SCREEN"))
+                .andExpect(jsonPath("$.messages[2].action.screen").value("ANALYTICS"));
     }
 
     @Test
@@ -93,6 +95,11 @@ class ChatFlowTest {
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.assistantMessage.action.type").value("OPEN_FORM"))
                 .andExpect(jsonPath("$.assistantMessage.action.form").value("REFUEL"));
+        mockMvc.perform(get("/api/v1/vehicles/{vehicleId}/chat", vehicleId)
+                        .header("Authorization", bearer()))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.messages[2].action.type").value("OPEN_FORM"))
+                .andExpect(jsonPath("$.messages[2].action.form").value("REFUEL"));
     }
 
     @Test

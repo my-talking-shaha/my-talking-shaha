@@ -198,6 +198,23 @@ void main() {
     expect(mileageField.controller?.text, isEmpty);
   });
 
+  testWidgets('history add route accepts type and mileage query parameters', (
+    tester,
+  ) async {
+    await _pumpApp(
+      tester,
+      initialLocation:
+          '/vehicle/096c10bb-13d1-4599-9109-e9e79789ea88/history/add?type=maintenance&mileageKm=130000',
+    );
+
+    final screen = tester.widget<AddHistoryEventScreen>(
+      find.byType(AddHistoryEventScreen),
+    );
+    expect(screen.initialType, HistoryEventType.maintenance);
+    expect(screen.initialMileageKm, 130000);
+    expect(find.text('New maintenance'), findsOneWidget);
+  });
+
   testWidgets('history add button opens the form and saves an event', (
     tester,
   ) async {
