@@ -41,6 +41,9 @@ Add these secrets in GitHub:
 - `SERVER_SSH_KEY` - private SSH key with access to the server.
 - `SERVER_APP_PATH` - repository path on the server, for example `/opt/my-talking-shaha`.
 - `SERVER_PORT` - optional SSH port. If omitted, port `22` is used.
+- `TIMEWEB_AI_BASE_URL` - OpenAI-compatible Timeweb AI base URL, for example
+  `https://agent.timeweb.cloud/api/v1/cloud-ai/agents/<agent_id>/v1`.
+- `TIMEWEB_AI_TOKEN` - Timeweb AI API token for the agent or AI Gateway.
 
 ## Deployment flow
 

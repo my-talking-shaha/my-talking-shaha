@@ -11,8 +11,8 @@
 
 - Docker
 - Docker Compose (v3.8 or higher)
-- Hugging Face token for AI chat. Copy `.env.example` to `.env` in the repository root
-  and set `HUGGINGFACE_TOKEN`.
+- Timeweb AI token for AI chat. Copy `.env.example` to `.env` in the repository root
+  and set `TIMEWEB_AI_BASE_URL` and `TIMEWEB_AI_TOKEN`.
 
 ## Building and Running
 

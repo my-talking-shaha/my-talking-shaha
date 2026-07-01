@@ -8,7 +8,7 @@ import org.springframework.web.client.RestClient;
 public class AiChatRestClientConfig {
 
     @Bean
-    public RestClient huggingFaceRestClient(AiChatProperties properties) {
+    public RestClient openAiCompatibleRestClient(AiChatProperties properties) {
         return RestClient.builder().baseUrl(properties.baseUrl()).build();
     }
 }
