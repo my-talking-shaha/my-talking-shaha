@@ -9,7 +9,7 @@
 The vehicle dashboard is the main cockpit screen for a selected car.
 
 Sections:
-1. Top app bar with menu/back icon and centered title `Моя Шаха`.
+1. Top app bar with menu/back icon and centered title `My Shaha`.
 2. Vehicle hero image card with title overlay.
 3. Metric cards for mileage and engine.
 4. VIN card with copy icon.

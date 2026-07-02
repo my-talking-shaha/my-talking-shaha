@@ -38,11 +38,11 @@ Covers:
 3. User can type a message immediately.
 4. Quick-question buttons are shown below the input field.
 5. Starter set:
-   - `Состояние авто`;
-   - `Когда ТО?`;
-   - `Что может сломаться?`;
-   - `Добавить заправку`;
-   - `Записать ремонт`.
+   - `Vehicle status`;
+   - `When is service due?`;
+   - `What can break soon?`;
+   - `Add refuel`;
+   - `Record repair`.
 6. Buttons may be dynamic and personalized for the selected user and vehicle.
 7. User taps a quick-question button.
 8. The question is sent to the chat as a user message.
@@ -64,7 +64,7 @@ AI agent answers must be based on:
 If data is missing, show exact fallback:
 
 ```text
-Недостаточно данных для ответа
+Not enough data to answer
 ```
 
 ## Response Content
@@ -93,26 +93,26 @@ Flutter should render structured actions but not invent them.
 
 ## Chat to Form Flow
 
-1. User sends a message about an event, for example `Заменил масло на 15000 км`.
+1. User sends a message about an event, for example `I changed the oil at 15000 km`.
 2. Backend recognizes the event intent and extracts known fields.
 3. If all required fields are present and valid, backend creates the event immediately
    and returns `createdEvent` with a confirmation message.
 4. If fields are missing or invalid, assistant asks for the missing/corrected values and
    keeps the extracted fields as a pending draft.
 5. If automatic creation is not possible for the intent, assistant may return a
-   `Перейти к форме` action.
+   `Go to form` action.
 6. Structured action payload includes:
    - event type;
    - target form route;
    - pre-filled fields;
    - return route to the current chat.
-7. User taps `Перейти к форме`.
+7. User taps `Go to form`.
 8. App opens the matching form with extracted fields pre-filled.
 9. User completes remaining fields and saves.
 10. App returns to the chat and appends an AI confirmation.
 11. User can cancel the action before saving.
 
-Example for `Заменил масло на 15000 км`:
+Example for `I changed the oil at 15000 km`:
 - event type: part replacement;
 - part: oil;
 - mileage: 15000.
@@ -152,14 +152,14 @@ Supported automatic creation intents:
 
 If required fields are missing, backend keeps the extracted fields as a pending chat draft
 and asks the user to provide the missing data. If validation fails, backend explains what
-is wrong and asks for corrected values. For example, `Я заправляла машину на 5 литров
-95-м бензином` should make the car ask for cost; `за 1000 рублей` should then complete
+is wrong and asks for corrected values. For example, `I refueled the car with 5 liters
+of 95 octane` should make the car ask for cost; `for 1000 rubles` should then complete
 the pending draft and create the `REFUEL` event.
 
 Example complete refuel message:
 
 ```text
-Я заправилась на 5 литров 95-м бензином за 1000 рублей
+I refueled with 5 liters of 95 octane for 1000 rubles
 ```
 
 Expected behavior:
@@ -171,6 +171,6 @@ Expected behavior:
 - supported fuel names are limited to the current form values: `92 octane`, `95 octane`,
   `98 octane`, and `Diesel`.
 
-Generic repair messages such as `Я хочу записать ремонт` are not enough to create an
+Generic repair messages such as `I want to record a repair` are not enough to create an
 event. The car should ask for the work description and any invalid or missing validation
 fields, then create the maintenance record only after the user sends valid details.

@@ -19,11 +19,11 @@ It can be rendered as:
 ## Maintenance Forecast Card
 
 The card displays:
-- section title `ПРОГНОЗ ОБСЛУЖИВАНИЯ`;
+- section title `MAINTENANCE FORECAST`;
 - last updated label;
-- next service forecast, e.g. `Через 2,400 км`;
+- next service forecast, e.g. `In 2,400 km`;
 - approximate date;
-- resource badge, e.g. `84% РЕСУРС`;
+- resource badge, e.g. `84% RESOURCE`;
 - part rows with remaining km/percent and progress bars.
 
 Part examples:

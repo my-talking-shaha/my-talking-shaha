@@ -27,7 +27,7 @@ Response:
     {
       "id": "044c10dc-13d1-4587-9169-e9e79789ea45",
       "type": "REFUEL",
-      "title": "Заправка",
+      "title": "Refuel",
       "eventDateTime": "2026-06-12T14:30:00Z",
       "cost": 2000,
       "mileageKm": 10000,

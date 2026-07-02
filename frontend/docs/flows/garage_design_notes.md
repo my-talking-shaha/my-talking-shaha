@@ -10,8 +10,8 @@ The garage screen is a car park overview.
 
 Visual structure:
 - large brand title at top;
-- section label `ТВОЙ ПАРК`;
-- screen title `Гараж`;
+- section label `YOUR GARAGE`;
+- screen title `Garage`;
 - circular add button near the top right;
 - vertical list of large vehicle cards;
 - bottom navigation.
@@ -21,7 +21,7 @@ Vehicle card content:
 - car name, e.g. `Lada 2106`;
 - subtitle/personality label;
 - quick metrics such as mileage, last repair, last refuel;
-- primary CTA `В кабину` with arrow.
+- primary CTA `Open cockpit` with arrow.
 
 ## Empty Garage
 
@@ -29,7 +29,7 @@ Empty state visual structure:
 - app title;
 - centered assistant/car icon;
 - text explaining that the garage is empty;
-- primary button `Добавить авто`;
+- primary button `Add vehicle`;
 - bottom navigation.
 
 ## Add Car Details Form

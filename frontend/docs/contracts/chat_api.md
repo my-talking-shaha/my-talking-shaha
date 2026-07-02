@@ -164,7 +164,7 @@ event immediately and return a confirmation message without an action:
   "createdEvent": {
     "id": "994v15jc-15d3-4957-9189-u8e79789ea66",
     "type": "REFUEL",
-    "title": "Заправка",
+    "title": "Refuel",
     "eventDateTime": "2026-06-12T10:00:01Z",
     "mileageKm": 10000,
     "liters": 5,
