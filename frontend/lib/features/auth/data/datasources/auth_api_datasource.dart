@@ -108,7 +108,7 @@ abstract final class AuthApiErrorMapper {
     if (statusCode == 401 || backendCode == 'INVALID_CREDENTIALS') {
       return const AuthException(
         AuthErrorCode.unauthorized,
-        'Email or password are incorrect',
+        'User not found. Check your email or register a new account.',
       );
     }
 

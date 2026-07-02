@@ -53,7 +53,10 @@ void main() {
       );
 
       expect(exception.code, AuthErrorCode.unauthorized);
-      expect(exception.message, 'Email or password are incorrect');
+      expect(
+        exception.message,
+        'User not found. Check your email or register a new account.',
+      );
     });
   });
 }

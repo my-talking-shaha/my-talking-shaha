@@ -45,6 +45,15 @@ final class _RegistrationScreenState extends ConsumerState<RegistrationScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
+              AuthModeSwitch(
+                selectedMode: AuthMode.register,
+                onModeSelected: (mode) {
+                  if (mode == AuthMode.login) {
+                    context.go('/login');
+                  }
+                },
+              ),
+              const SizedBox(height: AppSpacing.xxl),
               Text(
                 'Registration',
                 style: Theme.of(context).textTheme.headlineMedium?.copyWith(

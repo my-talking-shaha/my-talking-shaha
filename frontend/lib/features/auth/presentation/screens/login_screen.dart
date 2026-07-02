@@ -45,18 +45,27 @@ final class _LoginScreenState extends ConsumerState<LoginScreen> {
             textAlign: TextAlign.center,
             style: Theme.of(context).textTheme.headlineLarge?.copyWith(
               color: AppColors.primaryLight,
-              fontSize: 46,
+              fontSize: 42,
               fontWeight: FontWeight.w900,
               height: 1.12,
             ),
           ),
-          const SizedBox(height: 52),
+          const SizedBox(height: AppSpacing.xxl),
           AuthFormCard(
             child: Form(
               key: _formKey,
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
+                  AuthModeSwitch(
+                    selectedMode: AuthMode.login,
+                    onModeSelected: (mode) {
+                      if (mode == AuthMode.register) {
+                        context.go('/registration');
+                      }
+                    },
+                  ),
+                  const SizedBox(height: AppSpacing.xxl),
                   if (_errorMessage != null) ...[
                     AuthErrorBanner(message: _errorMessage!),
                     const SizedBox(height: AppSpacing.lg),
@@ -77,7 +86,6 @@ final class _LoginScreenState extends ConsumerState<LoginScreen> {
                     controller: _passwordController,
                     enabled: !isSubmitting,
                     hintText: 'At least 6 characters',
-                    helperText: 'At least 6 characters',
                     prefixIcon: const Icon(Icons.lock_outline),
                     suffixIcon: IconButton(
                       tooltip: _obscurePassword
@@ -119,25 +127,6 @@ final class _LoginScreenState extends ConsumerState<LoginScreen> {
                 ],
               ),
             ),
-          ),
-          const SizedBox(height: AppSpacing.xxl),
-          Wrap(
-            alignment: WrapAlignment.center,
-            crossAxisAlignment: WrapCrossAlignment.center,
-            children: [
-              Text(
-                'No account?',
-                style: Theme.of(
-                  context,
-                ).textTheme.bodyLarge?.copyWith(color: AppColors.textSecondary),
-              ),
-              TextButton(
-                onPressed: isSubmitting
-                    ? null
-                    : () => context.go('/registration'),
-                child: const Text('Register'),
-              ),
-            ],
           ),
         ],
       ),
