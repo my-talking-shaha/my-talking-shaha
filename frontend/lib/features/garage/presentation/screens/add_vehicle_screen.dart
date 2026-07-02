@@ -34,6 +34,22 @@ final class _AddVehicleScreenState extends ConsumerState<AddVehicleScreen> {
   static const _borderColor = Color(0xFF3B4252);
   static const _accentColor = Color(0xFFB8C3FF);
   static const _hintColor = Color(0xFF6F7482);
+  static const _otherVehicleColorValue = 'Other';
+  static const _standardVehicleColors = [
+    'White',
+    'Black',
+    'Silver',
+    'Grey',
+    'Red',
+    'Blue',
+    'Green',
+    'Yellow',
+    'Orange',
+    'Brown',
+    'Beige',
+    'Gold',
+    'Purple',
+  ];
 
   @override
   void initState() {
@@ -97,11 +113,15 @@ final class _AddVehicleScreenState extends ConsumerState<AddVehicleScreen> {
 
   void _syncTextControllers() {
     final state = _controller.state;
+    final canonicalColor = _canonicalVehicleColor(state.color);
+    if (canonicalColor != null && canonicalColor != state.color) {
+      _controller.updateColor(canonicalColor);
+    }
     _brandController.text = state.brand;
     _modelController.text = state.model;
     _yearController.text = state.year;
     _mileageController.text = state.currentMileage;
-    _colorController.text = state.color;
+    _colorController.text = _customVehicleColor(state.color) ?? '';
     _vinController.text = state.vin;
     _engineSpecificationController.text = state.engineSpecification;
   }
@@ -197,12 +217,11 @@ final class _AddVehicleScreenState extends ConsumerState<AddVehicleScreen> {
                       ],
                     ),
                     const SizedBox(height: 24),
-                    _GarageTextField(
-                      label: 'Color',
-                      hintText: 'blue',
-                      controller: _colorController,
-                      textInputAction: TextInputAction.next,
-                      onChanged: (value) =>
+                    _GarageColorField(
+                      selectedValue: _selectedVehicleColor(state.color),
+                      customColorController: _colorController,
+                      onColorChanged: _updateVehicleColor,
+                      onCustomColorChanged: (value) =>
                           _update(_controller.updateColor, value),
                     ),
                     const SizedBox(height: 24),
@@ -402,6 +421,50 @@ final class _AddVehicleScreenState extends ConsumerState<AddVehicleScreen> {
     });
   }
 
+  void _updateVehicleColor(String value) {
+    setState(() {
+      if (value == _otherVehicleColorValue) {
+        _controller.updateColor(_colorController.text);
+        return;
+      }
+
+      _colorController.clear();
+      _controller.updateColor(value);
+    });
+  }
+
+  String? _selectedVehicleColor(String color) {
+    if (color.trim().isEmpty) {
+      return null;
+    }
+
+    return _canonicalVehicleColor(color) ?? _otherVehicleColorValue;
+  }
+
+  String? _canonicalVehicleColor(String color) {
+    final normalizedColor = color.trim().toLowerCase();
+    if (normalizedColor.isEmpty) {
+      return null;
+    }
+
+    for (final standardColor in _standardVehicleColors) {
+      if (standardColor.toLowerCase() == normalizedColor) {
+        return standardColor;
+      }
+    }
+
+    return null;
+  }
+
+  String? _customVehicleColor(String color) {
+    final trimmedColor = color.trim();
+    if (trimmedColor.isEmpty || _canonicalVehicleColor(trimmedColor) != null) {
+      return null;
+    }
+
+    return trimmedColor;
+  }
+
   Future<void> _submit() async {
     FocusScope.of(context).unfocus();
     final isEditing = widget.vehicleId != null;
@@ -424,6 +487,110 @@ final class _AddVehicleScreenState extends ConsumerState<AddVehicleScreen> {
       SnackBar(content: Text(isEditing ? 'Vehicle updated' : 'Vehicle added')),
     );
     context.go('/garage');
+  }
+}
+
+final class _GarageColorField extends StatelessWidget {
+  const _GarageColorField({
+    required this.selectedValue,
+    required this.customColorController,
+    required this.onColorChanged,
+    required this.onCustomColorChanged,
+  });
+
+  static const _fieldColor = Color(0xFF20242D);
+  static const _borderColor = Color(0xFF3B4252);
+  static const _accentColor = Color(0xFFB8C3FF);
+  static const _hintColor = Color(0xFF6F7482);
+
+  final String? selectedValue;
+  final TextEditingController customColorController;
+  final ValueChanged<String> onColorChanged;
+  final ValueChanged<String> onCustomColorChanged;
+
+  bool get _usesCustomColor =>
+      selectedValue == _AddVehicleScreenState._otherVehicleColorValue;
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const _GarageDropdownLabel(label: 'Color'),
+        const SizedBox(height: 10),
+        DropdownButtonFormField<String>(
+          key: const ValueKey('vehicle_color_dropdown'),
+          initialValue: selectedValue,
+          dropdownColor: _fieldColor,
+          borderRadius: BorderRadius.circular(8),
+          icon: const Icon(
+            Icons.keyboard_arrow_down_rounded,
+            color: _accentColor,
+          ),
+          style: const TextStyle(color: Colors.white, fontSize: 16),
+          decoration: InputDecoration(
+            filled: true,
+            fillColor: _fieldColor,
+            contentPadding: const EdgeInsets.symmetric(
+              horizontal: 16,
+              vertical: 18,
+            ),
+            enabledBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(8),
+              borderSide: const BorderSide(color: _borderColor),
+            ),
+            focusedBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(8),
+              borderSide: const BorderSide(color: _accentColor),
+            ),
+          ),
+          hint: const Text('Select color', style: TextStyle(color: _hintColor)),
+          items: [
+            for (final color in _AddVehicleScreenState._standardVehicleColors)
+              DropdownMenuItem(value: color, child: Text(color)),
+            const DropdownMenuItem(
+              value: _AddVehicleScreenState._otherVehicleColorValue,
+              child: Text(_AddVehicleScreenState._otherVehicleColorValue),
+            ),
+          ],
+          onChanged: (value) {
+            if (value != null) {
+              onColorChanged(value);
+            }
+          },
+        ),
+        if (_usesCustomColor) ...[
+          const SizedBox(height: 12),
+          TextField(
+            key: const ValueKey('vehicle_custom_color_field'),
+            controller: customColorController,
+            style: const TextStyle(color: Colors.white, fontSize: 16),
+            cursorColor: _accentColor,
+            textInputAction: TextInputAction.next,
+            textCapitalization: TextCapitalization.words,
+            decoration: InputDecoration(
+              hintText: 'Custom color',
+              hintStyle: const TextStyle(color: _hintColor),
+              filled: true,
+              fillColor: _fieldColor,
+              contentPadding: const EdgeInsets.symmetric(
+                horizontal: 16,
+                vertical: 18,
+              ),
+              enabledBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(8),
+                borderSide: const BorderSide(color: _borderColor),
+              ),
+              focusedBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(8),
+                borderSide: const BorderSide(color: _accentColor),
+              ),
+            ),
+            onChanged: onCustomColorChanged,
+          ),
+        ],
+      ],
+    );
   }
 }
 
