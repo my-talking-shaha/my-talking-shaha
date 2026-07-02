@@ -6,6 +6,7 @@ import 'package:frontend/app/theme/app_theme.dart';
 import 'package:frontend/features/history/domain/entities/event_details.dart';
 import 'package:frontend/features/history/domain/entities/history_event.dart';
 import 'package:frontend/features/history/domain/entities/history_event_type.dart';
+import 'package:frontend/l10n/generated/app_localizations.dart';
 
 class EventCard extends StatelessWidget {
   final HistoryEvent event;
@@ -67,6 +68,7 @@ class EventCard extends StatelessWidget {
   }
 
   List<Widget> _detailWidgets(BuildContext context, EventDetails details) {
+    final l10n = AppLocalizations.of(context);
     final bodyStyle = Theme.of(context).textTheme.bodyMedium;
 
     return switch (details) {
@@ -79,18 +81,18 @@ class EventCard extends StatelessWidget {
         if (_nonEmptyParts(details).isNotEmpty) ...[
           const SizedBox(height: AppSpacing.xs),
           Text(
-            'Replaced: ${_nonEmptyParts(details).join(', ')}',
+            l10n.replaced(_nonEmptyParts(details).join(', ')),
             style: bodyStyle,
           ),
         ],
         if (_firstPhotoUrl(details) case final photoUrl?) ...[
           const SizedBox(height: AppSpacing.xs),
-          Text('Part photo:', style: bodyStyle),
+          Text(l10n.partPhotoLabel, style: bodyStyle),
           const SizedBox(height: AppSpacing.xs),
           _EventPhoto(url: photoUrl),
         ],
       ],
-      TripDetails() => [Text(_tripDetails(details), style: bodyStyle)],
+      TripDetails() => [Text(_tripDetails(context, details), style: bodyStyle)],
     };
   }
 
@@ -109,9 +111,9 @@ class EventCard extends StatelessWidget {
     return null;
   }
 
-  static String _tripDetails(TripDetails details) {
+  static String _tripDetails(BuildContext context, TripDetails details) {
     final route = details.route?.trim();
-    final duration = _formatDuration(details.duration);
+    final duration = _formatDuration(context, details.duration);
 
     return route == null || route.isEmpty ? duration : '$route • $duration';
   }
@@ -156,7 +158,7 @@ class _EventTimestamp extends StatelessWidget {
         const SizedBox(width: AppSpacing.xs),
         Flexible(
           child: Text(
-            _formatDateTime(occurredAt),
+            _formatDateTime(context, occurredAt),
             style: Theme.of(context).textTheme.bodySmall,
           ),
         ),
@@ -255,33 +257,42 @@ String _formatNumber(int value) {
   return value < 0 ? '-$buffer' : buffer.toString();
 }
 
-String _formatDuration(Duration duration) {
+String _formatDuration(BuildContext context, Duration duration) {
+  final isRu = Localizations.localeOf(context).languageCode == 'ru';
   final hours = duration.inHours;
   final minutes = duration.inMinutes.remainder(60);
 
-  if (hours == 0) return '$minutes min';
-  if (minutes == 0) return '$hours h';
-  return '$hours h $minutes min';
+  if (hours == 0) return isRu ? '$minutes мин' : '$minutes min';
+  if (minutes == 0) return isRu ? '$hours ч' : '$hours h';
+  return isRu ? '$hours ч $minutes мин' : '$hours h $minutes min';
 }
 
-String _formatDateTime(DateTime value) {
-  const months = [
-    'January',
-    'February',
-    'March',
-    'April',
-    'May',
-    'June',
-    'July',
-    'August',
-    'September',
-    'October',
-    'November',
-    'December',
-  ];
+String _formatDateTime(BuildContext context, DateTime value) {
   final local = value.toLocal();
-  final hour = local.hour.toString().padLeft(2, '0');
-  final minute = local.minute.toString().padLeft(2, '0');
+  if (Localizations.localeOf(context).languageCode == 'en') {
+    const months = [
+      'January',
+      'February',
+      'March',
+      'April',
+      'May',
+      'June',
+      'July',
+      'August',
+      'September',
+      'October',
+      'November',
+      'December',
+    ];
+    final hour = local.hour.toString().padLeft(2, '0');
+    final minute = local.minute.toString().padLeft(2, '0');
+    return '${months[local.month - 1]} ${local.day}, $hour:$minute';
+  }
 
-  return '${months[local.month - 1]} ${local.day}, $hour:$minute';
+  final date = MaterialLocalizations.of(context).formatMediumDate(local);
+  final time = MaterialLocalizations.of(
+    context,
+  ).formatTimeOfDay(TimeOfDay.fromDateTime(local), alwaysUse24HourFormat: true);
+
+  return '$date, $time';
 }

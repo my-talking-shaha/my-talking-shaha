@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:frontend/app/theme/app_theme.dart';
 import 'package:frontend/features/notifications/presentation/providers/notifications_providers.dart';
 import 'package:frontend/features/notifications/presentation/widgets/notification_card.dart';
+import 'package:frontend/l10n/generated/app_localizations.dart';
 import 'package:go_router/go_router.dart';
 
 final class NotificationsScreen extends ConsumerWidget {
@@ -10,10 +11,11 @@ final class NotificationsScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = AppLocalizations.of(context);
     final notificationsState = ref.watch(notificationsProvider);
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Notifications')),
+      appBar: AppBar(title: Text(l10n.notifications)),
       body: SafeArea(
         child: notificationsState.when(
           data: (notifications) {
@@ -58,10 +60,10 @@ final class _NotificationsEmptyState extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const Center(
+    return Center(
       child: Padding(
-        padding: EdgeInsets.all(AppSpacing.xl),
-        child: Text('No notifications yet'),
+        padding: const EdgeInsets.all(AppSpacing.xl),
+        child: Text(AppLocalizations.of(context).noNotificationsYet),
       ),
     );
   }
@@ -74,6 +76,8 @@ final class _NotificationsErrorState extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+
     return Center(
       child: Padding(
         padding: const EdgeInsets.all(AppSpacing.xl),
@@ -87,12 +91,12 @@ final class _NotificationsErrorState extends StatelessWidget {
             ),
             const SizedBox(height: AppSpacing.lg),
             Text(
-              'Network error',
+              l10n.networkError,
               style: Theme.of(context).textTheme.titleLarge,
             ),
             const SizedBox(height: AppSpacing.sm),
             Text(
-              'Notifications could not be loaded. Check the connection and try again.',
+              l10n.notificationsLoadError,
               textAlign: TextAlign.center,
               style: Theme.of(context).textTheme.bodyMedium,
             ),
@@ -100,7 +104,7 @@ final class _NotificationsErrorState extends StatelessWidget {
             OutlinedButton(
               key: const ValueKey('notifications_retry_action'),
               onPressed: onRetry,
-              child: const Text('Retry'),
+              child: Text(l10n.retry),
             ),
           ],
         ),

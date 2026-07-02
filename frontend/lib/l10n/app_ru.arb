@@ -20,4 +20,326 @@
   "chat": "Чат",
   "analytics": "Аналитика",
   "settings": "Настройки"
+  ,
+  "brandName": "My Talking Shaha",
+  "retry": "Повторить",
+  "tryAgain": "Попробовать снова",
+  "cancel": "Отмена",
+  "delete": "Удалить",
+  "edit": "Изменить",
+  "save": "Сохранить",
+  "openGarage": "Открыть гараж",
+  "email": "Email",
+  "enterYourEmail": "Введите email",
+  "enterValidEmail": "Введите корректный email",
+  "password": "Пароль",
+  "enterYourPassword": "Введите пароль",
+  "passwordMinLength": "Пароль должен быть не короче {count} символов",
+  "@passwordMinLength": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "passwordHint": "Минимум 6 символов",
+  "showPassword": "Показать пароль",
+  "hidePassword": "Скрыть пароль",
+  "forgotPassword": "Забыли пароль?",
+  "logIn": "Войти",
+  "noAccount": "Нет аккаунта?",
+  "register": "Зарегистрироваться",
+  "registration": "Регистрация",
+  "createYourProfile": "Создайте профиль",
+  "fullName": "Полное имя",
+  "enterYourFullName": "Введите полное имя",
+  "fullNameHint": "Иван Иванов",
+  "confirmPassword": "Подтвердите пароль",
+  "repeatPassword": "Повторите пароль",
+  "confirmYourPassword": "Подтвердите пароль",
+  "passwordsDoNotMatch": "Пароли не совпадают",
+  "alreadyHaveAccount": "Уже есть аккаунт?",
+  "somethingWentWrong": "Что-то пошло не так. Попробуйте позже",
+  "couldNotLogOut": "Не удалось выйти. Попробуйте снова",
+  "deleteVehicleQuestion": "Удалить автомобиль?",
+  "deleteVehicleConfirmation": "{vehicleName} будет удален из гаража.",
+  "@deleteVehicleConfirmation": {
+    "placeholders": {
+      "vehicleName": {}
+    }
+  },
+  "garageEmpty": "Гараж пуст",
+  "garageEmptyDescription": "Добавьте первую машину, чтобы создать ее цифрового двойника.",
+  "garageEmptyCompactDescription": "Добавьте первую машину, чтобы открыть ее цифрового двойника.",
+  "addVehicle": "Добавить авто",
+  "addCar": "Добавить авто",
+  "yourFleet": "ВАШ АВТОПАРК",
+  "couldNotLoadGarage": "Не удалось загрузить гараж",
+  "openCockpit": "Открыть кокпит",
+  "mileage": "ПРОБЕГ",
+  "service": "СЕРВИС",
+  "fuel": "ТОПЛИВО",
+  "noIssues": "Проблем нет",
+  "noData": "Нет данных",
+  "warningsCount": "{count} предупреждений",
+  "@warningsCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "editCar": "Редактировать авто",
+  "carSpecifications": "Характеристики авто",
+  "vehicleNotFound": "Автомобиль не найден",
+  "brand": "Марка",
+  "model": "Модель",
+  "year": "Год",
+  "currentMileage": "Текущий пробег",
+  "color": "Цвет",
+  "vinOptional": "VIN номер (необязательно)",
+  "engineType": "Тип двигателя",
+  "selectEngineType": "Выберите тип двигателя",
+  "gasoline": "Бензин",
+  "diesel": "Дизель",
+  "hybrid": "Гибрид",
+  "electric": "Электро",
+  "powerOutputHp": "Мощность (л.с.)",
+  "engineVolumeL": "Объем двигателя (л)",
+  "saveChanges": "Сохранить изменения",
+  "startNewShaha": "Создать новую шаху!",
+  "vehicleUpdated": "Автомобиль обновлен",
+  "vehicleAdded": "Автомобиль добавлен",
+  "checkVehicleDetails": "Проверьте данные автомобиля",
+  "couldNotUpdateVehicle": "Не удалось обновить автомобиль",
+  "couldNotSaveVehicle": "Не удалось сохранить автомобиль",
+  "enterBrand": "Введите марку",
+  "enterModel": "Введите модель",
+  "enterProductionYear": "Введите год выпуска",
+  "enterProductionYearRange": "Введите год выпуска от 1900 до {year}",
+  "@enterProductionYearRange": {
+    "placeholders": {
+      "year": {
+        "type": "int"
+      }
+    }
+  },
+  "mileageCannotBeNegative": "Пробег не может быть отрицательным",
+  "enterCurrentMileage": "Введите текущий пробег",
+  "enterPowerOutput": "Введите мощность",
+  "enterEngineVolume": "Введите объем двигателя",
+  "enterEngineSpecification": "Введите объем двигателя или мощность",
+  "powerOutputPositive": "Мощность должна быть больше нуля",
+  "engineVolumePositive": "Объем двигателя должен быть больше нуля",
+  "vinLengthError": "VIN должен содержать ровно 17 символов",
+  "myShaha": "Моя Shaha",
+  "couldNotLoadDashboard": "Не удалось загрузить панель",
+  "currentOdometer": "Текущий одометр",
+  "engine": "ДВИГАТЕЛЬ",
+  "vinNumber": "VIN НОМЕР",
+  "vinUnavailable": "VIN недоступен",
+  "copyVin": "Скопировать VIN",
+  "vinCopied": "VIN скопирован",
+  "latestEvents": "ПОСЛЕДНИЕ СОБЫТИЯ",
+  "viewAll": "Все",
+  "noEventsYet": "Событий пока нет",
+  "maintenanceHistory": "История обслуживания",
+  "addEvent": "Добавить событие",
+  "searchHistory": "Поиск по истории…",
+  "all": "ВСЕ",
+  "repairs": "РЕМОНТ",
+  "trips": "ПОЕЗДКИ",
+  "noEventsFound": "События не найдены",
+  "historyEmpty": "История пуста",
+  "tryAnotherSearch": "Попробуйте другой поиск или тип события.",
+  "historyEmptyDescription": "Поездки, заправки и ремонты появятся здесь.",
+  "couldNotLoadHistory": "Не удалось загрузить историю",
+  "newRefueling": "Новая заправка",
+  "newMaintenance": "Новое обслуживание",
+  "newTrip": "Новая поездка",
+  "eventType": "ТИП СОБЫТИЯ",
+  "dateAndTime": "ДАТА И ВРЕМЯ",
+  "title": "НАЗВАНИЕ",
+  "enterEventTitle": "Введите название события...",
+  "currentMileageLabel": "ТЕКУЩИЙ ПРОБЕГ",
+  "refuelingDetails": "ДЕТАЛИ ЗАПРАВКИ",
+  "amount": "КОЛИЧЕСТВО",
+  "cost": "СТОИМОСТЬ",
+  "fuelType": "ТИП ТОПЛИВА",
+  "mileageForecastInfo": "Пробег будет использован для обновления сервисных интервалов и прогнозов.",
+  "workDescription": "ОПИСАНИЕ РАБОТ",
+  "describeWorkPerformed": "Опишите выполненные работы...",
+  "replacedParts": "ЗАМЕНЕННЫЕ ДЕТАЛИ",
+  "enterPartsSeparated": "Введите детали через запятую...",
+  "route": "МАРШРУТ",
+  "duration": "ДЛИТЕЛЬНОСТЬ",
+  "start": "СТАРТ",
+  "end": "ФИНИШ",
+  "optional": "необязательно",
+  "partPhoto": "ФОТО ДЕТАЛИ",
+  "addPhoto": "Добавить фото",
+  "openingGallery": "Открываем галерею...",
+  "removePhoto": "Удалить фото",
+  "chooseAnotherPhoto": "Выбрать другое фото",
+  "couldNotSaveEvent": "Не удалось сохранить событие. Попробуйте снова.",
+  "couldNotAccessPhotoLibrary": "Не удалось открыть фотогалерею.",
+  "couldNotSelectPhoto": "Не удалось выбрать фото.",
+  "couldNotRestorePhoto": "Не удалось восстановить выбранное фото.",
+  "fuelEvent": "Заправка",
+  "maintenanceEvent": "Обслуживание",
+  "tripEvent": "Поездка",
+  "fieldMustBePositive": "{field} должно быть больше нуля",
+  "@fieldMustBePositive": {
+    "placeholders": {
+      "field": {}
+    }
+  },
+  "fieldIsRequired": "{field} обязательно",
+  "@fieldIsRequired": {
+    "placeholders": {
+      "field": {}
+    }
+  },
+  "mileageAtLeastKm": "Должно быть не меньше {km} км",
+  "@mileageAtLeastKm": {
+    "placeholders": {
+      "km": {
+        "type": "int"
+      }
+    }
+  },
+  "atLeastKm": "Не меньше {km} км",
+  "@atLeastKm": {
+    "placeholders": {
+      "km": {
+        "type": "int"
+      }
+    }
+  },
+  "mustExceedStart": "Должно быть больше старта",
+  "replaced": "Заменено: {parts}",
+  "@replaced": {
+    "placeholders": {
+      "parts": {}
+    }
+  },
+  "partPhotoLabel": "Фото детали:",
+  "chatWithShaha": "Чат с Shaha",
+  "vehicleAiAssistant": "AI-ассистент автомобиля",
+  "shahaOnline": "Shaha на связи",
+  "chatEmptyDescription": "Спросите о состоянии авто, расходах или обслуживании.",
+  "quickQuestionVehicleStatus": "Состояние авто",
+  "quickQuestionOil": "Когда менять масло?",
+  "quickQuestionBreakSoon": "Что скоро может сломаться?",
+  "message": "Сообщение",
+  "sendMessage": "Отправить сообщение",
+  "assistantThinking": "Ассистент думает",
+  "shahaThinking": "Shaha думает",
+  "connectingToShaha": "Подключаемся к Shaha",
+  "preparingChat": "Готовим историю и быстрые вопросы.",
+  "chatDidNotLoad": "Чат не загрузился",
+  "checkConnectionTryAgain": "Проверьте соединение и попробуйте снова.",
+  "couldNotGetReply": "Не удалось получить ответ. Проверьте backend и попробуйте снова.",
+  "openAnalytics": "Открыть аналитику",
+  "openForecast": "Открыть прогноз",
+  "openDashboard": "Открыть панель",
+  "open": "Открыть",
+  "addRefuel": "Добавить заправку",
+  "addTrip": "Добавить поездку",
+  "addPartRecord": "Добавить запись о детали",
+  "addMaintenance": "Добавить обслуживание",
+  "openForm": "Открыть форму",
+  "intelligence": "Интеллект",
+  "performanceOverview": "Обзор расходов и состояния",
+  "seasonalExpenses": "СЕЗОННЫЕ РАСХОДЫ",
+  "totalAmount": "ИТОГО: {amount}",
+  "@totalAmount": {
+    "placeholders": {
+      "amount": {}
+    }
+  },
+  "monthlyExpenseTrend": "Динамика расходов по месяцам",
+  "historyAnalysis": "АНАЛИЗ ИСТОРИИ",
+  "expensesLabel": "РАСХОДЫ: {period}",
+  "@expensesLabel": {
+    "placeholders": {
+      "period": {}
+    }
+  },
+  "costPerKm": "СТОИМОСТЬ ЗА КМ",
+  "averageLabel": "Среднее: {value}",
+  "@averageLabel": {
+    "placeholders": {
+      "value": {}
+    }
+  },
+  "performanceTrendOverTime": "ДИНАМИКА СОСТОЯНИЯ",
+  "companyMetricsUnavailable": "Метрики компании недоступны",
+  "countsUnavailable": "Счетчики недоступны",
+  "companyMetrics": "МЕТРИКИ КОМПАНИИ",
+  "keyCounts": "КЛЮЧЕВЫЕ СЧЕТЧИКИ",
+  "subscription": "Подписка",
+  "electronics": "Электроника",
+  "notEnoughAnalytics": "Недостаточно данных для аналитики",
+  "analyticsEmptyDescription": "Добавьте поездки, заправки, ремонты или обслуживание.",
+  "addRepair": "Добавить ремонт",
+  "couldNotLoadAnalytics": "Не удалось загрузить аналитику",
+  "month": "МЕСЯЦ",
+  "yearPeriod": "ГОД",
+  "allTime": "ВСЕ ВРЕМЯ",
+  "monthly": "МЕСЯЧНЫЕ",
+  "annual": "ГОДОВЫЕ",
+  "allTimeAdjective": "ЗА ВСЕ ВРЕМЯ",
+  "fuelCategory": "Топливо",
+  "maintenanceCategory": "Обслуживание",
+  "partsCategory": "Детали",
+  "otherCategory": "Другое",
+  "maintenanceForecast": "Прогноз обслуживания",
+  "noPartsAdded": "Детали не добавлены",
+  "partsEmptyDescription": "Когда появятся данные о ресурсе деталей, прогноз обслуживания будет здесь.",
+  "couldNotLoadParts": "Не удалось загрузить ресурс деталей",
+  "partsRetryDescription": "Попробуйте снова обновить прогноз обслуживания.",
+  "lifetimeNotSet": "Ресурс не задан",
+  "resource": "РЕСУРС",
+  "updatedTwoHoursAgo": "ОБНОВЛЕНО 2 ЧАСА НАЗАД",
+  "maintenanceForecastCaps": "ПРОГНОЗ ОБСЛУЖИВАНИЯ",
+  "serviceNeededNow": "Нужен сервис сейчас",
+  "inKm": "Через {km} км",
+  "@inKm": {
+    "placeholders": {
+      "km": {}
+    }
+  },
+  "notEnoughData": "Недостаточно данных",
+  "addLifetimeData": "Добавьте данные ресурса для прогноза",
+  "nextService": "СЛЕДУЮЩИЙ СЕРВИС",
+  "approxDateInDays": "Примерная дата: через {days} дн.",
+  "@approxDateInDays": {
+    "placeholders": {
+      "days": {
+        "type": "int"
+      }
+    }
+  },
+  "replacePartNow": "Замените {part} сейчас",
+  "@replacePartNow": {
+    "placeholders": {
+      "part": {}
+    }
+  },
+  "replaceCriticalPartsNow": "Замените критичные детали: {count}",
+  "@replaceCriticalPartsNow": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "noNotificationsYet": "Уведомлений пока нет",
+  "networkError": "Ошибка сети",
+  "notificationsLoadError": "Не удалось загрузить уведомления. Проверьте соединение и попробуйте снова.",
+  "notificationDetails": "Детали уведомления",
+  "notificationNotFound": "Уведомление не найдено",
+  "remainingResource": "Оставшийся ресурс",
+  "recommendedAction": "Рекомендованное действие"
 }

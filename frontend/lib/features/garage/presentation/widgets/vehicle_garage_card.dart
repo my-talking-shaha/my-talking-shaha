@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:frontend/app/theme/app_theme.dart';
 import 'package:frontend/features/garage/domain/entities/vehicle.dart';
+import 'package:frontend/l10n/generated/app_localizations.dart';
 
 final class VehicleGarageCard extends StatelessWidget {
   const VehicleGarageCard({
@@ -19,22 +20,23 @@ final class VehicleGarageCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     final subtitle = vehicle.color == null || vehicle.color!.isEmpty
-        ? '${vehicle.year} · ${vehicle.engineType}'
-        : '${vehicle.year} · ${vehicle.color} · ${vehicle.engineType}';
+        ? '${vehicle.year} · ${_engineTypeLabel(l10n, vehicle.engineType)}'
+        : '${vehicle.year} · ${vehicle.color} · ${_engineTypeLabel(l10n, vehicle.engineType)}';
 
     return _SwipeRevealActions(
       actions: [
         if (onEdit != null)
           _SwipeActionButton(
-            label: 'Edit',
+            label: l10n.edit,
             iconPath: 'assets/icons/garage/edit.svg',
             color: const Color(0xFFDCA249),
             onPressed: onEdit!,
           ),
         if (onDelete != null)
           _SwipeActionButton(
-            label: 'Delete',
+            label: l10n.delete,
             iconPath: 'assets/icons/garage/delete.svg',
             color: const Color(0xFFD4352F),
             onPressed: onDelete!,
@@ -91,7 +93,7 @@ final class VehicleGarageCard extends StatelessWidget {
                           Expanded(
                             child: _MetricTile(
                               iconPath: 'assets/icons/garage/mileage.svg',
-                              label: 'MILEAGE',
+                              label: l10n.mileage,
                               value:
                                   '${_formatMileage(vehicle.currentMileageKm)} km',
                             ),
@@ -100,18 +102,20 @@ final class VehicleGarageCard extends StatelessWidget {
                           Expanded(
                             child: _MetricTile(
                               iconPath: 'assets/icons/garage/repair.svg',
-                              label: 'SERVICE',
+                              label: l10n.service,
                               value: vehicle.activeWarningsCount > 0
-                                  ? '${vehicle.activeWarningsCount} warnings'
-                                  : 'No issues',
+                                  ? l10n.warningsCount(
+                                      vehicle.activeWarningsCount,
+                                    )
+                                  : l10n.noIssues,
                             ),
                           ),
                           const SizedBox(width: AppSpacing.sm),
-                          const Expanded(
+                          Expanded(
                             child: _MetricTile(
                               iconPath: 'assets/icons/garage/refuel.svg',
-                              label: 'FUEL',
-                              value: 'No data',
+                              label: l10n.fuel,
+                              value: l10n.noData,
                             ),
                           ),
                         ],
@@ -122,7 +126,7 @@ final class VehicleGarageCard extends StatelessWidget {
                         child: ElevatedButton.icon(
                           onPressed: onOpen,
                           icon: const Icon(Icons.keyboard_arrow_right),
-                          label: const Text('Open cockpit'),
+                          label: Text(l10n.openCockpit),
                           iconAlignment: IconAlignment.end,
                         ),
                       ),
@@ -136,6 +140,20 @@ final class VehicleGarageCard extends StatelessWidget {
       ),
     );
   }
+}
+
+String _engineTypeLabel(AppLocalizations l10n, String value) {
+  if (l10n.localeName.startsWith('en')) {
+    return value;
+  }
+
+  return switch (value.toLowerCase()) {
+    'gasoline' => l10n.gasoline,
+    'diesel' => l10n.diesel,
+    'hybrid' => l10n.hybrid,
+    'electric' => l10n.electric,
+    _ => value,
+  };
 }
 
 final class _SwipeRevealActions extends StatefulWidget {

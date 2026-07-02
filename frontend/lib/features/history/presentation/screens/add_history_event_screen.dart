@@ -10,6 +10,7 @@ import 'package:frontend/features/history/domain/entities/event_details.dart';
 import 'package:frontend/features/history/domain/entities/history_event.dart';
 import 'package:frontend/features/history/domain/entities/history_event_type.dart';
 import 'package:frontend/features/history/presentation/utils/history_event_form_utils.dart';
+import 'package:frontend/l10n/generated/app_localizations.dart';
 import 'package:image_picker/image_picker.dart';
 
 typedef SaveHistoryEvent = Future<void> Function(HistoryEvent event);
@@ -105,8 +106,10 @@ final class _AddHistoryEventScreenState extends State<AddHistoryEventScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+
     return Scaffold(
-      appBar: AppBar(title: Text(HistoryEventFormUtils.titleFor(_type))),
+      appBar: AppBar(title: Text(HistoryEventFormUtils.titleFor(_type, l10n))),
       body: SafeArea(
         top: false,
         child: Form(
@@ -119,7 +122,7 @@ final class _AddHistoryEventScreenState extends State<AddHistoryEventScreen> {
               AppSpacing.xxl,
             ),
             children: [
-              const _SectionLabel('EVENT TYPE'),
+              _SectionLabel(l10n.eventType),
               const SizedBox(height: AppSpacing.sm),
               _EventTypeSelector(
                 selectedType: _type,
@@ -131,7 +134,7 @@ final class _AddHistoryEventScreenState extends State<AddHistoryEventScreen> {
               ),
               const SizedBox(height: AppSpacing.lg),
               _FormCard(
-                label: 'DATE AND TIME',
+                label: l10n.dateAndTime,
                 child: _ReadOnlyValue(
                   icon: Icons.calendar_today_outlined,
                   value: HistoryEventFormUtils.formatDateTime(_occurredAt),
@@ -140,17 +143,16 @@ final class _AddHistoryEventScreenState extends State<AddHistoryEventScreen> {
               ),
               const SizedBox(height: AppSpacing.md),
               _FormCard(
-                label: 'TITLE',
+                label: l10n.title,
                 child: TextFormField(
                   key: const ValueKey('event-title'),
                   controller: _titleController,
-                  decoration: const InputDecoration(
-                    hintText: 'Enter event title...',
-                  ),
+                  decoration: InputDecoration(hintText: l10n.enterEventTitle),
                   textInputAction: TextInputAction.next,
                   validator: (value) => HistoryEventFormUtils.validateRequired(
                     value,
-                    label: 'Title',
+                    label: l10n.title,
+                    l10n: l10n,
                   ),
                 ),
               ),
@@ -168,7 +170,7 @@ final class _AddHistoryEventScreenState extends State<AddHistoryEventScreen> {
                         dimension: 20,
                         child: CircularProgressIndicator(strokeWidth: 2),
                       )
-                    : const Text('Save'),
+                    : Text(l10n.save),
               ),
             ],
           ),
@@ -180,7 +182,7 @@ final class _AddHistoryEventScreenState extends State<AddHistoryEventScreen> {
   List<Widget> _fuelFields() {
     return [
       _FormCard(
-        label: 'CURRENT MILEAGE',
+        label: AppLocalizations.of(context).currentMileageLabel,
         child: _NumberField(
           key: const ValueKey('fuel-mileage'),
           controller: _mileageController,
@@ -190,12 +192,13 @@ final class _AddHistoryEventScreenState extends State<AddHistoryEventScreen> {
           validator: (value) => HistoryEventFormUtils.validateMileage(
             value,
             minimumMileageKm: widget.initialMileageKm,
+            l10n: AppLocalizations.of(context),
           ),
         ),
       ),
       const SizedBox(height: AppSpacing.md),
       _FormCard(
-        label: 'REFUELING DETAILS',
+        label: AppLocalizations.of(context).refuelingDetails,
         child: Column(
           children: [
             Row(
@@ -203,7 +206,7 @@ final class _AddHistoryEventScreenState extends State<AddHistoryEventScreen> {
               children: [
                 Expanded(
                   child: _LabeledField(
-                    label: 'AMOUNT',
+                    label: AppLocalizations.of(context).amount,
                     child: _NumberField(
                       key: const ValueKey('fuel-liters'),
                       controller: _fuelLitersController,
@@ -212,7 +215,8 @@ final class _AddHistoryEventScreenState extends State<AddHistoryEventScreen> {
                       validator: (value) =>
                           HistoryEventFormUtils.validatePositiveInt(
                             value,
-                            label: 'Amount',
+                            label: AppLocalizations.of(context).amount,
+                            l10n: AppLocalizations.of(context),
                           ),
                     ),
                   ),
@@ -220,7 +224,7 @@ final class _AddHistoryEventScreenState extends State<AddHistoryEventScreen> {
                 const SizedBox(width: AppSpacing.sm),
                 Expanded(
                   child: _LabeledField(
-                    label: 'COST',
+                    label: AppLocalizations.of(context).cost,
                     child: _NumberField(
                       key: const ValueKey('fuel-cost'),
                       controller: _fuelCostController,
@@ -229,7 +233,8 @@ final class _AddHistoryEventScreenState extends State<AddHistoryEventScreen> {
                       validator: (value) =>
                           HistoryEventFormUtils.validatePositiveInt(
                             value,
-                            label: 'Cost',
+                            label: AppLocalizations.of(context).cost,
+                            l10n: AppLocalizations.of(context),
                           ),
                     ),
                   ),
@@ -238,7 +243,7 @@ final class _AddHistoryEventScreenState extends State<AddHistoryEventScreen> {
             ),
             const SizedBox(height: AppSpacing.md),
             _LabeledField(
-              label: 'FUEL TYPE',
+              label: AppLocalizations.of(context).fuelType,
               child: DropdownButtonFormField<String>(
                 key: const ValueKey('fuel-type'),
                 initialValue: _fuelType,
@@ -267,9 +272,8 @@ final class _AddHistoryEventScreenState extends State<AddHistoryEventScreen> {
         ),
       ),
       const SizedBox(height: AppSpacing.md),
-      const _InformationCard(
-        message:
-            'Mileage data will be used to update service intervals and forecasts.',
+      _InformationCard(
+        message: AppLocalizations.of(context).mileageForecastInfo,
       ),
     ];
   }
@@ -277,7 +281,7 @@ final class _AddHistoryEventScreenState extends State<AddHistoryEventScreen> {
   List<Widget> _maintenanceFields() {
     return [
       _FormCard(
-        label: 'CURRENT MILEAGE',
+        label: AppLocalizations.of(context).currentMileageLabel,
         child: _NumberField(
           key: const ValueKey('maintenance-mileage'),
           controller: _mileageController,
@@ -287,30 +291,32 @@ final class _AddHistoryEventScreenState extends State<AddHistoryEventScreen> {
           validator: (value) => HistoryEventFormUtils.validateMileage(
             value,
             minimumMileageKm: widget.initialMileageKm,
+            l10n: AppLocalizations.of(context),
           ),
         ),
       ),
       const SizedBox(height: AppSpacing.md),
       _FormCard(
-        label: 'WORK DESCRIPTION',
+        label: AppLocalizations.of(context).workDescription,
         child: TextFormField(
           key: const ValueKey('maintenance-description'),
           controller: _maintenanceDescriptionController,
           minLines: 4,
           maxLines: 6,
-          decoration: const InputDecoration(
-            hintText: 'Describe the work performed...',
+          decoration: InputDecoration(
+            hintText: AppLocalizations.of(context).describeWorkPerformed,
             alignLabelWithHint: true,
           ),
           validator: (value) => HistoryEventFormUtils.validateRequired(
             value,
-            label: 'Description',
+            label: AppLocalizations.of(context).workDescription,
+            l10n: AppLocalizations.of(context),
           ),
         ),
       ),
       const SizedBox(height: AppSpacing.md),
       _FormCard(
-        label: 'COST',
+        label: AppLocalizations.of(context).cost,
         optional: true,
         child: _NumberField(
           key: const ValueKey('maintenance-cost'),
@@ -322,15 +328,15 @@ final class _AddHistoryEventScreenState extends State<AddHistoryEventScreen> {
       ),
       const SizedBox(height: AppSpacing.md),
       _FormCard(
-        label: 'REPLACED PARTS',
+        label: AppLocalizations.of(context).replacedParts,
         optional: true,
         child: TextFormField(
           key: const ValueKey('maintenance-parts'),
           controller: _replacedPartsController,
           minLines: 3,
           maxLines: 5,
-          decoration: const InputDecoration(
-            hintText: 'Enter parts separated by commas...',
+          decoration: InputDecoration(
+            hintText: AppLocalizations.of(context).enterPartsSeparated,
           ),
         ),
       ),
@@ -351,13 +357,13 @@ final class _AddHistoryEventScreenState extends State<AddHistoryEventScreen> {
   List<Widget> _tripFields() {
     return [
       _FormCard(
-        label: 'MILEAGE',
+        label: AppLocalizations.of(context).mileage,
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Expanded(
               child: _LabeledField(
-                label: 'START',
+                label: AppLocalizations.of(context).start,
                 child: _NumberField(
                   key: const ValueKey('trip-start'),
                   controller: _tripStartController,
@@ -366,6 +372,7 @@ final class _AddHistoryEventScreenState extends State<AddHistoryEventScreen> {
                   validator: (value) => HistoryEventFormUtils.validateTripStart(
                     value,
                     minimumMileageKm: widget.initialMileageKm,
+                    l10n: AppLocalizations.of(context),
                   ),
                 ),
               ),
@@ -373,7 +380,7 @@ final class _AddHistoryEventScreenState extends State<AddHistoryEventScreen> {
             const SizedBox(width: AppSpacing.sm),
             Expanded(
               child: _LabeledField(
-                label: 'END',
+                label: AppLocalizations.of(context).end,
                 child: _NumberField(
                   key: const ValueKey('trip-end'),
                   controller: _tripEndController,
@@ -382,6 +389,7 @@ final class _AddHistoryEventScreenState extends State<AddHistoryEventScreen> {
                   validator: (value) => HistoryEventFormUtils.validateTripEnd(
                     value,
                     startMileage: _tripStartController.text,
+                    l10n: AppLocalizations.of(context),
                   ),
                 ),
               ),
@@ -391,7 +399,7 @@ final class _AddHistoryEventScreenState extends State<AddHistoryEventScreen> {
       ),
       const SizedBox(height: AppSpacing.md),
       _FormCard(
-        label: 'ROUTE',
+        label: AppLocalizations.of(context).route,
         optional: true,
         child: TextFormField(
           key: const ValueKey('trip-route'),
@@ -404,7 +412,7 @@ final class _AddHistoryEventScreenState extends State<AddHistoryEventScreen> {
       ),
       const SizedBox(height: AppSpacing.md),
       _FormCard(
-        label: 'DURATION',
+        label: AppLocalizations.of(context).duration,
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -417,7 +425,8 @@ final class _AddHistoryEventScreenState extends State<AddHistoryEventScreen> {
                 icon: Icons.timer_outlined,
                 validator: (value) => HistoryEventFormUtils.validatePositiveInt(
                   value,
-                  label: 'Duration',
+                  label: AppLocalizations.of(context).duration,
+                  l10n: AppLocalizations.of(context),
                 ),
               ),
             ),
@@ -459,7 +468,7 @@ final class _AddHistoryEventScreenState extends State<AddHistoryEventScreen> {
       }
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Could not save the event. Try again.')),
+        SnackBar(content: Text(AppLocalizations.of(context).couldNotSaveEvent)),
       );
     } finally {
       if (mounted) setState(() => _isSaving = false);
@@ -468,6 +477,9 @@ final class _AddHistoryEventScreenState extends State<AddHistoryEventScreen> {
 
   Future<void> _pickPhoto() async {
     if (_isPickingPhoto) return;
+    final l10n = AppLocalizations.of(context);
+    final accessError = l10n.couldNotAccessPhotoLibrary;
+    final selectError = l10n.couldNotSelectPhoto;
     setState(() => _isPickingPhoto = true);
 
     try {
@@ -483,25 +495,26 @@ final class _AddHistoryEventScreenState extends State<AddHistoryEventScreen> {
         setState(() => _selectedPhoto = photo);
       }
     } on PlatformException {
-      _showPhotoError('Could not access the photo library.');
+      _showPhotoError(accessError);
     } catch (_) {
-      _showPhotoError('Could not select the photo.');
+      _showPhotoError(selectError);
     } finally {
       if (mounted) setState(() => _isPickingPhoto = false);
     }
   }
 
   Future<void> _restoreLostPhoto() async {
+    final restoreError = AppLocalizations.of(context).couldNotRestorePhoto;
     try {
       final response = await _imagePicker.retrieveLostData();
       final files = response.files;
       if (files != null && files.isNotEmpty && mounted) {
         setState(() => _selectedPhoto = files.first);
       } else if (response.exception != null) {
-        _showPhotoError('Could not restore the selected photo.');
+        _showPhotoError(restoreError);
       }
     } on PlatformException {
-      _showPhotoError('Could not restore the selected photo.');
+      _showPhotoError(restoreError);
     }
   }
 
@@ -598,14 +611,15 @@ final class _EventTypeSelector extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    const options = [
-      (HistoryEventType.fuel, 'Fuel', 'assets/icons/events/gas.svg'),
+    final l10n = AppLocalizations.of(context);
+    final options = [
+      (HistoryEventType.fuel, l10n.fuelEvent, 'assets/icons/events/gas.svg'),
       (
         HistoryEventType.maintenance,
-        'Maintenance',
+        l10n.maintenanceEvent,
         'assets/icons/events/spanner.svg',
       ),
-      (HistoryEventType.trip, 'Trip', 'assets/icons/events/trip.svg'),
+      (HistoryEventType.trip, l10n.tripEvent, 'assets/icons/events/trip.svg'),
     ];
 
     return Container(
@@ -703,7 +717,10 @@ final class _FormCard extends StatelessWidget {
             children: [
               Expanded(child: _SectionLabel(label)),
               if (optional)
-                Text('optional', style: Theme.of(context).textTheme.bodySmall),
+                Text(
+                  AppLocalizations.of(context).optional,
+                  style: Theme.of(context).textTheme.bodySmall,
+                ),
             ],
           ),
           const SizedBox(height: AppSpacing.sm),
@@ -871,8 +888,10 @@ final class _PhotoCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+
     return _FormCard(
-      label: 'PART PHOTO',
+      label: l10n.partPhoto,
       optional: true,
       child: photo == null
           ? OutlinedButton.icon(
@@ -884,7 +903,7 @@ final class _PhotoCard extends StatelessWidget {
                       child: CircularProgressIndicator(strokeWidth: 2),
                     )
                   : const Icon(Icons.add_circle_outline, size: 18),
-              label: Text(isPicking ? 'Opening gallery...' : 'Add photo'),
+              label: Text(isPicking ? l10n.openingGallery : l10n.addPhoto),
             )
           : Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -916,7 +935,7 @@ final class _PhotoCard extends StatelessWidget {
                       child: IconButton.filled(
                         key: const ValueKey('maintenance-photo-remove'),
                         onPressed: onRemove,
-                        tooltip: 'Remove photo',
+                        tooltip: l10n.removePhoto,
                         style: IconButton.styleFrom(
                           backgroundColor: AppColors.backgroundDark.withValues(
                             alpha: 0.82,
@@ -933,7 +952,7 @@ final class _PhotoCard extends StatelessWidget {
                   key: const ValueKey('maintenance-photo-change'),
                   onPressed: isPicking ? null : onPick,
                   icon: const Icon(Icons.photo_library_outlined, size: 18),
-                  label: const Text('Choose another photo'),
+                  label: Text(l10n.chooseAnotherPhoto),
                 ),
               ],
             ),

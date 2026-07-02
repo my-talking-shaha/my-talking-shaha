@@ -7,6 +7,7 @@ import 'package:frontend/features/chat/domain/entities/chat_action.dart';
 import 'package:frontend/features/chat/domain/entities/chat_message.dart';
 import 'package:frontend/features/chat/presentation/providers/chat_providers.dart';
 import 'package:frontend/features/chat/presentation/state/chat_screen_state.dart';
+import 'package:frontend/l10n/generated/app_localizations.dart';
 import 'package:go_router/go_router.dart';
 
 final class ChatScreen extends ConsumerStatefulWidget {
@@ -31,6 +32,7 @@ final class _ChatScreenState extends ConsumerState<ChatScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     final provider = chatControllerProvider(widget.vehicleId);
     final chatState = ref.watch(provider);
 
@@ -45,7 +47,9 @@ final class _ChatScreenState extends ConsumerState<ChatScreen> {
       if (errorMessage != null && errorMessage.isNotEmpty) {
         ScaffoldMessenger.of(context)
           ..hideCurrentSnackBar()
-          ..showSnackBar(SnackBar(content: Text(errorMessage)));
+          ..showSnackBar(
+            SnackBar(content: Text(_localizedChatError(context, errorMessage))),
+          );
       }
     });
 
@@ -53,7 +57,7 @@ final class _ChatScreenState extends ConsumerState<ChatScreen> {
       appBar: AppBar(
         leading: IconButton(
           onPressed: () => context.go('/garage'),
-          tooltip: 'Open garage',
+          tooltip: l10n.openGarage,
           icon: const Icon(Icons.chevron_left_rounded, size: 32),
         ),
         titleSpacing: 0,
@@ -99,6 +103,15 @@ final class _ChatScreenState extends ConsumerState<ChatScreen> {
       );
     });
   }
+}
+
+String _localizedChatError(BuildContext context, String message) {
+  final l10n = AppLocalizations.of(context);
+  return switch (message) {
+    'Could not get a reply. Check the backend and try again.' =>
+      l10n.couldNotGetReply,
+    _ => message,
+  };
 }
 
 final class _ChatLoadedBody extends StatelessWidget {
@@ -237,11 +250,12 @@ final class _ChatEmptyState extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     final questions = quickQuestions.isEmpty
-        ? const [
-            'Vehicle status',
-            'When should I change oil?',
-            'What can break soon?',
+        ? [
+            l10n.quickQuestionVehicleStatus,
+            l10n.quickQuestionOil,
+            l10n.quickQuestionBreakSoon,
           ]
         : quickQuestions;
 
@@ -257,13 +271,13 @@ final class _ChatEmptyState extends StatelessWidget {
         const _AssistantMark(size: 84, iconSize: 38),
         const SizedBox(height: AppSpacing.xxl),
         Text(
-          'Shaha is online',
+          l10n.shahaOnline,
           textAlign: TextAlign.center,
           style: Theme.of(context).textTheme.headlineMedium,
         ),
         const SizedBox(height: AppSpacing.sm),
         Text(
-          'Ask about vehicle condition, expenses, or maintenance.',
+          l10n.chatEmptyDescription,
           textAlign: TextAlign.center,
           style: Theme.of(context).textTheme.bodyMedium,
         ),
@@ -478,7 +492,7 @@ final class _ChatActionPill extends StatelessWidget {
                 ),
                 const SizedBox(width: AppSpacing.sm),
                 Text(
-                  _label(),
+                  _label(context),
                   style: Theme.of(context).textTheme.labelLarge?.copyWith(
                     color: AppColors.primaryLight,
                     fontWeight: FontWeight.w700,
@@ -526,23 +540,24 @@ final class _ChatActionPill extends StatelessWidget {
     return null;
   }
 
-  String _label() {
+  String _label(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     final type = action.type.toUpperCase();
     if (type == 'OPEN_SCREEN') {
       return switch (action.screen?.toUpperCase()) {
-        'ANALYTICS' => 'Open analytics',
-        'MAINTENANCE_FORECAST' => 'Open forecast',
-        'DASHBOARD' => 'Open dashboard',
-        _ => 'Open',
+        'ANALYTICS' => l10n.openAnalytics,
+        'MAINTENANCE_FORECAST' => l10n.openForecast,
+        'DASHBOARD' => l10n.openDashboard,
+        _ => l10n.open,
       };
     }
 
     return switch (action.form?.toUpperCase()) {
-      'REFUEL' => 'Add refuel',
-      'TRIP' => 'Add trip',
-      'PART_REPLACEMENT' => 'Add part record',
-      'MAINTENANCE' => 'Add maintenance',
-      _ => 'Open form',
+      'REFUEL' => l10n.addRefuel,
+      'TRIP' => l10n.addTrip,
+      'PART_REPLACEMENT' => l10n.addPartRecord,
+      'MAINTENANCE' => l10n.addMaintenance,
+      _ => l10n.openForm,
     };
   }
 
@@ -679,6 +694,7 @@ final class _ChatInputBarState extends State<_ChatInputBar> {
   Widget build(BuildContext context) {
     final canSend =
         widget.controller.text.trim().isNotEmpty && !widget.isSending;
+    final l10n = AppLocalizations.of(context);
 
     return DecoratedBox(
       decoration: BoxDecoration(
@@ -715,13 +731,13 @@ final class _ChatInputBarState extends State<_ChatInputBar> {
                   maxLines: 4,
                   textInputAction: TextInputAction.send,
                   onSubmitted: canSend ? widget.onSend : null,
-                  decoration: const InputDecoration(
-                    hintText: 'Message',
+                  decoration: InputDecoration(
+                    hintText: l10n.message,
                     filled: false,
                     border: InputBorder.none,
                     enabledBorder: InputBorder.none,
                     focusedBorder: InputBorder.none,
-                    contentPadding: EdgeInsets.symmetric(
+                    contentPadding: const EdgeInsets.symmetric(
                       horizontal: AppSpacing.lg,
                       vertical: AppSpacing.md,
                     ),
@@ -737,7 +753,7 @@ final class _ChatInputBarState extends State<_ChatInputBar> {
                     ? () => widget.onSend(widget.controller.text)
                     : null,
                 icon: const Icon(Icons.arrow_upward),
-                tooltip: 'Send message',
+                tooltip: l10n.sendMessage,
               ),
             ),
           ],
@@ -766,11 +782,11 @@ final class _ChatTitle extends StatelessWidget {
             mainAxisSize: MainAxisSize.min,
             children: [
               Text(
-                'Chat with Shaha',
+                AppLocalizations.of(context).chatWithShaha,
                 style: Theme.of(context).textTheme.titleLarge,
               ),
               Text(
-                'Vehicle AI assistant',
+                AppLocalizations.of(context).vehicleAiAssistant,
                 style: Theme.of(context).textTheme.bodySmall,
               ),
             ],
@@ -829,7 +845,7 @@ final class _TypingBubbleState extends State<_TypingBubble>
                 vertical: AppSpacing.md,
               ),
               child: Semantics(
-                label: 'Assistant is thinking',
+                label: AppLocalizations.of(context).assistantThinking,
                 child: AnimatedBuilder(
                   animation: _controller,
                   builder: (context, _) {
@@ -876,7 +892,7 @@ final class _ThinkingWaveText extends StatelessWidget {
         ).createShader(bounds);
       },
       child: Text(
-        'Shaha is thinking',
+        AppLocalizations.of(context).shahaThinking,
         style: Theme.of(context).textTheme.titleMedium?.copyWith(
           color: AppColors.textSecondary,
           fontWeight: FontWeight.w500,
@@ -901,13 +917,13 @@ final class _ChatWarmupState extends StatelessWidget {
             const _AssistantMark(size: 72, iconSize: 32),
             const SizedBox(height: AppSpacing.xl),
             Text(
-              'Connecting to Shaha',
+              AppLocalizations.of(context).connectingToShaha,
               textAlign: TextAlign.center,
               style: Theme.of(context).textTheme.titleLarge,
             ),
             const SizedBox(height: AppSpacing.sm),
             Text(
-              'Preparing history and quick questions.',
+              AppLocalizations.of(context).preparingChat,
               textAlign: TextAlign.center,
               style: Theme.of(context).textTheme.bodyMedium,
             ),
@@ -974,13 +990,13 @@ final class _ChatLoadError extends StatelessWidget {
             ),
             const SizedBox(height: AppSpacing.lg),
             Text(
-              'Chat did not load',
+              AppLocalizations.of(context).chatDidNotLoad,
               textAlign: TextAlign.center,
               style: Theme.of(context).textTheme.titleLarge,
             ),
             const SizedBox(height: AppSpacing.sm),
             Text(
-              'Check the connection and try again.',
+              AppLocalizations.of(context).checkConnectionTryAgain,
               textAlign: TextAlign.center,
               style: Theme.of(context).textTheme.bodyMedium,
             ),
@@ -988,7 +1004,7 @@ final class _ChatLoadError extends StatelessWidget {
             OutlinedButton.icon(
               onPressed: onRetry,
               icon: const Icon(Icons.refresh_rounded),
-              label: const Text('Retry'),
+              label: Text(AppLocalizations.of(context).retry),
             ),
           ],
         ),

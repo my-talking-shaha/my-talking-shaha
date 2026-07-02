@@ -138,7 +138,9 @@ final class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                             .logout();
                         if (message != null) {
                           messenger.showSnackBar(
-                            SnackBar(content: Text(message)),
+                            SnackBar(
+                              content: Text(_localizedSettingsError(message)),
+                            ),
                           );
                         }
                       },
@@ -155,6 +157,14 @@ final class _SettingsScreenState extends ConsumerState<SettingsScreen> {
         ),
       ),
     );
+  }
+
+  String _localizedSettingsError(String message) {
+    final l10n = AppLocalizations.of(context);
+    return switch (message) {
+      'Could not log out. Please try again' => l10n.couldNotLogOut,
+      _ => message,
+    };
   }
 }
 
