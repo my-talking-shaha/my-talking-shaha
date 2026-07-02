@@ -38,16 +38,20 @@ Covers:
 3. User can type a message immediately.
 4. Quick-question buttons are shown below the input field.
 5. Starter set:
-   - `Состояние авто`;
-   - `Когда ТО?`;
-   - `Что может сломаться?`;
-   - `Добавить заправку`;
-   - `Записать ремонт`.
+   - `Vehicle status`;
+   - `When is service due?`;
+   - `What can break soon?`;
+   - `Add refuel`;
+   - `Record repair`.
 6. Buttons may be dynamic and personalized for the selected user and vehicle.
 7. User taps a quick-question button.
 8. The question is sent to the chat as a user message.
 
 ## Grounding Requirements
+
+AI chat answers are written as the selected vehicle speaking directly to the user, in
+first person. The backend should not answer like a generic app assistant unless a future
+personality mode explicitly asks for that.
 
 AI agent answers must be based on:
 - vehicle profile;
@@ -60,7 +64,7 @@ AI agent answers must be based on:
 If data is missing, show exact fallback:
 
 ```text
-Недостаточно данных для ответа
+Not enough data to answer
 ```
 
 ## Response Content
@@ -89,21 +93,26 @@ Flutter should render structured actions but not invent them.
 
 ## Chat to Form Flow
 
-1. User sends a message about an event, for example `Заменил масло на 15000 км`.
+1. User sends a message about an event, for example `I changed the oil at 15000 km`.
 2. Backend recognizes the event intent and extracts known fields.
-3. Assistant responds with a confirmation question and a `Перейти к форме` action.
-4. Structured action payload includes:
+3. If all required fields are present and valid, backend creates the event immediately
+   and returns `createdEvent` with a confirmation message.
+4. If fields are missing or invalid, assistant asks for the missing/corrected values and
+   keeps the extracted fields as a pending draft.
+5. If automatic creation is not possible for the intent, assistant may return a
+   `Go to form` action.
+6. Structured action payload includes:
    - event type;
    - target form route;
    - pre-filled fields;
    - return route to the current chat.
-5. User taps `Перейти к форме`.
-6. App opens the matching form with extracted fields pre-filled.
-7. User completes remaining fields and saves.
-8. App returns to the chat and appends an AI confirmation.
-9. User can cancel the action before saving.
+7. User taps `Go to form`.
+8. App opens the matching form with extracted fields pre-filled.
+9. User completes remaining fields and saves.
+10. App returns to the chat and appends an AI confirmation.
+11. User can cancel the action before saving.
 
-Example for `Заменил масло на 15000 км`:
+Example for `I changed the oil at 15000 km`:
 - event type: part replacement;
 - part: oil;
 - mileage: 15000.
@@ -130,3 +139,38 @@ If implemented:
 - Chat history is saved per vehicle.
 - Quick-question buttons are available on the chat start screen.
 - Recognized event intents can open pre-filled forms and return to chat after save.
+
+## Automatic Chat Event Creation
+
+When a chat message contains all required event fields, backend creates the timeline
+event immediately instead of only returning an `OPEN_FORM` action.
+
+Supported automatic creation intents:
+- refuel: liters, cost, fuel type/name, mileage if present;
+- trip: distance and duration;
+- repair/maintenance: repair text, mileage if present, cost if present.
+
+If required fields are missing, backend keeps the extracted fields as a pending chat draft
+and asks the user to provide the missing data. If validation fails, backend explains what
+is wrong and asks for corrected values. For example, `I refueled the car with 5 liters
+of 95 octane` should make the car ask for cost; `for 1000 rubles` should then complete
+the pending draft and create the `REFUEL` event.
+
+Example complete refuel message:
+
+```text
+I refueled with 5 liters of 95 octane for 1000 rubles
+```
+
+Expected behavior:
+- backend validates extracted data using timeline rules;
+- backend creates a `REFUEL` timeline event;
+- assistant returns a confirmation message without an action;
+- response includes `createdEvent`;
+- client refreshes timeline/dashboard/analytics data after receiving `createdEvent`.
+- supported fuel names are limited to the current form values: `92 octane`, `95 octane`,
+  `98 octane`, and `Diesel`.
+
+Generic repair messages such as `I want to record a repair` are not enough to create an
+event. The car should ask for the work description and any invalid or missing validation
+fields, then create the maintenance record only after the user sends valid details.

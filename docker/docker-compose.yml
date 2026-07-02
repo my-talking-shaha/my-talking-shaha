@@ -35,7 +35,9 @@ services:
       - SPRING_DATASOURCE_USERNAME=shaha_user
       - SPRING_DATASOURCE_PASSWORD=shaha_password
       - SPRING_JPA_HIBERNATE_DDL_AUTO=validate
-      - HUGGINGFACE_TOKEN=${HUGGINGFACE_TOKEN:-}
+      - TIMEWEB_AI_BASE_URL=${TIMEWEB_AI_BASE_URL:-}
+      - TIMEWEB_AI_TOKEN=${TIMEWEB_AI_TOKEN:-}
+      - TIMEWEB_AI_MODEL=${TIMEWEB_AI_MODEL:-timeweb-agent}
     depends_on:
       postgres:
         condition: service_healthy

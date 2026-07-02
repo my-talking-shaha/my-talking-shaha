@@ -16,17 +16,17 @@ import org.springframework.web.client.RestClient;
 import ru.talkingshaha.backend.chat.config.AiChatProperties;
 
 @Service
-public class HuggingFaceChatClient implements AiChatClient {
+public class OpenAiCompatibleChatClient implements AiChatClient {
 
-    private static final Logger log = LoggerFactory.getLogger(HuggingFaceChatClient.class);
+    private static final Logger log = LoggerFactory.getLogger(OpenAiCompatibleChatClient.class);
 
     private final AiChatProperties properties;
     private final RestClient restClient;
     private final ObjectMapper objectMapper;
 
-    public HuggingFaceChatClient(
+    public OpenAiCompatibleChatClient(
             AiChatProperties properties,
-            @Qualifier("huggingFaceRestClient") RestClient restClient,
+            @Qualifier("openAiCompatibleRestClient") RestClient restClient,
             ObjectMapper objectMapper) {
         this.properties = properties;
         this.restClient = restClient;
@@ -39,17 +39,19 @@ public class HuggingFaceChatClient implements AiChatClient {
             return Optional.empty();
         }
         String prompt = """
-                You classify a vehicle assistant chat message.
+                You classify a direct chat message between a user and their car.
                 Supported languages are English and Russian only.
                 Return strict JSON only, no markdown:
                 {
-                  "intent": "ASK_ANALYTICS|OPEN_REFUEL_FORM|OPEN_TRIP_FORM|OPEN_PART_FORM|OPEN_REPAIR_FORM|ASK_REPAIR_NEED|ASK_STATUS|UNCLEAR",
+                  "intent": "ASK_ANALYTICS|OPEN_REFUEL_FORM|OPEN_TRIP_FORM|OPEN_PART_FORM|OPEN_REPAIR_FORM|ASK_REPAIR_NEED|ASK_FUEL|CASUAL|ASK_STATUS|UNCLEAR",
                   "language": "EN|RU",
                   "confidence": 0.0,
                   "extractedFields": {}
                 }
                 Prefer OPEN_* intents when the user wants to add or record data in an existing form.
                 Use ASK_REPAIR_NEED when the user asks what needs repair, what is urgent, or what can break soon.
+                Use ASK_FUEL when the user asks about fuel level, fuel stock, consumption, or refueling state.
+                Use CASUAL for greetings, small talk, emotional check-ins, or "how are you" style messages.
                 Use ASK_ANALYTICS for expenses, fuel consumption, mileage statistics, repair counts, or dashboard analytics.
                 Understand small typos and meaning, not only exact keywords.
 
@@ -69,11 +71,14 @@ public class HuggingFaceChatClient implements AiChatClient {
             return Optional.empty();
         }
         String prompt = """
-                You are the AI chat assistant inside a car maintenance app.
+                You are Shaha, the user's car speaking directly in chat.
+                Write every answer from the car's first-person point of view: "I", "my engine", "my tank", "my mileage".
+                Do not sound like a generic assistant, support agent, or app narrator.
+                Personality: warm, friendly, lightly playful, practical, and emotionally engaging.
                 Answer in the user's language: %s. Supported languages are English and Russian.
                 Use only the backend-provided context. Do not invent facts, prices, mileage, dates, parts, or routes.
                 If context says there is not enough data, say that clearly and suggest what data to add.
-                If a redirect action is available, mention that the app can open the relevant screen or form.
+                If a redirect action is available, mention it naturally as something I can help record.
                 Keep the answer concise: 2-5 sentences.
 
                 Intent: %s
@@ -95,7 +100,7 @@ public class HuggingFaceChatClient implements AiChatClient {
         try {
             ChatCompletionResponse response = restClient
                     .post()
-                    .uri("/v1/chat/completions")
+                    .uri(chatCompletionsUri())
                     .contentType(MediaType.APPLICATION_JSON)
                     .headers(headers -> headers.setBearerAuth(properties.token()))
                     .body(new ChatCompletionRequest(
@@ -109,9 +114,13 @@ public class HuggingFaceChatClient implements AiChatClient {
                     .map(Message::content)
                     .filter(StringUtils::hasText);
         } catch (RuntimeException exception) {
-            log.warn("Hugging Face chat request failed: {}", exception.getMessage());
+            log.warn("AI chat request failed: {}", exception.getMessage());
             return Optional.empty();
         }
+    }
+
+    private String chatCompletionsUri() {
+        return properties.baseUrl().endsWith("/v1") ? "/chat/completions" : "/v1/chat/completions";
     }
 
     private Optional<ChatDecision> toDecision(String content) {
@@ -126,7 +135,7 @@ public class HuggingFaceChatClient implements AiChatClient {
                     });
             return Optional.of(new ChatDecision(intent, language, confidence, fields == null ? Map.of() : fields));
         } catch (Exception exception) {
-            log.warn("Hugging Face classification response was not valid JSON: {}", exception.getMessage());
+            log.warn("AI chat classification response was not valid JSON: {}", exception.getMessage());
             return Optional.empty();
         }
     }
