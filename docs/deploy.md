@@ -59,15 +59,19 @@ On every push to `main`, the workflow:
 8. Goes to `SERVER_APP_PATH`.
 9. Runs `git fetch --prune origin main`.
 10. Updates the server checkout with `git pull --ff-only origin main`.
-11. Removes the previous development stack and Postgres volume.
-12. Rebuilds and restarts the stack from a clean database.
-13. Verifies backend health and generated OpenAPI docs.
+11. Builds backend and frontend images before stopping the current stack.
+12. If the first Docker build fails, prunes the BuildKit cache and retries once.
+13. Removes the previous development stack and Postgres volume.
+14. Starts the already built stack from a clean database.
+15. Verifies backend health, frontend health, generated OpenAPI docs, and Swagger UI.
 
    ```bash
+   docker compose -f docker/docker-compose.yml build backend frontend
    docker compose -f docker/docker-compose.yml down -v
-   docker compose -f docker/docker-compose.yml up -d --build --remove-orphans
+   docker compose -f docker/docker-compose.yml up -d --no-build --remove-orphans backend frontend
 
    curl --fail --retry 30 --retry-delay 2 --retry-all-errors http://localhost:8080/actuator/health
+   curl --fail --retry 30 --retry-delay 2 --retry-all-errors http://localhost/health
    curl --fail --retry 30 --retry-delay 2 --retry-all-errors http://localhost/v3/api-docs
    ```
 

@@ -111,7 +111,16 @@ jobs:
             BUILD_PROGRESS_ARGS="--progress=plain"
           fi
 
-          $COMPOSE -f docker/docker-compose.yml build $BUILD_PROGRESS_ARGS backend frontend
+          build_services() {
+            $COMPOSE -f docker/docker-compose.yml build $BUILD_PROGRESS_ARGS backend frontend
+          }
+
+          if ! build_services; then
+            echo "Initial Docker build failed; pruning BuildKit cache and retrying once" >&2
+            docker builder prune -af >&2 || true
+            build_services
+          fi
+
           $COMPOSE -f docker/docker-compose.yml down -v --remove-orphans
           $COMPOSE -f docker/docker-compose.yml up -d --no-build --remove-orphans backend frontend
 
