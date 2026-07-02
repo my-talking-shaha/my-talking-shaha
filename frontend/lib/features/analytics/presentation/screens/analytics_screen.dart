@@ -110,10 +110,10 @@ final class _AnalyticsDashboard extends StatelessWidget {
         Text(
           'Intelligence',
           style: Theme.of(context).textTheme.headlineLarge?.copyWith(
-                color: AppColors.primaryLight,
-                fontSize: 28,
-                height: 1.1,
-              ),
+            color: AppColors.primaryLight,
+            fontSize: 28,
+            height: 1.1,
+          ),
         ),
         const SizedBox(height: 42),
         Text('Analytics', style: Theme.of(context).textTheme.headlineMedium),
@@ -147,11 +147,12 @@ final class _AnalyticsDashboard extends StatelessWidget {
         ),
         const SizedBox(height: AppSpacing.xxl),
         Consumer(
-          builder: (context, ref, child) =>
-              ref.watch(vehiclePartsProvider(vehicleId)).maybeWhen(
-                    data: (parts) => MaintenanceForecastCard(parts: parts),
-                    orElse: () => const SizedBox.shrink(),
-                  ),
+          builder: (context, ref, child) => ref
+              .watch(vehiclePartsProvider(vehicleId))
+              .maybeWhen(
+                data: (parts) => MaintenanceForecastCard(parts: parts),
+                orElse: () => const SizedBox.shrink(),
+              ),
         ),
         const SizedBox(height: AppSpacing.xxl),
         const _SectionHeader(title: 'HISTORY ANALYSIS'),
@@ -204,9 +205,9 @@ final class _PeriodSelector extends StatelessWidget {
                   ),
                   tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                   textStyle: Theme.of(context).textTheme.labelMedium?.copyWith(
-                        fontWeight: FontWeight.w800,
-                        letterSpacing: 0.6,
-                      ),
+                    fontWeight: FontWeight.w800,
+                    letterSpacing: 0.6,
+                  ),
                 ),
                 child: Text(_periodLabel(period)),
               ),
@@ -238,9 +239,9 @@ final class _AnalyticsSummaryCard extends StatelessWidget {
           Text(
             '${_periodAdjective(summary.period)} EXPENSES',
             style: Theme.of(context).textTheme.labelMedium?.copyWith(
-                  color: AppColors.textSecondary,
-                  letterSpacing: 1.2,
-                ),
+              color: AppColors.textSecondary,
+              letterSpacing: 1.2,
+            ),
           ),
           const SizedBox(height: AppSpacing.sm),
           FittedBox(
@@ -249,10 +250,10 @@ final class _AnalyticsSummaryCard extends StatelessWidget {
             child: Text(
               _formatMoney(totalExpenses.amount),
               style: Theme.of(context).textTheme.headlineLarge?.copyWith(
-                    color: AppColors.primaryLight,
-                    fontSize: 46,
-                    height: 1.05,
-                  ),
+                color: AppColors.primaryLight,
+                fontSize: 46,
+                height: 1.05,
+              ),
             ),
           ),
           const SizedBox(height: AppSpacing.xxl),
@@ -269,16 +270,14 @@ final class _AnalyticsSummaryCard extends StatelessWidget {
                     Text(
                       'COST PER KM',
                       style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                            color: AppColors.success,
-                            letterSpacing: 0.7,
-                          ),
+                        color: AppColors.success,
+                        letterSpacing: 0.7,
+                      ),
                     ),
                     const SizedBox(height: AppSpacing.xs),
                     Text(
                       '${_formatDecimal(mileage.costPerKm)} ₽',
-                      style: Theme.of(context)
-                          .textTheme
-                          .headlineMedium
+                      style: Theme.of(context).textTheme.headlineMedium
                           ?.copyWith(color: AppColors.success),
                     ),
                   ],
@@ -363,9 +362,9 @@ final class _TrendBadge extends StatelessWidget {
           Text(
             '${_formatDecimal(percent)}%',
             style: Theme.of(context).textTheme.labelMedium?.copyWith(
-                  color: AppColors.success,
-                  fontWeight: FontWeight.w800,
-                ),
+              color: AppColors.success,
+              fontWeight: FontWeight.w800,
+            ),
           ),
         ],
       ),
@@ -430,8 +429,8 @@ final class _ChartCard extends StatelessWidget {
               Text(
                 'Avg: ${valueFormatter(average)}',
                 style: Theme.of(context).textTheme.labelMedium?.copyWith(
-                      color: AppColors.primaryLight,
-                    ),
+                  color: AppColors.primaryLight,
+                ),
               ),
               if (trendPercent case final trend?) ...[
                 const SizedBox(width: AppSpacing.sm),
@@ -463,9 +462,9 @@ final class _HistoryAnalysisCard extends StatelessWidget {
           Text(
             'PERFORMANCE TREND OVER TIME',
             style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                  color: AppColors.textSecondary,
-                  letterSpacing: 0.8,
-                ),
+              color: AppColors.textSecondary,
+              letterSpacing: 0.8,
+            ),
           ),
           const SizedBox(height: AppSpacing.md),
           SizedBox(
@@ -531,9 +530,9 @@ final class _CompanyMetrics extends StatelessWidget {
         Text(
           'COMPANY METRICS',
           style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                color: AppColors.textSecondary,
-                letterSpacing: 0.7,
-              ),
+            color: AppColors.textSecondary,
+            letterSpacing: 0.7,
+          ),
         ),
         const SizedBox(height: AppSpacing.sm),
         for (final metric in history.companyMetrics) ...[
@@ -562,9 +561,9 @@ final class _HistoryCounts extends StatelessWidget {
         Text(
           'KEY COUNTS',
           style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                color: AppColors.textSecondary,
-                letterSpacing: 0.7,
-              ),
+            color: AppColors.textSecondary,
+            letterSpacing: 0.7,
+          ),
         ),
         const SizedBox(height: AppSpacing.sm),
         _MetricBullet(
@@ -644,9 +643,9 @@ final class _SectionHeader extends StatelessWidget {
           child: Text(
             title,
             style: Theme.of(context).textTheme.labelMedium?.copyWith(
-                  color: AppColors.textSecondary,
-                  letterSpacing: 1.1,
-                ),
+              color: AppColors.textSecondary,
+              letterSpacing: 1.1,
+            ),
           ),
         ),
         if (trailing != null)
