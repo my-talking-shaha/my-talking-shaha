@@ -13,12 +13,14 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 import ru.talkingshaha.backend.chat.dto.ChatMessagesResponse;
 import ru.talkingshaha.backend.chat.dto.ChatStateResponse;
 import ru.talkingshaha.backend.chat.dto.SendMessageRequest;
 import ru.talkingshaha.backend.chat.dto.SendMessageResponse;
+import ru.talkingshaha.backend.chat.service.ChatLanguage;
 import ru.talkingshaha.backend.chat.service.ChatService;
 import ru.talkingshaha.backend.common.error.ApiError;
 
@@ -47,13 +49,17 @@ public class ChatController {
     }
 
     @GetMapping
-    public ChatStateResponse state(@PathVariable UUID vehicleId) {
-        return chat.state(vehicleId);
+    public ChatStateResponse state(
+            @PathVariable UUID vehicleId,
+            @RequestParam(defaultValue = "EN") ChatLanguage language) {
+        return chat.state(vehicleId, language);
     }
 
     @GetMapping("/messages")
-    public ChatMessagesResponse messages(@PathVariable UUID vehicleId) {
-        return chat.messages(vehicleId);
+    public ChatMessagesResponse messages(
+            @PathVariable UUID vehicleId,
+            @RequestParam(defaultValue = "EN") ChatLanguage language) {
+        return chat.messages(vehicleId, language);
     }
 
     @PostMapping("/messages")

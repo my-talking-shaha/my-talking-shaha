@@ -10,7 +10,7 @@ The analytics screen is labeled as an intelligence/dashboard screen.
 
 Sections:
 1. Header/title `Intelligence`.
-2. Screen title `Аналитика` and subtitle.
+2. Screen title `Analytics` and subtitle.
 3. Annual/period expenses summary card.
 4. Monthly expenses chart card.
 5. Embedded parts feature widget / maintenance forecast card.

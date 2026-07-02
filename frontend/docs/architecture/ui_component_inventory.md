@@ -79,9 +79,9 @@ Used in:
 Uppercase section title with optional trailing action.
 
 Examples:
-- `ПРОГНОЗ ОБСЛУЖИВАНИЯ` + `ОБНОВЛЕНО 2 ЧАСА НАЗАД`
-- `ПОСЛЕДНИЕ СОБЫТИЯ` + `Все`
-- `ЕЖЕМЕСЯЧНЫЕ РАСХОДЫ`
+- `MAINTENANCE FORECAST` + `UPDATED 2 HOURS AGO`
+- `RECENT EVENTS` + `All`
+- `MONTHLY EXPENSES`
 
 ## Auth Components
 
@@ -109,7 +109,7 @@ Displays:
 - brand/model;
 - subtitle/status;
 - quick metrics;
-- primary action `В кабину`.
+- primary action `Open cockpit`.
 
 ### `GarageEmptyState`
 

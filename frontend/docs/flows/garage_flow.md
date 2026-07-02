@@ -17,7 +17,7 @@ Covers:
 
 1. Authenticated user opens `/garage`.
 2. Client fetches user's vehicles.
-3. If list is empty, show empty state with `Добавить автомобиль` action.
+3. If list is empty, show empty state with `Add vehicle` action.
 4. If list has cars, show vehicle cards.
 5. User taps a vehicle card.
 6. App navigates to `/vehicle/:vehicleId/chat`.

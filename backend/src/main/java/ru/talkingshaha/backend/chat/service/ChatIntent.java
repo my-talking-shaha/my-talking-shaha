@@ -7,6 +7,8 @@ public enum ChatIntent {
     OPEN_PART_FORM,
     OPEN_REPAIR_FORM,
     ASK_REPAIR_NEED,
+    ASK_FUEL,
+    CASUAL,
     ASK_STATUS,
     UNCLEAR
 }

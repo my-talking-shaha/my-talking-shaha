@@ -8,13 +8,13 @@ The application starts with the vehicle chat. The chat is the main way to ask ab
 
 Stages:
 
-1. Backend-grounded chat answers through Hugging Face chat completions.
+1. Backend-grounded chat answers through an OpenAI-compatible chat completions API.
 2. Backend intent validation and fallback rules for common parts, forms, analytics, and maintenance forecast.
 3. Configurable rules in application config or the database.
 4. Later: model-based predictions using collected user data.
 
-The chat uses `https://router.huggingface.co/v1/chat/completions` when `HUGGINGFACE_TOKEN`
-is configured. The default model is `google/gemma-4-31B-it:fastest`. If the token is
+The chat uses the OpenAI-compatible endpoint configured by `TIMEWEB_AI_BASE_URL` when
+`TIMEWEB_AI_TOKEN` is configured. If the token is
 missing or the provider is unavailable, the backend falls back to local intent rules and
 template answers.
 
@@ -52,7 +52,7 @@ Before generating or selecting an answer, the backend should prepare a compact c
       "type": "REFUEL",
       "date": "2026-06-12",
       "mileageKm": 10000,
-      "summary": "30 liters of AI-95 fuel, 2000 RUB"
+      "summary": "30 liters of 95 octane fuel, 2000 RUB"
     }
   ],
   "analytics": {

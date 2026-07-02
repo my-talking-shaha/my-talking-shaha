@@ -159,7 +159,7 @@ public class TimelineEventService {
             case RefuelEvent r -> new TimelineEventResponse(
                     r.getId(),
                     r.getType(),
-                    "Refill " + (r.getFuelName() != null ? r.getFuelName() : r.getFuelType().name()),
+                    refuelLabel(r),
                     r.getEventDateTime(),
                     r.getCost(),
                     r.getMileageKm(),
@@ -206,6 +206,10 @@ public class TimelineEventService {
                     List.copyOf(m.getPhotoUrls()));
             default -> throw new IllegalStateException("Unknown event type: " + event.getClass());
         };
+    }
+
+    private String refuelLabel(RefuelEvent event) {
+        return "Заправка";
     }
 
     private BigDecimal averageFuelConsumptionLitersPerKm(Vehicle vehicle) {

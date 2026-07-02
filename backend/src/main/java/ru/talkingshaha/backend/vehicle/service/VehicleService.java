@@ -139,7 +139,7 @@ public class VehicleService {
         String subtitle;
         switch (event) {
             case RefuelEvent r -> {
-                title = "Refill " + (r.getFuelName() != null ? r.getFuelName() : r.getFuelType().name());
+                title = refuelLabel(r);
                 subtitle = r.getLiters() != null ? r.getLiters() + " L" : null;
             }
             case TripEvent t -> {
@@ -154,6 +154,10 @@ public class VehicleService {
         }
         return new RecentEventResponse(
                 event.getId().toString(), event.getType().name(), title, subtitle, event.getEventDateTime());
+    }
+
+    private String refuelLabel(RefuelEvent event) {
+        return "Заправка";
     }
 
     @Transactional(readOnly = true)

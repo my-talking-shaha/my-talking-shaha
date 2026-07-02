@@ -20,11 +20,11 @@ Response:
       "vehicleId": "vehicle_123",
       "type": "part_lifetime_warning",
       "severity": "WARNING",
-      "title": "Скоро замена масла",
-      "message": "Осталось 450 км до рекомендуемой замены",
+      "title": "Oil change due soon",
+      "message": "450 km remaining before the recommended replacement",
       "partId": "part_123",
       "remainingKm": 450,
-      "recommendedAction": "Запланировать замену масла",
+      "recommendedAction": "Schedule oil replacement",
       "createdAt": "2026-06-10T10:00:00Z",
       "read": false
     }

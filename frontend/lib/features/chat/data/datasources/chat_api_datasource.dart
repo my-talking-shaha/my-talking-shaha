@@ -50,6 +50,7 @@ abstract final class ChatApiMapper {
     return SendMessageResult(
       userMessage: messageFromJson(_mapValue(json['userMessage'])),
       assistantMessage: messageFromJson(_mapValue(json['assistantMessage'])),
+      hasCreatedEvent: json['createdEvent'] is Map,
     );
   }
 

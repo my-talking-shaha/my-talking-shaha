@@ -43,7 +43,7 @@ Possible UI entry points:
 1. User opens `/vehicle/:vehicleId/parts` or taps the dashboard parts section.
 2. Client fetches installed parts for selected vehicle.
 3. Each part displays name, install date, install mileage, lifetime, remaining km/% and status.
-4. Parts without lifetime display `Ресурс не задан`.
+4. Parts without lifetime display `Lifetime not set`.
 
 ## Remaining Lifetime Formula
 
@@ -89,7 +89,7 @@ When selected, default lifetime may be prefilled if known.
 ## Replace Part Flow
 
 1. User opens part details or taps replace action.
-2. User taps `Заменена` / replace.
+2. User taps `Replaced` / replace.
 3. User enters new date and mileage.
 4. Backend creates replacement record and may create timeline event.
 5. Parts list, dashboard widget, analytics widget, and timeline refresh.
@@ -106,14 +106,14 @@ When selected, default lifetime may be prefilled if known.
 
 `chat` uses parts data to answer questions like:
 
-- “Когда менять масло?”
-- “Что нужно обслужить в первую очередь?”
-- “Какие детали скоро закончат ресурс?”
+- "When should I change the oil?"
+- "What should I service first?"
+- "Which parts are about to run out of lifetime?"
 
 ## Acceptance Criteria
 
 - Remaining resource is visible in km or percent.
-- `Ресурс не задан` appears for missing lifetime.
+- `Lifetime not set` appears for missing lifetime.
 - Warning and critical thresholds are visually clear.
 - User can manually correct lifetime if edit flow is implemented.
 - Replace action creates/updates records according to backend contract.

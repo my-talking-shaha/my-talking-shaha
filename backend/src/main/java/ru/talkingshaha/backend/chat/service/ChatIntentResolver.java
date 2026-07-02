@@ -19,39 +19,62 @@ public class ChatIntentResolver {
 
     public ChatDecision resolve(String userText, String context) {
         ChatLanguage language = detectLanguage(userText);
+        ChatDecision localDecision = localResolve(userText, language);
+        if (isHighPriorityLocalIntent(localDecision.intent())) {
+            return localDecision;
+        }
         return aiChatClient.classify(userText, context)
                 .filter(decision -> decision.confidence() >= AI_CONFIDENCE_THRESHOLD)
-                .orElseGet(() -> localResolve(userText, language));
+                .orElse(localDecision);
     }
 
     private ChatDecision localResolve(String userText, ChatLanguage language) {
         String text = normalize(userText);
-        if (matches(text, "fuel", "refuel", "gas", "petrol", "заправ", "бенз", "топлив", "залил", "бак")) {
+        if (matches(text, "fuel", "refuel", "gas", "petrol", "заправ", "бенз", "топлив", "залил", "залила")) {
             return decision(ChatIntent.OPEN_REFUEL_FORM, language);
         }
-        if (matches(text, "trip", "drive", "drove", "route", "поезд", "маршрут", "ехал", "проех", "дорог")) {
+        if (matches(text, "trip", "drive", "drove", "route",
+                "поезд", "маршрут", "ехал", "ехала", "проех", "дорог")) {
             return decision(ChatIntent.OPEN_TRIP_FORM, language);
         }
-        if (matches(text, "urgent", "soon", "break soon", "condition", "maintenance", "forecast", "repair need",
-                "сроч", "состоя", "сломается", "сломаться", "то", "обслуж", "прогноз", "починить")) {
-            return decision(ChatIntent.ASK_REPAIR_NEED, language);
+        if (matches(text, "add repair", "record repair", "new repair", "repair record",
+                "добавить ремонт", "записать ремонт", "новый ремонт", "запись ремонта",
+                "ремонт", "сервис", "починил", "починила", "чинил", "чинила",
+                "поменял", "поменяла", "менял", "меняла", "двигатель")) {
+            return decision(ChatIntent.OPEN_REPAIR_FORM, language);
         }
         if (matches(text, "changed", "replace", "part", "oil", "filter", "pads", "belt", "battery",
                 "замен", "детал", "масл", "фильтр", "колод", "ремен", "аккумулятор")) {
             return decision(ChatIntent.OPEN_PART_FORM, language);
         }
-        if (matches(text, "add repair", "record repair", "new repair", "repair record",
-                "добавить ремонт", "записать ремонт", "новый ремонт", "запись ремонта")) {
-            return decision(ChatIntent.OPEN_REPAIR_FORM, language);
+        if (matches(text, "urgent", "soon", "break soon", "condition", "maintenance", "forecast", "repair need",
+                "сроч", "состоя", "сломается", "сломаться", "то", "обслуж", "прогноз", "починить")) {
+            return decision(ChatIntent.ASK_REPAIR_NEED, language);
         }
-        if (matches(text, "expense", "cost", "spent", "analytics", "statistics", "consumption", "mileage",
-                "расход", "потрат", "стоим", "статист", "аналит", "пробег")) {
+        if (matches(text, "fuel level", "fuel left", "fuel stock", "gas left", "consumption", "tank",
+                "уровень топлива", "сколько бензина", "остаток топлива", "бак")) {
+            return decision(ChatIntent.ASK_FUEL, language);
+        }
+        if (matches(text, "expense", "cost", "spent", "analytics", "statistics", "mileage",
+                "расходы", "потрат", "стоим", "статист", "аналит", "пробег")) {
             return decision(ChatIntent.ASK_ANALYTICS, language);
         }
-        if (matches(text, "status", "car", "vehicle", "how is", "машин", "авто", "как дела")) {
+        if (matches(text, "status", "car", "vehicle", "how is",
+                "машин", "авто", "как самочувствие", "как двигатель")) {
             return decision(ChatIntent.ASK_STATUS, language);
         }
+        if (matches(text, "hello", "hi", "hey", "how are you", "how do you feel", "thanks", "thank you",
+                "привет", "здравствуй", "как ты", "как дела", "спасибо")) {
+            return decision(ChatIntent.CASUAL, language);
+        }
         return ChatDecision.unclear(language);
+    }
+
+    private boolean isHighPriorityLocalIntent(ChatIntent intent) {
+        return switch (intent) {
+            case OPEN_REFUEL_FORM, OPEN_TRIP_FORM, OPEN_PART_FORM, OPEN_REPAIR_FORM, ASK_REPAIR_NEED -> true;
+            default -> false;
+        };
     }
 
     private ChatDecision decision(ChatIntent intent, ChatLanguage language) {

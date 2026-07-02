@@ -7,7 +7,7 @@
 ## Timeline Screen
 
 Visual structure:
-- top app bar/title `История обслуживания`;
+- top app bar/title `Service History`;
 - search field;
 - filter/settings icon;
 - category chips;
@@ -34,11 +34,11 @@ Events should be visually categorized:
 
 The add record screens share a common structure:
 - top bar with back icon;
-- title such as `Новая поездка`, `Новая заправка`, or maintenance form;
+- title such as `New trip`, `New refuel`, or maintenance form;
 - record-type tabs;
 - dark inputs;
 - optional photo attachment for maintenance/repair;
-- primary `Сохранить` button.
+- primary `Save` button.
 
 ## Form Types
 

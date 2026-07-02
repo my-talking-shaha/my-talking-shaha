@@ -253,7 +253,7 @@ Response `200`:
     {
       "id": "044c10dc-13d1-4587-9169-e9e79789ea45",
       "type": "REFUEL",
-      "title": "Refill AI-95",
+      "title": "Заправка",
       "subtitle": "30 L",
       "eventDateTime": "2026-06-12T14:30:00Z"
     }
@@ -305,13 +305,13 @@ Response `200`:
     {
       "id": "044c10dc-13d1-4587-9169-e9e79789ea45",
       "type": "REFUEL",
-      "title": "Refill AI-95",
+      "title": "Заправка",
       "eventDateTime": "2026-06-12T14:30:00Z",
       "cost": 2000,
       "mileageKm": 10000,
       "liters": 30,
       "fuelType": "GASOLINE",
-      "fuelName": "AI-95",
+      "fuelName": "95 octane",
       "stationName": "Test Station"
     }
   ]
@@ -331,7 +331,7 @@ Request:
   "liters": 30,
   "cost": 2000,
   "fuelType": "GASOLINE",
-  "fuelName": "AI-95",
+  "fuelName": "95 octane",
   "stationName": "Test Station"
 }
 ```
@@ -540,7 +540,10 @@ empty chart arrays, zero metrics, and `hasData = false`.
 
 ### Get chat state
 
-`GET /api/v1/vehicles/{vehicleId}/chat`
+`GET /api/v1/vehicles/{vehicleId}/chat?language=EN`
+
+`language` is optional (`EN` or `RU`) and controls the initial assistant message plus
+fallback quick questions before any user messages exist.
 
 Response `200`:
 
@@ -556,7 +559,7 @@ Response `200`:
     {
       "id": "125c13vj-13d2-4557-9149-e9e79789ea83",
       "role": "ASSISTANT",
-      "text": "The assistant is ready.",
+      "text": "Hi! I am your car, and I am ready to chat.",
       "createdAt": "2026-06-12T10:00:00Z"
     }
   ]
@@ -565,7 +568,7 @@ Response `200`:
 
 ### Get chat history
 
-`GET /api/v1/vehicles/{vehicleId}/chat/messages`
+`GET /api/v1/vehicles/{vehicleId}/chat/messages?language=EN`
 
 Response `200`:
 
@@ -575,7 +578,7 @@ Response `200`:
     {
       "id": "125c13vj-13d2-4557-9149-e9e79789ea83",
       "role": "ASSISTANT",
-      "text": "The assistant is ready.",
+      "text": "Hi! I am your car, and I am ready to chat.",
       "createdAt": "2026-06-12T10:00:00Z"
     }
   ]
@@ -618,11 +621,59 @@ Response `201`:
         "mileageKm": 10000
       }
     }
-  }
+  },
+  "createdEvent": null
 }
 ```
 
 For screen redirects, the assistant message uses:
+
+When the raw text contains enough validated data for a supported event, the same endpoint
+creates the timeline event immediately and returns a confirmation assistant message with
+`action = null` and `createdEvent` filled with the created timeline event. Supported
+automatic event creation currently covers refuel, trip, and maintenance/repair messages.
+If required fields are missing or validation fails, the car asks for the missing or
+corrected values in chat and keeps a pending draft.
+
+Example:
+
+```json
+{
+  "text": "I refueled 95 octane gas for 5 liters for 1000 rubles"
+}
+```
+
+Response `201`:
+
+```json
+{
+  "assistantMessage": {
+    "role": "ASSISTANT",
+    "text": "I recorded my refuel: 5 L 95 octane, 1000 RUB. My mileage is now 10000 km.",
+    "action": null
+  },
+  "createdEvent": {
+    "type": "REFUEL",
+    "mileageKm": 10000,
+    "liters": 5,
+    "cost": 1000,
+    "fuelType": "GASOLINE",
+    "fuelName": "95 octane"
+  }
+}
+```
+
+If required fields are missing, the car asks the user to send the missing values in chat.
+For example, `I filled the car with 5 liters of 95 octane.` creates a pending refuel
+draft and asks for the cost; a follow-up like `for 1000 rubles` completes validation and
+creates the `REFUEL` timeline event.
+
+For chat-created refuel records, `fuelName` must match one of the currently supported
+frontend values: `92 octane`, `95 octane`, `98 octane`, or `Diesel`.
+
+Generic repair intent such as `I want to record the repair` must not create a maintenance
+event by itself. The backend asks for the repair/work description and validates mileage
+and optional cost before creating the record.
 
 ```json
 {
