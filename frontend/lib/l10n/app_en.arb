@@ -1,0 +1,23 @@
+{
+  "@@locale": "en",
+  "appLanguage": "App language",
+  "english": "English",
+  "russian": "Russian",
+  "profile": "Profile",
+  "driver": "Driver",
+  "signedIn": "Signed in",
+  "theme": "Theme",
+  "light": "Light",
+  "dark": "Dark",
+  "general": "General",
+  "notifications": "Notifications",
+  "vehicle": "Vehicle",
+  "allNotifications": "All notifications",
+  "logOut": "Log out",
+  "dashboard": "Dashboard",
+  "garage": "Garage",
+  "history": "History",
+  "chat": "Chat",
+  "analytics": "Analytics",
+  "settings": "Settings"
+}

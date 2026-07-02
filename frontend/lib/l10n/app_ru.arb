@@ -1,0 +1,23 @@
+{
+  "@@locale": "ru",
+  "appLanguage": "Язык приложения",
+  "english": "Английский",
+  "russian": "Русский",
+  "profile": "Профиль",
+  "driver": "Водитель",
+  "signedIn": "Выполнен вход",
+  "theme": "Тема",
+  "light": "Светлая",
+  "dark": "Темная",
+  "general": "Общие",
+  "notifications": "Уведомления",
+  "vehicle": "Автомобиль",
+  "allNotifications": "Все уведомления",
+  "logOut": "Выйти",
+  "dashboard": "Панель",
+  "garage": "Гараж",
+  "history": "История",
+  "chat": "Чат",
+  "analytics": "Аналитика",
+  "settings": "Настройки"
+}

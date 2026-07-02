@@ -1,7 +1,11 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:frontend/app/localization/app_locale_controller.dart';
 import 'package:frontend/app/theme/app_theme.dart';
 import 'package:frontend/features/auth/presentation/providers/auth_providers.dart';
+import 'package:frontend/l10n/generated/app_localizations.dart';
 import 'package:go_router/go_router.dart';
 
 final class SettingsScreen extends ConsumerStatefulWidget {
@@ -12,13 +16,18 @@ final class SettingsScreen extends ConsumerStatefulWidget {
 }
 
 final class _SettingsScreenState extends ConsumerState<SettingsScreen> {
-  String _theme = 'Dark';
-  String _language = 'ENG';
+  String _theme = 'dark';
   bool _notificationsEnabled = true;
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     final authState = ref.watch(authControllerProvider);
+    final locale =
+        ref
+            .watch(appLocaleControllerProvider)
+            .maybeWhen(data: (locale) => locale, orElse: () => null) ??
+        const Locale('en');
     final session = authState.maybeWhen(
       data: (session) => session,
       orElse: () => null,
@@ -28,16 +37,16 @@ final class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     final login = session?.login.trim();
     final profileName = fullName == null || fullName.isEmpty
         ? login == null || login.isEmpty
-              ? 'Driver'
+              ? l10n.driver
               : login
         : fullName;
-    final profileLogin = login == null || login.isEmpty ? 'Signed in' : login;
+    final profileLogin = login == null || login.isEmpty ? l10n.signedIn : login;
 
     return Scaffold(
       appBar: AppBar(
         centerTitle: true,
         title: Text(
-          'Profile',
+          l10n.profile,
           style: Theme.of(context).textTheme.headlineMedium,
         ),
       ),
@@ -54,6 +63,9 @@ final class _SettingsScreenState extends ConsumerState<SettingsScreen> {
             const SizedBox(height: AppSpacing.xxxl),
             _ThemeSection(
               selectedTheme: _theme,
+              lightLabel: l10n.light,
+              darkLabel: l10n.dark,
+              title: l10n.theme,
               onChanged: (value) {
                 setState(() {
                   _theme = value;
@@ -62,24 +74,30 @@ final class _SettingsScreenState extends ConsumerState<SettingsScreen> {
             ),
             const SizedBox(height: AppSpacing.xxl),
             _SettingsSection(
-              title: 'General',
+              title: l10n.general,
               children: [
                 _SettingsTile(
                   icon: Icons.language_rounded,
-                  title: 'App language',
-                  subtitle: _language == 'ENG' ? 'English' : 'Russian',
+                  title: l10n.appLanguage,
+                  subtitle: locale.languageCode == 'ru'
+                      ? l10n.russian
+                      : l10n.english,
                   trailing: _LanguageChoice(
-                    selectedLanguage: _language,
+                    selectedLocale: locale,
+                    englishLabel: l10n.english,
+                    russianLabel: l10n.russian,
                     onChanged: (value) {
-                      setState(() {
-                        _language = value;
-                      });
+                      unawaited(
+                        ref
+                            .read(appLocaleControllerProvider.notifier)
+                            .setLocale(value),
+                      );
                     },
                   ),
                 ),
                 _SettingsTile(
                   icon: Icons.notifications_none_rounded,
-                  title: 'Notifications',
+                  title: l10n.notifications,
                   trailing: Switch(
                     value: _notificationsEnabled,
                     onChanged: (value) {
@@ -93,12 +111,12 @@ final class _SettingsScreenState extends ConsumerState<SettingsScreen> {
             ),
             const SizedBox(height: AppSpacing.xxl),
             _SettingsSection(
-              title: 'Vehicle',
+              title: l10n.vehicle,
               children: [
                 _SettingsTile(
                   actionKey: const ValueKey('profile_all_notifications_action'),
                   icon: Icons.notifications_active_outlined,
-                  title: 'All notifications',
+                  title: l10n.allNotifications,
                   trailing: const Icon(
                     Icons.chevron_right_rounded,
                     color: AppColors.textMuted,
@@ -130,7 +148,7 @@ final class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                         child: CircularProgressIndicator(strokeWidth: 2),
                       )
                     : const Icon(Icons.logout),
-                label: const Text('Log out'),
+                label: Text(l10n.logOut),
               ),
             ),
           ],
@@ -258,9 +276,18 @@ final class _ProfileAvatar extends StatelessWidget {
 }
 
 final class _ThemeSection extends StatelessWidget {
-  const _ThemeSection({required this.selectedTheme, required this.onChanged});
+  const _ThemeSection({
+    required this.selectedTheme,
+    required this.lightLabel,
+    required this.darkLabel,
+    required this.title,
+    required this.onChanged,
+  });
 
   final String selectedTheme;
+  final String lightLabel;
+  final String darkLabel;
+  final String title;
   final ValueChanged<String> onChanged;
 
   @override
@@ -268,7 +295,7 @@ final class _ThemeSection extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const _SectionLabel('Theme'),
+        _SectionLabel(title),
         const SizedBox(height: AppSpacing.md),
         Container(
           padding: const EdgeInsets.all(AppSpacing.xs),
@@ -280,14 +307,14 @@ final class _ThemeSection extends StatelessWidget {
           child: Row(
             children: [
               _ThemeSegment(
-                label: 'Light',
-                selected: selectedTheme == 'Light',
-                onTap: () => onChanged('Light'),
+                label: lightLabel,
+                selected: selectedTheme == 'light',
+                onTap: () => onChanged('light'),
               ),
               _ThemeSegment(
-                label: 'Dark',
-                selected: selectedTheme == 'Dark',
-                onTap: () => onChanged('Dark'),
+                label: darkLabel,
+                selected: selectedTheme == 'dark',
+                onTap: () => onChanged('dark'),
               ),
             ],
           ),
@@ -336,28 +363,45 @@ final class _ThemeSegment extends StatelessWidget {
 
 final class _LanguageChoice extends StatelessWidget {
   const _LanguageChoice({
-    required this.selectedLanguage,
+    required this.selectedLocale,
+    required this.englishLabel,
+    required this.russianLabel,
     required this.onChanged,
   });
 
-  final String selectedLanguage;
-  final ValueChanged<String> onChanged;
+  final Locale selectedLocale;
+  final String englishLabel;
+  final String russianLabel;
+  final ValueChanged<Locale> onChanged;
 
   @override
   Widget build(BuildContext context) {
-    return PopupMenuButton<String>(
-      initialValue: selectedLanguage,
+    final selectedLanguageCode = selectedLocale.languageCode == 'ru'
+        ? 'RU'
+        : 'EN';
+
+    return PopupMenuButton<Locale>(
+      initialValue: selectedLocale,
       color: AppColors.surfaceHighest,
       shape: const RoundedRectangleBorder(borderRadius: AppRadius.input),
       onSelected: onChanged,
-      itemBuilder: (context) => const [
-        PopupMenuItem(value: 'ENG', child: Text('ENG')),
-        PopupMenuItem(value: 'RU', child: Text('RU')),
+      itemBuilder: (context) => [
+        PopupMenuItem(
+          value: const Locale('en'),
+          child: Text('$englishLabel (EN)'),
+        ),
+        PopupMenuItem(
+          value: const Locale('ru'),
+          child: Text('$russianLabel (RU)'),
+        ),
       ],
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Text(selectedLanguage, style: Theme.of(context).textTheme.labelLarge),
+          Text(
+            selectedLanguageCode,
+            style: Theme.of(context).textTheme.labelLarge,
+          ),
           const SizedBox(width: AppSpacing.xs),
           const Icon(Icons.chevron_right_rounded, color: AppColors.textMuted),
         ],
