@@ -14,9 +14,7 @@ final class ChatController extends AsyncNotifier<ChatScreenState> {
 
   @override
   Future<ChatScreenState> build() async {
-    final chatState = await ref
-        .watch(chatRepositoryProvider)
-        .getState(vehicleId);
+    final chatState = await ref.watch(chatRepositoryProvider).getState(vehicleId);
 
     return ChatScreenState(
       sessionId: chatState.sessionId,
@@ -28,9 +26,7 @@ final class ChatController extends AsyncNotifier<ChatScreenState> {
   Future<void> reload() async {
     state = const AsyncLoading<ChatScreenState>();
     state = await AsyncValue.guard(() async {
-      final chatState = await ref
-          .read(chatRepositoryProvider)
-          .getState(vehicleId);
+      final chatState = await ref.read(chatRepositoryProvider).getState(vehicleId);
 
       return ChatScreenState(
         sessionId: chatState.sessionId,
