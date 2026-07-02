@@ -26,37 +26,118 @@ void main() {
   group('AuthApiErrorMapper', () {
     test('maps backend conflict to auth conflict', () {
       final exception = AuthApiErrorMapper.fromDio(
-        DioException(
-          requestOptions: RequestOptions(path: '/auth/register'),
-          response: Response<Map<String, dynamic>>(
-            requestOptions: RequestOptions(path: '/auth/register'),
-            statusCode: 409,
-            data: const {'code': 'EMAIL_ALREADY_EXISTS'},
-          ),
+        _dioError(
+          path: '/auth/register',
+          statusCode: 409,
+          data: const {'code': 'EMAIL_ALREADY_EXISTS'},
         ),
       );
 
       expect(exception.code, AuthErrorCode.conflict);
-      expect(exception.message, 'Email already exists');
+      expect(
+        exception.message,
+        'This email is already registered. Log in instead.',
+      );
     });
 
-    test('maps backend invalid credentials to unauthorized', () {
+    test('maps backend validation fields to a readable validation message', () {
       final exception = AuthApiErrorMapper.fromDio(
-        DioException(
-          requestOptions: RequestOptions(path: '/auth/login'),
-          response: Response<Map<String, dynamic>>(
-            requestOptions: RequestOptions(path: '/auth/login'),
-            statusCode: 401,
-            data: const {'code': 'INVALID_CREDENTIALS'},
-          ),
+        _dioError(
+          path: '/auth/register',
+          statusCode: 400,
+          data: const {
+            'code': 'VALIDATION_ERROR',
+            'fields': {
+              'email': 'must be a well-formed email address',
+              'password': 'Password must be between 6 and 72 characters',
+              'displayName': 'must not be blank',
+            },
+          },
+        ),
+      );
+
+      expect(exception.code, AuthErrorCode.validation);
+      expect(
+        exception.message,
+        'Check the entered data:\n'
+        'Email: must be a well-formed email address\n'
+        'Password: Password must be between 6 and 72 characters\n'
+        'Full name: must not be blank',
+      );
+    });
+
+    test('maps login invalid credentials to a registration-aware message', () {
+      final exception = AuthApiErrorMapper.fromDio(
+        _dioError(
+          path: '/auth/login',
+          statusCode: 401,
+          data: const {'code': 'INVALID_CREDENTIALS'},
         ),
       );
 
       expect(exception.code, AuthErrorCode.unauthorized);
       expect(
         exception.message,
-        'User not found. Check your email or register a new account.',
+        'User not found or password is incorrect. Check your email and password, or register a new account.',
+      );
+    });
+
+    test('maps refresh invalid credentials to a session message', () {
+      final exception = AuthApiErrorMapper.fromDio(
+        _dioError(
+          path: '/auth/refresh',
+          statusCode: 401,
+          data: const {'code': 'INVALID_CREDENTIALS'},
+        ),
+      );
+
+      expect(exception.code, AuthErrorCode.unauthorized);
+      expect(exception.message, 'Session expired. Log in again.');
+    });
+
+    test('maps auth-required code before status fallback', () {
+      final exception = AuthApiErrorMapper.fromDio(
+        _dioError(
+          path: '/users/me',
+          statusCode: 401,
+          data: const {'code': 'AUTHENTICATION_REQUIRED'},
+        ),
+      );
+
+      expect(exception.code, AuthErrorCode.unauthorized);
+      expect(exception.message, 'Session expired. Log in again.');
+    });
+
+    test('falls back to status code when backend code is missing', () {
+      final exception = AuthApiErrorMapper.fromDio(
+        _dioError(
+          path: '/auth/register',
+          statusCode: 409,
+          data: const {'message': 'Email already registered'},
+        ),
+      );
+
+      expect(exception.code, AuthErrorCode.conflict);
+      expect(
+        exception.message,
+        'This email is already registered. Log in instead.',
       );
     });
   });
+}
+
+DioException _dioError({
+  required String path,
+  required int statusCode,
+  required Map<String, Object?> data,
+}) {
+  final requestOptions = RequestOptions(path: path);
+  return DioException(
+    requestOptions: requestOptions,
+    response: Response<Map<String, Object?>>(
+      requestOptions: requestOptions,
+      statusCode: statusCode,
+      data: data,
+    ),
+  );
 }
