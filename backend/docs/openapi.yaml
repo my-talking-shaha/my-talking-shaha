@@ -142,6 +142,7 @@ paths:
       tags: [ Vehicles ]
       parameters:
         - $ref: '#/components/parameters/VehicleId'
+        - $ref: '#/components/parameters/ChatLanguage'
       requestBody:
         required: true
         content:
@@ -166,6 +167,7 @@ paths:
       tags: [ Vehicles ]
       parameters:
         - $ref: '#/components/parameters/VehicleId'
+        - $ref: '#/components/parameters/ChatLanguage'
       responses:
         '204':
           description: Vehicle deleted
@@ -398,6 +400,7 @@ paths:
       tags: [ Chat ]
       parameters:
         - $ref: '#/components/parameters/VehicleId'
+        - $ref: '#/components/parameters/ChatLanguage'
       responses:
         '200':
           description: Chat state
@@ -415,6 +418,7 @@ paths:
       tags: [ Chat ]
       parameters:
         - $ref: '#/components/parameters/VehicleId'
+        - $ref: '#/components/parameters/ChatLanguage'
       responses:
         '200':
           description: Chat messages, oldest first
@@ -467,6 +471,15 @@ components:
       schema:
         type: string
         format: uuid
+    ChatLanguage:
+      name: language
+      in: query
+      required: false
+      description: Controls the initial assistant message and fallback quick questions.
+      schema:
+        type: string
+        enum: [ EN, RU ]
+        default: EN
   responses:
     ValidationError:
       description: Validation error
@@ -1130,6 +1143,10 @@ components:
           $ref: '#/components/schemas/ChatMessage'
         assistantMessage:
           $ref: '#/components/schemas/ChatMessage'
+        createdEvent:
+          allOf:
+            - $ref: '#/components/schemas/TimelineEvent'
+          nullable: true
     ChatMessage:
       type: object
       required: [ id, role, text, createdAt ]

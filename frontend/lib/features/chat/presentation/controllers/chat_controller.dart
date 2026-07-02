@@ -1,7 +1,11 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:frontend/features/analytics/domain/entities/analytics_period.dart';
+import 'package:frontend/features/analytics/presentation/providers/analytics_providers.dart';
 import 'package:frontend/features/chat/domain/entities/chat_message.dart';
 import 'package:frontend/features/chat/presentation/providers/chat_providers.dart';
 import 'package:frontend/features/chat/presentation/state/chat_screen_state.dart';
+import 'package:frontend/features/dashboard/presentation/providers/dashboard_providers.dart';
+import 'package:frontend/features/history/presentation/providers/history_providers.dart';
 
 final class ChatController extends AsyncNotifier<ChatScreenState> {
   ChatController(this.vehicleId);
@@ -66,6 +70,9 @@ final class ChatController extends AsyncNotifier<ChatScreenState> {
 
     result.when(
       data: (sendResult) {
+        if (sendResult.hasCreatedEvent) {
+          _refreshVehicleData();
+        }
         final latestState = state.value ?? currentState;
         final messages = latestState.messages
             .where((message) => message.id != localMessage.id)
@@ -94,5 +101,16 @@ final class ChatController extends AsyncNotifier<ChatScreenState> {
       },
       loading: () {},
     );
+  }
+
+  void _refreshVehicleData() {
+    ref.invalidate(historyEventsProvider(vehicleId));
+    ref.invalidate(vehicleDashboardProvider(vehicleId));
+    for (final period in AnalyticsPeriod.values) {
+      ref.invalidate(analyticsSummaryProvider((
+        vehicleId: vehicleId,
+        period: period,
+      )));
+    }
   }
 }

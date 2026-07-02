@@ -27,13 +27,13 @@ Response:
     {
       "id": "044c10dc-13d1-4587-9169-e9e79789ea45",
       "type": "REFUEL",
-      "title": "Refill AI-95",
+      "title": "Заправка",
       "eventDateTime": "2026-06-12T14:30:00Z",
       "cost": 2000,
       "mileageKm": 10000,
       "liters": 30,
       "fuelType": "GASOLINE",
-      "fuelName": "AI-95",
+      "fuelName": "95 octane",
       "stationName": "Test Station"
     }
   ]
@@ -51,7 +51,7 @@ Response:
   "liters": 30,
   "cost": 2000,
   "fuelType": "GASOLINE",
-  "fuelName": "AI-95",
+  "fuelName": "95 octane",
   "stationName": "Test Station"
 }
 ```

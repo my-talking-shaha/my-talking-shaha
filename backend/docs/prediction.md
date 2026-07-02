@@ -52,7 +52,7 @@ Before generating or selecting an answer, the backend should prepare a compact c
       "type": "REFUEL",
       "date": "2026-06-12",
       "mileageKm": 10000,
-      "summary": "30 liters of AI-95 fuel, 2000 RUB"
+      "summary": "30 liters of 95 octane fuel, 2000 RUB"
     }
   ],
   "analytics": {
