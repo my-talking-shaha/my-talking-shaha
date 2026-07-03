@@ -4,6 +4,7 @@ import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.OffsetDateTime;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
 import org.springframework.stereotype.Service;
@@ -167,6 +168,12 @@ public class TimelineEventService {
     }
 
     @Transactional(readOnly = true)
+    public Optional<UUID> activeChatTripId(ChatSession session) {
+        return trips.findTopByChatSessionAndStatusOrderByEventDateTimeDesc(session, TripCompletionStatus.IN_PROGRESS)
+                .map(TripEvent::getId);
+    }
+
+    @Transactional(readOnly = true)
     public List<String> missingRequiredTripFields(UUID vehicleId, UUID tripId) {
         Vehicle vehicle = vehicles.requireOwnedVehicle(vehicleId);
         TripEvent event = trips.findByIdAndVehicle(tripId, vehicle)
@@ -189,7 +196,6 @@ public class TimelineEventService {
         if (request.photoUrls() != null) {
             event.getPhotoUrls().addAll(request.photoUrls());
         }
-
         updateVehicleMileage(vehicle, request.mileageKm());
         return toResponse(maintenances.save(event));
     }

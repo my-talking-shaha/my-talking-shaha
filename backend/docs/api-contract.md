@@ -159,6 +159,21 @@ Client usage:
 
 ## Garage and vehicles
 
+### List vehicle brands
+
+`GET /api/v1/vehicles/brands`
+
+Returns all supported car brand names sorted alphabetically. Requires authentication.
+
+Response `200`:
+
+```json
+[
+  "Abarth",
+  "BMW"
+]
+```
+
 ### List garage vehicles
 
 `GET /api/v1/vehicles`
@@ -589,6 +604,11 @@ Response `200`:
 
 `POST /api/v1/vehicles/{vehicleId}/chat/messages`
 
+Trip lifecycle intents are supported directly in this chat endpoint. A natural-language
+message such as "I want to start a trip now" creates an in-progress trip and returns it
+as `createdEvent`. Follow-up trip details sent to the same chat session update that trip
+until it becomes `COMPLETE` or remains saved as `PARTIAL`.
+
 Request:
 
 ```json
@@ -706,6 +726,103 @@ If there is not enough data:
   }
 }
 ```
+
+### Start trip from chat
+
+`POST /api/v1/vehicles/{vehicleId}/chat/trips/start`
+
+Creates an in-progress trip timeline event, stores the start timestamp, associates it with
+the authenticated user through the vehicle, and links it to the active chat session.
+
+Request:
+
+```json
+{
+  "startedAt": "2026-06-13T09:15:00Z",
+  "notes": "Morning commute"
+}
+```
+
+Response `201`:
+
+```json
+{
+  "tripId": "994v15jc-15d3-4957-9189-u8e79789ea66",
+  "confirmation": "Trip started. I saved the start time and will keep the record even if details are added later.",
+  "missingRequiredFields": ["distanceKm", "fuelLiters", "durationMinutes"],
+  "extractedValues": {},
+  "trip": {
+    "id": "994v15jc-15d3-4957-9189-u8e79789ea66",
+    "type": "TRIP",
+    "eventDateTime": "2026-06-13T09:15:00Z",
+    "startMileageKm": 10000,
+    "tripStatus": "IN_PROGRESS"
+  }
+}
+```
+
+### End trip from chat
+
+`POST /api/v1/vehicles/{vehicleId}/chat/trips/{tripId}/end`
+
+Saves the end timestamp and any structured data the client already has. If critical fields
+are missing, the trip remains queryable in timeline logs and is saved as partial.
+
+Request:
+
+```json
+{
+  "endedAt": "2026-06-13T10:10:00Z",
+  "distanceKm": 42,
+  "durationMinutes": 55,
+  "fuelLiters": 4.2,
+  "notes": "Home -> University"
+}
+```
+
+Response `200` contains `missingRequiredFields`; empty means the trip is complete.
+
+### Collect trip data from natural language
+
+`POST /api/v1/vehicles/{vehicleId}/chat/trips/{tripId}/data`
+
+Request:
+
+```json
+{
+  "text": "We drove 42 km for 55 minutes and used about 4 liters"
+}
+```
+
+Response `200`:
+
+```json
+{
+  "tripId": "994v15jc-15d3-4957-9189-u8e79789ea66",
+  "confirmation": "I extracted and saved the trip details.",
+  "missingRequiredFields": [],
+  "extractedValues": {
+    "distanceKm": 42,
+    "durationMinutes": 55,
+    "fuelLiters": 4
+  },
+  "trip": {
+    "id": "994v15jc-15d3-4957-9189-u8e79789ea66",
+    "type": "TRIP",
+    "distanceKm": 42,
+    "durationMinutes": 55,
+    "fuelLiters": 4,
+    "tripStatus": "COMPLETE"
+  }
+}
+```
+
+If no clear values can be extracted, the backend auto-saves the existing trip data and
+returns the remaining missing fields. Partial trips are still returned by
+`GET /api/v1/vehicles/{vehicleId}/timeline?type=TRIP`.
+
+If a chat-started trip remains `IN_PROGRESS` after the backend auto-save timeout, the
+backend sets `endedAt`, marks it as `PARTIAL`, and keeps it visible in trip logs.
 
 ## Prediction
 
