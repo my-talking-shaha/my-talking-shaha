@@ -87,5 +87,29 @@ void main() {
         'durationMinutes': 60,
       });
     });
+
+    test(
+      'keeps backend gasoline type and station when editing mapped refuel',
+      () {
+        final event = HistoryApiEventMapper.fromJson(const {
+          'id': '044c10dc-13d1-4587-9169-e9e79789ea45',
+          'type': 'REFUEL',
+          'title': 'Refill AI-95',
+          'eventDateTime': '2026-06-12T14:30:00Z',
+          'cost': 2000,
+          'mileageKm': 10000,
+          'liters': 30,
+          'fuelType': 'GASOLINE',
+          'fuelName': 'AI-95',
+          'stationName': 'Test Station',
+        }, 'vehicle_1');
+
+        final payload = HistoryApiEventMapper.createPayload(event);
+
+        expect(payload['fuelType'], 'GASOLINE');
+        expect(payload['fuelName'], 'AI-95');
+        expect(payload['stationName'], 'Test Station');
+      },
+    );
   });
 }

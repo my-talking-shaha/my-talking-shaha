@@ -106,7 +106,8 @@ abstract final class HistoryApiEventMapper {
         'liters': details.liters,
         'cost': details.cost,
         'fuelType': _backendFuelType(details.fuelType),
-        'fuelName': details.fuelType,
+        'fuelName': _fuelNamePayload(details.fuelType),
+        'stationName': ?_stationNamePayload(details.fuelType),
       },
       MaintenanceDetails() => {
         'eventDateTime': _dateTimePayload(event.occurredAt),
@@ -157,15 +158,41 @@ abstract final class HistoryApiEventMapper {
   }
 
   static String _backendFuelType(String value) {
-    final lowerValue = value.toLowerCase();
-    if (lowerValue.contains('diesel')) return 'DIESEL';
+    final lowerValue = _fuelNamePayload(value).toLowerCase();
+    if (lowerValue.contains('diesel') || lowerValue.contains('диз')) {
+      return 'DIESEL';
+    }
     if (lowerValue.contains('electric')) return 'ELECTRIC';
     if (lowerValue.contains('hybrid')) return 'HYBRID';
-    if (lowerValue.contains('gas') || lowerValue.contains('octane')) {
+    if (lowerValue.contains('gas') ||
+        lowerValue.contains('petrol') ||
+        lowerValue.contains('benz') ||
+        lowerValue.contains('бенз') ||
+        lowerValue.contains('octane') ||
+        RegExp(r'(ai|аи|a)[\s-]?(92|95|98|100)').hasMatch(lowerValue)) {
       return 'GASOLINE';
     }
 
     return 'OTHER';
+  }
+
+  static String _fuelNamePayload(String value) {
+    return _splitFuelLabel(value).$1;
+  }
+
+  static String? _stationNamePayload(String value) {
+    return _splitFuelLabel(value).$2;
+  }
+
+  static (String, String?) _splitFuelLabel(String value) {
+    final parts = value.split('•');
+    final fuelName = parts.first.trim();
+    if (parts.length == 1) {
+      return (fuelName, null);
+    }
+
+    final stationName = parts.skip(1).join('•').trim();
+    return (fuelName, stationName.isEmpty ? null : stationName);
   }
 
   static String _maintenanceDescription(MaintenanceDetails details) {
