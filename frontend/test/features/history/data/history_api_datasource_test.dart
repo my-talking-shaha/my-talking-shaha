@@ -61,6 +61,27 @@ void main() {
       });
     });
 
+    test('omits local photo paths from backend maintenance payload', () {
+      final payload = HistoryApiEventMapper.createPayload(
+        HistoryEvent(
+          id: 'local-maintenance',
+          carId: 'vehicle_1',
+          type: HistoryEventType.maintenance,
+          occurredAt: DateTime.utc(2026, 6, 12, 16, 30),
+          title: 'Oil change',
+          currentMileageKm: 10000,
+          details: MaintenanceDetails(
+            description: 'Oil and filter replacement',
+            photoUrls: const [
+              '/documents/history_photos/local-maintenance.jpg',
+            ],
+          ),
+        ),
+      );
+
+      expect(payload.containsKey('photoUrls'), isFalse);
+    });
+
     test('builds backend trip payload from history event', () {
       final payload = HistoryApiEventMapper.createPayload(
         HistoryEvent(
