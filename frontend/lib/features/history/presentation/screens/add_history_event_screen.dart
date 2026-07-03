@@ -22,6 +22,8 @@ typedef PersistHistoryPhoto =
     });
 typedef DeleteHistoryPhoto = Future<void> Function(String path);
 
+const _defaultFuelTypes = ['92 octane', '95 octane', '98 octane', 'Diesel'];
+
 final class AddHistoryEventScreen extends StatefulWidget {
   const AddHistoryEventScreen({
     required this.vehicleId,
@@ -29,6 +31,7 @@ final class AddHistoryEventScreen extends StatefulWidget {
     required this.persistPhoto,
     required this.deletePhoto,
     this.pickPhoto,
+    this.initialEvent,
     this.initialMileageKm = 0,
     this.initialType = HistoryEventType.fuel,
     this.initialOccurredAt,
@@ -40,6 +43,7 @@ final class AddHistoryEventScreen extends StatefulWidget {
   final PersistHistoryPhoto persistPhoto;
   final DeleteHistoryPhoto deletePhoto;
   final PickHistoryPhoto? pickPhoto;
+  final HistoryEvent? initialEvent;
   final int initialMileageKm;
   final HistoryEventType initialType;
   final DateTime? initialOccurredAt;
@@ -56,6 +60,7 @@ final class _AddHistoryEventScreenState extends State<AddHistoryEventScreen> {
   bool _isSaving = false;
   bool _isPickingPhoto = false;
   XFile? _selectedPhoto;
+  List<String>? _existingPhotoUrls;
 
   final _imagePicker = ImagePicker();
 
@@ -73,12 +78,30 @@ final class _AddHistoryEventScreenState extends State<AddHistoryEventScreen> {
 
   String _fuelType = '95 octane';
 
+  bool get _isEditing => widget.initialEvent != null;
+
+  int get _minimumMileageKm {
+    final initialEvent = widget.initialEvent;
+    if (initialEvent == null) {
+      return widget.initialMileageKm;
+    }
+
+    return switch (initialEvent.details) {
+      TripDetails(:final startKm) => startKm,
+      _ => initialEvent.currentMileageKm,
+    };
+  }
+
   @override
   void initState() {
     super.initState();
-    _type = widget.initialType;
-    _occurredAt = widget.initialOccurredAt ?? DateTime.now();
-    if (widget.initialMileageKm > 0) {
+    final initialEvent = widget.initialEvent;
+    _type = initialEvent?.type ?? widget.initialType;
+    _occurredAt =
+        initialEvent?.occurredAt ?? widget.initialOccurredAt ?? DateTime.now();
+    if (initialEvent != null) {
+      _populateFromEvent(initialEvent);
+    } else if (widget.initialMileageKm > 0) {
       _mileageController.text = widget.initialMileageKm.toString();
       _tripStartController.text = widget.initialMileageKm.toString();
     }
@@ -106,7 +129,13 @@ final class _AddHistoryEventScreenState extends State<AddHistoryEventScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text(HistoryEventFormUtils.titleFor(_type))),
+      appBar: AppBar(
+        title: Text(
+          _isEditing
+              ? HistoryEventFormUtils.editTitleFor(_type)
+              : HistoryEventFormUtils.titleFor(_type),
+        ),
+      ),
       body: SafeArea(
         top: false,
         child: Form(
@@ -123,6 +152,7 @@ final class _AddHistoryEventScreenState extends State<AddHistoryEventScreen> {
               const SizedBox(height: AppSpacing.sm),
               _EventTypeSelector(
                 selectedType: _type,
+                enabled: !_isEditing,
                 onSelected: (type) {
                   if (type == _type) return;
                   setState(() => _type = type);
@@ -168,7 +198,7 @@ final class _AddHistoryEventScreenState extends State<AddHistoryEventScreen> {
                         dimension: 20,
                         child: CircularProgressIndicator(strokeWidth: 2),
                       )
-                    : const Text('Save'),
+                    : Text(_isEditing ? 'Save changes' : 'Save'),
               ),
             ],
           ),
@@ -178,6 +208,11 @@ final class _AddHistoryEventScreenState extends State<AddHistoryEventScreen> {
   }
 
   List<Widget> _fuelFields() {
+    final fuelTypeItems = [
+      if (!_defaultFuelTypes.contains(_fuelType)) _fuelType,
+      ..._defaultFuelTypes,
+    ];
+
     return [
       _FormCard(
         label: 'CURRENT MILEAGE',
@@ -189,7 +224,7 @@ final class _AddHistoryEventScreenState extends State<AddHistoryEventScreen> {
           icon: Icons.speed_outlined,
           validator: (value) => HistoryEventFormUtils.validateMileage(
             value,
-            minimumMileageKm: widget.initialMileageKm,
+            minimumMileageKm: _minimumMileageKm,
           ),
         ),
       ),
@@ -243,20 +278,9 @@ final class _AddHistoryEventScreenState extends State<AddHistoryEventScreen> {
                 key: const ValueKey('fuel-type'),
                 initialValue: _fuelType,
                 decoration: const InputDecoration(),
-                items: const [
-                  DropdownMenuItem(
-                    value: '92 octane',
-                    child: Text('92 octane'),
-                  ),
-                  DropdownMenuItem(
-                    value: '95 octane',
-                    child: Text('95 octane'),
-                  ),
-                  DropdownMenuItem(
-                    value: '98 octane',
-                    child: Text('98 octane'),
-                  ),
-                  DropdownMenuItem(value: 'Diesel', child: Text('Diesel')),
+                items: [
+                  for (final value in fuelTypeItems)
+                    DropdownMenuItem(value: value, child: Text(value)),
                 ],
                 onChanged: (value) {
                   if (value != null) _fuelType = value;
@@ -286,7 +310,7 @@ final class _AddHistoryEventScreenState extends State<AddHistoryEventScreen> {
           icon: Icons.speed_outlined,
           validator: (value) => HistoryEventFormUtils.validateMileage(
             value,
-            minimumMileageKm: widget.initialMileageKm,
+            minimumMileageKm: _minimumMileageKm,
           ),
         ),
       ),
@@ -365,7 +389,7 @@ final class _AddHistoryEventScreenState extends State<AddHistoryEventScreen> {
                   suffixText: 'km',
                   validator: (value) => HistoryEventFormUtils.validateTripStart(
                     value,
-                    minimumMileageKm: widget.initialMileageKm,
+                    minimumMileageKm: _minimumMileageKm,
                   ),
                 ),
               ),
@@ -434,7 +458,9 @@ final class _AddHistoryEventScreenState extends State<AddHistoryEventScreen> {
     setState(() => _isSaving = true);
     String? persistedPhotoPath;
     try {
-      final eventId = 'local-${DateTime.now().microsecondsSinceEpoch}';
+      final eventId =
+          widget.initialEvent?.id ??
+          'local-${DateTime.now().microsecondsSinceEpoch}';
       final photo = _type == HistoryEventType.maintenance
           ? _selectedPhoto
           : null;
@@ -463,6 +489,39 @@ final class _AddHistoryEventScreenState extends State<AddHistoryEventScreen> {
       );
     } finally {
       if (mounted) setState(() => _isSaving = false);
+    }
+  }
+
+  void _populateFromEvent(HistoryEvent event) {
+    _titleController.text = event.title;
+
+    switch (event.details) {
+      case FuelDetails(:final liters, :final cost, :final fuelType):
+        _mileageController.text = event.currentMileageKm.toString();
+        _fuelLitersController.text = liters.toString();
+        _fuelCostController.text = cost.toString();
+        _fuelType = fuelType;
+      case MaintenanceDetails(
+        :final description,
+        :final cost,
+        :final replacedParts,
+        :final photoUrls,
+      ):
+        _mileageController.text = event.currentMileageKm.toString();
+        _maintenanceDescriptionController.text = description;
+        _maintenanceCostController.text = cost?.toString() ?? '';
+        _replacedPartsController.text = replacedParts?.join(', ') ?? '';
+        _existingPhotoUrls = photoUrls;
+      case TripDetails(
+        :final startKm,
+        :final endKm,
+        :final route,
+        :final duration,
+      ):
+        _tripStartController.text = startKm.toString();
+        _tripEndController.text = endKm.toString();
+        _tripRouteController.text = route ?? '';
+        _tripDurationController.text = duration.inMinutes.toString();
     }
   }
 
@@ -566,7 +625,7 @@ final class _AddHistoryEventScreenState extends State<AddHistoryEventScreen> {
           replacedParts: HistoryEventFormUtils.parseCommaSeparated(
             _replacedPartsController.text,
           ),
-          photoUrls: photoPath == null ? null : [photoPath],
+          photoUrls: photoPath == null ? _existingPhotoUrls : [photoPath],
         ),
       ),
       HistoryEventType.trip => HistoryEvent(
@@ -591,10 +650,12 @@ final class _EventTypeSelector extends StatelessWidget {
   const _EventTypeSelector({
     required this.selectedType,
     required this.onSelected,
+    this.enabled = true,
   });
 
   final HistoryEventType selectedType;
   final ValueChanged<HistoryEventType> onSelected;
+  final bool enabled;
 
   @override
   Widget build(BuildContext context) {
@@ -650,7 +711,7 @@ final class _EventTypeSelector extends StatelessWidget {
                     label: label,
                     child: InkWell(
                       key: ValueKey('event-type-${type.name}'),
-                      onTap: () => onSelected(type),
+                      onTap: enabled ? () => onSelected(type) : null,
                       borderRadius: AppRadius.input,
                       child: Center(
                         child: SvgPicture.asset(

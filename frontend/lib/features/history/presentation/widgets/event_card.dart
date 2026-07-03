@@ -9,59 +9,79 @@ import 'package:frontend/features/history/domain/entities/history_event_type.dar
 
 class EventCard extends StatelessWidget {
   final HistoryEvent event;
+  final VoidCallback? onEdit;
+  final VoidCallback? onDelete;
 
-  const EventCard({required this.event, super.key});
+  const EventCard({required this.event, this.onEdit, this.onDelete, super.key});
 
   @override
   Widget build(BuildContext context) {
     final details = event.details;
     final presentation = _EventPresentation.from(event);
 
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(AppSpacing.lg),
-      decoration: BoxDecoration(
-        color: AppColors.surfaceHigh,
-        border: Border.all(color: AppColors.border),
-        borderRadius: AppRadius.card,
-      ),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          _EventIcon(presentation: presentation),
-          const SizedBox(width: AppSpacing.lg),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Expanded(
-                      child: Text(
-                        event.title,
-                        style: Theme.of(context).textTheme.titleMedium,
-                      ),
-                    ),
-                    if (presentation.metric case final metric?) ...[
-                      const SizedBox(width: AppSpacing.sm),
-                      Text(
-                        metric,
-                        textAlign: TextAlign.end,
-                        style: Theme.of(context).textTheme.titleMedium
-                            ?.copyWith(color: AppColors.primaryLight),
-                      ),
-                    ],
-                  ],
-                ),
-                const SizedBox(height: AppSpacing.xs),
-                ..._detailWidgets(context, details),
-                const SizedBox(height: AppSpacing.xs),
-                _EventTimestamp(occurredAt: event.occurredAt),
-              ],
-            ),
+    return _HistorySwipeRevealActions(
+      actions: [
+        if (onEdit != null)
+          _HistorySwipeActionButton(
+            label: 'Edit',
+            iconPath: 'assets/icons/garage/edit.svg',
+            color: const Color(0xFFDCA249),
+            onPressed: onEdit!,
           ),
-        ],
+        if (onDelete != null)
+          _HistorySwipeActionButton(
+            label: 'Delete',
+            iconPath: 'assets/icons/garage/delete.svg',
+            color: const Color(0xFFD4352F),
+            onPressed: onDelete!,
+          ),
+      ],
+      child: Container(
+        width: double.infinity,
+        padding: const EdgeInsets.all(AppSpacing.lg),
+        decoration: BoxDecoration(
+          color: AppColors.surfaceHigh,
+          border: Border.all(color: AppColors.border),
+          borderRadius: AppRadius.card,
+        ),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            _EventIcon(presentation: presentation),
+            const SizedBox(width: AppSpacing.lg),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Expanded(
+                        child: Text(
+                          event.title,
+                          style: Theme.of(context).textTheme.titleMedium,
+                        ),
+                      ),
+                      if (presentation.metric case final metric?) ...[
+                        const SizedBox(width: AppSpacing.sm),
+                        Text(
+                          metric,
+                          textAlign: TextAlign.end,
+                          style: Theme.of(context).textTheme.titleMedium
+                              ?.copyWith(color: AppColors.primaryLight),
+                        ),
+                      ],
+                    ],
+                  ),
+                  const SizedBox(height: AppSpacing.xs),
+                  ..._detailWidgets(context, details),
+                  const SizedBox(height: AppSpacing.xs),
+                  _EventTimestamp(occurredAt: event.occurredAt),
+                ],
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -114,6 +134,142 @@ class EventCard extends StatelessWidget {
     final duration = _formatDuration(details.duration);
 
     return route == null || route.isEmpty ? duration : '$route • $duration';
+  }
+}
+
+final class _HistorySwipeRevealActions extends StatefulWidget {
+  const _HistorySwipeRevealActions({
+    required this.child,
+    required this.actions,
+  });
+
+  final Widget child;
+  final List<Widget> actions;
+
+  @override
+  State<_HistorySwipeRevealActions> createState() =>
+      _HistorySwipeRevealActionsState();
+}
+
+final class _HistorySwipeRevealActionsState
+    extends State<_HistorySwipeRevealActions> {
+  static const double _actionWidth = 120;
+  double _dragOffset = 0;
+
+  bool get _isOpen => _dragOffset < 0;
+
+  @override
+  Widget build(BuildContext context) {
+    if (widget.actions.isEmpty) {
+      return widget.child;
+    }
+
+    return GestureDetector(
+      behavior: HitTestBehavior.translucent,
+      onHorizontalDragUpdate: (details) {
+        setState(() {
+          _dragOffset = (_dragOffset + details.delta.dx).clamp(
+            -_actionWidth,
+            0,
+          );
+        });
+      },
+      onHorizontalDragEnd: (_) {
+        setState(() {
+          _dragOffset = _dragOffset.abs() > _actionWidth * 0.38
+              ? -_actionWidth
+              : 0;
+        });
+      },
+      child: Stack(
+        clipBehavior: Clip.none,
+        children: [
+          Positioned.fill(
+            child: Align(
+              alignment: Alignment.centerRight,
+              child: SizedBox(
+                width: _actionWidth,
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.end,
+                  children: [
+                    for (
+                      var index = 0;
+                      index < widget.actions.length;
+                      index++
+                    ) ...[
+                      widget.actions[index],
+                      if (index < widget.actions.length - 1)
+                        const SizedBox(width: AppSpacing.sm),
+                    ],
+                  ],
+                ),
+              ),
+            ),
+          ),
+          AnimatedContainer(
+            duration: const Duration(milliseconds: 180),
+            curve: Curves.easeOutCubic,
+            transform: Matrix4.translationValues(_dragOffset, 0, 0),
+            child: GestureDetector(
+              onTap: _isOpen
+                  ? () {
+                      setState(() {
+                        _dragOffset = 0;
+                      });
+                    }
+                  : null,
+              child: widget.child,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+final class _HistorySwipeActionButton extends StatelessWidget {
+  const _HistorySwipeActionButton({
+    required this.label,
+    required this.iconPath,
+    required this.color,
+    required this.onPressed,
+  });
+
+  final String label;
+  final String iconPath;
+  final Color color;
+  final VoidCallback onPressed;
+
+  String get _actionKey => 'history_swipe_action_${label.toLowerCase()}';
+
+  @override
+  Widget build(BuildContext context) {
+    return Semantics(
+      label: label,
+      button: true,
+      child: SizedBox.square(
+        dimension: 52,
+        child: IconButton.filled(
+          key: ValueKey(_actionKey),
+          onPressed: onPressed,
+          tooltip: label,
+          style: IconButton.styleFrom(
+            backgroundColor: color,
+            foregroundColor: AppColors.white,
+            shape: const CircleBorder(),
+          ),
+          icon: SvgPicture.asset(
+            iconPath,
+            width: 26,
+            height: 26,
+            colorFilter: const ColorFilter.mode(
+              AppColors.white,
+              BlendMode.srcIn,
+            ),
+          ),
+        ),
+      ),
+    );
   }
 }
 

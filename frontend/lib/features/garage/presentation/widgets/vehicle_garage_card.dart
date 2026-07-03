@@ -42,6 +42,8 @@ final class VehicleGarageCard extends StatelessWidget {
       ],
       child: Material(
         color: Colors.transparent,
+        borderRadius: AppRadius.card,
+        clipBehavior: Clip.antiAlias,
         child: InkWell(
           onTap: onOpen,
           borderRadius: AppRadius.card,
@@ -286,7 +288,9 @@ final class _VehicleImage extends StatelessWidget {
     final photoUrl = vehicle.photoUrl?.trim();
 
     return ClipRRect(
-      borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
+      borderRadius: const BorderRadius.vertical(
+        top: Radius.circular(AppRadius.md),
+      ),
       child: AspectRatio(
         aspectRatio: 16 / 7,
         child: photoUrl == null || photoUrl.isEmpty

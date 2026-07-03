@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:frontend/app/theme/app_theme.dart';
@@ -78,7 +80,13 @@ final class _HistoryScreenState extends ConsumerState<HistoryScreen> {
                     return _HistoryEmptyState(hasFilters: _hasFilters);
                   }
 
-                  return _HistoryEventsList(events: filteredEvents);
+                  return _HistoryEventsList(
+                    events: filteredEvents,
+                    onEditEvent: _editEvent,
+                    onDeleteEvent: (event) {
+                      unawaited(_confirmDelete(event));
+                    },
+                  );
                 },
                 loading: () => const Center(child: CircularProgressIndicator()),
                 error: (error, stackTrace) => _HistoryErrorState(
@@ -106,6 +114,54 @@ final class _HistoryScreenState extends ConsumerState<HistoryScreen> {
           return matchesType && matchesQuery;
         })
         .toList(growable: false);
+  }
+
+  Future<void> _editEvent(HistoryEvent event) async {
+    await context.push<HistoryEvent>(
+      '/vehicle/${widget.vehicleId}/history/${event.id}/edit',
+      extra: event,
+    );
+    if (mounted) {
+      ref.invalidate(historyEventsProvider(widget.vehicleId));
+    }
+  }
+
+  Future<void> _confirmDelete(HistoryEvent event) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: const Text('Delete event?'),
+          content: Text('${event.title} will be removed from the history.'),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(false),
+              child: const Text('Cancel'),
+            ),
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(true),
+              child: const Text('Delete'),
+            ),
+          ],
+        );
+      },
+    );
+
+    if (confirmed != true || !mounted) {
+      return;
+    }
+
+    try {
+      await ref
+          .read(deleteHistoryEventProvider)
+          .call(widget.vehicleId, event.id);
+      ref.invalidate(historyEventsProvider(widget.vehicleId));
+    } catch (_) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Could not delete the event. Try again.')),
+      );
+    }
   }
 }
 
@@ -191,9 +247,15 @@ final class _TypeFilters extends StatelessWidget {
 }
 
 final class _HistoryEventsList extends StatelessWidget {
-  const _HistoryEventsList({required this.events});
+  const _HistoryEventsList({
+    required this.events,
+    required this.onEditEvent,
+    required this.onDeleteEvent,
+  });
 
   final List<HistoryEvent> events;
+  final ValueChanged<HistoryEvent> onEditEvent;
+  final ValueChanged<HistoryEvent> onDeleteEvent;
 
   @override
   Widget build(BuildContext context) {
@@ -231,7 +293,11 @@ final class _HistoryEventsList extends StatelessWidget {
                 ),
               ),
               for (var index = 0; index < group.events.length; index++) ...[
-                EventCard(event: group.events[index]),
+                EventCard(
+                  event: group.events[index],
+                  onEdit: () => onEditEvent(group.events[index]),
+                  onDelete: () => onDeleteEvent(group.events[index]),
+                ),
                 if (index < group.events.length - 1)
                   const SizedBox(height: AppSpacing.md),
               ],

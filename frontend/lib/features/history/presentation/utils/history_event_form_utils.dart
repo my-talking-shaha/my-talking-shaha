@@ -9,6 +9,14 @@ abstract final class HistoryEventFormUtils {
     };
   }
 
+  static String editTitleFor(HistoryEventType type) {
+    return switch (type) {
+      HistoryEventType.fuel => 'Edit refueling',
+      HistoryEventType.maintenance => 'Edit maintenance',
+      HistoryEventType.trip => 'Edit trip',
+    };
+  }
+
   static String formatDateTime(DateTime value) {
     String twoDigits(int number) => number.toString().padLeft(2, '0');
     return '${twoDigits(value.day)}/${twoDigits(value.month)}/${value.year}, '

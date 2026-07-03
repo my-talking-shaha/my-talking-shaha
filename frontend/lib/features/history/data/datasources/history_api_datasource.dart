@@ -37,6 +37,21 @@ final class HistoryApiDatasource implements HistoryDatasource {
       data: HistoryApiEventMapper.createPayload(event),
     );
   }
+
+  @override
+  Future<void> updateEvent(HistoryEvent event) async {
+    await _dio.patch<Map<String, dynamic>>(
+      '/vehicles/${event.carId}/timeline/${event.id}',
+      data: HistoryApiEventMapper.createPayload(event),
+    );
+  }
+
+  @override
+  Future<void> deleteEvent(String vehicleId, String eventId) async {
+    await _dio.delete<Map<String, dynamic>>(
+      '/vehicles/$vehicleId/timeline/$eventId',
+    );
+  }
 }
 
 abstract final class HistoryApiEventMapper {
