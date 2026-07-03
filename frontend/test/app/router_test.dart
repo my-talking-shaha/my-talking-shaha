@@ -16,10 +16,14 @@ import 'package:frontend/features/auth/presentation/providers/auth_providers.dar
 import 'package:frontend/features/dashboard/domain/entities/dashboard_data.dart';
 import 'package:frontend/features/dashboard/presentation/providers/dashboard_providers.dart';
 import 'package:frontend/features/dashboard/presentation/screens/dashboard_screen.dart';
+import 'package:frontend/features/garage/data/datasources/garage_datasource.dart';
 import 'package:frontend/features/garage/data/datasources/in_memory_garage_datasource.dart';
 import 'package:frontend/features/garage/domain/entities/vehicle.dart';
+import 'package:frontend/features/garage/domain/entities/vehicle_draft.dart';
 import 'package:frontend/features/garage/presentation/providers/garage_providers.dart';
+import 'package:frontend/features/history/data/datasources/history_datasource.dart';
 import 'package:frontend/features/history/data/datasources/mock_history_datasource.dart';
+import 'package:frontend/features/history/domain/entities/history_event.dart';
 import 'package:frontend/features/history/domain/entities/history_event_type.dart';
 import 'package:frontend/features/history/presentation/providers/history_providers.dart';
 import 'package:frontend/features/history/presentation/screens/add_history_event_screen.dart';
@@ -257,21 +261,82 @@ void main() {
     expect(events.any((event) => event.title == 'Highway refueling'), isTrue);
     expect(find.text('Highway refueling'), findsOneWidget);
   });
+
+  testWidgets('saving a history event refreshes mileage for the next event', (
+    tester,
+  ) async {
+    const vehicleId = '096c10bb-13d1-4599-9109-e9e79789ea88';
+    final garageDatasource = _MileageGarageDatasource(
+      vehicleId: vehicleId,
+      mileageKm: 124000,
+    );
+    final historyDatasource = _MileageUpdatingHistoryDatasource(
+      garageDatasource: garageDatasource,
+    );
+
+    await _pumpApp(
+      tester,
+      initialLocation: '/vehicle/$vehicleId/history',
+      garageDatasource: garageDatasource,
+      historyDatasource: historyDatasource,
+    );
+
+    await tester.tap(find.byType(FloatingActionButton));
+    await tester.pumpAndSettle();
+
+    await tester.enterText(
+      find.byKey(const ValueKey('event-title')),
+      'Mileage refresh fuel stop',
+    );
+    await tester.enterText(
+      find.byKey(const ValueKey('fuel-mileage')),
+      '124600',
+    );
+    await tester.enterText(find.byKey(const ValueKey('fuel-liters')), '42');
+    await tester.enterText(find.byKey(const ValueKey('fuel-cost')), '3000');
+    final saveButton = find.widgetWithText(ElevatedButton, 'Save');
+    await tester.dragUntilVisible(
+      saveButton,
+      find.byType(ListView),
+      const Offset(0, -300),
+    );
+    await tester.tap(saveButton);
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.byType(FloatingActionButton));
+    await tester.pumpAndSettle();
+
+    final screen = tester.widget<AddHistoryEventScreen>(
+      find.byType(AddHistoryEventScreen),
+    );
+    expect(screen.initialMileageKm, 124600);
+    final mileageField = tester.widget<TextFormField>(
+      find.descendant(
+        of: find.byKey(const ValueKey('fuel-mileage')),
+        matching: find.byType(TextFormField),
+      ),
+    );
+    expect(mileageField.controller?.text, '124600');
+  });
 }
 
 Future<_TestApp> _pumpApp(
   WidgetTester tester, {
   String? initialLocation,
   AuthRepository authRepository = const _AuthenticatedRepository(),
+  GarageDatasource? garageDatasource,
+  HistoryDatasource? historyDatasource,
   bool settle = true,
 }) async {
-  final garageDatasource = InMemoryGarageDatasource();
-  final historyDatasource = MockHistoryDatasource(delay: Duration.zero);
+  final resolvedGarageDatasource =
+      garageDatasource ?? InMemoryGarageDatasource();
+  final resolvedHistoryDatasource =
+      historyDatasource ?? MockHistoryDatasource(delay: Duration.zero);
   final container = ProviderContainer(
     overrides: [
       authRepositoryProvider.overrideWithValue(authRepository),
-      garageDatasourceProvider.overrideWithValue(garageDatasource),
-      historyDatasourceProvider.overrideWithValue(historyDatasource),
+      garageDatasourceProvider.overrideWithValue(resolvedGarageDatasource),
+      historyDatasourceProvider.overrideWithValue(resolvedHistoryDatasource),
       vehicleDashboardProvider.overrideWith((ref, vehicleId) {
         return _dashboardData(vehicleId);
       }),
@@ -320,6 +385,51 @@ final class _TestApp {
 
   final GoRouter router;
   final ProviderContainer container;
+}
+
+final class _MileageGarageDatasource implements GarageDatasource {
+  _MileageGarageDatasource({required this.vehicleId, required this.mileageKm});
+
+  final String vehicleId;
+  int mileageKm;
+
+  @override
+  Future<List<Vehicle>> getVehicles() async {
+    return [_vehicle(vehicleId).copyWith(currentMileageKm: mileageKm)];
+  }
+
+  @override
+  Future<Vehicle> addVehicle(VehicleDraft draft) {
+    throw UnimplementedError();
+  }
+
+  @override
+  Future<Vehicle> updateVehicle(String vehicleId, VehicleDraft draft) {
+    throw UnimplementedError();
+  }
+
+  @override
+  Future<void> deleteVehicle(String vehicleId) {
+    throw UnimplementedError();
+  }
+}
+
+final class _MileageUpdatingHistoryDatasource implements HistoryDatasource {
+  _MileageUpdatingHistoryDatasource({required this.garageDatasource});
+
+  final _MileageGarageDatasource garageDatasource;
+  final List<HistoryEvent> _events = [];
+
+  @override
+  Future<List<HistoryEvent>> getEvents(String vehicleId) async {
+    return List.unmodifiable(_events);
+  }
+
+  @override
+  Future<void> addEvent(HistoryEvent event) async {
+    _events.add(event);
+    garageDatasource.mileageKm = event.currentMileageKm;
+  }
 }
 
 DashboardData _dashboardData(String vehicleId) {
