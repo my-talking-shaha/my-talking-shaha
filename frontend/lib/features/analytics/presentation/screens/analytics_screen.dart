@@ -9,11 +9,17 @@ import 'package:frontend/features/analytics/domain/entities/analytics_summary.da
 import 'package:frontend/features/analytics/presentation/providers/analytics_providers.dart';
 import 'package:frontend/features/parts/presentation/providers/parts_providers.dart';
 import 'package:frontend/features/parts/presentation/widgets/maintenance_forecast_card.dart';
+import 'package:go_router/go_router.dart';
 
 final class AnalyticsScreen extends ConsumerStatefulWidget {
-  const AnalyticsScreen({required this.vehicleId, super.key});
+  const AnalyticsScreen({
+    required this.vehicleId,
+    this.launchedFromChat = false,
+    super.key,
+  });
 
   final String vehicleId;
+  final bool launchedFromChat;
 
   @override
   ConsumerState<AnalyticsScreen> createState() => _AnalyticsScreenState();
@@ -50,6 +56,17 @@ final class _AnalyticsScreenState extends ConsumerState<AnalyticsScreen> {
     final summaryState = ref.watch(analyticsSummaryProvider(request));
 
     return Scaffold(
+      appBar: widget.launchedFromChat
+          ? AppBar(
+              leading: IconButton(
+                onPressed: () =>
+                    context.go('/vehicle/${widget.vehicleId}/chat'),
+                tooltip: 'Back to chat',
+                icon: const Icon(Icons.chevron_left_rounded, size: 32),
+              ),
+              title: const Text('Analytics'),
+            )
+          : null,
       body: SafeArea(
         child: summaryState.when(
           data: (summary) {

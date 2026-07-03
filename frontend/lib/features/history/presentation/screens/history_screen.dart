@@ -9,9 +9,14 @@ import 'package:frontend/features/history/presentation/widgets/event_card.dart';
 import 'package:go_router/go_router.dart';
 
 final class HistoryScreen extends ConsumerStatefulWidget {
-  const HistoryScreen({required this.vehicleId, super.key});
+  const HistoryScreen({
+    required this.vehicleId,
+    this.launchedFromChat = false,
+    super.key,
+  });
 
   final String vehicleId;
+  final bool launchedFromChat;
 
   @override
   ConsumerState<HistoryScreen> createState() => _HistoryScreenState();
@@ -26,7 +31,17 @@ final class _HistoryScreenState extends ConsumerState<HistoryScreen> {
     final eventsState = ref.watch(historyEventsProvider(widget.vehicleId));
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Maintenance History')),
+      appBar: AppBar(
+        leading: widget.launchedFromChat
+            ? IconButton(
+                onPressed: () =>
+                    context.go('/vehicle/${widget.vehicleId}/chat'),
+                tooltip: 'Back to chat',
+                icon: const Icon(Icons.chevron_left_rounded, size: 32),
+              )
+            : null,
+        title: const Text('Maintenance History'),
+      ),
       floatingActionButton: FloatingActionButton(
         onPressed: () async {
           await context.push<HistoryEvent>(

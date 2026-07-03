@@ -51,12 +51,7 @@ final class _ChatScreenState extends ConsumerState<ChatScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        leading: IconButton(
-          onPressed: () => context.go('/garage'),
-          tooltip: 'Open garage',
-          icon: const Icon(Icons.chevron_left_rounded, size: 32),
-        ),
-        titleSpacing: 0,
+        titleSpacing: 32,
         title: const _ChatTitle(),
       ),
       body: chatState.when(
@@ -448,7 +443,13 @@ final class _ChatActionPill extends StatelessWidget {
         color: Colors.transparent,
         child: InkWell(
           key: const ValueKey('chat_message_action'),
-          onTap: () => context.push(destination),
+          onTap: () {
+            if (_opensShellScreen) {
+              context.go(destination);
+            } else {
+              unawaited(context.push(destination));
+            }
+          },
           borderRadius: BorderRadius.circular(18),
           child: Ink(
             padding: const EdgeInsets.fromLTRB(
@@ -496,12 +497,19 @@ final class _ChatActionPill extends StatelessWidget {
   String? _destination() {
     final type = action.type.toUpperCase();
     if (type == 'OPEN_SCREEN') {
-      return switch (action.screen?.toUpperCase()) {
+      final path = switch (action.screen?.toUpperCase()) {
         'ANALYTICS' => '/vehicle/$vehicleId/analytics',
+        'HISTORY' || 'TIMELINE' => '/vehicle/$vehicleId/history',
         'DASHBOARD' ||
         'MAINTENANCE_FORECAST' => '/vehicle/$vehicleId/dashboard',
         _ => null,
       };
+      if (path == null) return null;
+
+      return Uri(
+        path: path,
+        queryParameters: const {'from': 'chat'},
+      ).toString();
     }
 
     if (type == 'OPEN_FORM') {
@@ -526,11 +534,14 @@ final class _ChatActionPill extends StatelessWidget {
     return null;
   }
 
+  bool get _opensShellScreen => action.type.toUpperCase() == 'OPEN_SCREEN';
+
   String _label() {
     final type = action.type.toUpperCase();
     if (type == 'OPEN_SCREEN') {
       return switch (action.screen?.toUpperCase()) {
         'ANALYTICS' => 'Open analytics',
+        'HISTORY' || 'TIMELINE' => 'Open history',
         'MAINTENANCE_FORECAST' => 'Open forecast',
         'DASHBOARD' => 'Open dashboard',
         _ => 'Open',
@@ -551,6 +562,7 @@ final class _ChatActionPill extends StatelessWidget {
     if (type == 'OPEN_SCREEN') {
       return switch (action.screen?.toUpperCase()) {
         'ANALYTICS' => Icons.bar_chart_rounded,
+        'HISTORY' || 'TIMELINE' => Icons.history_rounded,
         'MAINTENANCE_FORECAST' => Icons.build_circle_outlined,
         'DASHBOARD' => Icons.directions_car_filled_rounded,
         _ => Icons.open_in_new_rounded,
