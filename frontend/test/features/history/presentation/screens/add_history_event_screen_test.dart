@@ -67,7 +67,7 @@ void main() {
     await _tapSave(tester);
 
     expect(savedEvent, isNull);
-    expect(find.text('Amount must be 100 L or less'), findsOneWidget);
+    expect(find.text('Max 100 L'), findsOneWidget);
 
     await tester.enterText(find.byKey(const ValueKey('fuel-liters')), '42.5');
     await _tapSave(tester);

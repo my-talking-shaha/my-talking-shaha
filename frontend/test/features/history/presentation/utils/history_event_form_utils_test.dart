@@ -21,18 +21,9 @@ void main() {
   test('validates fuel amount range and decimals', () {
     expect(HistoryEventFormUtils.validateFuelLiters('42.5'), isNull);
     expect(HistoryEventFormUtils.validateFuelLiters('42,5'), isNull);
-    expect(
-      HistoryEventFormUtils.validateFuelLiters('0'),
-      'Amount must be greater than 0 L',
-    );
-    expect(
-      HistoryEventFormUtils.validateFuelLiters('100.1'),
-      'Amount must be 100 L or less',
-    );
-    expect(
-      HistoryEventFormUtils.validateFuelLiters('abc'),
-      'Amount must be a number',
-    );
+    expect(HistoryEventFormUtils.validateFuelLiters('0'), '> 0 L');
+    expect(HistoryEventFormUtils.validateFuelLiters('100.1'), 'Max 100 L');
+    expect(HistoryEventFormUtils.validateFuelLiters('abc'), 'Enter number');
   });
 
   test('formats and normalizes form values', () {

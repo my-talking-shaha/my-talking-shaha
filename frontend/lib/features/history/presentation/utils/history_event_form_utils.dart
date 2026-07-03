@@ -62,9 +62,9 @@ abstract final class HistoryEventFormUtils {
 
   static String? validateFuelLiters(String? value) {
     final liters = parseDecimal(value);
-    if (liters == null) return 'Amount must be a number';
-    if (liters <= 0) return 'Amount must be greater than 0 L';
-    if (liters > 100) return 'Amount must be 100 L or less';
+    if (liters == null) return 'Enter number';
+    if (liters <= 0) return '> 0 L';
+    if (liters > 100) return 'Max 100 L';
     return null;
   }
 
