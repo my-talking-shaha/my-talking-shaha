@@ -23,6 +23,7 @@ import ru.talkingshaha.backend.vehicle.dto.CreateVehicleRequest;
 import ru.talkingshaha.backend.vehicle.dto.UpdateVehicleRequest;
 import ru.talkingshaha.backend.vehicle.dto.VehicleDashboardResponse;
 import ru.talkingshaha.backend.vehicle.dto.VehicleResponse;
+import ru.talkingshaha.backend.vehicle.service.VehicleBrandService;
 import ru.talkingshaha.backend.vehicle.service.VehicleService;
 
 @RestController
@@ -44,9 +45,16 @@ import ru.talkingshaha.backend.vehicle.service.VehicleService;
 public class VehicleController {
 
     private final VehicleService vehicles;
+    private final VehicleBrandService brands;
 
-    public VehicleController(VehicleService vehicles) {
+    public VehicleController(VehicleService vehicles, VehicleBrandService brands) {
         this.vehicles = vehicles;
+        this.brands = brands;
+    }
+
+    @GetMapping("/brands")
+    public List<String> listBrands() {
+        return brands.brands();
     }
 
     @GetMapping

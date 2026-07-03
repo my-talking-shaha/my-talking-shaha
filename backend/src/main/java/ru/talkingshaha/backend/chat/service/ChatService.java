@@ -111,6 +111,12 @@ public class ChatService {
     }
 
     @Transactional
+    public ChatSession activeSession(UUID vehicleId, ChatLanguage language) {
+        Vehicle vehicle = vehicles.requireOwnedVehicle(vehicleId);
+        return getOrCreateSession(vehicle, language);
+    }
+
+    @Transactional
     public SendMessageResponse send(UUID vehicleId, SendMessageRequest request) {
         Vehicle vehicle = vehicles.requireOwnedVehicle(vehicleId);
         ChatSession session = getOrCreateSession(vehicle, ChatLanguage.EN);

@@ -250,6 +250,78 @@ class ChatFlowTest {
     }
 
     @Test
+    void startsEndsAndCompletesTripFromChatLifecycle() throws Exception {
+        String vehicleId = createVehicle();
+        String startJson = mockMvc.perform(post("/api/v1/vehicles/{vehicleId}/chat/trips/start", vehicleId)
+                        .header("Authorization", bearer())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"notes\":\"Morning commute\"}"))
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.tripId").exists())
+                .andExpect(jsonPath("$.trip.type").value("TRIP"))
+                .andExpect(jsonPath("$.trip.startMileageKm").value(10000))
+                .andExpect(jsonPath("$.trip.tripStatus").value("IN_PROGRESS"))
+                .andExpect(jsonPath("$.missingRequiredFields", hasSize(3)))
+                .andReturn()
+                .getResponse()
+                .getContentAsString();
+        String tripId = startJson.replaceAll(".*\"tripId\":\"([^\"]+)\".*", "$1");
+        mockMvc.perform(post("/api/v1/vehicles/{vehicleId}/chat/trips/{tripId}/end", vehicleId, tripId)
+                        .header("Authorization", bearer())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{}"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.confirmation", containsString("partial")))
+                .andExpect(jsonPath("$.trip.tripStatus").value("PARTIAL"))
+                .andExpect(jsonPath("$.missingRequiredFields", hasSize(3)));
+        mockMvc.perform(post("/api/v1/vehicles/{vehicleId}/chat/trips/{tripId}/data", vehicleId, tripId)
+                        .header("Authorization", bearer())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"text\":\"We drove 12 km for 20 minutes and used 1.4 liters\"}"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.extractedValues.distanceKm").value(12))
+                .andExpect(jsonPath("$.extractedValues.durationMinutes").value(20))
+                .andExpect(jsonPath("$.extractedValues.fuelLiters").value(1.4))
+                .andExpect(jsonPath("$.trip.tripStatus").value("COMPLETE"))
+                .andExpect(jsonPath("$.missingRequiredFields", hasSize(0)));
+        mockMvc.perform(get("/api/v1/vehicles/{vehicleId}/timeline?type=TRIP", vehicleId)
+                        .header("Authorization", bearer()))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.events", hasSize(1)))
+                .andExpect(jsonPath("$.events[0].id").value(tripId))
+                .andExpect(jsonPath("$.events[0].distanceKm").value(12))
+                .andExpect(jsonPath("$.events[0].durationMinutes").value(20));
+    }
+
+    @Test
+    void autoSavesPartialTripWhenNaturalLanguageIsUnclear() throws Exception {
+        String vehicleId = createVehicle();
+        String startJson = mockMvc.perform(post("/api/v1/vehicles/{vehicleId}/chat/trips/start", vehicleId)
+                        .header("Authorization", bearer())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{}"))
+                .andExpect(status().isCreated())
+                .andReturn()
+                .getResponse()
+                .getContentAsString();
+        String tripId = startJson.replaceAll(".*\"tripId\":\"([^\"]+)\".*", "$1");
+        mockMvc.perform(post("/api/v1/vehicles/{vehicleId}/chat/trips/{tripId}/data", vehicleId, tripId)
+                        .header("Authorization", bearer())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"text\":\"not sure, maybe later\"}"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.confirmation", containsString("partial")))
+                .andExpect(jsonPath("$.trip.tripStatus").value("PARTIAL"))
+                .andExpect(jsonPath("$.extractedValues").isEmpty())
+                .andExpect(jsonPath("$.missingRequiredFields", hasSize(3)));
+        mockMvc.perform(get("/api/v1/vehicles/{vehicleId}/timeline?type=TRIP", vehicleId)
+                        .header("Authorization", bearer()))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.events", hasSize(1)))
+                .andExpect(jsonPath("$.events[0].id").value(tripId));
+    }
+
+    @Test
     void explainsRepairFieldsQuestionWithoutCreatingEvent() throws Exception {
         String vehicleId = createVehicle();
         mockMvc.perform(post("/api/v1/vehicles/{vehicleId}/chat/messages", vehicleId)
