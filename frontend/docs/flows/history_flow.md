@@ -74,6 +74,7 @@ Fields:
 
 - New mileage cannot be lower than previous known vehicle mileage unless backend explicitly supports corrections.
 - Trip end mileage must be >= start mileage.
+- Refueling amount supports decimal values and must be greater than 0 and no more than 100 liters.
 - If backend rejects mileage, show field-level error.
 
 ## Acceptance Criteria

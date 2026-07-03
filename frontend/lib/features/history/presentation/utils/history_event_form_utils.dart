@@ -60,6 +60,20 @@ abstract final class HistoryEventFormUtils {
     return null;
   }
 
+  static String? validateFuelLiters(String? value) {
+    final liters = parseDecimal(value);
+    if (liters == null) return 'Amount must be a number';
+    if (liters <= 0) return 'Amount must be greater than 0 L';
+    if (liters > 100) return 'Amount must be 100 L or less';
+    return null;
+  }
+
+  static double? parseDecimal(String? value) {
+    final normalized = value?.trim().replaceAll(',', '.');
+    if (normalized == null || normalized.isEmpty) return null;
+    return double.tryParse(normalized);
+  }
+
   static String? validateRequired(String? value, {required String label}) {
     if (value == null || value.trim().isEmpty) return '$label is required';
     return null;

@@ -48,6 +48,34 @@ void main() {
     expect(find.text('AMOUNT'), findsOneWidget);
   });
 
+  testWidgets('validates fuel amount range and accepts decimal liters', (
+    tester,
+  ) async {
+    HistoryEvent? savedEvent;
+    await _pumpScreen(tester, onSave: (event) async => savedEvent = event);
+
+    await tester.enterText(
+      find.byKey(const ValueKey('event-title')),
+      'Decimal fuel stop',
+    );
+    await tester.enterText(
+      find.byKey(const ValueKey('fuel-mileage')),
+      '124600',
+    );
+    await tester.enterText(find.byKey(const ValueKey('fuel-liters')), '150');
+    await tester.enterText(find.byKey(const ValueKey('fuel-cost')), '3000');
+    await _tapSave(tester);
+
+    expect(savedEvent, isNull);
+    expect(find.text('Amount must be 100 L or less'), findsOneWidget);
+
+    await tester.enterText(find.byKey(const ValueKey('fuel-liters')), '42.5');
+    await _tapSave(tester);
+
+    final details = savedEvent?.details as FuelDetails;
+    expect(details.liters, 42.5);
+  });
+
   testWidgets('switches between maintenance and trip forms', (tester) async {
     await _pumpScreen(tester, onSave: (_) async {});
 
