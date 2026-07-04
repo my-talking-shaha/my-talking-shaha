@@ -737,7 +737,7 @@ final class _AnalyticsEmptyState extends StatelessWidget {
             ),
             const SizedBox(height: AppSpacing.sm),
             Text(
-              summary.message ?? l10n.analyticsEmptyDescription,
+              l10n.analyticsEmptyDescription,
               textAlign: TextAlign.center,
               style: Theme.of(context).textTheme.bodyMedium,
             ),
