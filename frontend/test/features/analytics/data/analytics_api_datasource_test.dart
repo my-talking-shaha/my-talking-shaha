@@ -2,6 +2,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:frontend/features/analytics/data/datasources/analytics_api_datasource.dart';
 import 'package:frontend/features/analytics/domain/entities/analytics_period.dart';
 import 'package:frontend/features/analytics/domain/entities/analytics_summary.dart';
+import 'package:frontend/features/analytics/domain/entities/mileage_trend.dart';
 
 void main() {
   group('AnalyticsApiSummaryMapper', () {
@@ -118,6 +119,42 @@ void main() {
           ),
         ),
         {'period': 'YEAR', 'startDate': '2026-01-05', 'endDate': '2026-06-30'},
+      );
+    });
+  });
+
+  group('AnalyticsApiMileageTrendMapper', () {
+    test('maps backend mileage trend to domain model', () {
+      final trend = AnalyticsApiMileageTrendMapper.fromJson(const {
+        'year': 2026,
+        'month': 6,
+        'points': [
+          {'label': 'Jun 1', 'mileageKm': 142000},
+          {'label': 'Jun 15', 'mileageKm': 143240},
+        ],
+        'hasData': true,
+      }, fallbackFilter: const MileageTrendFilter(year: 2025));
+
+      expect(trend.year, 2026);
+      expect(trend.month, 6);
+      expect(trend.hasData, isTrue);
+      expect(trend.points, hasLength(2));
+      expect(trend.points.last.label, 'Jun 15');
+      expect(trend.points.last.mileageKm, 143240);
+    });
+
+    test('builds mileage trend query parameters', () {
+      expect(
+        AnalyticsApiMileageTrendMapper.queryParameters(
+          const MileageTrendFilter(year: 2026, month: 6),
+        ),
+        {'year': 2026, 'month': 6},
+      );
+      expect(
+        AnalyticsApiMileageTrendMapper.queryParameters(
+          const MileageTrendFilter(year: 2026),
+        ),
+        {'year': 2026},
       );
     });
   });

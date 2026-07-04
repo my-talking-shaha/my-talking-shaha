@@ -6,6 +6,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:frontend/app/theme/app_theme.dart';
 import 'package:frontend/features/analytics/domain/entities/analytics_period.dart';
 import 'package:frontend/features/analytics/domain/entities/analytics_summary.dart';
+import 'package:frontend/features/analytics/domain/entities/mileage_trend.dart';
 import 'package:frontend/features/analytics/presentation/providers/analytics_providers.dart';
 import 'package:frontend/features/parts/presentation/providers/parts_providers.dart';
 import 'package:frontend/features/parts/presentation/widgets/maintenance_forecast_card.dart';
@@ -24,6 +25,8 @@ final class _AnalyticsScreenState extends ConsumerState<AnalyticsScreen> {
 
   AnalyticsPeriod _selectedPeriod = AnalyticsPeriod.year;
   AnalyticsDateRange? _selectedDateRange;
+  int _selectedMileageYear = DateTime.now().year;
+  int? _selectedMileageMonth;
   Timer? _pollingTimer;
 
   @override
@@ -39,6 +42,15 @@ final class _AnalyticsScreenState extends ConsumerState<AnalyticsScreen> {
           vehicleId: widget.vehicleId,
           period: _selectedPeriod,
           dateRange: _selectedDateRange,
+        )),
+      );
+      ref.invalidate(
+        mileageTrendProvider((
+          vehicleId: widget.vehicleId,
+          filter: MileageTrendFilter(
+            year: _selectedMileageYear,
+            month: _selectedMileageMonth,
+          ),
         )),
       );
     });
@@ -58,6 +70,16 @@ final class _AnalyticsScreenState extends ConsumerState<AnalyticsScreen> {
       dateRange: _selectedDateRange,
     );
     final summaryState = ref.watch(analyticsSummaryProvider(request));
+    final mileageTrendRequest = (
+      vehicleId: widget.vehicleId,
+      filter: MileageTrendFilter(
+        year: _selectedMileageYear,
+        month: _selectedMileageMonth,
+      ),
+    );
+    final mileageTrendState = ref.watch(
+      mileageTrendProvider(mileageTrendRequest),
+    );
 
     return Scaffold(
       body: SafeArea(
@@ -72,6 +94,9 @@ final class _AnalyticsScreenState extends ConsumerState<AnalyticsScreen> {
               vehicleId: widget.vehicleId,
               selectedPeriod: _selectedPeriod,
               selectedDateRange: _selectedDateRange,
+              mileageTrendState: mileageTrendState,
+              selectedMileageYear: _selectedMileageYear,
+              selectedMileageMonth: _selectedMileageMonth,
               onPeriodSelected: (period) {
                 setState(() {
                   _selectedPeriod = period;
@@ -82,12 +107,19 @@ final class _AnalyticsScreenState extends ConsumerState<AnalyticsScreen> {
               onDateRangeCleared: () {
                 setState(() => _selectedDateRange = null);
               },
+              onMileageYearSelected: (year) {
+                setState(() => _selectedMileageYear = year);
+              },
+              onMileageMonthSelected: (month) {
+                setState(() => _selectedMileageMonth = month);
+              },
             );
           },
           loading: () => const _AnalyticsLoadingState(),
           error: (error, stackTrace) => _AnalyticsErrorState(
             onRetry: () {
               ref.invalidate(analyticsSummaryProvider(request));
+              ref.invalidate(mileageTrendProvider(mileageTrendRequest));
             },
           ),
         ),
@@ -131,18 +163,28 @@ final class _AnalyticsDashboard extends StatelessWidget {
     required this.vehicleId,
     required this.selectedPeriod,
     required this.selectedDateRange,
+    required this.mileageTrendState,
+    required this.selectedMileageYear,
+    required this.selectedMileageMonth,
     required this.onPeriodSelected,
     required this.onDateRangeSelected,
     required this.onDateRangeCleared,
+    required this.onMileageYearSelected,
+    required this.onMileageMonthSelected,
   });
 
   final AnalyticsSummary summary;
   final String vehicleId;
   final AnalyticsPeriod selectedPeriod;
   final AnalyticsDateRange? selectedDateRange;
+  final AsyncValue<MileageTrend> mileageTrendState;
+  final int selectedMileageYear;
+  final int? selectedMileageMonth;
   final ValueChanged<AnalyticsPeriod> onPeriodSelected;
   final VoidCallback onDateRangeSelected;
   final VoidCallback onDateRangeCleared;
+  final ValueChanged<int> onMileageYearSelected;
+  final ValueChanged<int?> onMileageMonthSelected;
 
   @override
   Widget build(BuildContext context) {
@@ -199,6 +241,16 @@ final class _AnalyticsDashboard extends StatelessWidget {
           accentColor: AppColors.primaryLight,
           chartType: _ChartType.line,
           trendPercent: summary.trendPercent,
+        ),
+        const SizedBox(height: AppSpacing.xxl),
+        const _SectionHeader(title: 'MILEAGE TREND'),
+        const SizedBox(height: AppSpacing.md),
+        _MileageTrendCard(
+          trendState: mileageTrendState,
+          selectedYear: selectedMileageYear,
+          selectedMonth: selectedMileageMonth,
+          onYearSelected: onMileageYearSelected,
+          onMonthSelected: onMileageMonthSelected,
         ),
         const SizedBox(height: AppSpacing.xxl),
         Consumer(
@@ -562,6 +614,203 @@ final class _ChartCard extends StatelessWidget {
           ),
         ],
       ),
+    );
+  }
+}
+
+final class _MileageTrendCard extends StatelessWidget {
+  const _MileageTrendCard({
+    required this.trendState,
+    required this.selectedYear,
+    required this.selectedMonth,
+    required this.onYearSelected,
+    required this.onMonthSelected,
+  });
+
+  final AsyncValue<MileageTrend> trendState;
+  final int selectedYear;
+  final int? selectedMonth;
+  final ValueChanged<int> onYearSelected;
+  final ValueChanged<int?> onMonthSelected;
+
+  @override
+  Widget build(BuildContext context) {
+    return _DashboardCard(
+      padding: const EdgeInsets.all(AppSpacing.lg),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          LayoutBuilder(
+            builder: (context, constraints) {
+              final compact = constraints.maxWidth < 360;
+              final children = [
+                _MileageFilterDropdown<int>(
+                  key: const ValueKey('analytics-mileage-year-filter'),
+                  value: selectedYear,
+                  items: [
+                    for (final year in _mileageYearOptions())
+                      DropdownMenuItem(value: year, child: Text('$year')),
+                  ],
+                  onChanged: (year) {
+                    if (year != null) {
+                      onYearSelected(year);
+                    }
+                  },
+                ),
+                _MileageFilterDropdown<int>(
+                  key: const ValueKey('analytics-mileage-month-filter'),
+                  value: selectedMonth ?? 0,
+                  items: const [
+                    DropdownMenuItem(value: 0, child: Text('All months')),
+                    DropdownMenuItem(value: 1, child: Text('January')),
+                    DropdownMenuItem(value: 2, child: Text('February')),
+                    DropdownMenuItem(value: 3, child: Text('March')),
+                    DropdownMenuItem(value: 4, child: Text('April')),
+                    DropdownMenuItem(value: 5, child: Text('May')),
+                    DropdownMenuItem(value: 6, child: Text('June')),
+                    DropdownMenuItem(value: 7, child: Text('July')),
+                    DropdownMenuItem(value: 8, child: Text('August')),
+                    DropdownMenuItem(value: 9, child: Text('September')),
+                    DropdownMenuItem(value: 10, child: Text('October')),
+                    DropdownMenuItem(value: 11, child: Text('November')),
+                    DropdownMenuItem(value: 12, child: Text('December')),
+                  ],
+                  onChanged: (month) {
+                    onMonthSelected(month == null || month == 0 ? null : month);
+                  },
+                ),
+              ];
+
+              if (compact) {
+                return Column(
+                  children: [
+                    for (var index = 0; index < children.length; index++) ...[
+                      children[index],
+                      if (index != children.length - 1)
+                        const SizedBox(height: AppSpacing.sm),
+                    ],
+                  ],
+                );
+              }
+
+              return Row(
+                children: [
+                  Expanded(child: children.first),
+                  const SizedBox(width: AppSpacing.sm),
+                  Expanded(child: children.last),
+                ],
+              );
+            },
+          ),
+          const SizedBox(height: AppSpacing.lg),
+          trendState.when(
+            data: (trend) {
+              if (!trend.hasData || trend.points.isEmpty) {
+                return const _UnavailableText(
+                  message: 'Mileage data is not available for this filter',
+                );
+              }
+
+              final chartPoints = [
+                for (final point in trend.points)
+                  AnalyticsChartPoint(
+                    label: point.label,
+                    value: point.mileageKm.toDouble(),
+                  ),
+              ];
+
+              return Column(
+                children: [
+                  SizedBox(
+                    height: 160,
+                    width: double.infinity,
+                    child: CustomPaint(
+                      painter: _AnalyticsChartPainter(
+                        points: chartPoints,
+                        accentColor: AppColors.success,
+                        type: _ChartType.line,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: AppSpacing.md),
+                  Row(
+                    children: [
+                      Container(
+                        width: 12,
+                        height: 12,
+                        decoration: const BoxDecoration(
+                          color: AppColors.success,
+                          shape: BoxShape.circle,
+                        ),
+                      ),
+                      const SizedBox(width: AppSpacing.sm),
+                      Expanded(
+                        child: Text(
+                          selectedMonth == null
+                              ? 'Accumulated mileage by month'
+                              : 'Accumulated mileage by day',
+                          style: Theme.of(context).textTheme.labelMedium,
+                        ),
+                      ),
+                      Text(
+                        '${_formatNumber(trend.points.last.mileageKm)} km',
+                        style: Theme.of(context).textTheme.labelMedium
+                            ?.copyWith(color: AppColors.primaryLight),
+                      ),
+                    ],
+                  ),
+                ],
+              );
+            },
+            loading: () => const SizedBox(
+              height: 160,
+              child: Center(child: CircularProgressIndicator()),
+            ),
+            error: (error, stackTrace) =>
+                const _UnavailableText(message: 'Could not load mileage trend'),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+final class _MileageFilterDropdown<T> extends StatelessWidget {
+  const _MileageFilterDropdown({
+    required this.value,
+    required this.items,
+    required this.onChanged,
+    super.key,
+  });
+
+  final T value;
+  final List<DropdownMenuItem<T>> items;
+  final ValueChanged<T?> onChanged;
+
+  @override
+  Widget build(BuildContext context) {
+    return DropdownButtonFormField<T>(
+      initialValue: value,
+      items: items,
+      onChanged: onChanged,
+      dropdownColor: AppColors.surfaceHigh,
+      decoration: const InputDecoration(
+        isDense: true,
+        contentPadding: EdgeInsets.symmetric(
+          horizontal: AppSpacing.md,
+          vertical: AppSpacing.sm,
+        ),
+        enabledBorder: OutlineInputBorder(
+          borderRadius: AppRadius.input,
+          borderSide: BorderSide(color: AppColors.border),
+        ),
+        focusedBorder: OutlineInputBorder(
+          borderRadius: AppRadius.input,
+          borderSide: BorderSide(color: AppColors.primaryLight),
+        ),
+      ),
+      style: Theme.of(context).textTheme.labelMedium,
+      iconEnabledColor: AppColors.textSecondary,
     );
   }
 }
@@ -1082,6 +1331,11 @@ String _dateLabel(DateTime date) {
   final day = date.day.toString().padLeft(2, '0');
   final month = date.month.toString().padLeft(2, '0');
   return '$day.$month.${date.year}';
+}
+
+List<int> _mileageYearOptions() {
+  final currentYear = DateTime.now().year;
+  return [for (var year = currentYear; year >= currentYear - 4; year--) year];
 }
 
 String _categoryLabel(ExpenseCategory category) {

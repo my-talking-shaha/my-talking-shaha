@@ -32,6 +32,31 @@ void main() {
     expect(find.text('MONTHLY EXPENSES'), findsWidgets);
 
     await tester.dragUntilVisible(
+      find.text('MILEAGE TREND'),
+      find.byType(ListView),
+      const Offset(0, -300),
+    );
+    expect(find.text('MILEAGE TREND'), findsOneWidget);
+    expect(
+      find.byKey(const ValueKey('analytics-mileage-year-filter')),
+      findsOneWidget,
+    );
+    expect(
+      find.byKey(const ValueKey('analytics-mileage-month-filter')),
+      findsOneWidget,
+    );
+    expect(find.text('Accumulated mileage by month'), findsOneWidget);
+
+    await tester.tap(
+      find.byKey(const ValueKey('analytics-mileage-month-filter')),
+    );
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('June').last);
+    await tester.pumpAndSettle();
+
+    expect(find.text('Accumulated mileage by day'), findsOneWidget);
+
+    await tester.dragUntilVisible(
       find.text('HISTORY ANALYSIS'),
       find.byType(ListView),
       const Offset(0, -300),

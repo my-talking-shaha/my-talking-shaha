@@ -1,6 +1,7 @@
 import 'package:frontend/features/analytics/data/datasources/analytics_datasource.dart';
 import 'package:frontend/features/analytics/domain/entities/analytics_period.dart';
 import 'package:frontend/features/analytics/domain/entities/analytics_summary.dart';
+import 'package:frontend/features/analytics/domain/entities/mileage_trend.dart';
 
 final class MockAnalyticsDatasource implements AnalyticsDatasource {
   MockAnalyticsDatasource({this.delay = const Duration(milliseconds: 500)});
@@ -28,6 +29,95 @@ final class MockAnalyticsDatasource implements AnalyticsDatasource {
       AnalyticsPeriod.year => _yearSummary(period),
       AnalyticsPeriod.all => _allTimeSummary(period),
     };
+  }
+
+  @override
+  Future<MileageTrend> getMileageTrend({
+    required String vehicleId,
+    required MileageTrendFilter filter,
+  }) async {
+    await Future<void>.delayed(delay);
+
+    if (vehicleId == 'vehicle_empty') {
+      return MileageTrend(
+        year: filter.year,
+        month: filter.month,
+        points: const [],
+        hasData: false,
+      );
+    }
+
+    final points = filter.month == null
+        ? _yearMileageTrend(filter.year)
+        : _monthMileageTrend(filter.year, filter.month!);
+
+    return MileageTrend(
+      year: filter.year,
+      month: filter.month,
+      points: points,
+      hasData: points.isNotEmpty,
+    );
+  }
+
+  List<MileageTrendPoint> _yearMileageTrend(int year) {
+    const monthlyDeltas = [
+      1640,
+      2320,
+      1740,
+      2860,
+      2180,
+      2510,
+      2060,
+      2780,
+      1950,
+      3220,
+      3060,
+      4320,
+    ];
+    var accumulated = 118000 + ((year - 2024) * 28000);
+
+    return [
+      for (var index = 0; index < monthlyDeltas.length; index++)
+        MileageTrendPoint(
+          label: _monthShortLabel(index + 1),
+          mileageKm: accumulated += monthlyDeltas[index],
+        ),
+    ];
+  }
+
+  List<MileageTrendPoint> _monthMileageTrend(int year, int month) {
+    final monthOffset = (year - 2024) * 28000 + (month - 1) * 2300;
+    var accumulated = 118000 + monthOffset;
+    final daysInMonth = DateTime(year, month + 1, 0).day;
+    final step = (daysInMonth / 6).ceil();
+
+    return [
+      for (var day = 1; day <= daysInMonth; day += step)
+        MileageTrendPoint(
+          label: '$day',
+          mileageKm: accumulated += 260 + ((day % 3) * 45),
+        ),
+      if ((daysInMonth - 1) % step != 0)
+        MileageTrendPoint(label: '$daysInMonth', mileageKm: accumulated + 320),
+    ];
+  }
+
+  String _monthShortLabel(int month) {
+    const labels = [
+      'Jan',
+      'Feb',
+      'Mar',
+      'Apr',
+      'May',
+      'Jun',
+      'Jul',
+      'Aug',
+      'Sep',
+      'Oct',
+      'Nov',
+      'Dec',
+    ];
+    return labels[month - 1];
   }
 
   AnalyticsSummary _customRangeSummary(

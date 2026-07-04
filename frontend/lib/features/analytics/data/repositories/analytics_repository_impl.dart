@@ -1,6 +1,7 @@
 import 'package:frontend/features/analytics/data/datasources/analytics_datasource.dart';
 import 'package:frontend/features/analytics/domain/entities/analytics_period.dart';
 import 'package:frontend/features/analytics/domain/entities/analytics_summary.dart';
+import 'package:frontend/features/analytics/domain/entities/mileage_trend.dart';
 import 'package:frontend/features/analytics/domain/repositories/analytics_repository.dart';
 
 final class AnalyticsRepositoryImpl implements AnalyticsRepository {
@@ -19,5 +20,13 @@ final class AnalyticsRepositoryImpl implements AnalyticsRepository {
       period: period,
       dateRange: dateRange,
     );
+  }
+
+  @override
+  Future<MileageTrend> getMileageTrend({
+    required String vehicleId,
+    required MileageTrendFilter filter,
+  }) {
+    return _datasource.getMileageTrend(vehicleId: vehicleId, filter: filter);
   }
 }

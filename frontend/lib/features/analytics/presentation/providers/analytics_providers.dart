@@ -6,6 +6,7 @@ import 'package:frontend/features/analytics/data/datasources/mock_analytics_data
 import 'package:frontend/features/analytics/data/repositories/analytics_repository_impl.dart';
 import 'package:frontend/features/analytics/domain/entities/analytics_period.dart';
 import 'package:frontend/features/analytics/domain/entities/analytics_summary.dart';
+import 'package:frontend/features/analytics/domain/entities/mileage_trend.dart';
 import 'package:frontend/features/analytics/domain/repositories/analytics_repository.dart';
 
 typedef AnalyticsSummaryRequest = ({
@@ -13,6 +14,8 @@ typedef AnalyticsSummaryRequest = ({
   AnalyticsPeriod period,
   AnalyticsDateRange? dateRange,
 });
+
+typedef MileageTrendRequest = ({String vehicleId, MileageTrendFilter filter});
 
 const useMockAnalyticsDatasource = bool.fromEnvironment('USE_MOCK_ANALYTICS');
 
@@ -46,5 +49,15 @@ final analyticsSummaryProvider = FutureProvider.autoDispose
             vehicleId: request.vehicleId,
             period: request.period,
             dateRange: request.dateRange,
+          );
+    });
+
+final mileageTrendProvider = FutureProvider.autoDispose
+    .family<MileageTrend, MileageTrendRequest>((ref, request) {
+      return ref
+          .watch(analyticsRepositoryProvider)
+          .getMileageTrend(
+            vehicleId: request.vehicleId,
+            filter: request.filter,
           );
     });

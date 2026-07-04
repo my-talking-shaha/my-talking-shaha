@@ -1,6 +1,7 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:frontend/features/analytics/data/datasources/mock_analytics_datasource.dart';
 import 'package:frontend/features/analytics/domain/entities/analytics_period.dart';
+import 'package:frontend/features/analytics/domain/entities/mileage_trend.dart';
 
 void main() {
   test('returns period-specific mocked analytics summaries', () async {
@@ -53,5 +54,31 @@ void main() {
     expect(summary.hasEnoughData, isFalse);
     expect(summary.totalExpenses, isNull);
     expect(summary.message, contains('Not enough data'));
+  });
+
+  test('returns filtered mocked mileage trends', () async {
+    final datasource = MockAnalyticsDatasource(delay: Duration.zero);
+
+    final yearTrend = await datasource.getMileageTrend(
+      vehicleId: 'vehicle_1',
+      filter: const MileageTrendFilter(year: 2026),
+    );
+    final monthTrend = await datasource.getMileageTrend(
+      vehicleId: 'vehicle_1',
+      filter: const MileageTrendFilter(year: 2026, month: 6),
+    );
+
+    expect(yearTrend.hasData, isTrue);
+    expect(yearTrend.month, isNull);
+    expect(yearTrend.points, hasLength(12));
+    expect(yearTrend.points.first.label, 'Jan');
+
+    expect(monthTrend.hasData, isTrue);
+    expect(monthTrend.month, 6);
+    expect(monthTrend.points.first.label, '1');
+    expect(
+      monthTrend.points.last.mileageKm,
+      greaterThan(monthTrend.points.first.mileageKm),
+    );
   });
 }
