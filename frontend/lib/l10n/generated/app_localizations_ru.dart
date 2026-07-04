@@ -662,6 +662,12 @@ class AppLocalizationsRu extends AppLocalizations {
   String get keyCounts => 'КЛЮЧЕВЫЕ СЧЕТЧИКИ';
 
   @override
+  String get eventsMetric => 'События';
+
+  @override
+  String get tripKmMetric => 'Км поездок';
+
+  @override
   String get subscription => 'Подписка';
 
   @override

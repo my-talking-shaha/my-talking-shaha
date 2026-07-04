@@ -278,6 +278,8 @@
   "countsUnavailable": "Counts are not available",
   "companyMetrics": "COMPANY METRICS",
   "keyCounts": "KEY COUNTS",
+  "eventsMetric": "Events",
+  "tripKmMetric": "Trip km",
   "subscription": "Subscription",
   "electronics": "Electronics",
   "notEnoughAnalytics": "Not enough data for analytics",

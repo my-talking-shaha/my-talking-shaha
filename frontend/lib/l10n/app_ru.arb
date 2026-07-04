@@ -278,6 +278,8 @@
   "countsUnavailable": "Счетчики недоступны",
   "companyMetrics": "МЕТРИКИ КОМПАНИИ",
   "keyCounts": "КЛЮЧЕВЫЕ СЧЕТЧИКИ",
+  "eventsMetric": "События",
+  "tripKmMetric": "Км поездок",
   "subscription": "Подписка",
   "electronics": "Электроника",
   "notEnoughAnalytics": "Недостаточно данных для аналитики",

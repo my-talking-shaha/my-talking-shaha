@@ -68,8 +68,7 @@ abstract class AppLocalizations {
   final String localeName;
 
   static AppLocalizations of(BuildContext context) {
-    return Localizations.of<AppLocalizations>(context, AppLocalizations) ??
-        AppLocalizationsEn();
+    return Localizations.of<AppLocalizations>(context, AppLocalizations)!;
   }
 
   static const LocalizationsDelegate<AppLocalizations> delegate =
@@ -1340,6 +1339,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'KEY COUNTS'**
   String get keyCounts;
+
+  /// No description provided for @eventsMetric.
+  ///
+  /// In en, this message translates to:
+  /// **'Events'**
+  String get eventsMetric;
+
+  /// No description provided for @tripKmMetric.
+  ///
+  /// In en, this message translates to:
+  /// **'Trip km'**
+  String get tripKmMetric;
 
   /// No description provided for @subscription.
   ///

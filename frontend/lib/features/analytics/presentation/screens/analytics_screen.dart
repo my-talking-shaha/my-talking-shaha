@@ -547,7 +547,10 @@ final class _CompanyMetrics extends StatelessWidget {
         const SizedBox(height: AppSpacing.sm),
         for (final metric in history.companyMetrics) ...[
           _MetricBullet(
-            label: metric.label,
+            label: _companyMetricLabel(
+              AppLocalizations.of(context),
+              metric.label,
+            ),
             value: '${metric.value}/${metric.maxValue}',
           ),
           if (metric != history.companyMetrics.last)
@@ -556,6 +559,14 @@ final class _CompanyMetrics extends StatelessWidget {
       ],
     );
   }
+}
+
+String _companyMetricLabel(AppLocalizations l10n, String label) {
+  return switch (label) {
+    'Events' => l10n.eventsMetric,
+    'Trip km' => l10n.tripKmMetric,
+    _ => label,
+  };
 }
 
 final class _HistoryCounts extends StatelessWidget {

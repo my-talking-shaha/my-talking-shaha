@@ -663,6 +663,12 @@ class AppLocalizationsEn extends AppLocalizations {
   String get keyCounts => 'KEY COUNTS';
 
   @override
+  String get eventsMetric => 'Events';
+
+  @override
+  String get tripKmMetric => 'Trip km';
+
+  @override
   String get subscription => 'Subscription';
 
   @override
