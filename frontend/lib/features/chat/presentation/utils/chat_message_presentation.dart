@@ -1,4 +1,5 @@
 import 'package:frontend/features/chat/domain/entities/chat_message.dart';
+import 'package:frontend/l10n/generated/app_localizations.dart';
 
 List<ChatMessage> visibleChatMessages(List<ChatMessage> messages) {
   return messages
@@ -6,11 +7,14 @@ List<ChatMessage> visibleChatMessages(List<ChatMessage> messages) {
       .toList(growable: false);
 }
 
-List<String> quickQuestionsFromBackend(List<String> questions) {
+List<String> quickQuestionsFromBackend(
+  AppLocalizations l10n,
+  List<String> questions,
+) {
   final result = <String>[];
 
   for (final question in questions) {
-    final trimmedQuestion = question.trim();
+    final trimmedQuestion = _localizedBackendChatText(l10n, question.trim());
     if (trimmedQuestion.isNotEmpty && !result.contains(trimmedQuestion)) {
       result.add(trimmedQuestion);
     }
@@ -20,6 +24,7 @@ List<String> quickQuestionsFromBackend(List<String> questions) {
 }
 
 List<String> bottomChatSuggestions({
+  required AppLocalizations l10n,
   required List<ChatMessage> messages,
   required List<String> quickQuestions,
   required bool isSending,
@@ -29,7 +34,7 @@ List<String> bottomChatSuggestions({
   }
 
   final latestMessage = messages.last;
-  final fallbackSuggestions = _fallbackSuggestionsFor(latestMessage);
+  final fallbackSuggestions = _fallbackSuggestionsFor(l10n, latestMessage);
   if (fallbackSuggestions.isNotEmpty) {
     return fallbackSuggestions;
   }
@@ -42,7 +47,10 @@ bool _isInitialReadyMessage(ChatMessage message) {
       message.text.trim().toLowerCase() == 'the assistant is ready.';
 }
 
-List<String> _fallbackSuggestionsFor(ChatMessage message) {
+List<String> _fallbackSuggestionsFor(
+  AppLocalizations l10n,
+  ChatMessage message,
+) {
   if (message.role == ChatMessageRole.user || message.action != null) {
     return const [];
   }
@@ -58,11 +66,15 @@ List<String> _fallbackSuggestionsFor(ChatMessage message) {
     return const [];
   }
 
-  return _isRussian(text)
-      ? const ['Показать аналитику', 'Состояние авто', 'Добавить заправку']
-      : const ['Show analytics', 'Vehicle status', 'Add refuel'];
+  return [l10n.openAnalytics, l10n.quickQuestionVehicleStatus, l10n.addRefuel];
 }
 
-bool _isRussian(String text) {
-  return text.runes.any((rune) => rune >= 0x0400 && rune <= 0x04FF);
+String _localizedBackendChatText(AppLocalizations l10n, String text) {
+  return switch (text.trim()) {
+    'Hi! I am your car, and I am ready to chat.' => l10n.chatGreetingReady,
+    'Vehicle status' => l10n.quickQuestionVehicleStatus,
+    'What are my total expenses?' => l10n.quickQuestionTotalExpenses,
+    'What can break soon?' => l10n.quickQuestionBreakSoon,
+    _ => text,
+  };
 }

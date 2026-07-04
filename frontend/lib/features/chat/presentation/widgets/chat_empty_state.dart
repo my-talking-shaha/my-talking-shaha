@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:frontend/app/theme/app_theme.dart';
 import 'package:frontend/features/chat/presentation/widgets/chat_assistant_mark.dart';
+import 'package:frontend/l10n/generated/app_localizations.dart';
 
 final class ChatEmptyState extends StatelessWidget {
   const ChatEmptyState({
@@ -14,11 +15,12 @@ final class ChatEmptyState extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     final questions = quickQuestions.isEmpty
-        ? const [
-            'Vehicle status',
-            'When should I change oil?',
-            'What can break soon?',
+        ? [
+            l10n.quickQuestionVehicleStatus,
+            l10n.quickQuestionOil,
+            l10n.quickQuestionBreakSoon,
           ]
         : quickQuestions;
 
@@ -34,13 +36,13 @@ final class ChatEmptyState extends StatelessWidget {
         const ChatAssistantMark(size: 84, iconSize: 38),
         const SizedBox(height: AppSpacing.xxl),
         Text(
-          'Shaha is online',
+          l10n.shahaOnline,
           textAlign: TextAlign.center,
           style: Theme.of(context).textTheme.headlineMedium,
         ),
         const SizedBox(height: AppSpacing.sm),
         Text(
-          'Ask about vehicle condition, expenses, or maintenance.',
+          l10n.chatEmptyDescription,
           textAlign: TextAlign.center,
           style: Theme.of(context).textTheme.bodyMedium,
         ),

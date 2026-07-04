@@ -5,6 +5,7 @@ import 'package:frontend/app/theme/app_theme.dart';
 import 'package:frontend/features/chat/domain/entities/chat_action.dart';
 import 'package:frontend/features/chat/domain/entities/chat_message.dart';
 import 'package:frontend/features/chat/presentation/widgets/chat_assistant_mark.dart';
+import 'package:frontend/l10n/generated/app_localizations.dart';
 import 'package:go_router/go_router.dart';
 
 final class ChatMessageList extends StatelessWidget {
@@ -210,7 +211,7 @@ final class _ChatActionPill extends StatelessWidget {
                 ),
                 const SizedBox(width: AppSpacing.sm),
                 Text(
-                  _label(),
+                  _label(context),
                   style: Theme.of(context).textTheme.labelLarge?.copyWith(
                     color: AppColors.primaryLight,
                     fontWeight: FontWeight.w700,
@@ -267,24 +268,25 @@ final class _ChatActionPill extends StatelessWidget {
 
   bool get _opensShellScreen => action.type.toUpperCase() == 'OPEN_SCREEN';
 
-  String _label() {
+  String _label(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     final type = action.type.toUpperCase();
     if (type == 'OPEN_SCREEN') {
       return switch (action.screen?.toUpperCase()) {
-        'ANALYTICS' => 'Open analytics',
-        'HISTORY' || 'TIMELINE' => 'Open history',
-        'MAINTENANCE_FORECAST' => 'Open forecast',
-        'DASHBOARD' => 'Open dashboard',
-        _ => 'Open',
+        'ANALYTICS' => l10n.openAnalytics,
+        'HISTORY' || 'TIMELINE' => l10n.maintenanceHistory,
+        'MAINTENANCE_FORECAST' => l10n.openForecast,
+        'DASHBOARD' => l10n.openDashboard,
+        _ => l10n.open,
       };
     }
 
     return switch (action.form?.toUpperCase()) {
-      'REFUEL' => 'Add refuel',
-      'TRIP' => 'Add trip',
-      'PART_REPLACEMENT' => 'Add part record',
-      'MAINTENANCE' => 'Add maintenance',
-      _ => 'Open form',
+      'REFUEL' => l10n.addRefuel,
+      'TRIP' => l10n.addTrip,
+      'PART_REPLACEMENT' => l10n.addPartRecord,
+      'MAINTENANCE' => l10n.addMaintenance,
+      _ => l10n.openForm,
     };
   }
 

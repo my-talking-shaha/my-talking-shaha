@@ -5,6 +5,7 @@ import 'package:frontend/features/chat/presentation/widgets/chat_empty_state.dar
 import 'package:frontend/features/chat/presentation/widgets/chat_input_bar.dart';
 import 'package:frontend/features/chat/presentation/widgets/chat_message_list.dart';
 import 'package:frontend/features/chat/presentation/widgets/chat_suggestion_strip.dart';
+import 'package:frontend/l10n/generated/app_localizations.dart';
 
 final class ChatLoadedBody extends StatelessWidget {
   const ChatLoadedBody({
@@ -24,9 +25,14 @@ final class ChatLoadedBody extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     final messages = visibleChatMessages(state.messages);
-    final quickQuestions = quickQuestionsFromBackend(state.quickQuestions);
+    final quickQuestions = quickQuestionsFromBackend(
+      l10n,
+      state.quickQuestions,
+    );
     final bottomSuggestions = bottomChatSuggestions(
+      l10n: l10n,
       messages: messages,
       quickQuestions: quickQuestions,
       isSending: state.isSending,
