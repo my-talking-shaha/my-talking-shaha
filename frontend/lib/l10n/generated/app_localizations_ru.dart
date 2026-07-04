@@ -567,13 +567,13 @@ class AppLocalizationsRu extends AppLocalizations {
   String get quickQuestionVehicleStatus => 'Состояние авто';
 
   @override
-  String get quickQuestionTotalExpenses => 'Какие у меня общие расходы?';
+  String get quickQuestionTotalExpenses => 'Какие расходы за всё время?';
 
   @override
   String get quickQuestionOil => 'Когда менять масло?';
 
   @override
-  String get quickQuestionBreakSoon => 'Что скоро может сломаться?';
+  String get quickQuestionBreakSoon => 'Что может сломаться скоро?';
 
   @override
   String get message => 'Сообщение';

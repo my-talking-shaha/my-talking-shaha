@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:frontend/app/theme/app_theme.dart';
 import 'package:frontend/features/chat/domain/entities/chat_action.dart';
 import 'package:frontend/features/chat/domain/entities/chat_message.dart';
+import 'package:frontend/features/chat/presentation/utils/chat_message_presentation.dart';
 import 'package:frontend/features/chat/presentation/widgets/chat_assistant_mark.dart';
 import 'package:frontend/l10n/generated/app_localizations.dart';
 import 'package:go_router/go_router.dart';
@@ -53,6 +54,9 @@ final class _ChatBubble extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final isUser = message.role == ChatMessageRole.user;
+    final text = isUser
+        ? message.text
+        : localizedBackendChatText(AppLocalizations.of(context), message.text);
 
     return LayoutBuilder(
       builder: (context, constraints) {
@@ -94,7 +98,7 @@ final class _ChatBubble extends StatelessWidget {
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       Text(
-                        message.text,
+                        text,
                         style: Theme.of(context).textTheme.bodyLarge?.copyWith(
                           color: AppColors.textPrimary,
                           height: 1.35,
@@ -341,6 +345,8 @@ final class _TypingBubbleState extends State<_TypingBubble>
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+
     return Padding(
       padding: const EdgeInsets.only(bottom: AppSpacing.md),
       child: Row(
@@ -360,7 +366,7 @@ final class _TypingBubbleState extends State<_TypingBubble>
                 vertical: AppSpacing.md,
               ),
               child: Semantics(
-                label: 'Assistant is thinking',
+                label: l10n.assistantThinking,
                 child: AnimatedBuilder(
                   animation: _controller,
                   builder: (context, _) {
@@ -388,6 +394,7 @@ final class _ThinkingWaveText extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     final waveStart = -1.4 + progress * 2.8;
 
     return ShaderMask(
@@ -407,7 +414,7 @@ final class _ThinkingWaveText extends StatelessWidget {
         ).createShader(bounds);
       },
       child: Text(
-        'Shaha is thinking',
+        l10n.shahaThinking,
         style: Theme.of(context).textTheme.titleMedium?.copyWith(
           color: AppColors.textSecondary,
           fontWeight: FontWeight.w500,

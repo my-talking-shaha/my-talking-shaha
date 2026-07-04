@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:frontend/app/theme/app_theme.dart';
+import 'package:frontend/l10n/generated/app_localizations.dart';
 
 final class ChatInputBar extends StatefulWidget {
   const ChatInputBar({
@@ -43,6 +44,7 @@ final class _ChatInputBarState extends State<ChatInputBar> {
   Widget build(BuildContext context) {
     final canSend =
         widget.controller.text.trim().isNotEmpty && !widget.isSending;
+    final l10n = AppLocalizations.of(context);
 
     return DecoratedBox(
       decoration: BoxDecoration(
@@ -79,13 +81,13 @@ final class _ChatInputBarState extends State<ChatInputBar> {
                   maxLines: 4,
                   textInputAction: TextInputAction.send,
                   onSubmitted: canSend ? widget.onSend : null,
-                  decoration: const InputDecoration(
-                    hintText: 'Message',
+                  decoration: InputDecoration(
+                    hintText: l10n.message,
                     filled: false,
                     border: InputBorder.none,
                     enabledBorder: InputBorder.none,
                     focusedBorder: InputBorder.none,
-                    contentPadding: EdgeInsets.symmetric(
+                    contentPadding: const EdgeInsets.symmetric(
                       horizontal: AppSpacing.lg,
                       vertical: AppSpacing.md,
                     ),
@@ -101,7 +103,7 @@ final class _ChatInputBarState extends State<ChatInputBar> {
                     ? () => widget.onSend(widget.controller.text)
                     : null,
                 icon: const Icon(Icons.arrow_upward),
-                tooltip: 'Send message',
+                tooltip: l10n.sendMessage,
               ),
             ),
           ],

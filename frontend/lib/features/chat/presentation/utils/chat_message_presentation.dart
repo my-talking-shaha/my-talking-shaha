@@ -14,7 +14,7 @@ List<String> quickQuestionsFromBackend(
   final result = <String>[];
 
   for (final question in questions) {
-    final trimmedQuestion = _localizedBackendChatText(l10n, question.trim());
+    final trimmedQuestion = localizedBackendChatText(l10n, question.trim());
     if (trimmedQuestion.isNotEmpty && !result.contains(trimmedQuestion)) {
       result.add(trimmedQuestion);
     }
@@ -69,12 +69,24 @@ List<String> _fallbackSuggestionsFor(
   return [l10n.openAnalytics, l10n.quickQuestionVehicleStatus, l10n.addRefuel];
 }
 
-String _localizedBackendChatText(AppLocalizations l10n, String text) {
-  return switch (text.trim()) {
-    'Hi! I am your car, and I am ready to chat.' => l10n.chatGreetingReady,
-    'Vehicle status' => l10n.quickQuestionVehicleStatus,
-    'What are my total expenses?' => l10n.quickQuestionTotalExpenses,
-    'What can break soon?' => l10n.quickQuestionBreakSoon,
-    _ => text,
+String localizedBackendChatText(AppLocalizations l10n, String text) {
+  final trimmedText = text.trim();
+
+  return switch (_normalizedChatText(trimmedText)) {
+    'hi i am your car and i am ready to chat' => l10n.chatGreetingReady,
+    'vehicle status' || 'состояние авто' => l10n.quickQuestionVehicleStatus,
+    'what are my total expenses' ||
+    'какие расходы за всё время' => l10n.quickQuestionTotalExpenses,
+    'what can break soon' ||
+    'что может сломаться скоро' => l10n.quickQuestionBreakSoon,
+    _ => trimmedText,
   };
+}
+
+String _normalizedChatText(String text) {
+  return text
+      .trim()
+      .toLowerCase()
+      .replaceAll(RegExp(r'[?!.,:;]+'), '')
+      .replaceAll(RegExp(r'\s+'), ' ');
 }
