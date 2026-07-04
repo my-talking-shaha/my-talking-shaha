@@ -9,8 +9,22 @@ import 'package:frontend/features/auth/domain/repositories/auth_repository.dart'
 import 'package:frontend/features/auth/presentation/providers/auth_providers.dart';
 import 'package:frontend/features/notifications/data/datasources/mock_notifications_datasource.dart';
 import 'package:frontend/features/notifications/presentation/providers/notifications_providers.dart';
+import 'package:shared_preferences_platform_interface/in_memory_shared_preferences_async.dart';
+import 'package:shared_preferences_platform_interface/shared_preferences_async_platform_interface.dart';
 
 void main() {
+  late SharedPreferencesAsyncPlatform? originalPlatform;
+
+  setUp(() {
+    originalPlatform = SharedPreferencesAsyncPlatform.instance;
+    SharedPreferencesAsyncPlatform.instance =
+        InMemorySharedPreferencesAsync.empty();
+  });
+
+  tearDown(() {
+    SharedPreferencesAsyncPlatform.instance = originalPlatform;
+  });
+
   testWidgets('profile renders MVP user controls', (tester) async {
     await _pumpApp(tester);
 
@@ -23,27 +37,49 @@ void main() {
     expect(find.text('GENERAL'), findsOneWidget);
     expect(find.text('App language'), findsOneWidget);
     expect(find.text('English'), findsOneWidget);
-    expect(find.text('ENG'), findsOneWidget);
+    expect(find.text('EN'), findsOneWidget);
     expect(find.text('Notifications'), findsWidgets);
     expect(find.byType(Switch), findsOneWidget);
     expect(find.text('VEHICLE'), findsOneWidget);
     expect(find.text('All notifications'), findsOneWidget);
-    await tester.tap(find.text('ENG'));
+    await tester.tap(find.text('EN'));
     await tester.pumpAndSettle();
 
-    expect(find.text('RU'), findsOneWidget);
+    expect(find.text('Russian (RU)'), findsOneWidget);
 
-    await tester.tap(find.text('RU'));
+    await tester.tap(find.text('Russian (RU)'));
     await tester.pumpAndSettle();
-    expect(find.text('Russian'), findsOneWidget);
+    expect(find.text('Русский'), findsOneWidget);
+    expect(find.text('Профиль'), findsOneWidget);
 
     await tester.dragUntilVisible(
-      find.text('Log out'),
+      find.text('Выйти'),
       find.byType(ListView),
       const Offset(0, -240),
     );
 
-    expect(find.text('Log out'), findsOneWidget);
+    expect(find.text('Выйти'), findsOneWidget);
+  });
+
+  testWidgets('profile restores selected language on next launch', (
+    tester,
+  ) async {
+    await _pumpApp(tester);
+
+    await tester.tap(find.text('EN'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Russian (RU)'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Профиль'), findsOneWidget);
+
+    await tester.pumpWidget(const SizedBox.shrink());
+    await tester.pump();
+    await _pumpApp(tester);
+
+    expect(find.text('Профиль'), findsOneWidget);
+    expect(find.text('Язык приложения'), findsOneWidget);
+    expect(find.text('RU'), findsOneWidget);
   });
 
   testWidgets('profile opens notifications and details with back navigation', (

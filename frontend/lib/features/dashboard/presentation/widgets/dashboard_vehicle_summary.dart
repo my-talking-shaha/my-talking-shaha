@@ -5,6 +5,7 @@ import 'package:frontend/app/theme/app_theme.dart';
 import 'package:frontend/features/dashboard/presentation/utils/dashboard_utils.dart';
 import 'package:frontend/features/dashboard/presentation/widgets/dashboard_section_header.dart';
 import 'package:frontend/features/garage/domain/entities/vehicle.dart';
+import 'package:frontend/l10n/generated/app_localizations.dart';
 
 final class DashboardVehicleSummary extends StatelessWidget {
   const DashboardVehicleSummary({required this.vehicle, super.key});
@@ -13,6 +14,8 @@ final class DashboardVehicleSummary extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+
     return Column(
       children: [
         _VehicleHero(vehicle: vehicle),
@@ -21,18 +24,18 @@ final class DashboardVehicleSummary extends StatelessWidget {
           children: [
             Expanded(
               child: _MetricCard(
-                label: 'MILEAGE',
+                label: l10n.mileage,
                 value: DashboardUtils.formatNumber(vehicle.currentMileageKm),
                 suffix: 'km',
-                subtitle: 'Current odometer',
+                subtitle: l10n.currentOdometer,
               ),
             ),
             const SizedBox(width: AppSpacing.lg),
             Expanded(
               child: _MetricCard(
-                label: 'ENGINE',
+                label: l10n.engine,
                 value: _engineSpecificationLabel(vehicle),
-                subtitle: DashboardUtils.engineLabel(vehicle.engineType),
+                subtitle: _engineTypeLabel(l10n, vehicle.engineType),
               ),
             ),
           ],
@@ -206,6 +209,7 @@ final class _VinCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     final value = vin?.trim();
     final hasVin = value != null && value.isNotEmpty;
 
@@ -222,10 +226,13 @@ final class _VinCard extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text('VIN NUMBER', style: dashboardSectionLabelStyle(context)),
+                Text(
+                  l10n.vinNumber,
+                  style: dashboardSectionLabelStyle(context),
+                ),
                 const SizedBox(height: AppSpacing.xs),
                 Text(
-                  hasVin ? value : 'VIN unavailable',
+                  hasVin ? value : l10n.vinUnavailable,
                   style: Theme.of(
                     context,
                   ).textTheme.bodyLarge?.copyWith(color: AppColors.textMuted),
@@ -234,7 +241,7 @@ final class _VinCard extends StatelessWidget {
             ),
           ),
           IconButton(
-            tooltip: hasVin ? 'Copy VIN' : 'VIN unavailable',
+            tooltip: hasVin ? l10n.copyVin : l10n.vinUnavailable,
             style: IconButton.styleFrom(
               foregroundColor: AppColors.primaryLight,
               disabledForegroundColor: AppColors.textDisabled,
@@ -253,8 +260,20 @@ final class _VinCard extends StatelessWidget {
 
     ScaffoldMessenger.of(context)
       ..hideCurrentSnackBar()
-      ..showSnackBar(const SnackBar(content: Text('VIN copied')));
+      ..showSnackBar(
+        SnackBar(content: Text(AppLocalizations.of(context).vinCopied)),
+      );
   }
+}
+
+String _engineTypeLabel(AppLocalizations l10n, String value) {
+  return switch (value.toLowerCase()) {
+    'gasoline' => l10n.gasoline,
+    'diesel' => l10n.diesel,
+    'hybrid' => l10n.hybrid,
+    'electric' => l10n.electric,
+    _ => value,
+  };
 }
 
 String _engineSpecificationLabel(Vehicle vehicle) {

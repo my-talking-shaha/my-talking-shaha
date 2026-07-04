@@ -6,6 +6,7 @@ import 'package:frontend/features/history/domain/entities/event_details.dart';
 import 'package:frontend/features/history/domain/entities/history_event.dart';
 import 'package:frontend/features/history/domain/entities/history_event_type.dart';
 import 'package:frontend/features/history/presentation/widgets/event_card.dart';
+import 'package:frontend/l10n/generated/app_localizations.dart';
 
 void main() {
   testWidgets('fuel card shows details, formatted cost, date, and fuel icon', (
@@ -140,6 +141,9 @@ void main() {
 Future<void> _pumpCard(WidgetTester tester, HistoryEvent event) async {
   await tester.pumpWidget(
     MaterialApp(
+      locale: const Locale('en'),
+      localizationsDelegates: AppLocalizations.localizationsDelegates,
+      supportedLocales: AppLocalizations.supportedLocales,
       theme: AppTheme.dark,
       home: Scaffold(
         body: SingleChildScrollView(

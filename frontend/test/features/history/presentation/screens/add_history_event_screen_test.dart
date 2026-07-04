@@ -4,6 +4,7 @@ import 'package:frontend/app/theme/app_theme.dart';
 import 'package:frontend/features/history/domain/entities/event_details.dart';
 import 'package:frontend/features/history/domain/entities/history_event.dart';
 import 'package:frontend/features/history/presentation/screens/add_history_event_screen.dart';
+import 'package:frontend/l10n/generated/app_localizations.dart';
 import 'package:image_picker/image_picker.dart';
 
 void main() {
@@ -143,6 +144,9 @@ Future<void> _pumpScreen(
 }) async {
   await tester.pumpWidget(
     MaterialApp(
+      locale: const Locale('en'),
+      localizationsDelegates: AppLocalizations.localizationsDelegates,
+      supportedLocales: AppLocalizations.supportedLocales,
       theme: AppTheme.dark,
       home: AddHistoryEventScreen(
         vehicleId: 'vehicle_1',

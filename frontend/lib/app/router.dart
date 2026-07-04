@@ -19,6 +19,7 @@ import 'package:frontend/features/history/presentation/screens/history_screen.da
 import 'package:frontend/features/notifications/presentation/screens/notification_details_screen.dart';
 import 'package:frontend/features/notifications/presentation/screens/notifications_screen.dart';
 import 'package:frontend/features/settings/presentation/screens/settings_screen.dart';
+import 'package:frontend/l10n/generated/app_localizations.dart';
 import 'package:go_router/go_router.dart';
 
 final routerProvider = Provider<GoRouter>((ref) {
@@ -116,7 +117,7 @@ final routerProvider = Provider<GoRouter>((ref) {
                       onPressed: () {
                         ref.invalidate(vehicleMileageProvider(vehicleId));
                       },
-                      child: const Text('Retry'),
+                      child: Text(AppLocalizations.of(context).retry),
                     ),
                   ),
                 ),
