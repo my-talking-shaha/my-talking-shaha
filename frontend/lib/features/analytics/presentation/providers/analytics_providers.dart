@@ -10,6 +10,8 @@ import 'package:frontend/features/analytics/domain/repositories/analytics_reposi
 
 typedef AnalyticsSummaryRequest = ({String vehicleId, AnalyticsPeriod period});
 
+const useMockAnalyticsDatasource = bool.fromEnvironment('USE_MOCK_ANALYTICS');
+
 final mockAnalyticsDatasourceProvider = Provider<MockAnalyticsDatasource>((
   ref,
 ) {
@@ -21,6 +23,10 @@ final analyticsApiDatasourceProvider = Provider<AnalyticsApiDatasource>((ref) {
 });
 
 final analyticsDatasourceProvider = Provider<AnalyticsDatasource>((ref) {
+  if (useMockAnalyticsDatasource) {
+    return ref.watch(mockAnalyticsDatasourceProvider);
+  }
+
   return ref.watch(analyticsApiDatasourceProvider);
 });
 
