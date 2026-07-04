@@ -5,9 +5,9 @@ services:
     image: postgres:16-alpine
     container_name: talking-shaha-db
     environment:
-      POSTGRES_DB: talking_shaha
-      POSTGRES_USER: shaha_user
-      POSTGRES_PASSWORD: shaha_password
+      POSTGRES_DB: ${DB_NAME:-talking_shaha}
+      POSTGRES_USER: ${DB_USERNAME:?DB_USERNAME is required}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:?DB_PASSWORD is required}
     ports:
       - "127.0.0.1:5432:5432"
     volumes:
@@ -16,7 +16,7 @@ services:
       - talking-shaha-network
     restart: unless-stopped
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U shaha_user -d talking_shaha"]
+      test: ["CMD-SHELL", "pg_isready -U \"$$POSTGRES_USER\" -d \"$$POSTGRES_DB\""]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -29,15 +29,16 @@ services:
     ports:
       - "127.0.0.1:8080:8080"
     environment:
-      - JAVA_OPTS=-Xmx512m -Xms256m
-      - SPRING_PROFILES_ACTIVE=docker
-      - SPRING_DATASOURCE_URL=jdbc:postgresql://postgres:5432/talking_shaha
-      - SPRING_DATASOURCE_USERNAME=shaha_user
-      - SPRING_DATASOURCE_PASSWORD=shaha_password
-      - SPRING_JPA_HIBERNATE_DDL_AUTO=validate
-      - TIMEWEB_AI_BASE_URL=${TIMEWEB_AI_BASE_URL:-}
-      - TIMEWEB_AI_TOKEN=${TIMEWEB_AI_TOKEN:-}
-      - TIMEWEB_AI_MODEL=${TIMEWEB_AI_MODEL:-timeweb-agent}
+      JAVA_OPTS: -Xmx512m -Xms256m
+      SPRING_PROFILES_ACTIVE: ${SPRING_PROFILES_ACTIVE:-docker}
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/${DB_NAME:-talking_shaha}
+      SPRING_DATASOURCE_USERNAME: ${DB_USERNAME:?DB_USERNAME is required}
+      SPRING_DATASOURCE_PASSWORD: ${DB_PASSWORD:?DB_PASSWORD is required}
+      SPRING_JPA_HIBERNATE_DDL_AUTO: validate
+      JWT_SECRET: ${JWT_SECRET:?JWT_SECRET is required}
+      TIMEWEB_AI_BASE_URL: ${TIMEWEB_AI_BASE_URL:-}
+      TIMEWEB_AI_TOKEN: ${TIMEWEB_AI_TOKEN:-}
+      TIMEWEB_AI_MODEL: ${TIMEWEB_AI_MODEL:-timeweb-agent}
     depends_on:
       postgres:
         condition: service_healthy

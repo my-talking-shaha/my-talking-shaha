@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:frontend/app/theme/app_theme.dart';
 import 'package:frontend/features/parts/domain/entities/vehicle_part.dart';
 import 'package:frontend/features/parts/presentation/widgets/parts_design_tokens.dart';
+import 'package:frontend/l10n/generated/app_localizations.dart';
 
 final class PartResourceRow extends StatelessWidget {
   const PartResourceRow({required this.part, super.key});
@@ -39,7 +40,7 @@ final class PartResourceRow extends StatelessWidget {
               ),
               const SizedBox(width: AppSpacing.md),
               Text(
-                _resourceText(part),
+                _resourceText(AppLocalizations.of(context), part),
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
                 textAlign: TextAlign.end,
@@ -81,12 +82,12 @@ final class PartResourceRow extends StatelessWidget {
   }
 }
 
-String _resourceText(VehiclePart part) {
+String _resourceText(AppLocalizations l10n, VehiclePart part) {
   final remainingKm = part.remainingKm;
   final remainingPercent = part.remainingPercent;
 
   if (remainingKm == null || remainingPercent == null) {
-    return 'Lifetime not set';
+    return l10n.lifetimeNotSet;
   }
 
   final displayPercent = remainingPercent.clamp(0, 100);

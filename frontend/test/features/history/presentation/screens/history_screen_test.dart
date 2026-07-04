@@ -5,6 +5,7 @@ import 'package:frontend/app/theme/app_theme.dart';
 import 'package:frontend/features/history/data/datasources/mock_history_datasource.dart';
 import 'package:frontend/features/history/presentation/providers/history_providers.dart';
 import 'package:frontend/features/history/presentation/screens/history_screen.dart';
+import 'package:frontend/l10n/generated/app_localizations.dart';
 
 void main() {
   testWidgets('filters mock history by event type and search query', (
@@ -18,6 +19,9 @@ void main() {
           ),
         ],
         child: MaterialApp(
+          locale: const Locale('en'),
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
           theme: AppTheme.dark,
           home: const HistoryScreen(vehicleId: 'vehicle_1'),
         ),

@@ -9,6 +9,7 @@ import 'package:frontend/features/garage/presentation/providers/garage_providers
 import 'package:frontend/features/garage/presentation/screens/add_vehicle_screen.dart';
 import 'package:frontend/features/garage/presentation/screens/garage_screen.dart';
 import 'package:frontend/features/garage/presentation/widgets/vehicle_garage_card.dart';
+import 'package:frontend/l10n/generated/app_localizations.dart';
 import 'package:go_router/go_router.dart';
 
 void main() {
@@ -70,49 +71,48 @@ void main() {
     },
   );
 
-  testWidgets(
-    'vehicle cards show garage data and navigate with vehicleId route parameter',
-    (tester) async {
-      final repository = _FakeGarageRepository(
-        vehicles: [
-          _vehicle(
-            id: 'vehicle_123',
-            brand: 'Lada',
-            model: '2106',
-            year: 1998,
-            color: 'blue',
-            currentMileageKm: 124580,
-            engineType: 'gasoline',
-          ),
-        ],
-      );
+  testWidgets('vehicle cards show garage data and open vehicle chat', (
+    tester,
+  ) async {
+    final repository = _FakeGarageRepository(
+      vehicles: [
+        _vehicle(
+          id: 'vehicle_123',
+          brand: 'Lada',
+          model: '2106',
+          year: 1998,
+          color: 'blue',
+          currentMileageKm: 124580,
+          engineType: 'gasoline',
+        ),
+      ],
+    );
 
-      await _pumpGarage(tester, repository);
+    await _pumpGarage(tester, repository);
 
-      expect(find.textContaining('Lada'), findsOneWidget);
-      expect(find.textContaining('2106'), findsOneWidget);
-      expect(find.textContaining('1998'), findsOneWidget);
-      expect(find.textContaining('blue'), findsOneWidget);
-      expect(find.textContaining('gasoline'), findsOneWidget);
-      expect(find.textContaining('124'), findsOneWidget);
-      final fallbackFinder = find.byKey(
-        const ValueKey('garage_vehicle_photo_fallback_vehicle_123'),
-      );
-      expect(fallbackFinder, findsOneWidget);
-      final fallback = tester.widget<Container>(fallbackFinder);
-      expect((fallback.decoration as BoxDecoration).gradient, isNotNull);
-      expect(
-        find.descendant(of: fallbackFinder, matching: find.text('Lada 2106')),
-        findsNothing,
-      );
-      expect(find.text('Lada 2106'), findsOneWidget);
+    expect(find.textContaining('Lada'), findsOneWidget);
+    expect(find.textContaining('2106'), findsOneWidget);
+    expect(find.textContaining('1998'), findsOneWidget);
+    expect(find.textContaining('blue'), findsOneWidget);
+    expect(find.textContaining('gasoline'), findsOneWidget);
+    expect(find.textContaining('124'), findsOneWidget);
+    final fallbackFinder = find.byKey(
+      const ValueKey('garage_vehicle_photo_fallback_vehicle_123'),
+    );
+    expect(fallbackFinder, findsOneWidget);
+    final fallback = tester.widget<Container>(fallbackFinder);
+    expect((fallback.decoration as BoxDecoration).gradient, isNotNull);
+    expect(
+      find.descendant(of: fallbackFinder, matching: find.text('Lada 2106')),
+      findsNothing,
+    );
+    expect(find.text('Lada 2106'), findsOneWidget);
 
-      await tester.tap(find.textContaining('Lada'));
-      await tester.pumpAndSettle();
+    await tester.tap(find.textContaining('Lada'));
+    await tester.pumpAndSettle();
 
-      expect(find.text('dashboard:vehicle_123'), findsOneWidget);
-    },
-  );
+    expect(find.text('chat:vehicle_123'), findsOneWidget);
+  });
 
   testWidgets('swipe reveals edit and delete actions', (tester) async {
     final repository = _FakeGarageRepository(
@@ -258,10 +258,10 @@ Future<void> _pumpGarage(
         },
       ),
       GoRoute(
-        path: '/vehicle/:vehicleId/dashboard',
+        path: '/vehicle/:vehicleId/chat',
         builder: (context, state) {
           final vehicleId = state.pathParameters['vehicleId'];
-          return Scaffold(body: Text('dashboard:$vehicleId'));
+          return Scaffold(body: Text('chat:$vehicleId'));
         },
       ),
     ],
@@ -270,7 +270,12 @@ Future<void> _pumpGarage(
   await tester.pumpWidget(
     ProviderScope(
       overrides: [garageRepositoryProvider.overrideWithValue(repository)],
-      child: MaterialApp.router(routerConfig: router),
+      child: MaterialApp.router(
+        locale: const Locale('en'),
+        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        supportedLocales: AppLocalizations.supportedLocales,
+        routerConfig: router,
+      ),
     ),
   );
   await tester.pumpAndSettle();

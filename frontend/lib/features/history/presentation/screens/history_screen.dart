@@ -6,6 +6,7 @@ import 'package:frontend/features/history/domain/entities/history_event.dart';
 import 'package:frontend/features/history/domain/entities/history_event_type.dart';
 import 'package:frontend/features/history/presentation/providers/history_providers.dart';
 import 'package:frontend/features/history/presentation/widgets/event_card.dart';
+import 'package:frontend/l10n/generated/app_localizations.dart';
 import 'package:go_router/go_router.dart';
 
 final class HistoryScreen extends ConsumerStatefulWidget {
@@ -28,6 +29,7 @@ final class _HistoryScreenState extends ConsumerState<HistoryScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     final eventsState = ref.watch(historyEventsProvider(widget.vehicleId));
 
     return Scaffold(
@@ -40,7 +42,7 @@ final class _HistoryScreenState extends ConsumerState<HistoryScreen> {
                 icon: const Icon(Icons.chevron_left_rounded, size: 32),
               )
             : null,
-        title: const Text('Maintenance History'),
+        title: Text(l10n.maintenanceHistory),
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: () async {
@@ -51,7 +53,7 @@ final class _HistoryScreenState extends ConsumerState<HistoryScreen> {
             ref.invalidate(historyEventsProvider(widget.vehicleId));
           }
         },
-        tooltip: 'Add event',
+        tooltip: l10n.addEvent,
         backgroundColor: AppColors.primaryLight,
         foregroundColor: const Color(0xFF002388),
         elevation: 8,
@@ -131,12 +133,14 @@ final class _SearchField extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+
     return TextField(
       onChanged: onChanged,
       textInputAction: TextInputAction.search,
-      decoration: const InputDecoration(
-        hintText: 'Search history…',
-        prefixIcon: Icon(Icons.search),
+      decoration: InputDecoration(
+        hintText: l10n.searchHistory,
+        prefixIcon: const Icon(Icons.search),
       ),
     );
   }
@@ -150,11 +154,12 @@ final class _TypeFilters extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    const filters = <(String, HistoryEventType?)>[
-      ('ALL', null),
-      ('FUEL', HistoryEventType.fuel),
-      ('REPAIRS', HistoryEventType.maintenance),
-      ('TRIPS', HistoryEventType.trip),
+    final l10n = AppLocalizations.of(context);
+    final filters = <(String, HistoryEventType?)>[
+      (l10n.all, null),
+      (l10n.fuel, HistoryEventType.fuel),
+      (l10n.repairs, HistoryEventType.maintenance),
+      (l10n.trips, HistoryEventType.trip),
     ];
 
     return SizedBox(
@@ -238,7 +243,7 @@ final class _HistoryEventsList extends StatelessWidget {
                   bottom: AppSpacing.md,
                 ),
                 child: Text(
-                  _monthTitle(group.month),
+                  _monthTitle(context, group.month),
                   style: Theme.of(context).textTheme.labelMedium?.copyWith(
                     color: AppColors.textSecondary,
                     letterSpacing: 1.1,
@@ -265,6 +270,8 @@ final class _HistoryEmptyState extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+
     return Center(
       child: Padding(
         padding: const EdgeInsets.all(AppSpacing.xl),
@@ -274,14 +281,12 @@ final class _HistoryEmptyState extends StatelessWidget {
             const Icon(Icons.history, color: AppColors.primaryLight, size: 48),
             const SizedBox(height: AppSpacing.lg),
             Text(
-              hasFilters ? 'No events found' : 'History is empty',
+              hasFilters ? l10n.noEventsFound : l10n.historyEmpty,
               style: Theme.of(context).textTheme.titleLarge,
             ),
             const SizedBox(height: AppSpacing.sm),
             Text(
-              hasFilters
-                  ? 'Try another search or event type.'
-                  : 'Trips, refueling, and repairs will appear here.',
+              hasFilters ? l10n.tryAnotherSearch : l10n.historyEmptyDescription,
               textAlign: TextAlign.center,
               style: Theme.of(context).textTheme.bodyMedium,
             ),
@@ -299,16 +304,18 @@ final class _HistoryErrorState extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+
     return Center(
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
           Text(
-            'Could not load history',
+            l10n.couldNotLoadHistory,
             style: Theme.of(context).textTheme.titleMedium,
           ),
           const SizedBox(height: AppSpacing.md),
-          TextButton(onPressed: onRetry, child: const Text('Retry')),
+          TextButton(onPressed: onRetry, child: Text(l10n.retry)),
         ],
       ),
     );
@@ -345,23 +352,8 @@ List<_MonthGroup> _groupByMonth(List<HistoryEvent> events) {
   return groups;
 }
 
-String _monthTitle(DateTime month) {
-  const months = [
-    'JANUARY',
-    'FEBRUARY',
-    'MARCH',
-    'APRIL',
-    'MAY',
-    'JUNE',
-    'JULY',
-    'AUGUST',
-    'SEPTEMBER',
-    'OCTOBER',
-    'NOVEMBER',
-    'DECEMBER',
-  ];
-
-  return '${months[month.month - 1]} ${month.year}';
+String _monthTitle(BuildContext context, DateTime month) {
+  return MaterialLocalizations.of(context).formatMonthYear(month).toUpperCase();
 }
 
 final class _MonthGroup {

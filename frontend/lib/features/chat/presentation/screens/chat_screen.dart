@@ -6,6 +6,8 @@ import 'package:frontend/features/chat/presentation/providers/chat_providers.dar
 import 'package:frontend/features/chat/presentation/widgets/chat_loaded_body.dart';
 import 'package:frontend/features/chat/presentation/widgets/chat_states.dart';
 import 'package:frontend/features/chat/presentation/widgets/chat_title.dart';
+import 'package:frontend/l10n/generated/app_localizations.dart';
+import 'package:go_router/go_router.dart';
 
 final class ChatScreen extends ConsumerStatefulWidget {
   const ChatScreen({required this.vehicleId, super.key});
@@ -29,6 +31,7 @@ final class _ChatScreenState extends ConsumerState<ChatScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     final provider = chatControllerProvider(widget.vehicleId);
     final chatState = ref.watch(provider);
 
@@ -43,12 +46,22 @@ final class _ChatScreenState extends ConsumerState<ChatScreen> {
       if (errorMessage != null && errorMessage.isNotEmpty) {
         ScaffoldMessenger.of(context)
           ..hideCurrentSnackBar()
-          ..showSnackBar(SnackBar(content: Text(errorMessage)));
+          ..showSnackBar(
+            SnackBar(content: Text(_localizedChatError(context, errorMessage))),
+          );
       }
     });
 
     return Scaffold(
-      appBar: AppBar(titleSpacing: 32, title: const ChatTitle()),
+      appBar: AppBar(
+        leading: IconButton(
+          onPressed: () => context.go('/garage'),
+          tooltip: l10n.openGarage,
+          icon: const Icon(Icons.chevron_left_rounded, size: 32),
+        ),
+        titleSpacing: 0,
+        title: const ChatTitle(),
+      ),
       body: chatState.when(
         data: (state) => ChatLoadedBody(
           vehicleId: widget.vehicleId,
@@ -89,4 +102,13 @@ final class _ChatScreenState extends ConsumerState<ChatScreen> {
       );
     });
   }
+}
+
+String _localizedChatError(BuildContext context, String message) {
+  final l10n = AppLocalizations.of(context);
+  return switch (message) {
+    'Could not get a reply. Check the backend and try again.' =>
+      l10n.couldNotGetReply,
+    _ => message,
+  };
 }

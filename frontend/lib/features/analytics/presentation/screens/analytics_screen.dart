@@ -9,6 +9,7 @@ import 'package:frontend/features/analytics/domain/entities/analytics_summary.da
 import 'package:frontend/features/analytics/presentation/providers/analytics_providers.dart';
 import 'package:frontend/features/parts/presentation/providers/parts_providers.dart';
 import 'package:frontend/features/parts/presentation/widgets/maintenance_forecast_card.dart';
+import 'package:frontend/l10n/generated/app_localizations.dart';
 import 'package:go_router/go_router.dart';
 
 final class AnalyticsScreen extends ConsumerStatefulWidget {
@@ -52,6 +53,7 @@ final class _AnalyticsScreenState extends ConsumerState<AnalyticsScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     final request = (vehicleId: widget.vehicleId, period: _selectedPeriod);
     final summaryState = ref.watch(analyticsSummaryProvider(request));
 
@@ -64,7 +66,7 @@ final class _AnalyticsScreenState extends ConsumerState<AnalyticsScreen> {
                 tooltip: 'Back to chat',
                 icon: const Icon(Icons.chevron_left_rounded, size: 32),
               ),
-              title: const Text('Analytics'),
+              title: Text(l10n.analytics),
             )
           : null,
       body: SafeArea(
@@ -110,6 +112,7 @@ final class _AnalyticsDashboard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     final charts = summary.charts!;
 
     return ListView(
@@ -121,7 +124,7 @@ final class _AnalyticsDashboard extends StatelessWidget {
       ),
       children: [
         Text(
-          'Intelligence',
+          l10n.intelligence,
           style: Theme.of(context).textTheme.headlineLarge?.copyWith(
             color: AppColors.primaryLight,
             fontSize: 28,
@@ -129,10 +132,10 @@ final class _AnalyticsDashboard extends StatelessWidget {
           ),
         ),
         const SizedBox(height: 42),
-        Text('Analytics', style: Theme.of(context).textTheme.headlineMedium),
+        Text(l10n.analytics, style: Theme.of(context).textTheme.headlineMedium),
         const SizedBox(height: AppSpacing.sm),
         Text(
-          'Performance and spending overview',
+          l10n.performanceOverview,
           style: Theme.of(
             context,
           ).textTheme.bodyLarge?.copyWith(color: AppColors.textSecondary),
@@ -146,14 +149,16 @@ final class _AnalyticsDashboard extends StatelessWidget {
         _AnalyticsSummaryCard(summary: summary),
         const SizedBox(height: AppSpacing.xxl),
         _SectionHeader(
-          title: 'SEASONAL EXPENSES',
-          trailing: 'TOTAL: ${_formatMoney(summary.totalExpenses!.amount)}',
+          title: l10n.seasonalExpenses,
+          trailing: l10n.totalAmount(
+            _formatMoney(summary.totalExpenses!.amount),
+          ),
         ),
         const SizedBox(height: AppSpacing.md),
         _ChartCard(
           points: charts.expensesByMonth,
           valueFormatter: (value) => _formatMoney(value.round()),
-          legend: 'Monthly expense trend',
+          legend: l10n.monthlyExpenseTrend,
           accentColor: AppColors.primaryLight,
           chartType: _ChartType.line,
           trendPercent: summary.trendPercent,
@@ -168,7 +173,7 @@ final class _AnalyticsDashboard extends StatelessWidget {
               ),
         ),
         const SizedBox(height: AppSpacing.xxl),
-        const _SectionHeader(title: 'HISTORY ANALYSIS'),
+        _SectionHeader(title: l10n.historyAnalysis),
         const SizedBox(height: AppSpacing.md),
         _HistoryAnalysisCard(summary: summary),
       ],
@@ -222,7 +227,7 @@ final class _PeriodSelector extends StatelessWidget {
                     letterSpacing: 0.6,
                   ),
                 ),
-                child: Text(_periodLabel(period)),
+                child: Text(_periodLabel(AppLocalizations.of(context), period)),
               ),
             ),
           ),
@@ -241,6 +246,7 @@ final class _AnalyticsSummaryCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     final totalExpenses = summary.totalExpenses!;
     final mileage = summary.mileage!;
 
@@ -250,7 +256,7 @@ final class _AnalyticsSummaryCard extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            '${_periodAdjective(summary.period)} EXPENSES',
+            l10n.expensesLabel(_periodAdjective(l10n, summary.period)),
             style: Theme.of(context).textTheme.labelMedium?.copyWith(
               color: AppColors.textSecondary,
               letterSpacing: 1.2,
@@ -281,7 +287,7 @@ final class _AnalyticsSummaryCard extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      'COST PER KM',
+                      l10n.costPerKm,
                       style: Theme.of(context).textTheme.bodySmall?.copyWith(
                         color: AppColors.success,
                         letterSpacing: 0.7,
@@ -331,7 +337,10 @@ final class _ExpenseCategoryGrid extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      _categoryLabel(category.category).toUpperCase(),
+                      _categoryLabel(
+                        AppLocalizations.of(context),
+                        category.category,
+                      ).toUpperCase(),
                       style: Theme.of(
                         context,
                       ).textTheme.bodySmall?.copyWith(letterSpacing: 0.7),
@@ -440,7 +449,9 @@ final class _ChartCard extends StatelessWidget {
                 ),
               ),
               Text(
-                'Avg: ${valueFormatter(average)}',
+                AppLocalizations.of(
+                  context,
+                ).averageLabel(valueFormatter(average)),
                 style: Theme.of(context).textTheme.labelMedium?.copyWith(
                   color: AppColors.primaryLight,
                 ),
@@ -473,7 +484,7 @@ final class _HistoryAnalysisCard extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            'PERFORMANCE TREND OVER TIME',
+            AppLocalizations.of(context).performanceTrendOverTime,
             style: Theme.of(context).textTheme.bodySmall?.copyWith(
               color: AppColors.textSecondary,
               letterSpacing: 0.8,
@@ -507,16 +518,20 @@ final class _HistoryAnalysisCard extends StatelessWidget {
                   SizedBox(
                     width: itemWidth,
                     child: history == null
-                        ? const _UnavailableText(
-                            message: 'Company metrics are not available',
+                        ? _UnavailableText(
+                            message: AppLocalizations.of(
+                              context,
+                            ).companyMetricsUnavailable,
                           )
                         : _CompanyMetrics(history: history),
                   ),
                   SizedBox(
                     width: itemWidth,
                     child: history == null
-                        ? const _UnavailableText(
-                            message: 'Counts are not available',
+                        ? _UnavailableText(
+                            message: AppLocalizations.of(
+                              context,
+                            ).countsUnavailable,
                           )
                         : _HistoryCounts(history: history),
                   ),
@@ -541,7 +556,7 @@ final class _CompanyMetrics extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          'COMPANY METRICS',
+          AppLocalizations.of(context).companyMetrics,
           style: Theme.of(context).textTheme.bodySmall?.copyWith(
             color: AppColors.textSecondary,
             letterSpacing: 0.7,
@@ -550,7 +565,10 @@ final class _CompanyMetrics extends StatelessWidget {
         const SizedBox(height: AppSpacing.sm),
         for (final metric in history.companyMetrics) ...[
           _MetricBullet(
-            label: metric.label,
+            label: _companyMetricLabel(
+              AppLocalizations.of(context),
+              metric.label,
+            ),
             value: '${metric.value}/${metric.maxValue}',
           ),
           if (metric != history.companyMetrics.last)
@@ -559,6 +577,14 @@ final class _CompanyMetrics extends StatelessWidget {
       ],
     );
   }
+}
+
+String _companyMetricLabel(AppLocalizations l10n, String label) {
+  return switch (label) {
+    'Events' => l10n.eventsMetric,
+    'Trip km' => l10n.tripKmMetric,
+    _ => label,
+  };
 }
 
 final class _HistoryCounts extends StatelessWidget {
@@ -572,7 +598,7 @@ final class _HistoryCounts extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          'KEY COUNTS',
+          AppLocalizations.of(context).keyCounts,
           style: Theme.of(context).textTheme.bodySmall?.copyWith(
             color: AppColors.textSecondary,
             letterSpacing: 0.7,
@@ -580,12 +606,12 @@ final class _HistoryCounts extends StatelessWidget {
         ),
         const SizedBox(height: AppSpacing.sm),
         _MetricBullet(
-          label: 'Subscription',
+          label: AppLocalizations.of(context).subscription,
           value: '${history.subscriptionCount}',
         ),
         const SizedBox(height: AppSpacing.xs),
         _MetricBullet(
-          label: 'Electronics',
+          label: AppLocalizations.of(context).electronics,
           value: '${history.electronicsCount}',
         ),
       ],
@@ -709,6 +735,7 @@ final class _AnalyticsEmptyState extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     return Center(
       child: SingleChildScrollView(
         padding: const EdgeInsets.all(AppSpacing.xl),
@@ -722,26 +749,25 @@ final class _AnalyticsEmptyState extends StatelessWidget {
             ),
             const SizedBox(height: AppSpacing.lg),
             Text(
-              'Not enough data for analytics',
+              l10n.notEnoughAnalytics,
               textAlign: TextAlign.center,
               style: Theme.of(context).textTheme.titleLarge,
             ),
             const SizedBox(height: AppSpacing.sm),
             Text(
-              summary.message ??
-                  'Add trips, refueling, repairs, or maintenance records.',
+              l10n.analyticsEmptyDescription,
               textAlign: TextAlign.center,
               style: Theme.of(context).textTheme.bodyMedium,
             ),
             const SizedBox(height: AppSpacing.xl),
-            const Wrap(
+            Wrap(
               alignment: WrapAlignment.center,
               spacing: AppSpacing.sm,
               runSpacing: AppSpacing.sm,
               children: [
-                _SuggestionChip(label: 'Add trip'),
-                _SuggestionChip(label: 'Add refueling'),
-                _SuggestionChip(label: 'Add repair'),
+                _SuggestionChip(label: l10n.addTrip),
+                _SuggestionChip(label: l10n.addRefuel),
+                _SuggestionChip(label: l10n.addRepair),
               ],
             ),
           ],
@@ -784,6 +810,7 @@ final class _AnalyticsErrorState extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     return Center(
       child: Padding(
         padding: const EdgeInsets.all(AppSpacing.xl),
@@ -791,12 +818,12 @@ final class _AnalyticsErrorState extends StatelessWidget {
           mainAxisSize: MainAxisSize.min,
           children: [
             Text(
-              'Could not load analytics',
+              l10n.couldNotLoadAnalytics,
               textAlign: TextAlign.center,
               style: Theme.of(context).textTheme.titleLarge,
             ),
             const SizedBox(height: AppSpacing.md),
-            TextButton(onPressed: onRetry, child: const Text('Retry')),
+            TextButton(onPressed: onRetry, child: Text(l10n.retry)),
           ],
         ),
       ),
@@ -949,28 +976,28 @@ final class _AnalyticsChartPainter extends CustomPainter {
   }
 }
 
-String _periodLabel(AnalyticsPeriod period) {
+String _periodLabel(AppLocalizations l10n, AnalyticsPeriod period) {
   return switch (period) {
-    AnalyticsPeriod.month => 'MONTH',
-    AnalyticsPeriod.year => 'YEAR',
-    AnalyticsPeriod.all => 'ALL TIME',
+    AnalyticsPeriod.month => l10n.month,
+    AnalyticsPeriod.year => l10n.yearPeriod,
+    AnalyticsPeriod.all => l10n.allTime,
   };
 }
 
-String _periodAdjective(AnalyticsPeriod period) {
+String _periodAdjective(AppLocalizations l10n, AnalyticsPeriod period) {
   return switch (period) {
-    AnalyticsPeriod.month => 'MONTHLY',
-    AnalyticsPeriod.year => 'ANNUAL',
-    AnalyticsPeriod.all => 'ALL-TIME',
+    AnalyticsPeriod.month => l10n.monthly,
+    AnalyticsPeriod.year => l10n.annual,
+    AnalyticsPeriod.all => l10n.allTimeAdjective,
   };
 }
 
-String _categoryLabel(ExpenseCategory category) {
+String _categoryLabel(AppLocalizations l10n, ExpenseCategory category) {
   return switch (category) {
-    ExpenseCategory.fuel => 'Fuel',
-    ExpenseCategory.maintenance => 'Maintenance',
-    ExpenseCategory.parts => 'Parts',
-    ExpenseCategory.other => 'Other',
+    ExpenseCategory.fuel => l10n.fuelCategory,
+    ExpenseCategory.maintenance => l10n.maintenanceCategory,
+    ExpenseCategory.parts => l10n.partsCategory,
+    ExpenseCategory.other => l10n.otherCategory,
   };
 }
 
