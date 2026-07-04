@@ -1,0 +1,133 @@
+version: '3.8'
+
+x-backend-common: &backend-common
+  image: talking-shaha-backend:${DEPLOY_IMAGE_TAG:-local}
+  build:
+    context: ..
+    dockerfile: docker/Dockerfile.backend
+  environment:
+    JAVA_OPTS: -Xmx512m -Xms256m
+    SPRING_PROFILES_ACTIVE: ${SPRING_PROFILES_ACTIVE:-docker}
+    SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/${DB_NAME:-talking_shaha}
+    SPRING_DATASOURCE_USERNAME: ${DB_USERNAME:?DB_USERNAME is required}
+    SPRING_DATASOURCE_PASSWORD: ${DB_PASSWORD:?DB_PASSWORD is required}
+    SPRING_JPA_HIBERNATE_DDL_AUTO: validate
+    JWT_SECRET: ${JWT_SECRET:?JWT_SECRET is required}
+    TIMEWEB_AI_BASE_URL: ${TIMEWEB_AI_BASE_URL:-}
+    TIMEWEB_AI_TOKEN: ${TIMEWEB_AI_TOKEN:-}
+    TIMEWEB_AI_MODEL: ${TIMEWEB_AI_MODEL:-timeweb-agent}
+  depends_on:
+    postgres:
+      condition: service_healthy
+  restart: unless-stopped
+  expose:
+    - "8080"
+  healthcheck:
+    test: ["CMD", "curl", "-f", "http://localhost:8080/actuator/health"]
+    interval: 30s
+    timeout: 10s
+    retries: 3
+    start_period: 40s
+
+x-frontend-common: &frontend-common
+  image: talking-shaha-frontend:${DEPLOY_IMAGE_TAG:-local}
+  build:
+    context: ..
+    dockerfile: docker/Dockerfile.frontend
+  restart: unless-stopped
+  expose:
+    - "80"
+  healthcheck:
+    test: ["CMD-SHELL", "wget -qO- http://localhost/health | grep -q healthy"]
+    interval: 30s
+    timeout: 10s
+    retries: 3
+    start_period: 10s
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: talking-shaha-db
+    environment:
+      POSTGRES_DB: ${DB_NAME:-talking_shaha}
+      POSTGRES_USER: ${DB_USERNAME:?DB_USERNAME is required}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:?DB_PASSWORD is required}
+    ports:
+      - "127.0.0.1:5432:5432"
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    networks:
+      talking-shaha-blue-network:
+        aliases:
+          - postgres
+      talking-shaha-green-network:
+        aliases:
+          - postgres
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U \"$$POSTGRES_USER\" -d \"$$POSTGRES_DB\""]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  backend-blue:
+    <<: *backend-common
+    container_name: talking-shaha-backend-blue
+    networks:
+      talking-shaha-blue-network:
+        aliases:
+          - backend
+
+  frontend-blue:
+    <<: *frontend-common
+    container_name: talking-shaha-frontend-blue
+    depends_on:
+      backend-blue:
+        condition: service_healthy
+    networks:
+      - talking-shaha-blue-network
+
+  backend-green:
+    <<: *backend-common
+    container_name: talking-shaha-backend-green
+    networks:
+      talking-shaha-green-network:
+        aliases:
+          - backend
+
+  frontend-green:
+    <<: *frontend-common
+    container_name: talking-shaha-frontend-green
+    depends_on:
+      backend-green:
+        condition: service_healthy
+    networks:
+      - talking-shaha-green-network
+
+  router:
+    image: nginx:alpine
+    container_name: talking-shaha-router
+    ports:
+      - "80:80"
+    volumes:
+      - ./router.blue-green.conf:/etc/nginx/conf.d/default.conf:ro
+      - ../.deploy/nginx:/etc/nginx/blue-green:ro
+    networks:
+      - talking-shaha-blue-network
+      - talking-shaha-green-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost/health | grep -q healthy"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+
+networks:
+  talking-shaha-blue-network:
+    driver: bridge
+  talking-shaha-green-network:
+    driver: bridge
+
+volumes:
+  postgres-data:
