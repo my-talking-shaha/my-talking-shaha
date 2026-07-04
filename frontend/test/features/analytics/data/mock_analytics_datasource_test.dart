@@ -16,12 +16,30 @@ void main() {
     );
 
     expect(year.hasEnoughData, isTrue);
-    expect(year.totalExpenses?.amount, 342500);
-    expect(year.charts?.expensesByMonth, hasLength(6));
+    expect(year.totalExpenses?.amount, 1258700);
+    expect(year.charts?.expensesByMonth, hasLength(12));
 
     expect(month.hasEnoughData, isTrue);
-    expect(month.totalExpenses?.amount, 15650);
-    expect(month.mileage?.costPerKm, 12.62);
+    expect(month.totalExpenses?.amount, 184950);
+    expect(month.mileage?.costPerKm, 42.81);
+  });
+
+  test('generates custom range mocked analytics from selected dates', () async {
+    final datasource = MockAnalyticsDatasource(delay: Duration.zero);
+
+    final summary = await datasource.getSummary(
+      vehicleId: 'vehicle_1',
+      period: AnalyticsPeriod.year,
+      dateRange: AnalyticsDateRange(
+        startDate: DateTime(2026, 6, 1),
+        endDate: DateTime(2026, 6, 10),
+      ),
+    );
+
+    expect(summary.hasEnoughData, isTrue);
+    expect(summary.totalExpenses?.amount, 82000);
+    expect(summary.mileage?.totalKm, 960);
+    expect(summary.charts?.expensesByMonth, isNotEmpty);
   });
 
   test('returns an explicit insufficient-data state', () async {

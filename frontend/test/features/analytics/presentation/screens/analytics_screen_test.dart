@@ -15,8 +15,12 @@ void main() {
 
     expect(find.text('Intelligence'), findsOneWidget);
     expect(find.text('Analytics'), findsOneWidget);
-    expect(find.text('342,500 ₽'), findsOneWidget);
+    expect(find.text('1,258,700 ₽'), findsOneWidget);
     expect(find.text('ANNUAL EXPENSES'), findsOneWidget);
+    expect(
+      find.byKey(const ValueKey('analytics-custom-date-range')),
+      findsOneWidget,
+    );
     expect(find.text('MAINTENANCE'), findsOneWidget);
     expect(find.text('FUEL'), findsOneWidget);
     expect(find.textContaining('Forecast'), findsNothing);
@@ -24,7 +28,7 @@ void main() {
     await tester.tap(find.byKey(const ValueKey('analytics-period-month')));
     await tester.pumpAndSettle();
 
-    expect(find.text('15,650 ₽'), findsOneWidget);
+    expect(find.text('184,950 ₽'), findsOneWidget);
     expect(find.text('MONTHLY EXPENSES'), findsWidgets);
 
     await tester.dragUntilVisible(

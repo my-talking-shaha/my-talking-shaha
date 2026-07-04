@@ -12,12 +12,14 @@ final class AnalyticsApiDatasource implements AnalyticsDatasource {
   Future<AnalyticsSummary> getSummary({
     required String vehicleId,
     required AnalyticsPeriod period,
+    AnalyticsDateRange? dateRange,
   }) async {
     final response = await _dio.get<Map<String, dynamic>>(
       '/vehicles/$vehicleId/analytics',
-      queryParameters: {
-        'period': AnalyticsApiSummaryMapper.periodQuery(period),
-      },
+      queryParameters: AnalyticsApiSummaryMapper.queryParameters(
+        period: period,
+        dateRange: dateRange,
+      ),
     );
 
     return AnalyticsApiSummaryMapper.fromJson(
@@ -126,6 +128,24 @@ abstract final class AnalyticsApiSummaryMapper {
       AnalyticsPeriod.year => 'YEAR',
       AnalyticsPeriod.all => 'ALL_TIME',
     };
+  }
+
+  static Map<String, String> queryParameters({
+    required AnalyticsPeriod period,
+    AnalyticsDateRange? dateRange,
+  }) {
+    return {
+      'period': periodQuery(period),
+      if (dateRange != null) ...{
+        'startDate': _dateQuery(dateRange.startDate),
+        'endDate': _dateQuery(dateRange.endDate),
+      },
+    };
+  }
+
+  static String _dateQuery(DateTime date) {
+    final normalized = DateTime(date.year, date.month, date.day);
+    return normalized.toIso8601String().split('T').first;
   }
 
   static List<ExpenseCategoryAmount> _expenseCategories(Object? value) {

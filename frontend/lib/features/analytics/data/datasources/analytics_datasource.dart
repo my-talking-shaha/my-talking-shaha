@@ -5,5 +5,6 @@ abstract interface class AnalyticsDatasource {
   Future<AnalyticsSummary> getSummary({
     required String vehicleId,
     required AnalyticsPeriod period,
+    AnalyticsDateRange? dateRange,
   });
 }

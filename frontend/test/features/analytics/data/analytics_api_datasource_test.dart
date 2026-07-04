@@ -107,5 +107,18 @@ void main() {
         'ALL_TIME',
       );
     });
+
+    test('builds custom date range query parameters', () {
+      expect(
+        AnalyticsApiSummaryMapper.queryParameters(
+          period: AnalyticsPeriod.year,
+          dateRange: AnalyticsDateRange(
+            startDate: DateTime(2026, 1, 5, 18),
+            endDate: DateTime(2026, 6, 30, 23, 59),
+          ),
+        ),
+        {'period': 'YEAR', 'startDate': '2026-01-05', 'endDate': '2026-06-30'},
+      );
+    });
   });
 }

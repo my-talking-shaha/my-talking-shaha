@@ -11,6 +11,7 @@ final class MockAnalyticsDatasource implements AnalyticsDatasource {
   Future<AnalyticsSummary> getSummary({
     required String vehicleId,
     required AnalyticsPeriod period,
+    AnalyticsDateRange? dateRange,
   }) async {
     await Future<void>.delayed(delay);
 
@@ -18,11 +19,120 @@ final class MockAnalyticsDatasource implements AnalyticsDatasource {
       return _emptySummary(period);
     }
 
+    if (dateRange != null) {
+      return _customRangeSummary(period, dateRange);
+    }
+
     return switch (period) {
       AnalyticsPeriod.month => _monthSummary(period),
       AnalyticsPeriod.year => _yearSummary(period),
       AnalyticsPeriod.all => _allTimeSummary(period),
     };
+  }
+
+  AnalyticsSummary _customRangeSummary(
+    AnalyticsPeriod period,
+    AnalyticsDateRange dateRange,
+  ) {
+    final days = dateRange.endDate.difference(dateRange.startDate).inDays + 1;
+    final safeDays = days < 1 ? 1 : days;
+    final totalExpenses = 8200 * safeDays;
+    final totalKm = 96 * safeDays;
+
+    return AnalyticsSummary(
+      period: period,
+      hasEnoughData: true,
+      totalExpenses: MoneyAmount(amount: totalExpenses, currency: 'RUB'),
+      trendPercent: 12.8,
+      expensesByCategory: [
+        ExpenseCategoryAmount(
+          category: ExpenseCategory.parts,
+          amount: (totalExpenses * 0.42).round(),
+        ),
+        ExpenseCategoryAmount(
+          category: ExpenseCategory.maintenance,
+          amount: (totalExpenses * 0.26).round(),
+        ),
+        ExpenseCategoryAmount(
+          category: ExpenseCategory.fuel,
+          amount: (totalExpenses * 0.24).round(),
+        ),
+        ExpenseCategoryAmount(
+          category: ExpenseCategory.other,
+          amount: (totalExpenses * 0.08).round(),
+        ),
+      ],
+      mileage: MileageAnalytics(
+        totalKm: totalKm,
+        costPerKm: totalExpenses / totalKm,
+        monthlyDeltaKm: totalKm,
+        growthPercent: 14,
+      ),
+      fuel: FuelAnalytics(
+        averageConsumptionPer100Km: 8.6,
+        totalLiters: totalKm * 0.086,
+      ),
+      repairs: RepairAnalytics(
+        count: (safeDays / 6).ceil(),
+        mostFrequentTypes: const [
+          RepairTypeMetric(label: 'Suspension', count: 4),
+          RepairTypeMetric(label: 'Brakes', count: 3),
+          RepairTypeMetric(label: 'Consumables', count: 2),
+        ],
+      ),
+      maintenanceForecast: _maintenanceForecast(),
+      history: _historyAnalytics(
+        reliability: 82,
+        efficiency: 76,
+        maintenanceLoad: 88,
+        refuels: (safeDays / 4).ceil(),
+        parts: (safeDays / 10).ceil(),
+      ),
+      charts: AnalyticsCharts(
+        expensesByMonth: _customRangePoints(dateRange, 8200),
+        mileageByMonth: _customRangePoints(dateRange, 96),
+        repairsByMonth: _customRangePoints(dateRange, 0.28),
+      ),
+    );
+  }
+
+  List<AnalyticsChartPoint> _customRangePoints(
+    AnalyticsDateRange dateRange,
+    double dailyValue,
+  ) {
+    final totalDays = dateRange.endDate.difference(dateRange.startDate).inDays;
+    final step = (totalDays / 5).ceil().clamp(1, 30);
+    final points = <AnalyticsChartPoint>[];
+
+    for (
+      var date = dateRange.startDate, index = 0;
+      !date.isAfter(dateRange.endDate);
+      date = date.add(Duration(days: step)), index++
+    ) {
+      final wave = index.isEven ? 1.18 : 0.82;
+      points.add(
+        AnalyticsChartPoint(
+          label: _shortDateLabel(date),
+          value: dailyValue * step * wave,
+        ),
+      );
+    }
+
+    if (points.isEmpty ||
+        points.last.label != _shortDateLabel(dateRange.endDate)) {
+      points.add(
+        AnalyticsChartPoint(
+          label: _shortDateLabel(dateRange.endDate),
+          value: dailyValue,
+        ),
+      );
+    }
+
+    return points;
+  }
+
+  String _shortDateLabel(DateTime date) {
+    return '${date.day}.${date.month.toString().padLeft(2, '0')}';
   }
 
   AnalyticsSummary _monthSummary(AnalyticsPeriod period) {

@@ -8,7 +8,11 @@ import 'package:frontend/features/analytics/domain/entities/analytics_period.dar
 import 'package:frontend/features/analytics/domain/entities/analytics_summary.dart';
 import 'package:frontend/features/analytics/domain/repositories/analytics_repository.dart';
 
-typedef AnalyticsSummaryRequest = ({String vehicleId, AnalyticsPeriod period});
+typedef AnalyticsSummaryRequest = ({
+  String vehicleId,
+  AnalyticsPeriod period,
+  AnalyticsDateRange? dateRange,
+});
 
 const useMockAnalyticsDatasource = bool.fromEnvironment('USE_MOCK_ANALYTICS');
 
@@ -38,5 +42,9 @@ final analyticsSummaryProvider = FutureProvider.autoDispose
     .family<AnalyticsSummary, AnalyticsSummaryRequest>((ref, request) {
       return ref
           .watch(analyticsRepositoryProvider)
-          .getSummary(vehicleId: request.vehicleId, period: request.period);
+          .getSummary(
+            vehicleId: request.vehicleId,
+            period: request.period,
+            dateRange: request.dateRange,
+          );
     });

@@ -5,5 +5,6 @@ abstract interface class AnalyticsRepository {
   Future<AnalyticsSummary> getSummary({
     required String vehicleId,
     required AnalyticsPeriod period,
+    AnalyticsDateRange? dateRange,
   });
 }

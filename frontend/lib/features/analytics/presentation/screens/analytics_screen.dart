@@ -23,6 +23,7 @@ final class _AnalyticsScreenState extends ConsumerState<AnalyticsScreen> {
   static const _pollingInterval = Duration(seconds: 60);
 
   AnalyticsPeriod _selectedPeriod = AnalyticsPeriod.year;
+  AnalyticsDateRange? _selectedDateRange;
   Timer? _pollingTimer;
 
   @override
@@ -33,8 +34,13 @@ final class _AnalyticsScreenState extends ConsumerState<AnalyticsScreen> {
         return;
       }
 
-      final request = (vehicleId: widget.vehicleId, period: _selectedPeriod);
-      ref.invalidate(analyticsSummaryProvider(request));
+      ref.invalidate(
+        analyticsSummaryProvider((
+          vehicleId: widget.vehicleId,
+          period: _selectedPeriod,
+          dateRange: _selectedDateRange,
+        )),
+      );
     });
   }
 
@@ -46,7 +52,11 @@ final class _AnalyticsScreenState extends ConsumerState<AnalyticsScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final request = (vehicleId: widget.vehicleId, period: _selectedPeriod);
+    final request = (
+      vehicleId: widget.vehicleId,
+      period: _selectedPeriod,
+      dateRange: _selectedDateRange,
+    );
     final summaryState = ref.watch(analyticsSummaryProvider(request));
 
     return Scaffold(
@@ -61,8 +71,16 @@ final class _AnalyticsScreenState extends ConsumerState<AnalyticsScreen> {
               summary: summary,
               vehicleId: widget.vehicleId,
               selectedPeriod: _selectedPeriod,
+              selectedDateRange: _selectedDateRange,
               onPeriodSelected: (period) {
-                setState(() => _selectedPeriod = period);
+                setState(() {
+                  _selectedPeriod = period;
+                  _selectedDateRange = null;
+                });
+              },
+              onDateRangeSelected: _selectDateRange,
+              onDateRangeCleared: () {
+                setState(() => _selectedDateRange = null);
               },
             );
           },
@@ -76,6 +94,35 @@ final class _AnalyticsScreenState extends ConsumerState<AnalyticsScreen> {
       ),
     );
   }
+
+  Future<void> _selectDateRange() async {
+    final now = DateTime.now();
+    final initialRange = _selectedDateRange;
+    final pickedRange = await showDateRangePicker(
+      context: context,
+      firstDate: DateTime(now.year - 10),
+      lastDate: now,
+      initialDateRange: DateTimeRange(
+        start:
+            initialRange?.startDate ?? now.subtract(const Duration(days: 30)),
+        end: initialRange?.endDate ?? now,
+      ),
+      builder: (context, child) {
+        return Theme(data: Theme.of(context), child: child!);
+      },
+    );
+
+    if (pickedRange == null || !mounted) {
+      return;
+    }
+
+    setState(() {
+      _selectedDateRange = AnalyticsDateRange(
+        startDate: pickedRange.start,
+        endDate: pickedRange.end,
+      );
+    });
+  }
 }
 
 final class _AnalyticsDashboard extends StatelessWidget {
@@ -83,13 +130,19 @@ final class _AnalyticsDashboard extends StatelessWidget {
     required this.summary,
     required this.vehicleId,
     required this.selectedPeriod,
+    required this.selectedDateRange,
     required this.onPeriodSelected,
+    required this.onDateRangeSelected,
+    required this.onDateRangeCleared,
   });
 
   final AnalyticsSummary summary;
   final String vehicleId;
   final AnalyticsPeriod selectedPeriod;
+  final AnalyticsDateRange? selectedDateRange;
   final ValueChanged<AnalyticsPeriod> onPeriodSelected;
+  final VoidCallback onDateRangeSelected;
+  final VoidCallback onDateRangeCleared;
 
   @override
   Widget build(BuildContext context) {
@@ -124,6 +177,12 @@ final class _AnalyticsDashboard extends StatelessWidget {
         _PeriodSelector(
           selectedPeriod: selectedPeriod,
           onSelected: onPeriodSelected,
+        ),
+        const SizedBox(height: AppSpacing.md),
+        _DateRangeSelector(
+          selectedDateRange: selectedDateRange,
+          onSelect: onDateRangeSelected,
+          onClear: onDateRangeCleared,
         ),
         const SizedBox(height: AppSpacing.xl),
         _AnalyticsSummaryCard(summary: summary),
@@ -211,6 +270,73 @@ final class _PeriodSelector extends StatelessWidget {
           ),
           if (period != AnalyticsPeriod.values.last)
             const SizedBox(width: AppSpacing.sm),
+        ],
+      ],
+    );
+  }
+}
+
+final class _DateRangeSelector extends StatelessWidget {
+  const _DateRangeSelector({
+    required this.selectedDateRange,
+    required this.onSelect,
+    required this.onClear,
+  });
+
+  final AnalyticsDateRange? selectedDateRange;
+  final VoidCallback onSelect;
+  final VoidCallback onClear;
+
+  @override
+  Widget build(BuildContext context) {
+    final dateRange = selectedDateRange;
+
+    return Row(
+      children: [
+        Expanded(
+          child: OutlinedButton.icon(
+            key: const ValueKey('analytics-custom-date-range'),
+            onPressed: onSelect,
+            icon: const Icon(Icons.calendar_month_outlined, size: 18),
+            label: Text(
+              dateRange == null ? 'Custom range' : _dateRangeLabel(dateRange),
+              overflow: TextOverflow.ellipsis,
+            ),
+            style: OutlinedButton.styleFrom(
+              foregroundColor: dateRange == null
+                  ? AppColors.textSecondary
+                  : AppColors.primaryLight,
+              side: BorderSide(
+                color: dateRange == null
+                    ? AppColors.border
+                    : AppColors.primaryLight,
+              ),
+              shape: const RoundedRectangleBorder(
+                borderRadius: AppRadius.input,
+              ),
+              minimumSize: const Size(0, 44),
+              padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md),
+              textStyle: Theme.of(
+                context,
+              ).textTheme.labelMedium?.copyWith(fontWeight: FontWeight.w800),
+            ),
+          ),
+        ),
+        if (dateRange != null) ...[
+          const SizedBox(width: AppSpacing.sm),
+          IconButton(
+            key: const ValueKey('analytics-clear-date-range'),
+            tooltip: 'Clear custom range',
+            onPressed: onClear,
+            icon: const Icon(Icons.close),
+            style: IconButton.styleFrom(
+              foregroundColor: AppColors.textSecondary,
+              backgroundColor: AppColors.surfaceHigh,
+              shape: const RoundedRectangleBorder(
+                borderRadius: AppRadius.input,
+              ),
+            ),
+          ),
         ],
       ],
     );
@@ -946,6 +1072,16 @@ String _periodAdjective(AnalyticsPeriod period) {
     AnalyticsPeriod.year => 'ANNUAL',
     AnalyticsPeriod.all => 'ALL-TIME',
   };
+}
+
+String _dateRangeLabel(AnalyticsDateRange dateRange) {
+  return '${_dateLabel(dateRange.startDate)} - ${_dateLabel(dateRange.endDate)}';
+}
+
+String _dateLabel(DateTime date) {
+  final day = date.day.toString().padLeft(2, '0');
+  final month = date.month.toString().padLeft(2, '0');
+  return '$day.$month.${date.year}';
 }
 
 String _categoryLabel(ExpenseCategory category) {

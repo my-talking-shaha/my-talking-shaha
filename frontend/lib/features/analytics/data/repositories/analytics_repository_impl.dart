@@ -12,7 +12,12 @@ final class AnalyticsRepositoryImpl implements AnalyticsRepository {
   Future<AnalyticsSummary> getSummary({
     required String vehicleId,
     required AnalyticsPeriod period,
+    AnalyticsDateRange? dateRange,
   }) {
-    return _datasource.getSummary(vehicleId: vehicleId, period: period);
+    return _datasource.getSummary(
+      vehicleId: vehicleId,
+      period: period,
+      dateRange: dateRange,
+    );
   }
 }

@@ -16,6 +16,16 @@ YEAR
 ALL_TIME
 ```
 
+Custom range:
+
+```text
+GET /api/v1/vehicles/{vehicleId}/analytics?startDate=2026-01-01&endDate=2026-06-30
+```
+
+`startDate` and `endDate` are inclusive ISO dates and must be provided together.
+When a custom range is selected, the client sends both dates and uses the response
+to update every analytics card/chart.
+
 Response:
 
 ```json
@@ -72,6 +82,7 @@ and `hasData` is `false`.
 ## Errors
 
 - `400 VALIDATION_ERROR` for invalid `period`
+- `400 VALIDATION_ERROR` when only one custom date is provided or `startDate` is after `endDate`
 - `401 UNAUTHORIZED` after auth is enabled
 - `403 FORBIDDEN`
 - `404 NOT_FOUND`
