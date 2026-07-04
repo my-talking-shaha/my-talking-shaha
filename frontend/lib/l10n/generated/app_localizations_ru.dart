@@ -201,7 +201,7 @@ class AppLocalizationsRu extends AppLocalizations {
   String get couldNotLoadGarage => 'Не удалось загрузить гараж';
 
   @override
-  String get openCockpit => 'Открыть кокпит';
+  String get openCockpit => 'Открыть кабину';
 
   @override
   String get mileage => 'ПРОБЕГ';
