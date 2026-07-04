@@ -482,6 +482,13 @@ Part replacements are represented in service history by
 
 `period` is optional. Supported values: `MONTH`, `YEAR`, `ALL_TIME`.
 
+Custom date ranges are supported with inclusive ISO dates:
+
+`GET /api/v1/vehicles/{vehicleId}/analytics?startDate=2026-01-01&endDate=2026-06-30`
+
+`startDate` and `endDate` must be provided together. When both are present,
+the custom interval takes precedence over `period`.
+
 Response `200`:
 
 ```json

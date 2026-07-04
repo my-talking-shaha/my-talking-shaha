@@ -380,6 +380,22 @@ paths:
           required: false
           schema:
             $ref: '#/components/schemas/AnalyticsPeriod'
+        - name: startDate
+          in: query
+          required: false
+          description: Inclusive custom range start date. Must be provided with endDate.
+          schema:
+            type: string
+            format: date
+            example: '2026-01-01'
+        - name: endDate
+          in: query
+          required: false
+          description: Inclusive custom range end date. Must be provided with startDate.
+          schema:
+            type: string
+            format: date
+            example: '2026-06-30'
       responses:
         '200':
           description: Analytics overview
