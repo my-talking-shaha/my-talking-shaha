@@ -11,15 +11,17 @@
 
 - Docker
 - Docker Compose (v3.8 or higher)
-- Timeweb AI token for AI chat. Copy `.env.example` to `.env` in the repository root
-  and set `TIMEWEB_AI_BASE_URL` and `TIMEWEB_AI_TOKEN`.
+- Explicit local secrets. Copy `.env.example` to `.env` in the repository root
+  and replace `JWT_SECRET`, `DB_USERNAME`, `DB_PASSWORD`, and `TIMEWEB_AI_TOKEN`.
+  The example placeholders and local development values must not be reused for
+  shared, staging, or production-like deployments.
 
 ## Building and Running
 
 ### Quick Start
 
 ```bash
-docker-compose -f docker/docker-compose.yml up --build
+docker compose --env-file .env -f docker/docker-compose.yml up --build
 ```
 
 The app will be available at [http://localhost](http://localhost)
@@ -42,7 +44,7 @@ GitHub Actions smoke tests additionally use `docker/docker-compose.ci.yml` with 
 The frontend build uses `ghcr.io/cirruslabs/flutter:stable` by default and retries transient network steps such as Flutter web precache and `flutter pub get`. Override the Flutter SDK image when needed:
 
 ```bash
-docker-compose -f docker/docker-compose.yml build --build-arg FLUTTER_IMAGE=ghcr.io/cirruslabs/flutter:stable frontend
+docker compose --env-file .env -f docker/docker-compose.yml build --build-arg FLUTTER_IMAGE=ghcr.io/cirruslabs/flutter:stable frontend
 ```
 
 Use `--no-cache` only when you intentionally want to redownload everything.
@@ -50,24 +52,24 @@ Use `--no-cache` only when you intentionally want to redownload everything.
 ### Running in Background
 
 ```bash
-docker-compose -f docker/docker-compose.yml up -d --build
+docker compose --env-file .env -f docker/docker-compose.yml up -d --build
 ```
 
 ### Stopping Services
 
 ```bash
-docker-compose -f docker/docker-compose.yml down
+docker compose --env-file .env -f docker/docker-compose.yml down
 ```
 
 ### Viewing Logs
 
 ```bash
 # All services
-docker-compose -f docker/docker-compose.yml logs -f
+docker compose --env-file .env -f docker/docker-compose.yml logs -f
 
 # Specific service
-docker-compose -f docker/docker-compose.yml logs -f backend
-docker-compose -f docker/docker-compose.yml logs -f frontend
+docker compose --env-file .env -f docker/docker-compose.yml logs -f backend
+docker compose --env-file .env -f docker/docker-compose.yml logs -f frontend
 ```
 
 ## Accessing the Application

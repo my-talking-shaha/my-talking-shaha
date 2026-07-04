@@ -83,6 +83,10 @@ jobs:
       - frontend
     runs-on: ubuntu-latest
     timeout-minutes: 45
+    env:
+      DB_USERNAME: ci_shaha_user
+      DB_PASSWORD: ci-db-password-32-bytes
+      JWT_SECRET: ci-jwt-secret-with-more-than-32-bytes
 
     steps:
       - name: Checkout repository
