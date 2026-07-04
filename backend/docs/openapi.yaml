@@ -409,6 +409,42 @@ paths:
           $ref: '#/components/responses/Forbidden'
         '404':
           $ref: '#/components/responses/NotFound'
+  /vehicles/{vehicleId}/analytics/mileage-trend:
+    get:
+      summary: Get mileage trend
+      description: Returns accumulated mileage points aggregated for the selected year or a selected month in that year.
+      tags: [ Analytics ]
+      parameters:
+        - $ref: '#/components/parameters/VehicleId'
+        - name: year
+          in: query
+          required: true
+          schema:
+            type: integer
+            minimum: 1900
+            example: 2026
+        - name: month
+          in: query
+          required: false
+          description: Calendar month number. Omit to return the yearly trend grouped by month.
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 12
+            example: 6
+      responses:
+        '200':
+          description: Mileage trend for chart rendering
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MileageTrend'
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
   /vehicles/{vehicleId}/chat:
     get:
       summary: Get AI chat state
@@ -1055,6 +1091,37 @@ components:
           $ref: '#/components/schemas/HistoryAnalysis'
         hasData:
           type: boolean
+    MileageTrend:
+      type: object
+      required: [ year, points, hasData ]
+      properties:
+        year:
+          type: integer
+          example: 2026
+        month:
+          type: integer
+          nullable: true
+          minimum: 1
+          maximum: 12
+          example: 6
+        points:
+          type: array
+          items:
+            $ref: '#/components/schemas/MileageTrendPoint'
+        hasData:
+          type: boolean
+    MileageTrendPoint:
+      type: object
+      required: [ label, mileageKm ]
+      properties:
+        label:
+          type: string
+          description: Short chart label such as "Jan" for yearly trend or "15" for a monthly trend.
+          example: Jun 15
+        mileageKm:
+          type: integer
+          description: Accumulated odometer mileage in kilometers at this point.
+          example: 143240
     MonthlyExpense:
       type: object
       required: [ month, total, breakdownByCategory ]

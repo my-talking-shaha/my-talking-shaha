@@ -543,6 +543,46 @@ Response `200`:
 If there is no data for the selected period, response is still `200` with zero totals,
 empty chart arrays, zero metrics, and `hasData = false`.
 
+### Get mileage trend
+
+`GET /api/v1/vehicles/{vehicleId}/analytics/mileage-trend?year=2026&month=6`
+
+`year` is required. `month` is optional and must be a number from `1` to `12`.
+When `month` is omitted, the backend returns a yearly mileage trend grouped by
+month. When `month` is provided, the backend returns points inside that calendar
+month. Values are accumulated odometer mileage in kilometers and are ready for
+line chart rendering.
+
+Response `200`:
+
+```json
+{
+  "year": 2026,
+  "month": 6,
+  "points": [
+    {
+      "label": "Jun 1",
+      "mileageKm": 142000
+    },
+    {
+      "label": "Jun 15",
+      "mileageKm": 143240
+    },
+    {
+      "label": "Jun 30",
+      "mileageKm": 145180
+    }
+  ],
+  "hasData": true
+}
+```
+
+If `month` is omitted, `month` is returned as `null` or omitted and `points`
+should use month labels such as `Jan`, `Feb`, `Mar`.
+
+If there is no mileage data for the selected filter, response is still `200`
+with `points = []` and `hasData = false`.
+
 ## Chat
 
 ### Get chat state
