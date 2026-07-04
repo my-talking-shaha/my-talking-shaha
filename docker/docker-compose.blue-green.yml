@@ -38,7 +38,7 @@ x-frontend-common: &frontend-common
   expose:
     - "80"
   healthcheck:
-    test: ["CMD-SHELL", "wget -qO- http://localhost/health | grep -q healthy"]
+    test: ["CMD-SHELL", "wget -qO- http://127.0.0.1/health | grep -q healthy"]
     interval: 30s
     timeout: 10s
     retries: 3
@@ -117,7 +117,7 @@ services:
       - talking-shaha-green-network
     restart: unless-stopped
     healthcheck:
-      test: ["CMD-SHELL", "wget -qO- http://localhost/health | grep -q healthy"]
+      test: ["CMD-SHELL", "wget -qO- http://127.0.0.1/health | grep -q healthy"]
       interval: 30s
       timeout: 10s
       retries: 3
