@@ -132,7 +132,10 @@ final class _ChatLoadedBody extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final messages = _visibleMessages(state.messages);
-    final quickQuestions = _quickQuestionsFromBackend(state.quickQuestions);
+    final quickQuestions = _quickQuestionsFromBackend(
+      context,
+      state.quickQuestions,
+    );
     final bottomSuggestions = _bottomSuggestions(
       messages: messages,
       quickQuestions: quickQuestions,
@@ -182,11 +185,15 @@ final class _ChatLoadedBody extends StatelessWidget {
         message.text.trim().toLowerCase() == 'the assistant is ready.';
   }
 
-  List<String> _quickQuestionsFromBackend(List<String> questions) {
+  List<String> _quickQuestionsFromBackend(
+    BuildContext context,
+    List<String> questions,
+  ) {
+    final l10n = AppLocalizations.of(context);
     final result = <String>[];
 
     for (final question in questions) {
-      final trimmedQuestion = question.trim();
+      final trimmedQuestion = _localizedBackendChatText(l10n, question.trim());
       if (trimmedQuestion.isNotEmpty && !result.contains(trimmedQuestion)) {
         result.add(trimmedQuestion);
       }
@@ -381,7 +388,10 @@ final class _ChatBubble extends StatelessWidget {
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       Text(
-                        message.text,
+                        _localizedBackendChatText(
+                          AppLocalizations.of(context),
+                          message.text,
+                        ),
                         style: Theme.of(context).textTheme.bodyLarge?.copyWith(
                           color: AppColors.textPrimary,
                           height: 1.35,
@@ -441,6 +451,16 @@ final class _ChatBubble extends StatelessWidget {
     final minute = value.minute.toString().padLeft(2, '0');
     return '$hour:$minute';
   }
+}
+
+String _localizedBackendChatText(AppLocalizations l10n, String text) {
+  return switch (text.trim()) {
+    'Hi! I am your car, and I am ready to chat.' => l10n.chatGreetingReady,
+    'Vehicle status' => l10n.quickQuestionVehicleStatus,
+    'What are my total expenses?' => l10n.quickQuestionTotalExpenses,
+    'What can break soon?' => l10n.quickQuestionBreakSoon,
+    _ => text,
+  };
 }
 
 final class _ChatActionPill extends StatelessWidget {

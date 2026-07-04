@@ -1130,11 +1130,23 @@ abstract class AppLocalizations {
   /// **'Ask about vehicle condition, expenses, or maintenance.'**
   String get chatEmptyDescription;
 
+  /// No description provided for @chatGreetingReady.
+  ///
+  /// In en, this message translates to:
+  /// **'Hi! I am your car, and I am ready to chat.'**
+  String get chatGreetingReady;
+
   /// No description provided for @quickQuestionVehicleStatus.
   ///
   /// In en, this message translates to:
   /// **'Vehicle status'**
   String get quickQuestionVehicleStatus;
+
+  /// No description provided for @quickQuestionTotalExpenses.
+  ///
+  /// In en, this message translates to:
+  /// **'What are my total expenses?'**
+  String get quickQuestionTotalExpenses;
 
   /// No description provided for @quickQuestionOil.
   ///

@@ -549,7 +549,14 @@ class AppLocalizationsRu extends AppLocalizations {
       'Спросите о состоянии авто, расходах или обслуживании.';
 
   @override
+  String get chatGreetingReady =>
+      'Привет! Я ваш автомобиль и готов пообщаться.';
+
+  @override
   String get quickQuestionVehicleStatus => 'Состояние авто';
+
+  @override
+  String get quickQuestionTotalExpenses => 'Какие у меня общие расходы?';
 
   @override
   String get quickQuestionOil => 'Когда менять масло?';

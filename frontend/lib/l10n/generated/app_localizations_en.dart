@@ -551,7 +551,13 @@ class AppLocalizationsEn extends AppLocalizations {
       'Ask about vehicle condition, expenses, or maintenance.';
 
   @override
+  String get chatGreetingReady => 'Hi! I am your car, and I am ready to chat.';
+
+  @override
   String get quickQuestionVehicleStatus => 'Vehicle status';
+
+  @override
+  String get quickQuestionTotalExpenses => 'What are my total expenses?';
 
   @override
   String get quickQuestionOil => 'When should I change oil?';
