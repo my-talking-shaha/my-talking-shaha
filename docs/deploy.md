@@ -25,12 +25,26 @@ production data.
 
    Log out and log back in after changing groups.
 
-4. Run the application once manually:
+4. Optionally run the application once manually for a private local smoke test
+   with explicit local-only values:
 
    ```bash
-   docker compose -f docker/docker-compose.yml down -v
-   docker compose -f docker/docker-compose.yml up -d --build --remove-orphans
+   cat > .env <<'EOF'
+   JWT_SECRET=local-jwt-secret-with-more-than-32-bytes
+   DB_USERNAME=local_shaha_user
+   DB_PASSWORD=local-db-password-32-bytes
+   TIMEWEB_AI_BASE_URL=https://agent.timeweb.cloud/api/v1/cloud-ai/agents/YOUR_AGENT_ID/v1
+   TIMEWEB_AI_TOKEN=local-placeholder-token
+   TIMEWEB_AI_MODEL=timeweb-agent
+   EOF
+
+   docker compose --env-file .env -f docker/docker-compose.yml down -v
+   docker compose --env-file .env -f docker/docker-compose.yml up -d --build --remove-orphans
    ```
+
+   These local values are development-only. Do not leave them on the shared
+   development server, staging, or production-like deployment. Those
+   environments must use GitHub secrets or real environment variables instead.
 
 ## GitHub secrets
 
@@ -41,9 +55,18 @@ Add these secrets in GitHub:
 - `SERVER_SSH_KEY` - private SSH key with access to the server.
 - `SERVER_APP_PATH` - repository path on the server, for example `/opt/my-talking-shaha`.
 - `SERVER_PORT` - optional SSH port. If omitted, port `22` is used.
+- `JWT_SECRET` - production-grade JWT signing secret, at least 32 bytes, not
+  the local development placeholder.
+- `DB_USERNAME` - production database username, not the committed local default.
+- `DB_PASSWORD` - production database password, not the committed local default.
 - `TIMEWEB_AI_BASE_URL` - OpenAI-compatible Timeweb AI base URL, for example
   `https://agent.timeweb.cloud/api/v1/cloud-ai/agents/<agent_id>/v1`.
 - `TIMEWEB_AI_TOKEN` - Timeweb AI API token for the agent or AI Gateway.
+
+The backend fails during startup outside `local` or `test` profiles when
+`JWT_SECRET`, `DB_USERNAME`, or `DB_PASSWORD` are missing or still set to known
+development placeholders. The deploy workflow checks the same required GitHub
+secrets before it starts the remote Docker stack.
 
 ## Deployment flow
 
