@@ -22,6 +22,15 @@ final class ChatScreen extends ConsumerStatefulWidget {
 final class _ChatScreenState extends ConsumerState<ChatScreen> {
   final _messageController = TextEditingController();
   final _scrollController = ScrollController();
+  String? _lockedInitialGreetingLocaleName;
+
+  @override
+  void didUpdateWidget(covariant ChatScreen oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.vehicleId != widget.vehicleId) {
+      _lockedInitialGreetingLocaleName = null;
+    }
+  }
 
   @override
   void dispose() {
@@ -70,6 +79,7 @@ final class _ChatScreenState extends ConsumerState<ChatScreen> {
           controller: _messageController,
           scrollController: _scrollController,
           onSend: _send,
+          lockedInitialGreetingLocaleName: _lockedInitialGreetingLocaleName,
         ),
         loading: () => const _ChatWarmupState(),
         error: (error, stackTrace) => _ChatLoadError(
@@ -82,6 +92,18 @@ final class _ChatScreenState extends ConsumerState<ChatScreen> {
   void _send(String text) {
     final trimmedText = text.trim();
     if (trimmedText.isEmpty) return;
+
+    final chatState = ref.read(chatControllerProvider(widget.vehicleId)).value;
+    final hasUserMessages =
+        chatState?.messages.any(
+          (message) => message.role == ChatMessageRole.user,
+        ) ??
+        false;
+    if (!hasUserMessages && _lockedInitialGreetingLocaleName == null) {
+      _lockedInitialGreetingLocaleName = AppLocalizations.of(
+        context,
+      ).localeName;
+    }
 
     _messageController.clear();
     unawaited(
@@ -121,6 +143,7 @@ final class _ChatLoadedBody extends StatelessWidget {
     required this.controller,
     required this.scrollController,
     required this.onSend,
+    required this.lockedInitialGreetingLocaleName,
   });
 
   final String vehicleId;
@@ -128,6 +151,7 @@ final class _ChatLoadedBody extends StatelessWidget {
   final TextEditingController controller;
   final ScrollController scrollController;
   final ValueChanged<String> onSend;
+  final String? lockedInitialGreetingLocaleName;
 
   @override
   Widget build(BuildContext context) {
@@ -157,6 +181,8 @@ final class _ChatLoadedBody extends StatelessWidget {
                     messages: messages,
                     scrollController: scrollController,
                     isSending: state.isSending,
+                    lockedInitialGreetingLocaleName:
+                        lockedInitialGreetingLocaleName,
                   ),
           ),
           if (messages.isNotEmpty && bottomSuggestions.isNotEmpty)
@@ -309,15 +335,21 @@ final class _MessageList extends StatelessWidget {
     required this.messages,
     required this.scrollController,
     required this.isSending,
+    required this.lockedInitialGreetingLocaleName,
   });
 
   final String vehicleId;
   final List<ChatMessage> messages;
   final ScrollController scrollController;
   final bool isSending;
+  final String? lockedInitialGreetingLocaleName;
 
   @override
   Widget build(BuildContext context) {
+    final hasUserMessages = messages.any(
+      (message) => message.role == ChatMessageRole.user,
+    );
+
     return ListView.builder(
       controller: scrollController,
       padding: const EdgeInsets.fromLTRB(
@@ -332,17 +364,31 @@ final class _MessageList extends StatelessWidget {
           return const _TypingBubble();
         }
 
-        return _ChatBubble(vehicleId: vehicleId, message: messages[index]);
+        return _ChatBubble(
+          vehicleId: vehicleId,
+          message: messages[index],
+          canLocalizeInitialGreeting: index == 0 && !hasUserMessages,
+          lockedInitialGreetingLocaleName: index == 0 && hasUserMessages
+              ? lockedInitialGreetingLocaleName
+              : null,
+        );
       },
     );
   }
 }
 
 final class _ChatBubble extends StatelessWidget {
-  const _ChatBubble({required this.vehicleId, required this.message});
+  const _ChatBubble({
+    required this.vehicleId,
+    required this.message,
+    required this.canLocalizeInitialGreeting,
+    required this.lockedInitialGreetingLocaleName,
+  });
 
   final String vehicleId;
   final ChatMessage message;
+  final bool canLocalizeInitialGreeting;
+  final String? lockedInitialGreetingLocaleName;
 
   @override
   Widget build(BuildContext context) {
@@ -389,8 +435,11 @@ final class _ChatBubble extends StatelessWidget {
                     children: [
                       Text(
                         _localizedBackendChatText(
-                          AppLocalizations.of(context),
+                          _initialGreetingLocalizations(context),
                           message.text,
+                          localizeGreeting:
+                              canLocalizeInitialGreeting ||
+                              lockedInitialGreetingLocaleName != null,
                         ),
                         style: Theme.of(context).textTheme.bodyLarge?.copyWith(
                           color: AppColors.textPrimary,
@@ -451,11 +500,27 @@ final class _ChatBubble extends StatelessWidget {
     final minute = value.minute.toString().padLeft(2, '0');
     return '$hour:$minute';
   }
+
+  AppLocalizations _initialGreetingLocalizations(BuildContext context) {
+    final localeName = lockedInitialGreetingLocaleName;
+    if (localeName == null) {
+      return AppLocalizations.of(context);
+    }
+
+    return lookupAppLocalizations(
+      Locale(localeName.split(RegExp('[-_]')).first),
+    );
+  }
 }
 
-String _localizedBackendChatText(AppLocalizations l10n, String text) {
+String _localizedBackendChatText(
+  AppLocalizations l10n,
+  String text, {
+  bool localizeGreeting = true,
+}) {
   return switch (text.trim()) {
-    'Hi! I am your car, and I am ready to chat.' => l10n.chatGreetingReady,
+    'Hi! I am your car, and I am ready to chat.' when localizeGreeting =>
+      l10n.chatGreetingReady,
     'Vehicle status' => l10n.quickQuestionVehicleStatus,
     'What are my total expenses?' => l10n.quickQuestionTotalExpenses,
     'What can break soon?' => l10n.quickQuestionBreakSoon,
