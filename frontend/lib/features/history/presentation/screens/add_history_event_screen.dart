@@ -213,7 +213,11 @@ final class _AddHistoryEventScreenState extends State<AddHistoryEventScreen> {
                       hintText: '0',
                       suffixText: 'L',
                       allowDecimal: true,
-                      validator: HistoryEventFormUtils.validateFuelLiters,
+                      validator: (value) =>
+                          HistoryEventFormUtils.validateFuelLiters(
+                            value,
+                            l10n: AppLocalizations.of(context),
+                          ),
                     ),
                   ),
                 ),

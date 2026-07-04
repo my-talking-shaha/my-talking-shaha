@@ -431,6 +431,17 @@ class AppLocalizationsRu extends AppLocalizations {
   String get amount => 'КОЛИЧЕСТВО';
 
   @override
+  String get fuelLitersInvalidNumber => 'Введите литры';
+
+  @override
+  String get fuelLitersMustBePositive => 'Больше 0 л';
+
+  @override
+  String fuelLitersMax(int max) {
+    return 'Макс. $max л';
+  }
+
+  @override
   String get cost => 'СТОИМОСТЬ';
 
   @override

@@ -920,6 +920,24 @@ abstract class AppLocalizations {
   /// **'AMOUNT'**
   String get amount;
 
+  /// No description provided for @fuelLitersInvalidNumber.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter amount'**
+  String get fuelLitersInvalidNumber;
+
+  /// No description provided for @fuelLitersMustBePositive.
+  ///
+  /// In en, this message translates to:
+  /// **'Must be > 0 L'**
+  String get fuelLitersMustBePositive;
+
+  /// No description provided for @fuelLitersMax.
+  ///
+  /// In en, this message translates to:
+  /// **'Max {max} L'**
+  String fuelLitersMax(int max);
+
   /// No description provided for @cost.
   ///
   /// In en, this message translates to:
