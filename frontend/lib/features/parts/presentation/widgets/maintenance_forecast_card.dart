@@ -5,19 +5,21 @@ import 'package:frontend/features/parts/domain/entities/vehicle_part.dart';
 import 'package:frontend/features/parts/presentation/widgets/part_resource_row.dart';
 import 'package:frontend/features/parts/presentation/widgets/parts_design_tokens.dart';
 import 'package:frontend/features/parts/presentation/widgets/resource_badge.dart';
+import 'package:frontend/l10n/generated/app_localizations.dart';
 
 final class MaintenanceForecastCard extends StatelessWidget {
   const MaintenanceForecastCard({
     required this.parts,
-    this.lastUpdatedLabel = 'UPDATED 2 HOURS AGO',
+    this.lastUpdatedLabel,
     super.key,
   });
 
   final List<VehiclePart> parts;
-  final String lastUpdatedLabel;
+  final String? lastUpdatedLabel;
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     final knownParts = parts
         .where((part) => part.remainingPercent != null)
         .toList(growable: false);
@@ -34,7 +36,7 @@ final class MaintenanceForecastCard extends StatelessWidget {
             children: [
               Expanded(
                 child: Text(
-                  'MAINTENANCE FORECAST',
+                  l10n.maintenanceForecastCaps,
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                   style: Theme.of(context).textTheme.bodySmall?.copyWith(
@@ -49,7 +51,7 @@ final class MaintenanceForecastCard extends StatelessWidget {
               const SizedBox(width: AppSpacing.sm),
               Expanded(
                 child: Text(
-                  lastUpdatedLabel,
+                  lastUpdatedLabel ?? l10n.updatedTwoHoursAgo,
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                   textAlign: TextAlign.end,
@@ -113,6 +115,7 @@ final class _ForecastSummary extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     final criticalParts = parts
         .where((part) => part.status == PartResourceStatus.critical)
         .toList(growable: false);
@@ -129,15 +132,15 @@ final class _ForecastSummary extends StatelessWidget {
         });
 
     final headline = criticalParts.isNotEmpty
-        ? 'Service needed now'
+        ? l10n.serviceNeededNow
         : nextPositiveRemainingKm != null
-        ? 'In ${_formatInt(nextPositiveRemainingKm)} km'
-        : 'Not enough data';
+        ? l10n.inKm(_formatInt(nextPositiveRemainingKm))
+        : l10n.notEnoughData;
     final caption = criticalParts.isNotEmpty
-        ? _criticalCaption(criticalParts)
+        ? _criticalCaption(l10n, criticalParts)
         : nextPositiveRemainingKm != null
-        ? _approximateWindow(nextPositiveRemainingKm)
-        : 'Add lifetime data to forecast';
+        ? _approximateWindow(l10n, nextPositiveRemainingKm)
+        : l10n.addLifetimeData;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -157,7 +160,7 @@ final class _ForecastSummary extends StatelessWidget {
             const SizedBox(width: AppSpacing.sm),
             Flexible(
               child: Text(
-                'NEXT SERVICE',
+                l10n.nextService,
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
                 style: Theme.of(context).textTheme.bodySmall?.copyWith(
@@ -199,19 +202,22 @@ final class _ForecastSummary extends StatelessWidget {
     );
   }
 
-  String _approximateWindow(int remainingKm) {
+  String _approximateWindow(AppLocalizations l10n, int remainingKm) {
     final days = (remainingKm / _averageDailyMileageKm).ceil();
     final displayDays = days < 1 ? 1 : days;
 
-    return 'Approx. date: in $displayDays days';
+    return l10n.approxDateInDays(displayDays);
   }
 
-  String _criticalCaption(List<VehiclePart> criticalParts) {
+  String _criticalCaption(
+    AppLocalizations l10n,
+    List<VehiclePart> criticalParts,
+  ) {
     if (criticalParts.length == 1) {
-      return 'Replace ${criticalParts.first.name} now';
+      return l10n.replacePartNow(criticalParts.first.name);
     }
 
-    return 'Replace ${criticalParts.length} critical parts now';
+    return l10n.replaceCriticalPartsNow(criticalParts.length);
   }
 }
 

@@ -90,7 +90,7 @@ void main() {
       expect(summary.period, AnalyticsPeriod.all);
       expect(summary.hasEnoughData, isFalse);
       expect(summary.totalExpenses, isNull);
-      expect(summary.message, contains('Not enough data'));
+      expect(summary.message, isNull);
     });
 
     test('uses backend period query values', () {
