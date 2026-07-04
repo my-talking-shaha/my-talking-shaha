@@ -212,10 +212,10 @@ final class _AddHistoryEventScreenState extends State<AddHistoryEventScreen> {
                       controller: _fuelLitersController,
                       hintText: '0',
                       suffixText: 'L',
+                      allowDecimal: true,
                       validator: (value) =>
-                          HistoryEventFormUtils.validatePositiveInt(
+                          HistoryEventFormUtils.validateFuelLiters(
                             value,
-                            label: AppLocalizations.of(context).amount,
                             l10n: AppLocalizations.of(context),
                           ),
                     ),
@@ -562,7 +562,9 @@ final class _AddHistoryEventScreenState extends State<AddHistoryEventScreen> {
         currentMileageKm: int.parse(_mileageController.text),
         details: FuelDetails(
           cost: int.parse(_fuelCostController.text),
-          liters: int.parse(_fuelLitersController.text),
+          liters: HistoryEventFormUtils.parseDecimal(
+            _fuelLitersController.text,
+          )!,
           fuelType: _fuelType,
         ),
       ),
@@ -773,6 +775,7 @@ final class _NumberField extends StatelessWidget {
     this.suffixText,
     this.icon,
     this.validator,
+    this.allowDecimal = false,
     super.key,
   });
 
@@ -781,13 +784,18 @@ final class _NumberField extends StatelessWidget {
   final String? suffixText;
   final IconData? icon;
   final FormFieldValidator<String>? validator;
+  final bool allowDecimal;
 
   @override
   Widget build(BuildContext context) {
     return TextFormField(
       controller: controller,
-      keyboardType: TextInputType.number,
-      inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+      keyboardType: TextInputType.numberWithOptions(decimal: allowDecimal),
+      inputFormatters: [
+        allowDecimal
+            ? FilteringTextInputFormatter.allow(RegExp(r'[0-9\.,]'))
+            : FilteringTextInputFormatter.digitsOnly,
+      ],
       decoration: InputDecoration(
         hintText: hintText,
         prefixIcon: icon == null ? null : Icon(icon),

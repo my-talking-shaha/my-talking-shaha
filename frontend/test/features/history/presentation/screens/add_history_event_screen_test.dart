@@ -49,6 +49,52 @@ void main() {
     expect(find.text('AMOUNT'), findsOneWidget);
   });
 
+  testWidgets('validates fuel amount range and accepts decimal liters', (
+    tester,
+  ) async {
+    HistoryEvent? savedEvent;
+    await _pumpScreen(tester, onSave: (event) async => savedEvent = event);
+
+    await tester.enterText(
+      find.byKey(const ValueKey('event-title')),
+      'Decimal fuel stop',
+    );
+    await tester.enterText(
+      find.byKey(const ValueKey('fuel-mileage')),
+      '124600',
+    );
+    await tester.enterText(find.byKey(const ValueKey('fuel-liters')), '150');
+    await tester.enterText(find.byKey(const ValueKey('fuel-cost')), '3000');
+    await _tapSave(tester);
+
+    expect(savedEvent, isNull);
+    expect(find.text('Max 100 L'), findsOneWidget);
+
+    await tester.enterText(find.byKey(const ValueKey('fuel-liters')), '42.5');
+    await _tapSave(tester);
+
+    final details = savedEvent?.details as FuelDetails;
+    expect(details.liters, 42.5);
+  });
+
+  testWidgets('localizes fuel amount validation errors', (tester) async {
+    await _pumpScreen(tester, locale: const Locale('ru'), onSave: (_) async {});
+
+    await tester.enterText(
+      find.byKey(const ValueKey('event-title')),
+      'Заправка',
+    );
+    await tester.enterText(
+      find.byKey(const ValueKey('fuel-mileage')),
+      '124600',
+    );
+    await tester.enterText(find.byKey(const ValueKey('fuel-liters')), '0');
+    await tester.enterText(find.byKey(const ValueKey('fuel-cost')), '3000');
+    await _tapSave(tester, label: 'Сохранить');
+
+    expect(find.text('Больше 0 л'), findsOneWidget);
+  });
+
   testWidgets('switches between maintenance and trip forms', (tester) async {
     await _pumpScreen(tester, onSave: (_) async {});
 
@@ -141,10 +187,11 @@ Future<void> _pumpScreen(
   PickHistoryPhoto? pickPhoto,
   PersistHistoryPhoto? persistPhoto,
   DeleteHistoryPhoto? deletePhoto,
+  Locale locale = const Locale('en'),
 }) async {
   await tester.pumpWidget(
     MaterialApp(
-      locale: const Locale('en'),
+      locale: locale,
       localizationsDelegates: AppLocalizations.localizationsDelegates,
       supportedLocales: AppLocalizations.supportedLocales,
       theme: AppTheme.dark,
@@ -168,8 +215,8 @@ Future<void> _pumpScreen(
   await tester.pump();
 }
 
-Future<void> _tapSave(WidgetTester tester) async {
-  final saveButton = find.widgetWithText(ElevatedButton, 'Save');
+Future<void> _tapSave(WidgetTester tester, {String label = 'Save'}) async {
+  final saveButton = find.widgetWithText(ElevatedButton, label);
   await tester.dragUntilVisible(
     saveButton,
     find.byType(ListView),

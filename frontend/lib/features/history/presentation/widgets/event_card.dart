@@ -73,7 +73,10 @@ class EventCard extends StatelessWidget {
 
     return switch (details) {
       FuelDetails() => [
-        Text('${details.liters} L • ${details.fuelType}', style: bodyStyle),
+        Text(
+          '${_formatLiters(details.liters)} L • ${details.fuelType}',
+          style: bodyStyle,
+        ),
       ],
       MaintenanceDetails() => [
         if (details.description.trim().isNotEmpty)
@@ -255,6 +258,13 @@ String _formatNumber(int value) {
   }
 
   return value < 0 ? '-$buffer' : buffer.toString();
+}
+
+String _formatLiters(double value) {
+  if (value == value.roundToDouble()) {
+    return value.toInt().toString();
+  }
+  return value.toStringAsFixed(2).replaceFirst(RegExp(r'0+$'), '');
 }
 
 String _formatDuration(BuildContext context, Duration duration) {

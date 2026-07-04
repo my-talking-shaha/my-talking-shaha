@@ -433,6 +433,17 @@ class AppLocalizationsEn extends AppLocalizations {
   String get amount => 'AMOUNT';
 
   @override
+  String get fuelLitersInvalidNumber => 'Enter amount';
+
+  @override
+  String get fuelLitersMustBePositive => 'Must be > 0 L';
+
+  @override
+  String fuelLitersMax(int max) {
+    return 'Max $max L';
+  }
+
+  @override
   String get cost => 'COST';
 
   @override

@@ -164,6 +164,16 @@
   "currentMileageLabel": "CURRENT MILEAGE",
   "refuelingDetails": "REFUELING DETAILS",
   "amount": "AMOUNT",
+  "fuelLitersInvalidNumber": "Enter amount",
+  "fuelLitersMustBePositive": "Must be > 0 L",
+  "fuelLitersMax": "Max {max} L",
+  "@fuelLitersMax": {
+    "placeholders": {
+      "max": {
+        "type": "int"
+      }
+    }
+  },
   "cost": "COST",
   "fuelType": "FUEL TYPE",
   "mileageForecastInfo": "Mileage data will be used to update service intervals and forecasts.",

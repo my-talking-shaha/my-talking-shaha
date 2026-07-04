@@ -94,6 +94,20 @@ abstract final class HistoryEventFormUtils {
     return null;
   }
 
+  static String? validateFuelLiters(String? value, {AppLocalizations? l10n}) {
+    final liters = parseDecimal(value);
+    if (liters == null) return l10n?.fuelLitersInvalidNumber ?? 'Enter number';
+    if (liters <= 0) return l10n?.fuelLitersMustBePositive ?? '> 0 L';
+    if (liters > 100) return l10n?.fuelLitersMax(100) ?? 'Max 100 L';
+    return null;
+  }
+
+  static double? parseDecimal(String? value) {
+    final normalized = value?.trim().replaceAll(',', '.');
+    if (normalized == null || normalized.isEmpty) return null;
+    return double.tryParse(normalized);
+  }
+
   static String? validateRequired(
     String? value, {
     required String label,

@@ -164,6 +164,16 @@
   "currentMileageLabel": "ТЕКУЩИЙ ПРОБЕГ",
   "refuelingDetails": "ДЕТАЛИ ЗАПРАВКИ",
   "amount": "КОЛИЧЕСТВО",
+  "fuelLitersInvalidNumber": "Введите литры",
+  "fuelLitersMustBePositive": "Больше 0 л",
+  "fuelLitersMax": "Макс. {max} л",
+  "@fuelLitersMax": {
+    "placeholders": {
+      "max": {
+        "type": "int"
+      }
+    }
+  },
   "cost": "СТОИМОСТЬ",
   "fuelType": "ТИП ТОПЛИВА",
   "mileageForecastInfo": "Пробег будет использован для обновления сервисных интервалов и прогнозов.",
