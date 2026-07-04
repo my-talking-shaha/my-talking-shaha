@@ -1,48 +1,54 @@
+import 'package:frontend/l10n/generated/app_localizations.dart';
+
 abstract final class AuthValidator {
   static const int minPasswordLength = 6;
 
-  static String? fullName(String? value) {
-    return requiredField(value, message: 'Enter your full name');
+  static String? fullName(String? value, AppLocalizations l10n) {
+    return requiredField(value, message: l10n.enterYourFullName);
   }
 
-  static String? login(String? value) {
-    final requiredError = requiredField(value, message: 'Enter your email');
+  static String? login(String? value, AppLocalizations l10n) {
+    final requiredError = requiredField(value, message: l10n.enterYourEmail);
     if (requiredError != null) {
       return requiredError;
     }
 
     final emailPattern = RegExp(r'^[^@\s]+@[^@\s]+\.[^@\s]+$');
     if (!emailPattern.hasMatch(value!.trim())) {
-      return 'Enter a valid email';
+      return l10n.enterValidEmail;
     }
 
     return null;
   }
 
-  static String? password(String? value) {
-    final requiredError = requiredField(value, message: 'Enter your password');
+  static String? password(String? value, AppLocalizations l10n) {
+    final requiredError = requiredField(value, message: l10n.enterYourPassword);
     if (requiredError != null) {
       return requiredError;
     }
 
     if (!isStrongPassword(value!)) {
-      return 'Password must be at least $minPasswordLength characters';
+      return l10n.passwordMinLength(minPasswordLength);
     }
 
     return null;
   }
 
-  static String? confirmPassword(String? value, String password) {
+  static String? confirmPassword(
+    String? value,
+    String password,
+    AppLocalizations l10n,
+  ) {
     final requiredError = requiredField(
       value,
-      message: 'Confirm your password',
+      message: l10n.confirmYourPassword,
     );
     if (requiredError != null) {
       return requiredError;
     }
 
     if (value != password) {
-      return 'Passwords do not match';
+      return l10n.passwordsDoNotMatch;
     }
 
     return null;

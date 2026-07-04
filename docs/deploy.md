@@ -25,12 +25,26 @@ production data.
 
    Log out and log back in after changing groups.
 
-4. Run the application once manually:
+4. Optionally run the application once manually for a private local smoke test
+   with explicit local-only values:
 
    ```bash
-   docker compose -f docker/docker-compose.yml down -v
-   docker compose -f docker/docker-compose.yml up -d --build --remove-orphans
+   cat > .env <<'EOF'
+   JWT_SECRET=local-jwt-secret-with-more-than-32-bytes
+   DB_USERNAME=local_shaha_user
+   DB_PASSWORD=local-db-password-32-bytes
+   TIMEWEB_AI_BASE_URL=https://agent.timeweb.cloud/api/v1/cloud-ai/agents/YOUR_AGENT_ID/v1
+   TIMEWEB_AI_TOKEN=local-placeholder-token
+   TIMEWEB_AI_MODEL=timeweb-agent
+   EOF
+
+   docker compose --env-file .env -f docker/docker-compose.yml down -v
+   docker compose --env-file .env -f docker/docker-compose.yml up -d --build --remove-orphans
    ```
+
+   These local values are development-only. Do not leave them on the shared
+   development server, staging, or production-like deployment. Those
+   environments must use GitHub secrets or real environment variables instead.
 
 ## GitHub secrets
 
@@ -41,9 +55,18 @@ Add these secrets in GitHub:
 - `SERVER_SSH_KEY` - private SSH key with access to the server.
 - `SERVER_APP_PATH` - repository path on the server, for example `/opt/my-talking-shaha`.
 - `SERVER_PORT` - optional SSH port. If omitted, port `22` is used.
+- `JWT_SECRET` - production-grade JWT signing secret, at least 32 bytes, not
+  the local development placeholder.
+- `DB_USERNAME` - production database username, not the committed local default.
+- `DB_PASSWORD` - production database password, not the committed local default.
 - `TIMEWEB_AI_BASE_URL` - OpenAI-compatible Timeweb AI base URL, for example
   `https://agent.timeweb.cloud/api/v1/cloud-ai/agents/<agent_id>/v1`.
 - `TIMEWEB_AI_TOKEN` - Timeweb AI API token for the agent or AI Gateway.
+
+The backend fails during startup outside `local` or `test` profiles when
+`JWT_SECRET`, `DB_USERNAME`, or `DB_PASSWORD` are missing or still set to known
+development placeholders. The deploy workflow checks the same required GitHub
+secrets before it starts the remote Docker stack.
 
 ## Deployment flow
 
@@ -59,15 +82,19 @@ On every push to `main`, the workflow:
 8. Goes to `SERVER_APP_PATH`.
 9. Runs `git fetch --prune origin main`.
 10. Updates the server checkout with `git pull --ff-only origin main`.
-11. Removes the previous development stack and Postgres volume.
-12. Rebuilds and restarts the stack from a clean database.
-13. Verifies backend health and generated OpenAPI docs.
+11. Builds backend and frontend images before stopping the current stack.
+12. If the first Docker build fails, prunes the BuildKit cache and retries once.
+13. Removes the previous development stack and Postgres volume.
+14. Starts the already built stack from a clean database.
+15. Verifies backend health, frontend health, generated OpenAPI docs, and Swagger UI.
 
    ```bash
+   docker compose -f docker/docker-compose.yml build backend frontend
    docker compose -f docker/docker-compose.yml down -v
-   docker compose -f docker/docker-compose.yml up -d --build --remove-orphans
+   docker compose -f docker/docker-compose.yml up -d --no-build --remove-orphans backend frontend
 
    curl --fail --retry 30 --retry-delay 2 --retry-all-errors http://localhost:8080/actuator/health
+   curl --fail --retry 30 --retry-delay 2 --retry-all-errors http://localhost/health
    curl --fail --retry 30 --retry-delay 2 --retry-all-errors http://localhost/v3/api-docs
    ```
 

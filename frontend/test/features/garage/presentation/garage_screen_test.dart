@@ -9,6 +9,7 @@ import 'package:frontend/features/garage/presentation/providers/garage_providers
 import 'package:frontend/features/garage/presentation/screens/add_vehicle_screen.dart';
 import 'package:frontend/features/garage/presentation/screens/garage_screen.dart';
 import 'package:frontend/features/garage/presentation/widgets/vehicle_garage_card.dart';
+import 'package:frontend/l10n/generated/app_localizations.dart';
 import 'package:go_router/go_router.dart';
 
 void main() {
@@ -348,7 +349,12 @@ Future<void> _pumpGarage(
   await tester.pumpWidget(
     ProviderScope(
       overrides: [garageRepositoryProvider.overrideWithValue(repository)],
-      child: MaterialApp.router(routerConfig: router),
+      child: MaterialApp.router(
+        locale: const Locale('en'),
+        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        supportedLocales: AppLocalizations.supportedLocales,
+        routerConfig: router,
+      ),
     ),
   );
   await tester.pumpAndSettle();

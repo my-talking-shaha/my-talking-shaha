@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:frontend/app/theme/app_theme.dart';
 import 'package:frontend/features/notifications/domain/entities/app_notification.dart';
 import 'package:frontend/features/notifications/presentation/providers/notifications_providers.dart';
+import 'package:frontend/l10n/generated/app_localizations.dart';
 
 final class NotificationDetailsScreen extends ConsumerWidget {
   const NotificationDetailsScreen({required this.notificationId, super.key});
@@ -11,12 +12,13 @@ final class NotificationDetailsScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = AppLocalizations.of(context);
     final notificationState = ref.watch(
       notificationByIdProvider(notificationId),
     );
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Notification details')),
+      appBar: AppBar(title: Text(l10n.notificationDetails)),
       body: SafeArea(
         child: notificationState.when(
           data: (notification) {
@@ -44,6 +46,8 @@ final class _NotificationDetails extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+
     return ListView(
       padding: const EdgeInsets.all(AppSpacing.xl),
       children: [
@@ -74,12 +78,12 @@ final class _NotificationDetails extends StatelessWidget {
                   const SizedBox(height: AppSpacing.lg),
                   if (notification.remainingKm != null)
                     _DetailRow(
-                      label: 'Remaining resource',
+                      label: l10n.remainingResource,
                       value: '${notification.remainingKm} km',
                     ),
                   if (notification.recommendedAction != null)
                     _DetailRow(
-                      label: 'Recommended action',
+                      label: l10n.recommendedAction,
                       value: notification.recommendedAction!,
                     ),
                 ],
@@ -119,10 +123,10 @@ final class _NotificationNotFoundState extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const Center(
+    return Center(
       child: Padding(
-        padding: EdgeInsets.all(AppSpacing.xl),
-        child: Text('Notification was not found'),
+        padding: const EdgeInsets.all(AppSpacing.xl),
+        child: Text(AppLocalizations.of(context).notificationNotFound),
       ),
     );
   }
@@ -135,6 +139,8 @@ final class _NotificationDetailsErrorState extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+
     return Center(
       child: Padding(
         padding: const EdgeInsets.all(AppSpacing.xl),
@@ -148,11 +154,11 @@ final class _NotificationDetailsErrorState extends StatelessWidget {
             ),
             const SizedBox(height: AppSpacing.lg),
             Text(
-              'Network error',
+              l10n.networkError,
               style: Theme.of(context).textTheme.titleLarge,
             ),
             const SizedBox(height: AppSpacing.xl),
-            OutlinedButton(onPressed: onRetry, child: const Text('Retry')),
+            OutlinedButton(onPressed: onRetry, child: Text(l10n.retry)),
           ],
         ),
       ),
