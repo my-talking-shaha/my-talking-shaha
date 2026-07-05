@@ -142,9 +142,7 @@ abstract final class AnalyticsApiSummaryMapper {
         history: null,
         charts: null,
         trendPercent: null,
-        message:
-            'Not enough data for analytics yet. Add trips, refueling, repairs, '
-            'or maintenance records to unlock insights.',
+        message: null,
       );
     }
 

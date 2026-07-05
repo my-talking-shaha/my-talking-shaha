@@ -8,6 +8,7 @@ import 'package:frontend/app/theme/app_theme.dart';
 import 'package:frontend/features/garage/domain/entities/vehicle.dart';
 import 'package:frontend/features/garage/presentation/providers/garage_providers.dart';
 import 'package:frontend/features/garage/presentation/widgets/vehicle_garage_card.dart';
+import 'package:frontend/l10n/generated/app_localizations.dart';
 import 'package:go_router/go_router.dart';
 
 final class GarageScreen extends ConsumerWidget {
@@ -30,7 +31,7 @@ final class GarageScreen extends ConsumerWidget {
             vehicles: vehicles,
             onAddVehicle: () => context.go('/garage/add'),
             onOpenVehicle: (vehicleId) {
-              context.go('/vehicle/$vehicleId/dashboard');
+              context.go('/vehicle/$vehicleId/chat');
             },
             onEditVehicle: (vehicleId) {
               context.go('/garage/edit/$vehicleId');
@@ -55,22 +56,22 @@ final class GarageScreen extends ConsumerWidget {
     WidgetRef ref,
     Vehicle vehicle,
   ) async {
+    final l10n = AppLocalizations.of(context);
+    final vehicleName = '${vehicle.brand} ${vehicle.model}';
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) {
         return AlertDialog(
-          title: const Text('Delete vehicle?'),
-          content: Text(
-            '${vehicle.brand} ${vehicle.model} will be removed from the garage.',
-          ),
+          title: Text(l10n.deleteVehicleQuestion),
+          content: Text(l10n.deleteVehicleConfirmation(vehicleName)),
           actions: [
             TextButton(
               onPressed: () => Navigator.of(context).pop(false),
-              child: const Text('Cancel'),
+              child: Text(l10n.cancel),
             ),
             TextButton(
               onPressed: () => Navigator.of(context).pop(true),
-              child: const Text('Delete'),
+              child: Text(l10n.delete),
             ),
           ],
         );
@@ -147,6 +148,8 @@ final class _EmptyGarageBody extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+
     return Stack(
       fit: StackFit.expand,
       children: [
@@ -162,7 +165,7 @@ final class _EmptyGarageBody extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                'My Talking Shaha',
+                l10n.brandName,
                 style: Theme.of(context).textTheme.headlineLarge?.copyWith(
                   color: const Color(0xFFB8C3FF),
                   fontSize: 31,
@@ -178,7 +181,7 @@ final class _EmptyGarageBody extends StatelessWidget {
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       Text(
-                        'Garage is empty',
+                        l10n.garageEmpty,
                         textAlign: TextAlign.center,
                         style: Theme.of(context).textTheme.headlineMedium
                             ?.copyWith(
@@ -189,7 +192,7 @@ final class _EmptyGarageBody extends StatelessWidget {
                       ),
                       const SizedBox(height: AppSpacing.md),
                       Text(
-                        'Add your first car to create its digital twin.',
+                        l10n.garageEmptyDescription,
                         textAlign: TextAlign.center,
                         style: Theme.of(context).textTheme.bodyLarge?.copyWith(
                           color: AppColors.textSecondary,
@@ -203,7 +206,7 @@ final class _EmptyGarageBody extends StatelessWidget {
                         child: ElevatedButton.icon(
                           onPressed: onAddVehicle,
                           icon: const Icon(Icons.add_circle_outline, size: 22),
-                          label: const Text('Add vehicle'),
+                          label: Text(l10n.addVehicle),
                         ),
                       ),
                     ],
@@ -330,11 +333,13 @@ final class _GarageHeader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          'My Talking Shaha',
+          l10n.brandName,
           style: Theme.of(context).textTheme.headlineLarge?.copyWith(
             color: const Color(0xFFB8C3FF),
             fontSize: 31,
@@ -351,7 +356,7 @@ final class _GarageHeader extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    'YOUR FLEET',
+                    l10n.yourFleet,
                     style: Theme.of(context).textTheme.bodySmall?.copyWith(
                       color: AppColors.success,
                       fontSize: 12,
@@ -361,7 +366,7 @@ final class _GarageHeader extends StatelessWidget {
                   ),
                   const SizedBox(height: AppSpacing.sm),
                   Text(
-                    'Garage',
+                    l10n.garage,
                     style: Theme.of(context).textTheme.headlineMedium?.copyWith(
                       fontSize: 25,
                       fontWeight: FontWeight.w800,
@@ -375,7 +380,7 @@ final class _GarageHeader extends StatelessWidget {
               width: 56,
               height: 56,
               child: IconButton.filled(
-                tooltip: 'Add vehicle',
+                tooltip: l10n.addVehicle,
                 onPressed: onAddVehicle,
                 style: IconButton.styleFrom(
                   backgroundColor: AppColors.primary,
@@ -399,6 +404,8 @@ final class _GarageErrorState extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+
     return Center(
       child: Column(
         mainAxisSize: MainAxisSize.min,
@@ -406,11 +413,11 @@ final class _GarageErrorState extends StatelessWidget {
           const Icon(Icons.error_outline, color: AppColors.error, size: 40),
           const SizedBox(height: AppSpacing.lg),
           Text(
-            'Could not load garage',
+            l10n.couldNotLoadGarage,
             style: Theme.of(context).textTheme.titleMedium,
           ),
           const SizedBox(height: AppSpacing.md),
-          OutlinedButton(onPressed: onRetry, child: const Text('Retry')),
+          OutlinedButton(onPressed: onRetry, child: Text(l10n.retry)),
         ],
       ),
     );

@@ -7,6 +7,7 @@ import 'package:flutter_svg/svg.dart';
 import 'package:frontend/app/theme/app_theme.dart';
 import 'package:frontend/features/garage/presentation/controllers/add_vehicle_controller.dart';
 import 'package:frontend/features/garage/presentation/providers/garage_providers.dart';
+import 'package:frontend/l10n/generated/app_localizations.dart';
 import 'package:go_router/go_router.dart';
 
 final class AddVehicleScreen extends ConsumerStatefulWidget {
@@ -34,6 +35,22 @@ final class _AddVehicleScreenState extends ConsumerState<AddVehicleScreen> {
   static const _borderColor = Color(0xFF3B4252);
   static const _accentColor = Color(0xFFB8C3FF);
   static const _hintColor = Color(0xFF6F7482);
+  static const _otherVehicleColorValue = 'Other';
+  static const _standardVehicleColors = [
+    'White',
+    'Black',
+    'Silver',
+    'Grey',
+    'Red',
+    'Blue',
+    'Green',
+    'Yellow',
+    'Orange',
+    'Brown',
+    'Beige',
+    'Gold',
+    'Purple',
+  ];
 
   @override
   void initState() {
@@ -81,9 +98,9 @@ final class _AddVehicleScreenState extends ConsumerState<AddVehicleScreen> {
         return;
       }
 
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(const SnackBar(content: Text('Vehicle was not found')));
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(AppLocalizations.of(context).vehicleNotFound)),
+      );
       context.go('/garage');
       return;
     } finally {
@@ -97,17 +114,22 @@ final class _AddVehicleScreenState extends ConsumerState<AddVehicleScreen> {
 
   void _syncTextControllers() {
     final state = _controller.state;
+    final canonicalColor = _canonicalVehicleColor(state.color);
+    if (canonicalColor != null && canonicalColor != state.color) {
+      _controller.updateColor(canonicalColor);
+    }
     _brandController.text = state.brand;
     _modelController.text = state.model;
     _yearController.text = state.year;
     _mileageController.text = state.currentMileage;
-    _colorController.text = state.color;
+    _colorController.text = _customVehicleColor(state.color) ?? '';
     _vinController.text = state.vin;
     _engineSpecificationController.text = state.engineSpecification;
   }
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     final state = _controller.state;
     final hasEngineType = state.engineType.isNotEmpty;
     final isEditing = widget.vehicleId != null;
@@ -120,7 +142,7 @@ final class _AddVehicleScreenState extends ConsumerState<AddVehicleScreen> {
         titleSpacing: 0,
         iconTheme: const IconThemeData(color: _accentColor),
         title: Text(
-          isEditing ? 'Edit car' : 'Car Specifications',
+          isEditing ? l10n.editCar : l10n.carSpecifications,
           style: const TextStyle(
             color: _accentColor,
             fontWeight: FontWeight.w700,
@@ -140,20 +162,26 @@ final class _AddVehicleScreenState extends ConsumerState<AddVehicleScreen> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     _GarageTextField(
-                      label: 'Brand',
+                      label: l10n.brand,
                       hintText: 'Lada',
                       controller: _brandController,
-                      errorText: state.fieldErrors['brand'],
+                      errorText: _localizedVehicleError(
+                        l10n,
+                        state.fieldErrors['brand'],
+                      ),
                       textInputAction: TextInputAction.next,
                       onChanged: (value) =>
                           _update(_controller.updateBrand, value),
                     ),
                     const SizedBox(height: 24),
                     _GarageTextField(
-                      label: 'Model',
+                      label: l10n.model,
                       hintText: '2106',
                       controller: _modelController,
-                      errorText: state.fieldErrors['model'],
+                      errorText: _localizedVehicleError(
+                        l10n,
+                        state.fieldErrors['model'],
+                      ),
                       textInputAction: TextInputAction.next,
                       onChanged: (value) =>
                           _update(_controller.updateModel, value),
@@ -163,10 +191,13 @@ final class _AddVehicleScreenState extends ConsumerState<AddVehicleScreen> {
                       children: [
                         Expanded(
                           child: _GarageTextField(
-                            label: 'Year',
+                            label: l10n.year,
                             hintText: '1998',
                             controller: _yearController,
-                            errorText: state.fieldErrors['year'],
+                            errorText: _localizedVehicleError(
+                              l10n,
+                              state.fieldErrors['year'],
+                            ),
                             keyboardType: TextInputType.number,
                             inputFormatters: [
                               FilteringTextInputFormatter.digitsOnly,
@@ -179,10 +210,13 @@ final class _AddVehicleScreenState extends ConsumerState<AddVehicleScreen> {
                         const SizedBox(width: 16),
                         Expanded(
                           child: _GarageTextField(
-                            label: 'Current mileage',
+                            label: l10n.currentMileage,
                             hintText: '124580',
                             controller: _mileageController,
-                            errorText: state.fieldErrors['currentMileageKm'],
+                            errorText: _localizedVehicleError(
+                              l10n,
+                              state.fieldErrors['currentMileageKm'],
+                            ),
                             keyboardType: TextInputType.number,
                             inputFormatters: [
                               FilteringTextInputFormatter.digitsOnly,
@@ -197,20 +231,22 @@ final class _AddVehicleScreenState extends ConsumerState<AddVehicleScreen> {
                       ],
                     ),
                     const SizedBox(height: 24),
-                    _GarageTextField(
-                      label: 'Color',
-                      hintText: 'blue',
-                      controller: _colorController,
-                      textInputAction: TextInputAction.next,
-                      onChanged: (value) =>
+                    _GarageColorField(
+                      selectedValue: _selectedVehicleColor(state.color),
+                      customColorController: _colorController,
+                      onColorChanged: _updateVehicleColor,
+                      onCustomColorChanged: (value) =>
                           _update(_controller.updateColor, value),
                     ),
                     const SizedBox(height: 24),
                     _GarageTextField(
-                      label: 'VIN number (optional)',
+                      label: l10n.vinOptional,
                       hintText: 'XTA21060012345678',
                       controller: _vinController,
-                      errorText: state.fieldErrors['vin'],
+                      errorText: _localizedVehicleError(
+                        l10n,
+                        state.fieldErrors['vin'],
+                      ),
                       inputFormatters: [
                         LengthLimitingTextInputFormatter(17),
                         FilteringTextInputFormatter.allow(
@@ -223,7 +259,7 @@ final class _AddVehicleScreenState extends ConsumerState<AddVehicleScreen> {
                           _update(_controller.updateVin, value),
                     ),
                     const SizedBox(height: 24),
-                    const _GarageDropdownLabel(label: 'Engine type'),
+                    _GarageDropdownLabel(label: l10n.engineType),
                     const SizedBox(height: 10),
                     DropdownButtonFormField<String>(
                       key: ValueKey(state.engineType),
@@ -238,7 +274,10 @@ final class _AddVehicleScreenState extends ConsumerState<AddVehicleScreen> {
                       ),
                       style: const TextStyle(color: Colors.white, fontSize: 16),
                       decoration: InputDecoration(
-                        errorText: state.fieldErrors['engineType'],
+                        errorText: _localizedVehicleError(
+                          l10n,
+                          state.fieldErrors['engineType'],
+                        ),
                         filled: true,
                         fillColor: _fieldColor,
                         contentPadding: const EdgeInsets.symmetric(
@@ -265,26 +304,26 @@ final class _AddVehicleScreenState extends ConsumerState<AddVehicleScreen> {
                             ? const TextStyle(color: _accentColor)
                             : null,
                       ),
-                      hint: const Text(
-                        'Select engine type',
-                        style: TextStyle(color: _hintColor),
+                      hint: Text(
+                        l10n.selectEngineType,
+                        style: const TextStyle(color: _hintColor),
                       ),
-                      items: const [
+                      items: [
                         DropdownMenuItem(
                           value: 'gasoline',
-                          child: Text('gasoline'),
+                          child: Text(l10n.gasoline),
                         ),
                         DropdownMenuItem(
                           value: 'diesel',
-                          child: Text('diesel'),
+                          child: Text(l10n.diesel),
                         ),
                         DropdownMenuItem(
                           value: 'hybrid',
-                          child: Text('hybrid'),
+                          child: Text(l10n.hybrid),
                         ),
                         DropdownMenuItem(
                           value: 'electric',
-                          child: Text('electric'),
+                          child: Text(l10n.electric),
                         ),
                       ],
                       onChanged: state.isSubmitting
@@ -297,13 +336,16 @@ final class _AddVehicleScreenState extends ConsumerState<AddVehicleScreen> {
                       const SizedBox(height: 24),
                       _GarageTextField(
                         label: state.engineType == 'electric'
-                            ? 'Power output (hp)'
-                            : 'Engine volume (L)',
+                            ? l10n.powerOutputHp
+                            : l10n.engineVolumeL,
                         hintText: state.engineType == 'electric'
                             ? '283'
                             : '1.6',
                         controller: _engineSpecificationController,
-                        errorText: state.fieldErrors['engineSpecification'],
+                        errorText: _localizedVehicleError(
+                          l10n,
+                          state.fieldErrors['engineSpecification'],
+                        ),
                         keyboardType: state.engineType == 'electric'
                             ? TextInputType.number
                             : const TextInputType.numberWithOptions(
@@ -327,7 +369,7 @@ final class _AddVehicleScreenState extends ConsumerState<AddVehicleScreen> {
                     if (state.errorMessage != null) ...[
                       const SizedBox(height: 24),
                       Text(
-                        state.errorMessage!,
+                        _localizedVehicleError(l10n, state.errorMessage)!,
                         style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                           color: AppColors.error,
                         ),
@@ -370,8 +412,8 @@ final class _AddVehicleScreenState extends ConsumerState<AddVehicleScreen> {
                                   const SizedBox(width: 8),
                                   Text(
                                     isEditing
-                                        ? 'Save changes'
-                                        : 'Start new shaha!',
+                                        ? l10n.saveChanges
+                                        : l10n.startNewShaha,
                                     style: const TextStyle(
                                       fontWeight: FontWeight.w700,
                                       letterSpacing: 1.2,
@@ -402,7 +444,52 @@ final class _AddVehicleScreenState extends ConsumerState<AddVehicleScreen> {
     });
   }
 
+  void _updateVehicleColor(String value) {
+    setState(() {
+      if (value == _otherVehicleColorValue) {
+        _controller.updateColor(_colorController.text);
+        return;
+      }
+
+      _colorController.clear();
+      _controller.updateColor(value);
+    });
+  }
+
+  String? _selectedVehicleColor(String color) {
+    if (color.trim().isEmpty) {
+      return null;
+    }
+
+    return _canonicalVehicleColor(color) ?? _otherVehicleColorValue;
+  }
+
+  String? _canonicalVehicleColor(String color) {
+    final normalizedColor = color.trim().toLowerCase();
+    if (normalizedColor.isEmpty) {
+      return null;
+    }
+
+    for (final standardColor in _standardVehicleColors) {
+      if (standardColor.toLowerCase() == normalizedColor) {
+        return standardColor;
+      }
+    }
+
+    return null;
+  }
+
+  String? _customVehicleColor(String color) {
+    final trimmedColor = color.trim();
+    if (trimmedColor.isEmpty || _canonicalVehicleColor(trimmedColor) != null) {
+      return null;
+    }
+
+    return trimmedColor;
+  }
+
   Future<void> _submit() async {
+    final l10n = AppLocalizations.of(context);
     FocusScope.of(context).unfocus();
     final isEditing = widget.vehicleId != null;
 
@@ -421,10 +508,174 @@ final class _AddVehicleScreenState extends ConsumerState<AddVehicleScreen> {
 
     ref.invalidate(garageControllerProvider);
     ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(isEditing ? 'Vehicle updated' : 'Vehicle added')),
+      SnackBar(
+        content: Text(isEditing ? l10n.vehicleUpdated : l10n.vehicleAdded),
+      ),
     );
     context.go('/garage');
   }
+}
+
+final class _GarageColorField extends StatelessWidget {
+  const _GarageColorField({
+    required this.selectedValue,
+    required this.customColorController,
+    required this.onColorChanged,
+    required this.onCustomColorChanged,
+  });
+
+  static const _fieldColor = Color(0xFF20242D);
+  static const _borderColor = Color(0xFF3B4252);
+  static const _accentColor = Color(0xFFB8C3FF);
+  static const _hintColor = Color(0xFF6F7482);
+
+  final String? selectedValue;
+  final TextEditingController customColorController;
+  final ValueChanged<String> onColorChanged;
+  final ValueChanged<String> onCustomColorChanged;
+
+  bool get _usesCustomColor =>
+      selectedValue == _AddVehicleScreenState._otherVehicleColorValue;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        _GarageDropdownLabel(label: l10n.color),
+        const SizedBox(height: 10),
+        DropdownButtonFormField<String>(
+          key: const ValueKey('vehicle_color_dropdown'),
+          initialValue: selectedValue,
+          dropdownColor: _fieldColor,
+          borderRadius: BorderRadius.circular(8),
+          icon: const Icon(
+            Icons.keyboard_arrow_down_rounded,
+            color: _accentColor,
+          ),
+          style: const TextStyle(color: Colors.white, fontSize: 16),
+          decoration: InputDecoration(
+            filled: true,
+            fillColor: _fieldColor,
+            contentPadding: const EdgeInsets.symmetric(
+              horizontal: 16,
+              vertical: 18,
+            ),
+            enabledBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(8),
+              borderSide: const BorderSide(color: _borderColor),
+            ),
+            focusedBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(8),
+              borderSide: const BorderSide(color: _accentColor),
+            ),
+          ),
+          hint: Text(
+            l10n.selectColor,
+            style: const TextStyle(color: _hintColor),
+          ),
+          items: [
+            for (final color in _AddVehicleScreenState._standardVehicleColors)
+              DropdownMenuItem(
+                value: color,
+                child: Text(_localizedVehicleColor(l10n, color)),
+              ),
+            DropdownMenuItem(
+              value: _AddVehicleScreenState._otherVehicleColorValue,
+              child: Text(l10n.vehicleColorOther),
+            ),
+          ],
+          onChanged: (value) {
+            if (value != null) {
+              onColorChanged(value);
+            }
+          },
+        ),
+        if (_usesCustomColor) ...[
+          const SizedBox(height: 12),
+          TextField(
+            key: const ValueKey('vehicle_custom_color_field'),
+            controller: customColorController,
+            style: const TextStyle(color: Colors.white, fontSize: 16),
+            cursorColor: _accentColor,
+            textInputAction: TextInputAction.next,
+            textCapitalization: TextCapitalization.words,
+            decoration: InputDecoration(
+              hintText: l10n.customColor,
+              hintStyle: const TextStyle(color: _hintColor),
+              filled: true,
+              fillColor: _fieldColor,
+              contentPadding: const EdgeInsets.symmetric(
+                horizontal: 16,
+                vertical: 18,
+              ),
+              enabledBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(8),
+                borderSide: const BorderSide(color: _borderColor),
+              ),
+              focusedBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(8),
+                borderSide: const BorderSide(color: _accentColor),
+              ),
+            ),
+            onChanged: onCustomColorChanged,
+          ),
+        ],
+      ],
+    );
+  }
+
+  String _localizedVehicleColor(AppLocalizations l10n, String color) {
+    return switch (color) {
+      'White' => l10n.vehicleColorWhite,
+      'Black' => l10n.vehicleColorBlack,
+      'Silver' => l10n.vehicleColorSilver,
+      'Grey' => l10n.vehicleColorGrey,
+      'Red' => l10n.vehicleColorRed,
+      'Blue' => l10n.vehicleColorBlue,
+      'Green' => l10n.vehicleColorGreen,
+      'Yellow' => l10n.vehicleColorYellow,
+      'Orange' => l10n.vehicleColorOrange,
+      'Brown' => l10n.vehicleColorBrown,
+      'Beige' => l10n.vehicleColorBeige,
+      'Gold' => l10n.vehicleColorGold,
+      'Purple' => l10n.vehicleColorPurple,
+      _ => color,
+    };
+  }
+}
+
+String? _localizedVehicleError(AppLocalizations l10n, String? message) {
+  if (message == null) return null;
+
+  final yearMatch = RegExp(
+    r'Enter a production year from 1900 to (\d+)',
+  ).firstMatch(message);
+  if (yearMatch != null) {
+    return l10n.enterProductionYearRange(int.parse(yearMatch.group(1)!));
+  }
+
+  return switch (message) {
+    'Check the vehicle details' => l10n.checkVehicleDetails,
+    'Could not update the vehicle' => l10n.couldNotUpdateVehicle,
+    'Could not save the vehicle' => l10n.couldNotSaveVehicle,
+    'Enter a brand' => l10n.enterBrand,
+    'Enter a model' => l10n.enterModel,
+    'Enter a production year' => l10n.enterProductionYear,
+    'Mileage cannot be negative' => l10n.mileageCannotBeNegative,
+    'Enter current mileage' => l10n.enterCurrentMileage,
+    'Select an engine type' => l10n.selectEngineType,
+    'Enter either engine volume or power output' =>
+      l10n.enterEngineSpecification,
+    'Power output must be greater than zero' => l10n.powerOutputPositive,
+    'Engine volume must be greater than zero' => l10n.engineVolumePositive,
+    'Enter power output' => l10n.enterPowerOutput,
+    'Enter engine volume' => l10n.enterEngineVolume,
+    'VIN must contain exactly 17 characters' => l10n.vinLengthError,
+    _ => message,
+  };
 }
 
 final class _GarageTextField extends StatelessWidget {

@@ -7,6 +7,7 @@ import 'package:frontend/features/chat/domain/entities/chat_action.dart';
 import 'package:frontend/features/chat/domain/entities/chat_message.dart';
 import 'package:frontend/features/chat/presentation/providers/chat_providers.dart';
 import 'package:frontend/features/chat/presentation/state/chat_screen_state.dart';
+import 'package:frontend/l10n/generated/app_localizations.dart';
 import 'package:go_router/go_router.dart';
 
 final class ChatScreen extends ConsumerStatefulWidget {
@@ -21,6 +22,15 @@ final class ChatScreen extends ConsumerStatefulWidget {
 final class _ChatScreenState extends ConsumerState<ChatScreen> {
   final _messageController = TextEditingController();
   final _scrollController = ScrollController();
+  String? _lockedInitialGreetingLocaleName;
+
+  @override
+  void didUpdateWidget(covariant ChatScreen oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.vehicleId != widget.vehicleId) {
+      _lockedInitialGreetingLocaleName = null;
+    }
+  }
 
   @override
   void dispose() {
@@ -31,6 +41,7 @@ final class _ChatScreenState extends ConsumerState<ChatScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     final provider = chatControllerProvider(widget.vehicleId);
     final chatState = ref.watch(provider);
 
@@ -45,7 +56,9 @@ final class _ChatScreenState extends ConsumerState<ChatScreen> {
       if (errorMessage != null && errorMessage.isNotEmpty) {
         ScaffoldMessenger.of(context)
           ..hideCurrentSnackBar()
-          ..showSnackBar(SnackBar(content: Text(errorMessage)));
+          ..showSnackBar(
+            SnackBar(content: Text(_localizedChatError(context, errorMessage))),
+          );
       }
     });
 
@@ -53,7 +66,7 @@ final class _ChatScreenState extends ConsumerState<ChatScreen> {
       appBar: AppBar(
         leading: IconButton(
           onPressed: () => context.go('/garage'),
-          tooltip: 'Open garage',
+          tooltip: l10n.openGarage,
           icon: const Icon(Icons.chevron_left_rounded, size: 32),
         ),
         titleSpacing: 0,
@@ -66,6 +79,7 @@ final class _ChatScreenState extends ConsumerState<ChatScreen> {
           controller: _messageController,
           scrollController: _scrollController,
           onSend: _send,
+          lockedInitialGreetingLocaleName: _lockedInitialGreetingLocaleName,
         ),
         loading: () => const _ChatWarmupState(),
         error: (error, stackTrace) => _ChatLoadError(
@@ -78,6 +92,18 @@ final class _ChatScreenState extends ConsumerState<ChatScreen> {
   void _send(String text) {
     final trimmedText = text.trim();
     if (trimmedText.isEmpty) return;
+
+    final chatState = ref.read(chatControllerProvider(widget.vehicleId)).value;
+    final hasUserMessages =
+        chatState?.messages.any(
+          (message) => message.role == ChatMessageRole.user,
+        ) ??
+        false;
+    if (!hasUserMessages && _lockedInitialGreetingLocaleName == null) {
+      _lockedInitialGreetingLocaleName = AppLocalizations.of(
+        context,
+      ).localeName;
+    }
 
     _messageController.clear();
     unawaited(
@@ -101,6 +127,15 @@ final class _ChatScreenState extends ConsumerState<ChatScreen> {
   }
 }
 
+String _localizedChatError(BuildContext context, String message) {
+  final l10n = AppLocalizations.of(context);
+  return switch (message) {
+    'Could not get a reply. Check the backend and try again.' =>
+      l10n.couldNotGetReply,
+    _ => message,
+  };
+}
+
 final class _ChatLoadedBody extends StatelessWidget {
   const _ChatLoadedBody({
     required this.vehicleId,
@@ -108,6 +143,7 @@ final class _ChatLoadedBody extends StatelessWidget {
     required this.controller,
     required this.scrollController,
     required this.onSend,
+    required this.lockedInitialGreetingLocaleName,
   });
 
   final String vehicleId;
@@ -115,11 +151,15 @@ final class _ChatLoadedBody extends StatelessWidget {
   final TextEditingController controller;
   final ScrollController scrollController;
   final ValueChanged<String> onSend;
+  final String? lockedInitialGreetingLocaleName;
 
   @override
   Widget build(BuildContext context) {
     final messages = _visibleMessages(state.messages);
-    final quickQuestions = _quickQuestionsFromBackend(state.quickQuestions);
+    final quickQuestions = _quickQuestionsFromBackend(
+      context,
+      state.quickQuestions,
+    );
     final bottomSuggestions = _bottomSuggestions(
       messages: messages,
       quickQuestions: quickQuestions,
@@ -141,6 +181,8 @@ final class _ChatLoadedBody extends StatelessWidget {
                     messages: messages,
                     scrollController: scrollController,
                     isSending: state.isSending,
+                    lockedInitialGreetingLocaleName:
+                        lockedInitialGreetingLocaleName,
                   ),
           ),
           if (messages.isNotEmpty && bottomSuggestions.isNotEmpty)
@@ -169,11 +211,15 @@ final class _ChatLoadedBody extends StatelessWidget {
         message.text.trim().toLowerCase() == 'the assistant is ready.';
   }
 
-  List<String> _quickQuestionsFromBackend(List<String> questions) {
+  List<String> _quickQuestionsFromBackend(
+    BuildContext context,
+    List<String> questions,
+  ) {
+    final l10n = AppLocalizations.of(context);
     final result = <String>[];
 
     for (final question in questions) {
-      final trimmedQuestion = question.trim();
+      final trimmedQuestion = _localizedBackendChatText(l10n, question.trim());
       if (trimmedQuestion.isNotEmpty && !result.contains(trimmedQuestion)) {
         result.add(trimmedQuestion);
       }
@@ -237,11 +283,12 @@ final class _ChatEmptyState extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     final questions = quickQuestions.isEmpty
-        ? const [
-            'Vehicle status',
-            'When should I change oil?',
-            'What can break soon?',
+        ? [
+            l10n.quickQuestionVehicleStatus,
+            l10n.quickQuestionOil,
+            l10n.quickQuestionBreakSoon,
           ]
         : quickQuestions;
 
@@ -257,13 +304,13 @@ final class _ChatEmptyState extends StatelessWidget {
         const _AssistantMark(size: 84, iconSize: 38),
         const SizedBox(height: AppSpacing.xxl),
         Text(
-          'Shaha is online',
+          l10n.shahaOnline,
           textAlign: TextAlign.center,
           style: Theme.of(context).textTheme.headlineMedium,
         ),
         const SizedBox(height: AppSpacing.sm),
         Text(
-          'Ask about vehicle condition, expenses, or maintenance.',
+          l10n.chatEmptyDescription,
           textAlign: TextAlign.center,
           style: Theme.of(context).textTheme.bodyMedium,
         ),
@@ -288,15 +335,21 @@ final class _MessageList extends StatelessWidget {
     required this.messages,
     required this.scrollController,
     required this.isSending,
+    required this.lockedInitialGreetingLocaleName,
   });
 
   final String vehicleId;
   final List<ChatMessage> messages;
   final ScrollController scrollController;
   final bool isSending;
+  final String? lockedInitialGreetingLocaleName;
 
   @override
   Widget build(BuildContext context) {
+    final hasUserMessages = messages.any(
+      (message) => message.role == ChatMessageRole.user,
+    );
+
     return ListView.builder(
       controller: scrollController,
       padding: const EdgeInsets.fromLTRB(
@@ -311,17 +364,31 @@ final class _MessageList extends StatelessWidget {
           return const _TypingBubble();
         }
 
-        return _ChatBubble(vehicleId: vehicleId, message: messages[index]);
+        return _ChatBubble(
+          vehicleId: vehicleId,
+          message: messages[index],
+          canLocalizeInitialGreeting: index == 0 && !hasUserMessages,
+          lockedInitialGreetingLocaleName: index == 0 && hasUserMessages
+              ? lockedInitialGreetingLocaleName
+              : null,
+        );
       },
     );
   }
 }
 
 final class _ChatBubble extends StatelessWidget {
-  const _ChatBubble({required this.vehicleId, required this.message});
+  const _ChatBubble({
+    required this.vehicleId,
+    required this.message,
+    required this.canLocalizeInitialGreeting,
+    required this.lockedInitialGreetingLocaleName,
+  });
 
   final String vehicleId;
   final ChatMessage message;
+  final bool canLocalizeInitialGreeting;
+  final String? lockedInitialGreetingLocaleName;
 
   @override
   Widget build(BuildContext context) {
@@ -367,7 +434,13 @@ final class _ChatBubble extends StatelessWidget {
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       Text(
-                        message.text,
+                        _localizedBackendChatText(
+                          _initialGreetingLocalizations(context),
+                          message.text,
+                          localizeGreeting:
+                              canLocalizeInitialGreeting ||
+                              lockedInitialGreetingLocaleName != null,
+                        ),
                         style: Theme.of(context).textTheme.bodyLarge?.copyWith(
                           color: AppColors.textPrimary,
                           height: 1.35,
@@ -427,6 +500,32 @@ final class _ChatBubble extends StatelessWidget {
     final minute = value.minute.toString().padLeft(2, '0');
     return '$hour:$minute';
   }
+
+  AppLocalizations _initialGreetingLocalizations(BuildContext context) {
+    final localeName = lockedInitialGreetingLocaleName;
+    if (localeName == null) {
+      return AppLocalizations.of(context);
+    }
+
+    return lookupAppLocalizations(
+      Locale(localeName.split(RegExp('[-_]')).first),
+    );
+  }
+}
+
+String _localizedBackendChatText(
+  AppLocalizations l10n,
+  String text, {
+  bool localizeGreeting = true,
+}) {
+  return switch (text.trim()) {
+    'Hi! I am your car, and I am ready to chat.' when localizeGreeting =>
+      l10n.chatGreetingReady,
+    'Vehicle status' => l10n.quickQuestionVehicleStatus,
+    'What are my total expenses?' => l10n.quickQuestionTotalExpenses,
+    'What can break soon?' => l10n.quickQuestionBreakSoon,
+    _ => text,
+  };
 }
 
 final class _ChatActionPill extends StatelessWidget {
@@ -478,7 +577,7 @@ final class _ChatActionPill extends StatelessWidget {
                 ),
                 const SizedBox(width: AppSpacing.sm),
                 Text(
-                  _label(),
+                  _label(context),
                   style: Theme.of(context).textTheme.labelLarge?.copyWith(
                     color: AppColors.primaryLight,
                     fontWeight: FontWeight.w700,
@@ -526,23 +625,24 @@ final class _ChatActionPill extends StatelessWidget {
     return null;
   }
 
-  String _label() {
+  String _label(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     final type = action.type.toUpperCase();
     if (type == 'OPEN_SCREEN') {
       return switch (action.screen?.toUpperCase()) {
-        'ANALYTICS' => 'Open analytics',
-        'MAINTENANCE_FORECAST' => 'Open forecast',
-        'DASHBOARD' => 'Open dashboard',
-        _ => 'Open',
+        'ANALYTICS' => l10n.openAnalytics,
+        'MAINTENANCE_FORECAST' => l10n.openForecast,
+        'DASHBOARD' => l10n.openDashboard,
+        _ => l10n.open,
       };
     }
 
     return switch (action.form?.toUpperCase()) {
-      'REFUEL' => 'Add refuel',
-      'TRIP' => 'Add trip',
-      'PART_REPLACEMENT' => 'Add part record',
-      'MAINTENANCE' => 'Add maintenance',
-      _ => 'Open form',
+      'REFUEL' => l10n.addRefuel,
+      'TRIP' => l10n.addTrip,
+      'PART_REPLACEMENT' => l10n.addPartRecord,
+      'MAINTENANCE' => l10n.addMaintenance,
+      _ => l10n.openForm,
     };
   }
 
@@ -679,6 +779,7 @@ final class _ChatInputBarState extends State<_ChatInputBar> {
   Widget build(BuildContext context) {
     final canSend =
         widget.controller.text.trim().isNotEmpty && !widget.isSending;
+    final l10n = AppLocalizations.of(context);
 
     return DecoratedBox(
       decoration: BoxDecoration(
@@ -715,13 +816,13 @@ final class _ChatInputBarState extends State<_ChatInputBar> {
                   maxLines: 4,
                   textInputAction: TextInputAction.send,
                   onSubmitted: canSend ? widget.onSend : null,
-                  decoration: const InputDecoration(
-                    hintText: 'Message',
+                  decoration: InputDecoration(
+                    hintText: l10n.message,
                     filled: false,
                     border: InputBorder.none,
                     enabledBorder: InputBorder.none,
                     focusedBorder: InputBorder.none,
-                    contentPadding: EdgeInsets.symmetric(
+                    contentPadding: const EdgeInsets.symmetric(
                       horizontal: AppSpacing.lg,
                       vertical: AppSpacing.md,
                     ),
@@ -737,7 +838,7 @@ final class _ChatInputBarState extends State<_ChatInputBar> {
                     ? () => widget.onSend(widget.controller.text)
                     : null,
                 icon: const Icon(Icons.arrow_upward),
-                tooltip: 'Send message',
+                tooltip: l10n.sendMessage,
               ),
             ),
           ],
@@ -766,11 +867,11 @@ final class _ChatTitle extends StatelessWidget {
             mainAxisSize: MainAxisSize.min,
             children: [
               Text(
-                'Chat with Shaha',
+                AppLocalizations.of(context).chatWithShaha,
                 style: Theme.of(context).textTheme.titleLarge,
               ),
               Text(
-                'Vehicle AI assistant',
+                AppLocalizations.of(context).vehicleAiAssistant,
                 style: Theme.of(context).textTheme.bodySmall,
               ),
             ],
@@ -829,7 +930,7 @@ final class _TypingBubbleState extends State<_TypingBubble>
                 vertical: AppSpacing.md,
               ),
               child: Semantics(
-                label: 'Assistant is thinking',
+                label: AppLocalizations.of(context).assistantThinking,
                 child: AnimatedBuilder(
                   animation: _controller,
                   builder: (context, _) {
@@ -876,7 +977,7 @@ final class _ThinkingWaveText extends StatelessWidget {
         ).createShader(bounds);
       },
       child: Text(
-        'Shaha is thinking',
+        AppLocalizations.of(context).shahaThinking,
         style: Theme.of(context).textTheme.titleMedium?.copyWith(
           color: AppColors.textSecondary,
           fontWeight: FontWeight.w500,
@@ -901,13 +1002,13 @@ final class _ChatWarmupState extends StatelessWidget {
             const _AssistantMark(size: 72, iconSize: 32),
             const SizedBox(height: AppSpacing.xl),
             Text(
-              'Connecting to Shaha',
+              AppLocalizations.of(context).connectingToShaha,
               textAlign: TextAlign.center,
               style: Theme.of(context).textTheme.titleLarge,
             ),
             const SizedBox(height: AppSpacing.sm),
             Text(
-              'Preparing history and quick questions.',
+              AppLocalizations.of(context).preparingChat,
               textAlign: TextAlign.center,
               style: Theme.of(context).textTheme.bodyMedium,
             ),
@@ -974,13 +1075,13 @@ final class _ChatLoadError extends StatelessWidget {
             ),
             const SizedBox(height: AppSpacing.lg),
             Text(
-              'Chat did not load',
+              AppLocalizations.of(context).chatDidNotLoad,
               textAlign: TextAlign.center,
               style: Theme.of(context).textTheme.titleLarge,
             ),
             const SizedBox(height: AppSpacing.sm),
             Text(
-              'Check the connection and try again.',
+              AppLocalizations.of(context).checkConnectionTryAgain,
               textAlign: TextAlign.center,
               style: Theme.of(context).textTheme.bodyMedium,
             ),
@@ -988,7 +1089,7 @@ final class _ChatLoadError extends StatelessWidget {
             OutlinedButton.icon(
               onPressed: onRetry,
               icon: const Icon(Icons.refresh_rounded),
-              label: const Text('Retry'),
+              label: Text(AppLocalizations.of(context).retry),
             ),
           ],
         ),

@@ -60,7 +60,7 @@ final class MockAuthDatasource implements AuthDatasource {
     if (account == null || account.password != normalized.password) {
       throw const AuthException(
         AuthErrorCode.unauthorized,
-        'Login or password are incorrect',
+        'User not found or password is incorrect. Check your email and password, or register a new account.',
       );
     }
 

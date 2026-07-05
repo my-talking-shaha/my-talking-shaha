@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:frontend/app/theme/app_theme.dart';
+import 'package:frontend/l10n/generated/app_localizations.dart';
 
 final class GarageEmptyState extends StatelessWidget {
   const GarageEmptyState({required this.onAddVehicle, super.key});
@@ -8,6 +9,8 @@ final class GarageEmptyState extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+
     return Center(
       child: Padding(
         padding: const EdgeInsets.all(AppSpacing.xl),
@@ -37,12 +40,12 @@ final class GarageEmptyState extends StatelessWidget {
               ),
               const SizedBox(height: AppSpacing.xl),
               Text(
-                'Garage is empty',
+                l10n.garageEmpty,
                 style: Theme.of(context).textTheme.titleLarge,
               ),
               const SizedBox(height: AppSpacing.sm),
               Text(
-                'Add your first car to open its digital twin.',
+                l10n.garageEmptyCompactDescription,
                 textAlign: TextAlign.center,
                 style: Theme.of(context).textTheme.bodyMedium,
               ),
@@ -52,7 +55,7 @@ final class GarageEmptyState extends StatelessWidget {
                 child: ElevatedButton.icon(
                   onPressed: onAddVehicle,
                   icon: const Icon(Icons.add),
-                  label: const Text('Add car'),
+                  label: Text(l10n.addCar),
                 ),
               ),
             ],

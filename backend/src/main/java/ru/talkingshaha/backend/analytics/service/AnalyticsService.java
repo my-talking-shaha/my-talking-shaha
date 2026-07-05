@@ -157,10 +157,18 @@ public class AnalyticsService {
         return filteredEvents.stream()
                 .filter(TripEvent.class::isInstance)
                 .map(TripEvent.class::cast)
-                .mapToInt(trip -> trip.getStartMileageKm() == null
-                        ? 0
-                        : Math.max(0, trip.getEndMileageKm() - trip.getStartMileageKm()))
+                .mapToInt(this::tripDistanceKm)
                 .sum();
+    }
+
+    private int tripDistanceKm(TripEvent trip) {
+        if (trip.getDistanceKm() != null) {
+            return Math.max(0, trip.getDistanceKm());
+        }
+        if (trip.getStartMileageKm() == null || trip.getEndMileageKm() == null) {
+            return 0;
+        }
+        return Math.max(0, trip.getEndMileageKm() - trip.getStartMileageKm());
     }
 
     private BigDecimal totalLiters(List<BaseEvent> filteredEvents) {

@@ -53,7 +53,7 @@ void main() {
 
     expect(summary.hasEnoughData, isFalse);
     expect(summary.totalExpenses, isNull);
-    expect(summary.message, contains('Not enough data'));
+    expect(summary.message, isNull);
   });
 
   test('returns filtered mocked mileage trends', () async {

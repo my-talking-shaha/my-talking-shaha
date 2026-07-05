@@ -2,6 +2,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:frontend/core/network/api_client.dart';
+import 'package:frontend/core/storage/shared_preferences_provider.dart';
 import 'package:frontend/features/auth/data/datasources/auth_api_datasource.dart';
 import 'package:frontend/features/auth/data/datasources/auth_datasource.dart';
 import 'package:frontend/features/auth/data/datasources/auth_secure_storage.dart';
@@ -11,14 +12,9 @@ import 'package:frontend/features/auth/data/repositories/auth_repository_impl.da
 import 'package:frontend/features/auth/domain/entities/auth_session.dart';
 import 'package:frontend/features/auth/domain/repositories/auth_repository.dart';
 import 'package:frontend/features/auth/presentation/controllers/auth_controller.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 
 final flutterSecureStorageProvider = Provider<FlutterSecureStorage>((ref) {
   return const FlutterSecureStorage();
-});
-
-final sharedPreferencesProvider = Provider<SharedPreferencesAsync>((ref) {
-  return SharedPreferencesAsync();
 });
 
 final authSessionStorageProvider = Provider<AuthSessionStorage>((ref) {

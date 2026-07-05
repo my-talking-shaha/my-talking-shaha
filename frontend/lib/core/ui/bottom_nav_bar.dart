@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:frontend/app/theme/app_theme.dart';
+import 'package:frontend/l10n/generated/app_localizations.dart';
 
 enum Destination { garage, history, chat, analytics, settings }
 
@@ -18,6 +19,7 @@ final class PrimaryBottomNavBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     final destinations = Destination.values
         .where(
           (destination) => hasVehicleContext || !destination.requiresVehicle,
@@ -34,7 +36,10 @@ final class PrimaryBottomNavBar extends StatelessWidget {
       showSelectedLabels: false,
       showUnselectedLabels: false,
       items: destinations.map((destination) {
-        final label = destination.label(hasVehicleContext: hasVehicleContext);
+        final label = destination.label(
+          l10n: l10n,
+          hasVehicleContext: hasVehicleContext,
+        );
         return BottomNavigationBarItem(
           icon: _NavigationIcon(
             destination: destination,
@@ -70,12 +75,15 @@ final class _NavigationIcon extends StatelessWidget {
 }
 
 extension on Destination {
-  String label({required bool hasVehicleContext}) => switch (this) {
-    Destination.garage => hasVehicleContext ? 'Dashboard' : 'Garage',
-    Destination.history => 'History',
-    Destination.chat => 'Chat',
-    Destination.analytics => 'Analytics',
-    Destination.settings => 'Settings',
+  String label({
+    required AppLocalizations l10n,
+    required bool hasVehicleContext,
+  }) => switch (this) {
+    Destination.garage => hasVehicleContext ? l10n.dashboard : l10n.garage,
+    Destination.history => l10n.history,
+    Destination.chat => l10n.chat,
+    Destination.analytics => l10n.analytics,
+    Destination.settings => l10n.settings,
   };
 
   String get assetPath => switch (this) {

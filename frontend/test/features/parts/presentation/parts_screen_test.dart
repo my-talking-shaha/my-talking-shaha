@@ -9,6 +9,7 @@ import 'package:frontend/features/parts/domain/repositories/parts_repository.dar
 import 'package:frontend/features/parts/presentation/providers/parts_providers.dart';
 import 'package:frontend/features/parts/presentation/screens/parts_screen.dart';
 import 'package:frontend/features/parts/presentation/widgets/maintenance_forecast_card.dart';
+import 'package:frontend/l10n/generated/app_localizations.dart';
 import 'package:go_router/go_router.dart';
 
 void main() {
@@ -17,6 +18,9 @@ void main() {
   ) async {
     await tester.pumpWidget(
       MaterialApp(
+        locale: const Locale('en'),
+        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        supportedLocales: AppLocalizations.supportedLocales,
         theme: AppTheme.dark,
         home: Scaffold(body: MaintenanceForecastCard(parts: _mockParts())),
       ),
@@ -60,6 +64,9 @@ void main() {
     (tester) async {
       await tester.pumpWidget(
         MaterialApp(
+          locale: const Locale('en'),
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
           theme: AppTheme.dark,
           home: Scaffold(
             body: MaintenanceForecastCard(parts: _mockPartsWithoutCritical()),
@@ -165,7 +172,13 @@ Future<void> _pumpPartsRoute(
   await tester.pumpWidget(
     ProviderScope(
       overrides: [partsRepositoryProvider.overrideWithValue(repository)],
-      child: MaterialApp.router(theme: AppTheme.dark, routerConfig: router),
+      child: MaterialApp.router(
+        locale: const Locale('en'),
+        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        supportedLocales: AppLocalizations.supportedLocales,
+        theme: AppTheme.dark,
+        routerConfig: router,
+      ),
     ),
   );
 }

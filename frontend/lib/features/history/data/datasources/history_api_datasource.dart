@@ -63,7 +63,7 @@ abstract final class HistoryApiEventMapper {
       details: switch (type) {
         HistoryEventType.fuel => FuelDetails(
           cost: _intValue(json['cost']) ?? 0,
-          liters: _intValue(json['liters']) ?? 0,
+          liters: _doubleValue(json['liters']) ?? 0,
           fuelType: _fuelLabel(json),
         ),
         HistoryEventType.maintenance => MaintenanceDetails(
@@ -184,6 +184,14 @@ abstract final class HistoryApiEventMapper {
       int intValue => intValue,
       num numValue => numValue.toInt(),
       String stringValue => num.tryParse(stringValue)?.toInt(),
+      _ => null,
+    };
+  }
+
+  static double? _doubleValue(Object? value) {
+    return switch (value) {
+      num numValue => numValue.toDouble(),
+      String stringValue => num.tryParse(stringValue)?.toDouble(),
       _ => null,
     };
   }
