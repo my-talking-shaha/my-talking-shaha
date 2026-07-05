@@ -3,6 +3,7 @@ package ru.talkingshaha.backend.common.error;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+import jakarta.validation.ConstraintViolationException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
@@ -23,6 +24,18 @@ public class GlobalExceptionHandler {
         Map<String, String> fields =
                 exception.getBindingResult().getFieldErrors().stream()
                         .collect(Collectors.toMap(FieldError::getField, this::fieldMessage, (left, right) -> left));
+        log.warn("API error code=VALIDATION_ERROR fields={}", fields.keySet());
+        return ResponseEntity.badRequest()
+                .body(new ApiError("VALIDATION_ERROR", "Request contains invalid fields", fields));
+    }
+
+    @ExceptionHandler(ConstraintViolationException.class)
+    public ResponseEntity<ApiError> handleConstraintViolation(ConstraintViolationException exception) {
+        Map<String, String> fields = exception.getConstraintViolations().stream()
+                .collect(Collectors.toMap(
+                        violation -> violation.getPropertyPath().toString(),
+                        violation -> violation.getMessage() == null ? "Invalid value" : violation.getMessage(),
+                        (left, right) -> left));
         log.warn("API error code=VALIDATION_ERROR fields={}", fields.keySet());
         return ResponseEntity.badRequest()
                 .body(new ApiError("VALIDATION_ERROR", "Request contains invalid fields", fields));

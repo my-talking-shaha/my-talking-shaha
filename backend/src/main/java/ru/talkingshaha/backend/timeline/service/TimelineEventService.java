@@ -3,10 +3,17 @@ package ru.talkingshaha.backend.timeline.service;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.util.List;
+import java.util.Set;
 import java.util.UUID;
 
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import jakarta.validation.ConstraintViolation;
+import jakarta.validation.ConstraintViolationException;
+import jakarta.validation.Validator;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import ru.talkingshaha.backend.common.error.ResourceNotFoundException;
 import ru.talkingshaha.backend.common.model.BaseEvent;
 import ru.talkingshaha.backend.timeline.dto.CreateMaintenanceEventRequest;
 import ru.talkingshaha.backend.timeline.dto.CreatePartEventRequest;
@@ -35,6 +42,8 @@ public class TimelineEventService {
     private final MaintenanceEventRepository maintenances;
     private final VehicleService vehicles;
     private final PartService parts;
+    private final ObjectMapper objectMapper;
+    private final Validator validator;
 
     public TimelineEventService(
             TimelineEventRepository events,
@@ -42,13 +51,17 @@ public class TimelineEventService {
             RefuelEventRepository refuels,
             MaintenanceEventRepository maintenances,
             VehicleService vehicles,
-            PartService parts) {
+            PartService parts,
+            ObjectMapper objectMapper,
+            Validator validator) {
         this.events = events;
         this.trips = trips;
         this.refuels = refuels;
         this.maintenances = maintenances;
         this.vehicles = vehicles;
         this.parts = parts;
+        this.objectMapper = objectMapper;
+        this.validator = validator;
     }
 
     @Transactional(readOnly = true)
@@ -137,6 +150,86 @@ public class TimelineEventService {
 
         updateVehicleMileage(vehicle, request.mileageKm());
         return toResponse(maintenances.save(event));
+    }
+
+    @Transactional
+    public TimelineEventResponse updateEvent(UUID vehicleId, UUID eventId, JsonNode body) {
+        Vehicle vehicle = vehicles.requireOwnedVehicle(vehicleId);
+        BaseEvent event = events.findByIdAndVehicle(eventId, vehicle)
+                .orElseThrow(() -> new ResourceNotFoundException("Timeline event not found"));
+        switch (event) {
+            case RefuelEvent refuel -> applyRefuelUpdate(refuel, convertAndValidate(body, CreateRefuelEventRequest.class));
+            case TripEvent trip -> applyTripUpdate(trip, convertAndValidate(body, CreateTripEventRequest.class));
+            case MaintenanceEvent maintenance ->
+                    applyMaintenanceUpdate(maintenance, convertAndValidate(body, CreateMaintenanceEventRequest.class));
+            default -> throw new IllegalStateException("Unknown event type: " + event.getClass());
+        }
+        updateVehicleMileage(vehicle, eventMileage(event));
+        return toResponse(event);
+    }
+
+    @Transactional
+    public void deleteEvent(UUID vehicleId, UUID eventId) {
+        Vehicle vehicle = vehicles.requireOwnedVehicle(vehicleId);
+        BaseEvent event = events.findByIdAndVehicle(eventId, vehicle)
+                .orElseThrow(() -> new ResourceNotFoundException("Timeline event not found"));
+        events.delete(event);
+    }
+
+    private <T> T convertAndValidate(JsonNode body, Class<T> requestType) {
+        T request;
+        try {
+            request = objectMapper.convertValue(body, requestType);
+        } catch (IllegalArgumentException exception) {
+            throw new IllegalArgumentException("Request contains invalid fields");
+        }
+        Set<ConstraintViolation<T>> violations = validator.validate(request);
+        if (!violations.isEmpty()) {
+            throw new ConstraintViolationException(violations);
+        }
+        return request;
+    }
+
+    private void applyRefuelUpdate(RefuelEvent event, CreateRefuelEventRequest request) {
+        event.setEventDateTime(request.eventDateTime());
+        event.setMileageKm(request.mileageKm());
+        event.setLiters(request.liters());
+        event.setCost(request.cost());
+        event.setFuelType(request.fuelType());
+        event.setFuelName(request.fuelName());
+        event.setStationName(request.stationName());
+    }
+
+    private void applyTripUpdate(TripEvent event, CreateTripEventRequest request) {
+        if (request.startMileageKm() != null && request.endMileageKm() < request.startMileageKm()) {
+            throw new IllegalArgumentException("End mileage must be >= start mileage");
+        }
+        event.setEventDateTime(request.eventDateTime());
+        event.setStartMileageKm(request.startMileageKm());
+        event.setEndMileageKm(request.endMileageKm());
+        event.setRoute(request.route());
+        event.setDurationMinutes(request.durationMinutes());
+    }
+
+    private void applyMaintenanceUpdate(MaintenanceEvent event, CreateMaintenanceEventRequest request) {
+        event.setEventDateTime(request.eventDateTime());
+        event.setMileageKm(request.mileageKm());
+        event.setName(request.name());
+        event.setDescription(request.description());
+        event.setCost(request.cost());
+        if (request.photoUrls() != null) {
+            event.getPhotoUrls().clear();
+            event.getPhotoUrls().addAll(request.photoUrls());
+        }
+    }
+
+    private Integer eventMileage(BaseEvent event) {
+        return switch (event) {
+            case RefuelEvent refuel -> refuel.getMileageKm();
+            case TripEvent trip -> trip.getEndMileageKm();
+            case MaintenanceEvent maintenance -> maintenance.getMileageKm();
+            default -> null;
+        };
     }
 
     private void validateMileage(Vehicle vehicle, Integer mileageKm) {
