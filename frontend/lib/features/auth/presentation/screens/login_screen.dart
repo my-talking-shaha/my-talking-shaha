@@ -6,6 +6,7 @@ import 'package:frontend/features/auth/presentation/providers/auth_providers.dar
 import 'package:frontend/features/auth/presentation/widgets/auth_error_banner.dart';
 import 'package:frontend/features/auth/presentation/widgets/auth_screen_scaffold.dart';
 import 'package:frontend/features/auth/utils/validator.dart';
+import 'package:frontend/l10n/generated/app_localizations.dart';
 import 'package:go_router/go_router.dart';
 
 final class LoginScreen extends ConsumerStatefulWidget {
@@ -31,6 +32,7 @@ final class _LoginScreenState extends ConsumerState<LoginScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     final authState = ref.watch(authControllerProvider);
     final isSubmitting = authState.isLoading;
 
@@ -62,27 +64,27 @@ final class _LoginScreenState extends ConsumerState<LoginScreen> {
                     const SizedBox(height: AppSpacing.lg),
                   ],
                   AuthTextField(
-                    label: 'Email',
+                    label: l10n.email,
                     controller: _loginController,
                     enabled: !isSubmitting,
-                    hintText: 'Enter your email',
+                    hintText: l10n.enterYourEmail,
                     prefixIcon: const Icon(Icons.email_outlined),
                     textInputAction: TextInputAction.next,
-                    validator: AuthValidator.login,
+                    validator: (value) => AuthValidator.login(value, l10n),
                     onChanged: (_) => _clearError(),
                   ),
                   const SizedBox(height: AppSpacing.lg),
                   AuthTextField(
-                    label: 'Password',
+                    label: l10n.password,
                     controller: _passwordController,
                     enabled: !isSubmitting,
-                    hintText: 'At least 6 characters',
-                    helperText: 'At least 6 characters',
+                    hintText: l10n.passwordHint,
+                    helperText: l10n.passwordHint,
                     prefixIcon: const Icon(Icons.lock_outline),
                     suffixIcon: IconButton(
                       tooltip: _obscurePassword
-                          ? 'Show password'
-                          : 'Hide password',
+                          ? l10n.showPassword
+                          : l10n.hidePassword,
                       onPressed: isSubmitting
                           ? null
                           : () {
@@ -98,7 +100,7 @@ final class _LoginScreenState extends ConsumerState<LoginScreen> {
                     ),
                     obscureText: _obscurePassword,
                     textInputAction: TextInputAction.done,
-                    validator: AuthValidator.password,
+                    validator: (value) => AuthValidator.password(value, l10n),
                     onChanged: (_) => _clearError(),
                     onFieldSubmitted: (_) => _submit(),
                   ),
@@ -106,12 +108,12 @@ final class _LoginScreenState extends ConsumerState<LoginScreen> {
                     alignment: Alignment.centerRight,
                     child: TextButton(
                       onPressed: isSubmitting ? null : () {},
-                      child: const Text('Forgot password?'),
+                      child: Text(l10n.forgotPassword),
                     ),
                   ),
                   const SizedBox(height: AppSpacing.md),
                   AuthPrimaryButton(
-                    label: 'Log in',
+                    label: l10n.logIn,
                     isLoading: isSubmitting,
                     onPressed: _submit,
                     showArrow: true,
@@ -126,7 +128,7 @@ final class _LoginScreenState extends ConsumerState<LoginScreen> {
             crossAxisAlignment: WrapCrossAlignment.center,
             children: [
               Text(
-                'No account?',
+                l10n.noAccount,
                 style: Theme.of(
                   context,
                 ).textTheme.bodyLarge?.copyWith(color: AppColors.textSecondary),
@@ -135,7 +137,7 @@ final class _LoginScreenState extends ConsumerState<LoginScreen> {
                 onPressed: isSubmitting
                     ? null
                     : () => context.go('/registration'),
-                child: const Text('Register'),
+                child: Text(l10n.register),
               ),
             ],
           ),
@@ -173,7 +175,15 @@ final class _LoginScreenState extends ConsumerState<LoginScreen> {
     }
 
     setState(() {
-      _errorMessage = message;
+      _errorMessage = _localizedErrorMessage(context, message);
     });
+  }
+
+  String _localizedErrorMessage(BuildContext context, String message) {
+    final l10n = AppLocalizations.of(context);
+    return switch (message) {
+      'Something went wrong. Please try again later' => l10n.somethingWentWrong,
+      _ => message,
+    };
   }
 }

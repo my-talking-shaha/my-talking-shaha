@@ -4,7 +4,7 @@ sealed class EventDetails {
 
 class FuelDetails extends EventDetails {
   final int cost;
-  final int liters;
+  final double liters;
   final String fuelType;
 
   FuelDetails({

@@ -33,6 +33,22 @@ void main() {
       expect(details.fuelType, 'AI-95 • Test Station');
     });
 
+    test('builds backend refuel payload with decimal liters', () {
+      final payload = HistoryApiEventMapper.createPayload(
+        HistoryEvent(
+          id: 'local-fuel',
+          carId: 'vehicle_1',
+          type: HistoryEventType.fuel,
+          occurredAt: DateTime.utc(2026, 6, 12, 14, 30),
+          title: 'Refuel',
+          currentMileageKm: 10000,
+          details: FuelDetails(cost: 3000, liters: 42.5, fuelType: '95 octane'),
+        ),
+      );
+
+      expect(payload['liters'], 42.5);
+    });
+
     test('builds backend maintenance payload from history event', () {
       final payload = HistoryApiEventMapper.createPayload(
         HistoryEvent(

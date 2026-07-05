@@ -30,13 +30,21 @@ abstract final class DashboardUtils {
 
   static String eventSubtitle(HistoryEvent event) {
     return switch (event.details) {
-      FuelDetails(:final liters, :final fuelType) => '$liters L • $fuelType',
+      FuelDetails(:final liters, :final fuelType) =>
+        '${formatLiters(liters)} L • $fuelType',
       MaintenanceDetails(:final description) => description,
       TripDetails(:final route, :final distanceKm) => [
         if (route != null && route.trim().isNotEmpty) route.trim(),
         '${formatNumber(distanceKm)} km',
       ].join(' • '),
     };
+  }
+
+  static String formatLiters(double value) {
+    if (value == value.roundToDouble()) {
+      return value.toInt().toString();
+    }
+    return value.toStringAsFixed(2).replaceFirst(RegExp(r'0+$'), '');
   }
 
   static String relativeDate(DateTime occurredAt) {

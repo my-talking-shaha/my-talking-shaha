@@ -102,11 +102,11 @@ public class VehicleService {
     @Transactional
     public void deleteVehicle(UUID vehicleId) {
         Vehicle vehicle = requireOwnedVehicle(vehicleId);
+        events.deleteAll(events.findAllByVehicleOrderByEventDateTimeDesc(vehicle));
         chatSessions.findByVehicle(vehicle).ifPresent(session -> {
             chatMessages.deleteAll(chatMessages.findAllBySessionOrderByCreatedAtAsc(session));
             chatSessions.delete(session);
         });
-        events.deleteAll(events.findAllByVehicleOrderByEventDateTimeDesc(vehicle));
         parts.deleteAll(parts.findAllByVehicleOrderByInstalledAtDescNameAsc(vehicle));
         vehicles.delete(vehicle);
     }

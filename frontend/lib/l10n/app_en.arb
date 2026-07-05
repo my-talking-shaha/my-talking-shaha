@@ -1,0 +1,359 @@
+{
+  "@@locale": "en",
+  "appLanguage": "App language",
+  "english": "English",
+  "russian": "Russian",
+  "profile": "Profile",
+  "driver": "Driver",
+  "signedIn": "Signed in",
+  "theme": "Theme",
+  "light": "Light",
+  "dark": "Dark",
+  "general": "General",
+  "notifications": "Notifications",
+  "vehicle": "Vehicle",
+  "allNotifications": "All notifications",
+  "logOut": "Log out",
+  "dashboard": "Dashboard",
+  "garage": "Garage",
+  "history": "History",
+  "chat": "Chat",
+  "analytics": "Analytics",
+  "settings": "Settings"
+  ,
+  "brandName": "My Talking Shaha",
+  "retry": "Retry",
+  "tryAgain": "Try again",
+  "cancel": "Cancel",
+  "delete": "Delete",
+  "edit": "Edit",
+  "save": "Save",
+  "openGarage": "Open garage",
+  "email": "Email",
+  "enterYourEmail": "Enter your email",
+  "enterValidEmail": "Enter a valid email",
+  "password": "Password",
+  "enterYourPassword": "Enter your password",
+  "passwordMinLength": "Password must be at least {count} characters",
+  "@passwordMinLength": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "passwordHint": "At least 6 characters",
+  "showPassword": "Show password",
+  "hidePassword": "Hide password",
+  "forgotPassword": "Forgot password?",
+  "logIn": "Log in",
+  "noAccount": "No account?",
+  "register": "Register",
+  "registration": "Registration",
+  "createYourProfile": "Create your profile",
+  "fullName": "Full name",
+  "enterYourFullName": "Enter your full name",
+  "fullNameHint": "John Smith",
+  "confirmPassword": "Confirm password",
+  "repeatPassword": "Repeat password",
+  "confirmYourPassword": "Confirm your password",
+  "passwordsDoNotMatch": "Passwords do not match",
+  "alreadyHaveAccount": "Already have an account?",
+  "somethingWentWrong": "Something went wrong. Please try again later",
+  "couldNotLogOut": "Could not log out. Please try again",
+  "deleteVehicleQuestion": "Delete vehicle?",
+  "deleteVehicleConfirmation": "{vehicleName} will be removed from the garage.",
+  "@deleteVehicleConfirmation": {
+    "placeholders": {
+      "vehicleName": {}
+    }
+  },
+  "garageEmpty": "Garage is empty",
+  "garageEmptyDescription": "Add your first car to create its digital twin.",
+  "garageEmptyCompactDescription": "Add your first car to open its digital twin.",
+  "addVehicle": "Add vehicle",
+  "addCar": "Add car",
+  "yourFleet": "YOUR FLEET",
+  "couldNotLoadGarage": "Could not load garage",
+  "openCockpit": "Open cockpit",
+  "mileage": "MILEAGE",
+  "service": "SERVICE",
+  "fuel": "FUEL",
+  "noIssues": "No issues",
+  "noData": "No data",
+  "warningsCount": "{count} warnings",
+  "@warningsCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "editCar": "Edit car",
+  "carSpecifications": "Car Specifications",
+  "vehicleNotFound": "Vehicle was not found",
+  "brand": "Brand",
+  "model": "Model",
+  "year": "Year",
+  "currentMileage": "Current mileage",
+  "color": "Color",
+  "vinOptional": "VIN number (optional)",
+  "engineType": "Engine type",
+  "selectEngineType": "Select engine type",
+  "gasoline": "Gasoline",
+  "diesel": "Diesel",
+  "hybrid": "Hybrid",
+  "electric": "Electric",
+  "powerOutputHp": "Power output (hp)",
+  "engineVolumeL": "Engine volume (L)",
+  "saveChanges": "Save changes",
+  "startNewShaha": "Start new shaha!",
+  "vehicleUpdated": "Vehicle updated",
+  "vehicleAdded": "Vehicle added",
+  "checkVehicleDetails": "Check the vehicle details",
+  "couldNotUpdateVehicle": "Could not update the vehicle",
+  "couldNotSaveVehicle": "Could not save the vehicle",
+  "enterBrand": "Enter a brand",
+  "enterModel": "Enter a model",
+  "enterProductionYear": "Enter a production year",
+  "enterProductionYearRange": "Enter a production year from 1900 to {year}",
+  "@enterProductionYearRange": {
+    "placeholders": {
+      "year": {
+        "type": "int"
+      }
+    }
+  },
+  "mileageCannotBeNegative": "Mileage cannot be negative",
+  "enterCurrentMileage": "Enter current mileage",
+  "enterPowerOutput": "Enter power output",
+  "enterEngineVolume": "Enter engine volume",
+  "enterEngineSpecification": "Enter either engine volume or power output",
+  "powerOutputPositive": "Power output must be greater than zero",
+  "engineVolumePositive": "Engine volume must be greater than zero",
+  "vinLengthError": "VIN must contain exactly 17 characters",
+  "myShaha": "My Shaha",
+  "couldNotLoadDashboard": "Could not load the dashboard",
+  "currentOdometer": "Current odometer",
+  "engine": "ENGINE",
+  "vinNumber": "VIN NUMBER",
+  "vinUnavailable": "VIN unavailable",
+  "copyVin": "Copy VIN",
+  "vinCopied": "VIN copied",
+  "latestEvents": "LATEST EVENTS",
+  "viewAll": "View all",
+  "noEventsYet": "No events yet",
+  "maintenanceHistory": "Maintenance History",
+  "addEvent": "Add event",
+  "searchHistory": "Search history…",
+  "all": "ALL",
+  "repairs": "REPAIRS",
+  "trips": "TRIPS",
+  "noEventsFound": "No events found",
+  "historyEmpty": "History is empty",
+  "tryAnotherSearch": "Try another search or event type.",
+  "historyEmptyDescription": "Trips, refueling, and repairs will appear here.",
+  "couldNotLoadHistory": "Could not load history",
+  "newRefueling": "New refueling",
+  "newMaintenance": "New maintenance",
+  "newTrip": "New trip",
+  "eventType": "EVENT TYPE",
+  "dateAndTime": "DATE AND TIME",
+  "title": "TITLE",
+  "enterEventTitle": "Enter event title...",
+  "currentMileageLabel": "CURRENT MILEAGE",
+  "refuelingDetails": "REFUELING DETAILS",
+  "amount": "AMOUNT",
+  "fuelLitersInvalidNumber": "Enter amount",
+  "fuelLitersMustBePositive": "Must be > 0 L",
+  "fuelLitersMax": "Max {max} L",
+  "@fuelLitersMax": {
+    "placeholders": {
+      "max": {
+        "type": "int"
+      }
+    }
+  },
+  "cost": "COST",
+  "fuelType": "FUEL TYPE",
+  "mileageForecastInfo": "Mileage data will be used to update service intervals and forecasts.",
+  "workDescription": "WORK DESCRIPTION",
+  "describeWorkPerformed": "Describe the work performed...",
+  "replacedParts": "REPLACED PARTS",
+  "enterPartsSeparated": "Enter parts separated by commas...",
+  "route": "ROUTE",
+  "duration": "DURATION",
+  "start": "START",
+  "end": "END",
+  "optional": "optional",
+  "partPhoto": "PART PHOTO",
+  "addPhoto": "Add photo",
+  "openingGallery": "Opening gallery...",
+  "removePhoto": "Remove photo",
+  "chooseAnotherPhoto": "Choose another photo",
+  "couldNotSaveEvent": "Could not save the event. Try again.",
+  "couldNotAccessPhotoLibrary": "Could not access the photo library.",
+  "couldNotSelectPhoto": "Could not select the photo.",
+  "couldNotRestorePhoto": "Could not restore the selected photo.",
+  "fuelEvent": "Fuel",
+  "maintenanceEvent": "Maintenance",
+  "tripEvent": "Trip",
+  "fieldMustBePositive": "{field} must be positive",
+  "@fieldMustBePositive": {
+    "placeholders": {
+      "field": {}
+    }
+  },
+  "fieldIsRequired": "{field} is required",
+  "@fieldIsRequired": {
+    "placeholders": {
+      "field": {}
+    }
+  },
+  "mileageAtLeastKm": "Must be at least {km} km",
+  "@mileageAtLeastKm": {
+    "placeholders": {
+      "km": {
+        "type": "int"
+      }
+    }
+  },
+  "atLeastKm": "At least {km} km",
+  "@atLeastKm": {
+    "placeholders": {
+      "km": {
+        "type": "int"
+      }
+    }
+  },
+  "mustExceedStart": "Must exceed start",
+  "replaced": "Replaced: {parts}",
+  "@replaced": {
+    "placeholders": {
+      "parts": {}
+    }
+  },
+  "partPhotoLabel": "Part photo:",
+  "chatWithShaha": "Chat with Shaha",
+  "vehicleAiAssistant": "Vehicle AI assistant",
+  "shahaOnline": "Shaha is online",
+  "chatEmptyDescription": "Ask about vehicle condition, expenses, or maintenance.",
+  "chatGreetingReady": "Hi! I am your car, and I am ready to chat.",
+  "quickQuestionVehicleStatus": "Vehicle status",
+  "quickQuestionTotalExpenses": "What are my total expenses?",
+  "quickQuestionOil": "When should I change oil?",
+  "quickQuestionBreakSoon": "What can break soon?",
+  "message": "Message",
+  "sendMessage": "Send message",
+  "assistantThinking": "Assistant is thinking",
+  "shahaThinking": "Shaha is thinking",
+  "connectingToShaha": "Connecting to Shaha",
+  "preparingChat": "Preparing history and quick questions.",
+  "chatDidNotLoad": "Chat did not load",
+  "checkConnectionTryAgain": "Check the connection and try again.",
+  "couldNotGetReply": "Could not get a reply. Check the backend and try again.",
+  "openAnalytics": "Open analytics",
+  "openForecast": "Open forecast",
+  "openDashboard": "Open dashboard",
+  "open": "Open",
+  "addRefuel": "Add refueling",
+  "addTrip": "Add trip",
+  "addPartRecord": "Add part record",
+  "addMaintenance": "Add maintenance",
+  "openForm": "Open form",
+  "intelligence": "Intelligence",
+  "performanceOverview": "Performance and spending overview",
+  "seasonalExpenses": "SEASONAL EXPENSES",
+  "totalAmount": "TOTAL: {amount}",
+  "@totalAmount": {
+    "placeholders": {
+      "amount": {}
+    }
+  },
+  "monthlyExpenseTrend": "Monthly expense trend",
+  "historyAnalysis": "HISTORY ANALYSIS",
+  "expensesLabel": "{period} EXPENSES",
+  "@expensesLabel": {
+    "placeholders": {
+      "period": {}
+    }
+  },
+  "costPerKm": "COST PER KM",
+  "averageLabel": "Avg: {value}",
+  "@averageLabel": {
+    "placeholders": {
+      "value": {}
+    }
+  },
+  "performanceTrendOverTime": "PERFORMANCE TREND OVER TIME",
+  "companyMetricsUnavailable": "Company metrics are not available",
+  "countsUnavailable": "Counts are not available",
+  "companyMetrics": "COMPANY METRICS",
+  "keyCounts": "KEY COUNTS",
+  "eventsMetric": "Events",
+  "tripKmMetric": "Trip km",
+  "subscription": "Subscription",
+  "electronics": "Electronics",
+  "notEnoughAnalytics": "Not enough data for analytics",
+  "analyticsEmptyDescription": "Add trips, refueling, repairs, or maintenance records.",
+  "addRepair": "Add repair",
+  "couldNotLoadAnalytics": "Could not load analytics",
+  "month": "MONTH",
+  "yearPeriod": "YEAR",
+  "allTime": "ALL TIME",
+  "monthly": "MONTHLY",
+  "annual": "ANNUAL",
+  "allTimeAdjective": "ALL-TIME",
+  "fuelCategory": "Fuel",
+  "maintenanceCategory": "Maintenance",
+  "partsCategory": "Parts",
+  "otherCategory": "Other",
+  "maintenanceForecast": "Maintenance forecast",
+  "noPartsAdded": "No parts added",
+  "partsEmptyDescription": "When part lifetime data appears, the maintenance forecast will be shown here.",
+  "couldNotLoadParts": "Could not load parts lifetime",
+  "partsRetryDescription": "Try again to refresh the maintenance forecast.",
+  "lifetimeNotSet": "Lifetime not set",
+  "resource": "RESOURCE",
+  "updatedTwoHoursAgo": "UPDATED 2 HOURS AGO",
+  "maintenanceForecastCaps": "MAINTENANCE FORECAST",
+  "serviceNeededNow": "Service needed now",
+  "inKm": "In {km} km",
+  "@inKm": {
+    "placeholders": {
+      "km": {}
+    }
+  },
+  "notEnoughData": "Not enough data",
+  "addLifetimeData": "Add lifetime data to forecast",
+  "nextService": "NEXT SERVICE",
+  "approxDateInDays": "Approx. date: in {days} days",
+  "@approxDateInDays": {
+    "placeholders": {
+      "days": {
+        "type": "int"
+      }
+    }
+  },
+  "replacePartNow": "Replace {part} now",
+  "@replacePartNow": {
+    "placeholders": {
+      "part": {}
+    }
+  },
+  "replaceCriticalPartsNow": "Replace {count} critical parts now",
+  "@replaceCriticalPartsNow": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "noNotificationsYet": "No notifications yet",
+  "networkError": "Network error",
+  "notificationsLoadError": "Notifications could not be loaded. Check the connection and try again.",
+  "notificationDetails": "Notification details",
+  "notificationNotFound": "Notification was not found",
+  "remainingResource": "Remaining resource",
+  "recommendedAction": "Recommended action"
+}

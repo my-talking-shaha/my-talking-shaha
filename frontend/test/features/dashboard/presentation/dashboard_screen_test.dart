@@ -10,6 +10,7 @@ import 'package:frontend/features/dashboard/presentation/screens/dashboard_scree
 import 'package:frontend/features/garage/domain/entities/vehicle.dart';
 import 'package:frontend/features/history/domain/entities/history_event_type.dart';
 import 'package:frontend/features/parts/domain/entities/vehicle_part.dart';
+import 'package:frontend/l10n/generated/app_localizations.dart';
 
 void main() {
   testWidgets('shows vehicle summary and latest events', (tester) async {
@@ -119,6 +120,9 @@ Future<void> _pumpDashboard(
         ),
       ],
       child: MaterialApp(
+        locale: const Locale('en'),
+        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        supportedLocales: AppLocalizations.supportedLocales,
         theme: AppTheme.dark,
         home: const DashboardScreen(vehicleId: 'vehicle_1'),
       ),

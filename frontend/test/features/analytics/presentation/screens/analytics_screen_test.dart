@@ -7,6 +7,7 @@ import 'package:frontend/features/analytics/presentation/providers/analytics_pro
 import 'package:frontend/features/analytics/presentation/screens/analytics_screen.dart';
 import 'package:frontend/features/parts/presentation/providers/parts_providers.dart';
 import 'package:go_router/go_router.dart';
+import 'package:frontend/l10n/generated/app_localizations.dart';
 
 void main() {
   testWidgets('renders mocked analytics dashboard and switches periods', (
@@ -85,6 +86,9 @@ Future<void> _pumpAnalyticsScreen(
         vehiclePartsProvider(vehicleId).overrideWith((ref) async => const []),
       ],
       child: MaterialApp(
+        locale: const Locale('en'),
+        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        supportedLocales: AppLocalizations.supportedLocales,
         theme: AppTheme.dark,
         home: AnalyticsScreen(vehicleId: vehicleId),
       ),
