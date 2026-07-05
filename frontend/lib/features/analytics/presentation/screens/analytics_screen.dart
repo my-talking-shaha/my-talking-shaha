@@ -753,16 +753,16 @@ final class _AnalyticsEmptyState extends StatelessWidget {
               runSpacing: AppSpacing.sm,
               children: [
                 _SuggestionChip(
-                    label: l10n.addTrip, 
-                    onPressed: () => _openHistoryAdd(context, type: 'trip'),
+                  label: l10n.addTrip,
+                  onPressed: () => _openHistoryAdd(context, type: 'trip'),
                 ),
                 _SuggestionChip(
-                    label: l10n.addRefuel, 
-                    onPressed: () => _openHistoryAdd(context),
-                 ),
+                  label: l10n.addRefuel,
+                  onPressed: () => _openHistoryAdd(context),
+                ),
                 _SuggestionChip(
-                    label: l10n.addRepair, 
-                    _openHistoryAdd(context, type: 'maintenance', ),
+                  label: l10n.addRepair,
+                  _openHistoryAdd(context, type: 'maintenance'),
                 ),
               ],
             ),
