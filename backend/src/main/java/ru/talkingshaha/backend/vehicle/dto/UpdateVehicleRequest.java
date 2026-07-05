@@ -31,8 +31,5 @@ public record UpdateVehicleRequest(
         String engineDescription,
         @Schema(example = "XTA21060012345678")
         @Size(min = 17, max = 17, message = "must contain exactly 17 characters")
-        String vin,
-        @Schema(example = "https://example.com/new-car.jpg")
-        @Size(max = 500, message = "must contain at most 500 characters")
-        String photoUrl) {
+        String vin) {
 }

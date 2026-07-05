@@ -84,8 +84,10 @@ The generated OpenAPI JSON should be available at `http://SERVER_HOST/v3/api-doc
 
 The current Docker Compose file sets `SPRING_JPA_HIBERNATE_DDL_AUTO=validate`
 and leaves schema changes to Flyway migrations. Because this development
-deployment runs `docker compose down -v`, the `postgres-data` volume is deleted
-on each deploy. This is acceptable only while the server has no important data.
+deployment runs `docker compose down -v`, the `postgres-data` and `photo-data`
+volumes are deleted on each deploy, so the database and uploaded photos are
+wiped together and stay consistent. This is acceptable only while the server
+has no important data.
 
 For staging or production, remove the `down -v` step and never edit migrations
 that have already been applied to a shared database. Add schema changes as new
