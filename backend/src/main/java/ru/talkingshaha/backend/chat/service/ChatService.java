@@ -8,6 +8,7 @@ import java.time.OffsetDateTime;
 import java.util.Comparator;
 import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
@@ -111,6 +112,12 @@ public class ChatService {
     }
 
     @Transactional
+    public ChatSession activeSession(UUID vehicleId, ChatLanguage language) {
+        Vehicle vehicle = vehicles.requireOwnedVehicle(vehicleId);
+        return getOrCreateSession(vehicle, language);
+    }
+
+    @Transactional
     public SendMessageResponse send(UUID vehicleId, SendMessageRequest request) {
         Vehicle vehicle = vehicles.requireOwnedVehicle(vehicleId);
         ChatSession session = getOrCreateSession(vehicle, ChatLanguage.EN);
@@ -157,9 +164,15 @@ public class ChatService {
             ChatSession session,
             Vehicle vehicle) {
         try {
+            if (decision.intent() == ChatIntent.OPEN_TRIP_FORM && startsTripConversation(userText)) {
+                return startTripFromChatMessage(userText, session, vehicle);
+            }
             Optional<ChatActionResponse> pending = latestPendingAction(session);
             if (pending.isPresent()) {
-                return continuePendingEvent(userText, pending.get(), vehicle);
+                return continuePendingEvent(userText, pending.get(), session, vehicle);
+            }
+            if (decision.intent() == ChatIntent.OPEN_TRIP_FORM && endsTripConversation(userText)) {
+                return endActiveTripFromChatMessage(userText, session, vehicle);
             }
             if (asksForRequiredFields(userText)) {
                 Map<String, Object> fields = prefill(userText);
@@ -182,7 +195,11 @@ public class ChatService {
         }
     }
 
-    private Optional<AssistantDraft> continuePendingEvent(String userText, ChatActionResponse pending, Vehicle vehicle) {
+    private Optional<AssistantDraft> continuePendingEvent(
+            String userText,
+            ChatActionResponse pending,
+            ChatSession session,
+            Vehicle vehicle) {
         Map<String, Object> merged = new LinkedHashMap<>(pending.prefill());
         Map<String, Object> newFields = prefill(userText);
         if ("REFUEL".equals(pending.form())) {
@@ -191,7 +208,9 @@ public class ChatService {
         merged.putAll(newFields);
         return switch (pending.form()) {
             case "REFUEL" -> createRefuelFromText(userText, vehicle, merged);
-            case "TRIP" -> createTripFromText(userText, vehicle, merged);
+            case "TRIP" -> uuidField(merged, "tripId")
+                    .map(tripId -> updateLifecycleTripFromText(userText, vehicle, session, tripId, merged))
+                    .orElseGet(() -> createTripFromText(userText, vehicle, merged));
             case "MAINTENANCE" -> createMaintenanceFromText(userText, vehicle, merged);
             default -> Optional.empty();
         };
@@ -252,6 +271,56 @@ public class ChatService {
                         stringField(fields, "route").orElse(null),
                         integerField(fields, "durationMinutes").orElseThrow()));
         return Optional.of(new AssistantDraft(tripCreatedAnswer(event), null, event));
+    }
+
+    private Optional<AssistantDraft> startTripFromChatMessage(String userText, ChatSession session, Vehicle vehicle) {
+        TimelineEventResponse event = timelineEvents.startChatTrip(vehicle.getId(), session, OffsetDateTime.now(), userText);
+        Map<String, Object> fields = new LinkedHashMap<>();
+        fields.put("tripId", event.id().toString());
+        return Optional.of(new AssistantDraft(
+                tripStartedAnswer(event),
+                pendingAction("TRIP", fields),
+                event));
+    }
+
+    private Optional<AssistantDraft> endActiveTripFromChatMessage(String userText, ChatSession session, Vehicle vehicle) {
+        return timelineEvents.activeChatTripId(session)
+                .map(tripId -> updateLifecycleTripFromText(userText, vehicle, session, tripId, Map.of()))
+                .orElseGet(() -> Optional.of(new AssistantDraft(
+                        "\u041d\u0435 \u0432\u0438\u0436\u0443 \u0430\u043a\u0442\u0438\u0432\u043d\u043e\u0439 \u043f\u043e\u0435\u0437\u0434\u043a\u0438 \u0434\u043b\u044f \u0437\u0430\u0432\u0435\u0440\u0448\u0435\u043d\u0438\u044f. \u0421\u043d\u0430\u0447\u0430\u043b\u0430 \u043d\u0430\u0447\u043d\u0438 \u043f\u043e\u0435\u0437\u0434\u043a\u0443, \u0430 \u043f\u043e\u0442\u043e\u043c \u044f \u0441\u043e\u0445\u0440\u0430\u043d\u044e \u0432\u0440\u0435\u043c\u044f \u0444\u0438\u043d\u0438\u0448\u0430.",
+                        null,
+                        null)));
+    }
+
+    private Optional<AssistantDraft> updateLifecycleTripFromText(
+            String userText,
+            Vehicle vehicle,
+            ChatSession session,
+            UUID tripId,
+            Map<String, Object> carriedFields) {
+        Map<String, Object> fields = mergedFields(carriedFields, prefill(userText));
+        firstInteger(userText, DISTANCE_PATTERN).ifPresent(distance -> fields.put("distanceKm", distance));
+        firstInteger(userText, DURATION_PATTERN).ifPresent(duration -> fields.put("durationMinutes", duration));
+        decimalField(fields, "liters").ifPresent(fuelLiters -> fields.put("fuelLiters", fuelLiters));
+        OffsetDateTime endedAt = endsTripConversation(userText) || hasLifecycleCompletionFields(fields)
+                ? OffsetDateTime.now()
+                : null;
+        TimelineEventResponse event = timelineEvents.updateChatTrip(
+                vehicle.getId(),
+                tripId,
+                session,
+                new TimelineEventService.TripUpdate(
+                        endedAt,
+                        integerField(fields, "distanceKm").orElse(null),
+                        integerField(fields, "durationMinutes").orElse(null),
+                        decimalField(fields, "fuelLiters").orElse(null),
+                        userText));
+        if (event.tripStatus() == ru.talkingshaha.backend.timeline.model.TripCompletionStatus.COMPLETE) {
+            return Optional.of(new AssistantDraft(tripLifecycleCompletedAnswer(event), null, event));
+        }
+        Map<String, Object> nextFields = new LinkedHashMap<>(fields);
+        nextFields.put("tripId", tripId.toString());
+        return Optional.of(new AssistantDraft(tripLifecyclePartialAnswer(event), pendingAction("TRIP", nextFields), event));
     }
 
     private Optional<AssistantDraft> createMaintenanceFromText(
@@ -317,6 +386,31 @@ public class ChatService {
 
     private ChatActionResponse pendingAction(String form, Map<String, Object> fields) {
         return new ChatActionResponse("PENDING_EVENT", form, null, fields);
+    }
+
+    private boolean startsTripConversation(String userText) {
+        String text = normalizedText(userText);
+        boolean hasTrip = text.contains("trip") || text.contains("\u043f\u043e\u0435\u0437\u0434");
+        return hasTrip && (text.contains("start")
+                || text.contains("begin")
+                || text.contains("\u043d\u0430\u0447")
+                || text.contains("\u0441\u0442\u0430\u0440\u0442")
+                || text.contains("\u043f\u043e\u0435\u0445\u0430\u043b"));
+    }
+
+    private boolean endsTripConversation(String userText) {
+        String text = normalizedText(userText);
+        boolean hasTrip = text.contains("trip") || text.contains("\u043f\u043e\u0435\u0437\u0434");
+        return hasTrip && (text.contains("end")
+                || text.contains("finish")
+                || text.contains("complete")
+                || text.contains("\u0437\u0430\u043a\u043e\u043d\u0447")
+                || text.contains("\u0437\u0430\u0432\u0435\u0440\u0448")
+                || text.contains("\u0444\u0438\u043d\u0438\u0448"));
+    }
+
+    private String normalizedText(String userText) {
+        return userText == null ? "" : userText.toLowerCase(Locale.ROOT);
     }
 
     private Map<String, Object> mergedFields(Map<String, Object> first, Map<String, Object> second) {
@@ -446,6 +540,27 @@ public class ChatService {
             }
         }
         return Optional.empty();
+    }
+
+    private Optional<UUID> uuidField(Map<String, Object> fields, String key) {
+        Object value = fields.get(key);
+        if (value instanceof UUID uuid) {
+            return Optional.of(uuid);
+        }
+        if (value instanceof String string && !string.isBlank()) {
+            try {
+                return Optional.of(UUID.fromString(string));
+            } catch (IllegalArgumentException ignored) {
+                return Optional.empty();
+            }
+        }
+        return Optional.empty();
+    }
+
+    private boolean hasLifecycleCompletionFields(Map<String, Object> fields) {
+        return integerField(fields, "distanceKm").isPresent()
+                && integerField(fields, "durationMinutes").isPresent()
+                && decimalField(fields, "fuelLiters").isPresent();
     }
 
     private Optional<BigDecimal> decimalField(Map<String, Object> fields, String key) {
@@ -638,6 +753,19 @@ public class ChatService {
     private String maintenanceCreatedAnswer(TimelineEventResponse event) {
         return "Записала ремонт в свою историю: %s, пробег %s км."
                 .formatted(event.name(), event.mileageKm());
+    }
+
+    private String tripStartedAnswer(TimelineEventResponse event) {
+        return "\u041f\u043e\u0435\u0437\u0434\u043a\u0443 \u043d\u0430\u0447\u0430\u043b\u0430 \u0438 \u0441\u043e\u0445\u0440\u0430\u043d\u0438\u043b\u0430 \u0441\u0442\u0430\u0440\u0442. \u041a\u043e\u0433\u0434\u0430 \u0437\u0430\u043a\u043e\u043d\u0447\u0438\u0448\u044c, \u043d\u0430\u043f\u0438\u0448\u0438 \u0441\u044e\u0434\u0430 \u0434\u0438\u0441\u0442\u0430\u043d\u0446\u0438\u044e, \u0434\u043b\u0438\u0442\u0435\u043b\u044c\u043d\u043e\u0441\u0442\u044c \u0438 \u0440\u0430\u0441\u0445\u043e\u0434 \u0442\u043e\u043f\u043b\u0438\u0432\u0430.";
+    }
+
+    private String tripLifecyclePartialAnswer(TimelineEventResponse event) {
+        return "\u0421\u043e\u0445\u0440\u0430\u043d\u0438\u043b\u0430 \u043f\u043e\u0435\u0437\u0434\u043a\u0443 \u0447\u0430\u0441\u0442\u0438\u0447\u043d\u043e. \u041f\u0440\u0438\u0448\u043b\u0438 \u043d\u0435\u0434\u043e\u0441\u0442\u0430\u044e\u0449\u0438\u0435 \u0434\u0430\u043d\u043d\u044b\u0435: \u0434\u0438\u0441\u0442\u0430\u043d\u0446\u0438\u044e, \u0434\u043b\u0438\u0442\u0435\u043b\u044c\u043d\u043e\u0441\u0442\u044c \u0438\u043b\u0438 \u0440\u0430\u0441\u0445\u043e\u0434 \u0442\u043e\u043f\u043b\u0438\u0432\u0430.";
+    }
+
+    private String tripLifecycleCompletedAnswer(TimelineEventResponse event) {
+        return "\u041f\u043e\u0435\u0437\u0434\u043a\u0443 \u0437\u0430\u0432\u0435\u0440\u0448\u0438\u043b\u0430: %s \u043a\u043c \u0437\u0430 %s \u043c\u0438\u043d\u0443\u0442, \u0440\u0430\u0441\u0445\u043e\u0434 \u0442\u043e\u043f\u043b\u0438\u0432\u0430 %s \u043b."
+                .formatted(event.distanceKm(), event.durationMinutes(), decimal(event.fuelLiters()));
     }
 
     private String contextForDecision(

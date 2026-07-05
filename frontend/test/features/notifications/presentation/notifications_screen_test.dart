@@ -6,6 +6,7 @@ import 'package:frontend/features/notifications/domain/entities/app_notification
 import 'package:frontend/features/notifications/domain/repositories/notifications_repository.dart';
 import 'package:frontend/features/notifications/presentation/providers/notifications_providers.dart';
 import 'package:frontend/features/notifications/presentation/screens/notifications_screen.dart';
+import 'package:frontend/l10n/generated/app_localizations.dart';
 
 void main() {
   testWidgets('notifications screen renders network error state', (
@@ -19,6 +20,9 @@ void main() {
           ),
         ],
         child: MaterialApp(
+          locale: const Locale('en'),
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
           theme: AppTheme.dark,
           home: const NotificationsScreen(),
         ),

@@ -58,6 +58,10 @@ Response `200`:
 
 `POST /api/v1/vehicles/{vehicleId}/chat/messages`
 
+Trip lifecycle can be driven from this same endpoint. If the user writes a natural
+message like "I want to start a trip now", backend creates an `IN_PROGRESS` trip and
+returns it in `createdEvent`; follow-up trip details in the same chat update that trip.
+
 Request:
 
 ```json
@@ -200,3 +204,76 @@ missing validation fields, then creates the event only after the user provides v
 ## Voice Input
 
 Voice-to-text is client-side/platform concern. Backend receives text only unless a future audio endpoint is defined.
+
+## Trip Lifecycle From Chat
+
+### Start Trip
+
+`POST /api/v1/vehicles/{vehicleId}/chat/trips/start`
+
+Request:
+
+```json
+{
+  "startedAt": "2026-06-13T09:15:00Z",
+  "notes": "Morning commute"
+}
+```
+
+Response `201`:
+
+```json
+{
+  "tripId": "994v15jc-15d3-4957-9189-u8e79789ea66",
+  "confirmation": "Trip started. I saved the start time and will keep the record even if details are added later.",
+  "missingRequiredFields": ["distanceKm", "fuelLiters", "durationMinutes"],
+  "extractedValues": {},
+  "trip": {
+    "id": "994v15jc-15d3-4957-9189-u8e79789ea66",
+    "type": "TRIP",
+    "eventDateTime": "2026-06-13T09:15:00Z",
+    "startMileageKm": 10000,
+    "tripStatus": "IN_PROGRESS"
+  }
+}
+```
+
+### End Trip
+
+`POST /api/v1/vehicles/{vehicleId}/chat/trips/{tripId}/end`
+
+Request may include any known fields:
+
+```json
+{
+  "endedAt": "2026-06-13T10:10:00Z",
+  "distanceKm": 42,
+  "durationMinutes": 55,
+  "fuelLiters": 4.2,
+  "notes": "Home -> University"
+}
+```
+
+Response includes `missingRequiredFields`. If the array is not empty, the trip has still
+been auto-saved as partial and appears in timeline logs.
+
+### Collect Trip Data
+
+`POST /api/v1/vehicles/{vehicleId}/chat/trips/{tripId}/data`
+
+```json
+{
+  "text": "We drove 42 km for 55 minutes and used about 4 liters"
+}
+```
+
+Response includes:
+- `extractedValues`: values parsed from natural language;
+- `missingRequiredFields`: remaining critical fields;
+- `trip`: updated timeline event with `tripStatus` (`IN_PROGRESS`, `PARTIAL`, or `COMPLETE`).
+
+If the backend cannot confidently extract values, it keeps the current trip saved as
+partial and returns the missing fields for the chat UI to ask about.
+
+If the user abandons an in-progress trip, the backend auto-saves it after the configured
+timeout as `PARTIAL` with an `endedAt` timestamp, so it remains visible in trip logs.
