@@ -68,7 +68,12 @@ void main() {
       find.widgetWithText(SegmentedButton<AuthMode>, 'Register'),
       findsOne,
     );
-    await tester.tap(find.text('Register'));
+    await tester.tap(
+      find.descendant(
+        of: find.byType(SegmentedButton<AuthMode>),
+        matching: find.text('Register'),
+      ),
+    );
     await tester.pumpAndSettle();
 
     expect(app.router.routeInformationProvider.value.uri.path, '/registration');
