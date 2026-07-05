@@ -216,7 +216,7 @@ void main() {
     expect(vehicles.single.brand, 'Toyota');
   });
 
-  testWidgets('edit form saves a standard color from the dropdown', (
+  testWidgets('edit form suggests standard colors while typing', (
     tester,
   ) async {
     final repository = _FakeGarageRepository(
@@ -240,11 +240,15 @@ void main() {
     await tester.tap(find.byKey(const ValueKey('garage_swipe_action_edit')));
     await tester.pumpAndSettle();
 
-    expect(find.text('Blue'), findsOneWidget);
+    final colorField = find.byKey(const ValueKey('vehicle_color_field'));
+    expect(tester.widget<TextField>(colorField).controller?.text, 'Blue');
 
-    await tester.tap(find.byKey(const ValueKey('vehicle_color_dropdown')));
+    await tester.enterText(colorField, 'Re');
     await tester.pumpAndSettle();
-    await tester.tap(find.text('Red').last);
+
+    expect(find.text('Red'), findsOneWidget);
+
+    await tester.tap(find.text('Red'));
     await tester.pumpAndSettle();
     await tester.ensureVisible(find.text('Save changes'));
     await tester.pumpAndSettle();
@@ -255,7 +259,46 @@ void main() {
     expect(vehicles.single.color, 'Red');
   });
 
-  testWidgets('edit form preserves custom colors through the Other field', (
+  testWidgets(
+    'edit form preserves custom colors through the color text field',
+    (tester) async {
+      final repository = _FakeGarageRepository(
+        vehicles: [
+          _vehicle(
+            id: 'vehicle_123',
+            brand: 'Lada',
+            model: '2106',
+            year: 1998,
+            color: 'Champagne',
+            currentMileageKm: 124580,
+            engineType: 'gasoline',
+          ),
+        ],
+      );
+
+      await _pumpGarage(tester, repository);
+
+      await tester.drag(find.byType(VehicleGarageCard), const Offset(-160, 0));
+      await tester.pumpAndSettle();
+      await tester.tap(find.byKey(const ValueKey('garage_swipe_action_edit')));
+      await tester.pumpAndSettle();
+
+      final colorField = tester.widget<TextField>(
+        find.byKey(const ValueKey('vehicle_color_field')),
+      );
+      expect(colorField.controller?.text, 'Champagne');
+
+      await tester.ensureVisible(find.text('Save changes'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Save changes'));
+      await tester.pumpAndSettle();
+
+      final vehicles = await repository.getVehicles();
+      expect(vehicles.single.color, 'Champagne');
+    },
+  );
+
+  testWidgets('edit form uses a compact engine menu and dismisses text focus', (
     tester,
   ) async {
     final repository = _FakeGarageRepository(
@@ -265,7 +308,7 @@ void main() {
           brand: 'Lada',
           model: '2106',
           year: 1998,
-          color: 'Champagne',
+          color: 'blue',
           currentMileageKm: 124580,
           engineType: 'gasoline',
         ),
@@ -279,19 +322,19 @@ void main() {
     await tester.tap(find.byKey(const ValueKey('garage_swipe_action_edit')));
     await tester.pumpAndSettle();
 
-    final customColorField = tester.widget<TextField>(
-      find.byKey(const ValueKey('vehicle_custom_color_field')),
+    final engineMenu = tester.widget<PopupMenuButton<String>>(
+      find.byType(PopupMenuButton<String>),
     );
-    expect(find.text('Other'), findsOneWidget);
-    expect(customColorField.controller?.text, 'Champagne');
+    expect(engineMenu.constraints?.maxWidth, 260);
 
-    await tester.ensureVisible(find.text('Save changes'));
-    await tester.pumpAndSettle();
-    await tester.tap(find.text('Save changes'));
-    await tester.pumpAndSettle();
+    await tester.tap(find.byType(TextField).at(1));
+    await tester.pump();
+    final textFieldFocus = FocusManager.instance.primaryFocus;
+    expect(textFieldFocus, isNotNull);
 
-    final vehicles = await repository.getVehicles();
-    expect(vehicles.single.color, 'Champagne');
+    await tester.tapAt(const Offset(10, 160));
+    await tester.pump();
+    expect(FocusManager.instance.primaryFocus, isNot(textFieldFocus));
   });
 
   testWidgets('delete action requires confirmation and supports cancel', (
