@@ -127,7 +127,13 @@ Future<void> _pumpAnalyticsRouter(
         ),
         vehiclePartsProvider(vehicleId).overrideWith((ref) async => const []),
       ],
-      child: MaterialApp.router(theme: AppTheme.dark, routerConfig: router),
+      child: MaterialApp.router(
+        locale: const Locale('en'),
+        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        supportedLocales: AppLocalizations.supportedLocales,
+        theme: AppTheme.dark,
+        routerConfig: router,
+      ),
     ),
   );
   await tester.pumpAndSettle();
