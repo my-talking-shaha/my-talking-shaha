@@ -539,10 +539,12 @@ final class _GarageColorField extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const _GarageDropdownLabel(label: 'Color'),
+        _GarageDropdownLabel(label: l10n.color),
         const SizedBox(height: 10),
         DropdownButtonFormField<String>(
           key: const ValueKey('vehicle_color_dropdown'),
@@ -570,13 +572,19 @@ final class _GarageColorField extends StatelessWidget {
               borderSide: const BorderSide(color: _accentColor),
             ),
           ),
-          hint: const Text('Select color', style: TextStyle(color: _hintColor)),
+          hint: Text(
+            l10n.selectColor,
+            style: const TextStyle(color: _hintColor),
+          ),
           items: [
             for (final color in _AddVehicleScreenState._standardVehicleColors)
-              DropdownMenuItem(value: color, child: Text(color)),
-            const DropdownMenuItem(
+              DropdownMenuItem(
+                value: color,
+                child: Text(_localizedVehicleColor(l10n, color)),
+              ),
+            DropdownMenuItem(
               value: _AddVehicleScreenState._otherVehicleColorValue,
-              child: Text(_AddVehicleScreenState._otherVehicleColorValue),
+              child: Text(l10n.vehicleColorOther),
             ),
           ],
           onChanged: (value) {
@@ -595,7 +603,7 @@ final class _GarageColorField extends StatelessWidget {
             textInputAction: TextInputAction.next,
             textCapitalization: TextCapitalization.words,
             decoration: InputDecoration(
-              hintText: 'Custom color',
+              hintText: l10n.customColor,
               hintStyle: const TextStyle(color: _hintColor),
               filled: true,
               fillColor: _fieldColor,
@@ -617,6 +625,25 @@ final class _GarageColorField extends StatelessWidget {
         ],
       ],
     );
+  }
+
+  String _localizedVehicleColor(AppLocalizations l10n, String color) {
+    return switch (color) {
+      'White' => l10n.vehicleColorWhite,
+      'Black' => l10n.vehicleColorBlack,
+      'Silver' => l10n.vehicleColorSilver,
+      'Grey' => l10n.vehicleColorGrey,
+      'Red' => l10n.vehicleColorRed,
+      'Blue' => l10n.vehicleColorBlue,
+      'Green' => l10n.vehicleColorGreen,
+      'Yellow' => l10n.vehicleColorYellow,
+      'Orange' => l10n.vehicleColorOrange,
+      'Brown' => l10n.vehicleColorBrown,
+      'Beige' => l10n.vehicleColorBeige,
+      'Gold' => l10n.vehicleColorGold,
+      'Purple' => l10n.vehicleColorPurple,
+      _ => color,
+    };
   }
 }
 
