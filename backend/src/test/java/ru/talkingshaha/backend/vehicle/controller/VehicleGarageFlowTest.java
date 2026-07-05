@@ -1,6 +1,7 @@
 package ru.talkingshaha.backend.vehicle.controller;
 
 import static org.hamcrest.Matchers.hasSize;
+import static org.hamcrest.Matchers.hasItem;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
@@ -44,6 +45,15 @@ class VehicleGarageFlowTest {
 
     private String bearer() {
         return "Bearer " + token;
+    }
+
+    @Test
+    void returnsVehicleBrandsFromCatalog() throws Exception {
+        mockMvc.perform(get("/api/v1/vehicles/brands")
+                        .header("Authorization", bearer()))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$", hasItem("Abarth")))
+                .andExpect(jsonPath("$", hasItem("BMW")));
     }
 
     @Test

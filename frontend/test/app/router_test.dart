@@ -13,6 +13,7 @@ import 'package:frontend/features/auth/domain/entities/auth_session.dart';
 import 'package:frontend/features/auth/domain/repositories/auth_repository.dart';
 import 'package:frontend/features/auth/presentation/controllers/auth_controller.dart';
 import 'package:frontend/features/auth/presentation/providers/auth_providers.dart';
+import 'package:frontend/features/auth/presentation/widgets/auth_screen_scaffold.dart';
 import 'package:frontend/features/chat/domain/entities/chat_action.dart';
 import 'package:frontend/features/chat/domain/entities/chat_message.dart';
 import 'package:frontend/features/chat/domain/entities/chat_state.dart';
@@ -59,6 +60,34 @@ void main() {
 
     expect(app.container.read(authControllerProvider).hasValue, isTrue);
     expect(app.router.routeInformationProvider.value.uri.path, '/login');
+  });
+
+  testWidgets('login screen prominently offers registration', (tester) async {
+    final app = await _pumpApp(
+      tester,
+      authRepository: const _UnauthenticatedRepository(),
+    );
+
+    expect(app.router.routeInformationProvider.value.uri.path, '/login');
+    expect(find.widgetWithText(SegmentedButton<AuthMode>, 'Login'), findsOne);
+    expect(
+      find.widgetWithText(SegmentedButton<AuthMode>, 'Register'),
+      findsOne,
+    );
+    await tester.tap(
+      find.descendant(
+        of: find.byType(SegmentedButton<AuthMode>),
+        matching: find.text('Register'),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    expect(app.router.routeInformationProvider.value.uri.path, '/registration');
+    expect(find.widgetWithText(SegmentedButton<AuthMode>, 'Login'), findsOne);
+    expect(
+      find.widgetWithText(SegmentedButton<AuthMode>, 'Register'),
+      findsOne,
+    );
   });
 
   testWidgets('tab routes are hosted in an indexed stack', (tester) async {
@@ -569,6 +598,28 @@ final class _AuthenticatedRepository implements AuthRepository {
       login: 'driver',
       fullName: 'Test Driver',
     );
+  }
+
+  @override
+  Future<AuthSession> register(RegistrationCredentials credentials) {
+    throw UnimplementedError();
+  }
+
+  @override
+  Future<AuthSession> login(LoginCredentials credentials) {
+    throw UnimplementedError();
+  }
+
+  @override
+  Future<void> logout() async {}
+}
+
+final class _UnauthenticatedRepository implements AuthRepository {
+  const _UnauthenticatedRepository();
+
+  @override
+  Future<AuthSession?> restoreSession() async {
+    return null;
   }
 
   @override

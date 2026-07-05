@@ -248,6 +248,54 @@ class AppLocalizationsRu extends AppLocalizations {
   String get color => 'Цвет';
 
   @override
+  String get selectColor => 'Выберите цвет';
+
+  @override
+  String get customColor => 'Свой цвет';
+
+  @override
+  String get vehicleColorWhite => 'Белый';
+
+  @override
+  String get vehicleColorBlack => 'Черный';
+
+  @override
+  String get vehicleColorSilver => 'Серебристый';
+
+  @override
+  String get vehicleColorGrey => 'Серый';
+
+  @override
+  String get vehicleColorRed => 'Красный';
+
+  @override
+  String get vehicleColorBlue => 'Синий';
+
+  @override
+  String get vehicleColorGreen => 'Зеленый';
+
+  @override
+  String get vehicleColorYellow => 'Желтый';
+
+  @override
+  String get vehicleColorOrange => 'Оранжевый';
+
+  @override
+  String get vehicleColorBrown => 'Коричневый';
+
+  @override
+  String get vehicleColorBeige => 'Бежевый';
+
+  @override
+  String get vehicleColorGold => 'Золотой';
+
+  @override
+  String get vehicleColorPurple => 'Фиолетовый';
+
+  @override
+  String get vehicleColorOther => 'Другой';
+
+  @override
   String get vinOptional => 'VIN номер (необязательно)';
 
   @override

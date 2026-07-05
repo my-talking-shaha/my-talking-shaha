@@ -560,6 +560,102 @@ abstract class AppLocalizations {
   /// **'Color'**
   String get color;
 
+  /// No description provided for @selectColor.
+  ///
+  /// In en, this message translates to:
+  /// **'Select color'**
+  String get selectColor;
+
+  /// No description provided for @customColor.
+  ///
+  /// In en, this message translates to:
+  /// **'Custom color'**
+  String get customColor;
+
+  /// No description provided for @vehicleColorWhite.
+  ///
+  /// In en, this message translates to:
+  /// **'White'**
+  String get vehicleColorWhite;
+
+  /// No description provided for @vehicleColorBlack.
+  ///
+  /// In en, this message translates to:
+  /// **'Black'**
+  String get vehicleColorBlack;
+
+  /// No description provided for @vehicleColorSilver.
+  ///
+  /// In en, this message translates to:
+  /// **'Silver'**
+  String get vehicleColorSilver;
+
+  /// No description provided for @vehicleColorGrey.
+  ///
+  /// In en, this message translates to:
+  /// **'Grey'**
+  String get vehicleColorGrey;
+
+  /// No description provided for @vehicleColorRed.
+  ///
+  /// In en, this message translates to:
+  /// **'Red'**
+  String get vehicleColorRed;
+
+  /// No description provided for @vehicleColorBlue.
+  ///
+  /// In en, this message translates to:
+  /// **'Blue'**
+  String get vehicleColorBlue;
+
+  /// No description provided for @vehicleColorGreen.
+  ///
+  /// In en, this message translates to:
+  /// **'Green'**
+  String get vehicleColorGreen;
+
+  /// No description provided for @vehicleColorYellow.
+  ///
+  /// In en, this message translates to:
+  /// **'Yellow'**
+  String get vehicleColorYellow;
+
+  /// No description provided for @vehicleColorOrange.
+  ///
+  /// In en, this message translates to:
+  /// **'Orange'**
+  String get vehicleColorOrange;
+
+  /// No description provided for @vehicleColorBrown.
+  ///
+  /// In en, this message translates to:
+  /// **'Brown'**
+  String get vehicleColorBrown;
+
+  /// No description provided for @vehicleColorBeige.
+  ///
+  /// In en, this message translates to:
+  /// **'Beige'**
+  String get vehicleColorBeige;
+
+  /// No description provided for @vehicleColorGold.
+  ///
+  /// In en, this message translates to:
+  /// **'Gold'**
+  String get vehicleColorGold;
+
+  /// No description provided for @vehicleColorPurple.
+  ///
+  /// In en, this message translates to:
+  /// **'Purple'**
+  String get vehicleColorPurple;
+
+  /// No description provided for @vehicleColorOther.
+  ///
+  /// In en, this message translates to:
+  /// **'Other'**
+  String get vehicleColorOther;
+
   /// No description provided for @vinOptional.
   ///
   /// In en, this message translates to:

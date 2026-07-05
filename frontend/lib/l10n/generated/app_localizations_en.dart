@@ -249,6 +249,54 @@ class AppLocalizationsEn extends AppLocalizations {
   String get color => 'Color';
 
   @override
+  String get selectColor => 'Select color';
+
+  @override
+  String get customColor => 'Custom color';
+
+  @override
+  String get vehicleColorWhite => 'White';
+
+  @override
+  String get vehicleColorBlack => 'Black';
+
+  @override
+  String get vehicleColorSilver => 'Silver';
+
+  @override
+  String get vehicleColorGrey => 'Grey';
+
+  @override
+  String get vehicleColorRed => 'Red';
+
+  @override
+  String get vehicleColorBlue => 'Blue';
+
+  @override
+  String get vehicleColorGreen => 'Green';
+
+  @override
+  String get vehicleColorYellow => 'Yellow';
+
+  @override
+  String get vehicleColorOrange => 'Orange';
+
+  @override
+  String get vehicleColorBrown => 'Brown';
+
+  @override
+  String get vehicleColorBeige => 'Beige';
+
+  @override
+  String get vehicleColorGold => 'Gold';
+
+  @override
+  String get vehicleColorPurple => 'Purple';
+
+  @override
+  String get vehicleColorOther => 'Other';
+
+  @override
   String get vinOptional => 'VIN number (optional)';
 
   @override

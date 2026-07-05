@@ -8,6 +8,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+import java.time.OffsetDateTime;
 import java.util.UUID;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -18,6 +19,7 @@ import org.springframework.http.MediaType;
 import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
+import ru.talkingshaha.backend.timeline.service.TripAutoSaveService;
 
 @SpringBootTest
 @AutoConfigureMockMvc
@@ -27,6 +29,9 @@ class ChatFlowTest {
 
     @Autowired
     private MockMvc mockMvc;
+
+    @Autowired
+    private TripAutoSaveService tripAutoSave;
 
     private String token;
 
@@ -247,6 +252,162 @@ class ChatFlowTest {
                 .andExpect(jsonPath("$.events[0].endMileageKm").value(10012))
                 .andExpect(jsonPath("$.events[0].distanceKm").value(12))
                 .andExpect(jsonPath("$.events[0].durationMinutes").value(20));
+    }
+
+    @Test
+    void startsAndCompletesTripLifecycleFromNaturalChatMessages() throws Exception {
+        String vehicleId = createVehicle();
+        mockMvc.perform(post("/api/v1/vehicles/{vehicleId}/chat/messages", vehicleId)
+                        .header("Authorization", bearer())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"text\":\"\\u043f\\u0440\\u0438\\u0432\\u0435\\u0442! \\u044f \\u0445\\u043e\\u0447\\u0443 \\u043d\\u0430\\u0447\\u0430\\u0442\\u044c \\u043f\\u043e\\u0435\\u0437\\u0434\\u043a\\u0443 \\u0441\\u0435\\u0439\\u0447\\u0430\\u0441\"}"))
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.createdEvent.type").value("TRIP"))
+                .andExpect(jsonPath("$.createdEvent.tripStatus").value("IN_PROGRESS"))
+                .andExpect(jsonPath("$.assistantMessage.action").doesNotExist());
+        mockMvc.perform(get("/api/v1/vehicles/{vehicleId}/timeline?type=TRIP", vehicleId)
+                        .header("Authorization", bearer()))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.events", hasSize(1)))
+                .andExpect(jsonPath("$.events[0].tripStatus").value("IN_PROGRESS"));
+        mockMvc.perform(post("/api/v1/vehicles/{vehicleId}/chat/messages", vehicleId)
+                        .header("Authorization", bearer())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"text\":\"We drove 12 km for 20 minutes and used 1.4 liters\"}"))
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.createdEvent.type").value("TRIP"))
+                .andExpect(jsonPath("$.createdEvent.distanceKm").value(12))
+                .andExpect(jsonPath("$.createdEvent.durationMinutes").value(20))
+                .andExpect(jsonPath("$.createdEvent.fuelLiters").value(1.4))
+                .andExpect(jsonPath("$.createdEvent.tripStatus").value("COMPLETE"))
+                .andExpect(jsonPath("$.createdEvent.endedAt").exists())
+                .andExpect(jsonPath("$.assistantMessage.action").doesNotExist());
+        mockMvc.perform(get("/api/v1/vehicles/{vehicleId}/timeline?type=TRIP", vehicleId)
+                        .header("Authorization", bearer()))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.events", hasSize(1)))
+                .andExpect(jsonPath("$.events[0].distanceKm").value(12))
+                .andExpect(jsonPath("$.events[0].durationMinutes").value(20))
+                .andExpect(jsonPath("$.events[0].fuelLiters").value(1.4))
+                .andExpect(jsonPath("$.events[0].tripStatus").value("COMPLETE"));
+    }
+
+    @Test
+    void startTripCommandOverridesPendingTripFormClarification() throws Exception {
+        String vehicleId = createVehicle();
+        mockMvc.perform(post("/api/v1/vehicles/{vehicleId}/chat/messages", vehicleId)
+                        .header("Authorization", bearer())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"text\":\"I drove today\"}"))
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.createdEvent").doesNotExist());
+        mockMvc.perform(post("/api/v1/vehicles/{vehicleId}/chat/messages", vehicleId)
+                        .header("Authorization", bearer())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"text\":\"\\u044f \\u0445\\u043e\\u0447\\u0443 \\u043d\\u0430\\u0447\\u0430\\u0442\\u044c \\u043f\\u043e\\u0435\\u0437\\u0434\\u043a\\u0443 \\u0441\\u0435\\u0439\\u0447\\u0430\\u0441\"}"))
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.createdEvent.type").value("TRIP"))
+                .andExpect(jsonPath("$.createdEvent.tripStatus").value("IN_PROGRESS"));
+        mockMvc.perform(get("/api/v1/vehicles/{vehicleId}/timeline?type=TRIP", vehicleId)
+                        .header("Authorization", bearer()))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.events", hasSize(1)))
+                .andExpect(jsonPath("$.events[0].tripStatus").value("IN_PROGRESS"));
+    }
+
+    @Test
+    void startsEndsAndCompletesTripFromChatLifecycle() throws Exception {
+        String vehicleId = createVehicle();
+        String startJson = mockMvc.perform(post("/api/v1/vehicles/{vehicleId}/chat/trips/start", vehicleId)
+                        .header("Authorization", bearer())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"notes\":\"Morning commute\"}"))
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.tripId").exists())
+                .andExpect(jsonPath("$.trip.type").value("TRIP"))
+                .andExpect(jsonPath("$.trip.startMileageKm").value(10000))
+                .andExpect(jsonPath("$.trip.tripStatus").value("IN_PROGRESS"))
+                .andExpect(jsonPath("$.missingRequiredFields", hasSize(3)))
+                .andReturn()
+                .getResponse()
+                .getContentAsString();
+        String tripId = startJson.replaceAll(".*\"tripId\":\"([^\"]+)\".*", "$1");
+        mockMvc.perform(post("/api/v1/vehicles/{vehicleId}/chat/trips/{tripId}/end", vehicleId, tripId)
+                        .header("Authorization", bearer())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{}"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.confirmation", containsString("partial")))
+                .andExpect(jsonPath("$.trip.tripStatus").value("PARTIAL"))
+                .andExpect(jsonPath("$.missingRequiredFields", hasSize(3)));
+        mockMvc.perform(post("/api/v1/vehicles/{vehicleId}/chat/trips/{tripId}/data", vehicleId, tripId)
+                        .header("Authorization", bearer())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"text\":\"We drove 12 km for 20 minutes and used 1.4 liters\"}"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.extractedValues.distanceKm").value(12))
+                .andExpect(jsonPath("$.extractedValues.durationMinutes").value(20))
+                .andExpect(jsonPath("$.extractedValues.fuelLiters").value(1.4))
+                .andExpect(jsonPath("$.trip.tripStatus").value("COMPLETE"))
+                .andExpect(jsonPath("$.missingRequiredFields", hasSize(0)));
+        mockMvc.perform(get("/api/v1/vehicles/{vehicleId}/timeline?type=TRIP", vehicleId)
+                        .header("Authorization", bearer()))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.events", hasSize(1)))
+                .andExpect(jsonPath("$.events[0].id").value(tripId))
+                .andExpect(jsonPath("$.events[0].distanceKm").value(12))
+                .andExpect(jsonPath("$.events[0].durationMinutes").value(20));
+    }
+
+    @Test
+    void autoSavesPartialTripWhenNaturalLanguageIsUnclear() throws Exception {
+        String vehicleId = createVehicle();
+        String startJson = mockMvc.perform(post("/api/v1/vehicles/{vehicleId}/chat/trips/start", vehicleId)
+                        .header("Authorization", bearer())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{}"))
+                .andExpect(status().isCreated())
+                .andReturn()
+                .getResponse()
+                .getContentAsString();
+        String tripId = startJson.replaceAll(".*\"tripId\":\"([^\"]+)\".*", "$1");
+        mockMvc.perform(post("/api/v1/vehicles/{vehicleId}/chat/trips/{tripId}/data", vehicleId, tripId)
+                        .header("Authorization", bearer())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"text\":\"not sure, maybe later\"}"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.confirmation", containsString("partial")))
+                .andExpect(jsonPath("$.trip.tripStatus").value("PARTIAL"))
+                .andExpect(jsonPath("$.extractedValues").isEmpty())
+                .andExpect(jsonPath("$.missingRequiredFields", hasSize(3)));
+        mockMvc.perform(get("/api/v1/vehicles/{vehicleId}/timeline?type=TRIP", vehicleId)
+                        .header("Authorization", bearer()))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.events", hasSize(1)))
+                .andExpect(jsonPath("$.events[0].id").value(tripId));
+    }
+
+    @Test
+    void autoSavesAbandonedInProgressTripAsPartial() throws Exception {
+        String vehicleId = createVehicle();
+        String startJson = mockMvc.perform(post("/api/v1/vehicles/{vehicleId}/chat/trips/start", vehicleId)
+                        .header("Authorization", bearer())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{}"))
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.trip.tripStatus").value("IN_PROGRESS"))
+                .andReturn()
+                .getResponse()
+                .getContentAsString();
+        String tripId = startJson.replaceAll(".*\"tripId\":\"([^\"]+)\".*", "$1");
+        tripAutoSave.autoSaveAbandonedTrips(OffsetDateTime.now().plusSeconds(1), OffsetDateTime.now());
+        mockMvc.perform(get("/api/v1/vehicles/{vehicleId}/timeline?type=TRIP", vehicleId)
+                        .header("Authorization", bearer()))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.events", hasSize(1)))
+                .andExpect(jsonPath("$.events[0].id").value(tripId))
+                .andExpect(jsonPath("$.events[0].tripStatus").value("PARTIAL"))
+                .andExpect(jsonPath("$.events[0].endedAt").exists());
     }
 
     @Test
