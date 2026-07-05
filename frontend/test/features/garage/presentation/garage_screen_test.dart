@@ -178,6 +178,84 @@ void main() {
     expect(find.textContaining('2107'), findsOneWidget);
   });
 
+  testWidgets('edit form saves a standard color from the dropdown', (
+    tester,
+  ) async {
+    final repository = _FakeGarageRepository(
+      vehicles: [
+        _vehicle(
+          id: 'vehicle_123',
+          brand: 'Lada',
+          model: '2106',
+          year: 1998,
+          color: 'blue',
+          currentMileageKm: 124580,
+          engineType: 'gasoline',
+        ),
+      ],
+    );
+
+    await _pumpGarage(tester, repository);
+
+    await tester.drag(find.byType(VehicleGarageCard), const Offset(-160, 0));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const ValueKey('garage_swipe_action_edit')));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Blue'), findsOneWidget);
+
+    await tester.tap(find.byKey(const ValueKey('vehicle_color_dropdown')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Red').last);
+    await tester.pumpAndSettle();
+    await tester.ensureVisible(find.text('Save changes'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Save changes'));
+    await tester.pumpAndSettle();
+
+    final vehicles = await repository.getVehicles();
+    expect(vehicles.single.color, 'Red');
+  });
+
+  testWidgets('edit form preserves custom colors through the Other field', (
+    tester,
+  ) async {
+    final repository = _FakeGarageRepository(
+      vehicles: [
+        _vehicle(
+          id: 'vehicle_123',
+          brand: 'Lada',
+          model: '2106',
+          year: 1998,
+          color: 'Champagne',
+          currentMileageKm: 124580,
+          engineType: 'gasoline',
+        ),
+      ],
+    );
+
+    await _pumpGarage(tester, repository);
+
+    await tester.drag(find.byType(VehicleGarageCard), const Offset(-160, 0));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const ValueKey('garage_swipe_action_edit')));
+    await tester.pumpAndSettle();
+
+    final customColorField = tester.widget<TextField>(
+      find.byKey(const ValueKey('vehicle_custom_color_field')),
+    );
+    expect(find.text('Other'), findsOneWidget);
+    expect(customColorField.controller?.text, 'Champagne');
+
+    await tester.ensureVisible(find.text('Save changes'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Save changes'));
+    await tester.pumpAndSettle();
+
+    final vehicles = await repository.getVehicles();
+    expect(vehicles.single.color, 'Champagne');
+  });
+
   testWidgets('delete action requires confirmation and supports cancel', (
     tester,
   ) async {
