@@ -152,7 +152,10 @@ final routerProvider = Provider<GoRouter>((ref) {
                   final vehicleId = state.pathParameters['vehicleId'] ?? '';
                   return _tabPage(
                     state: state,
-                    child: DashboardScreen(vehicleId: vehicleId),
+                    child: DashboardScreen(
+                      vehicleId: vehicleId,
+                      launchedFromChat: _launchedFromChat(state.uri),
+                    ),
                   );
                 },
               ),
@@ -170,7 +173,10 @@ final routerProvider = Provider<GoRouter>((ref) {
                   final vehicleId = state.pathParameters['vehicleId'] ?? '';
                   return _tabPage(
                     state: state,
-                    child: HistoryScreen(vehicleId: vehicleId),
+                    child: HistoryScreen(
+                      vehicleId: vehicleId,
+                      launchedFromChat: _launchedFromChat(state.uri),
+                    ),
                   );
                 },
               ),
@@ -203,7 +209,10 @@ final routerProvider = Provider<GoRouter>((ref) {
                   final vehicleId = state.pathParameters['vehicleId'] ?? '';
                   return _tabPage(
                     state: state,
-                    child: AnalyticsScreen(vehicleId: vehicleId),
+                    child: AnalyticsScreen(
+                      vehicleId: vehicleId,
+                      launchedFromChat: _launchedFromChat(state.uri),
+                    ),
                   );
                 },
               ),
@@ -326,6 +335,10 @@ HistoryEventType _historyEventTypeFromQuery(String? value) {
     'maintenance' || 'part_replacement' => HistoryEventType.maintenance,
     _ => HistoryEventType.fuel,
   };
+}
+
+bool _launchedFromChat(Uri uri) {
+  return uri.queryParameters['from'] == 'chat';
 }
 
 Future<void> _saveHistoryEvent(WidgetRef ref, HistoryEvent event) async {

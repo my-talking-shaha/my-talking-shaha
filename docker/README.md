@@ -5,7 +5,11 @@
 - `Dockerfile.backend` - Multi-stage build for Spring Boot backend
 - `Dockerfile.frontend` - Multi-stage build for Flutter web frontend
 - `docker-compose.yml` - Orchestration configuration
-- `nginx.conf` - Nginx configuration for frontend and API routing
+- `nginx.conf` - Nginx configuration inside each frontend container
+- `router.local.conf` - stable local routing layer for frontend, API, OpenAPI, and Swagger UI
+- `docker-compose.blue-green.yml` - blue-green deployment topology
+- `router.blue-green.conf` - stable deployment router that switches between blue and green slots
+- `deploy-blue-green.sh` - remote deployment script used by GitHub Actions
 
 ## Prerequisites
 
@@ -32,6 +36,7 @@ Docker Compose will automatically build:
 
 - **Backend**: Multi-stage Maven build for Spring Boot application
 - **Frontend**: Uses a prebuilt Flutter SDK image, installs dependencies, and builds the web app
+- **Router**: Nginx container that owns public port `80` and proxies to the frontend/backend containers
 
 The Dockerfiles use BuildKit cache mounts for downloaded dependencies:
 
@@ -78,3 +83,7 @@ docker compose --env-file .env -f docker/docker-compose.yml logs -f frontend
 - **Backend API**: http://localhost:8080, bound to localhost only
 - **Health Check**: http://localhost/health
 - **Database**: postgres://localhost:5432/talking_shaha, bound to localhost only
+
+In the blue-green deployment topology, only `talking-shaha-router` binds public
+port `80`. The blue and green frontend/backend app containers expose ports only
+inside Docker networks, and the router reloads nginx upstreams to switch traffic.
