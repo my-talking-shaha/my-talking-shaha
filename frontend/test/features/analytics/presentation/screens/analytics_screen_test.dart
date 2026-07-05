@@ -6,8 +6,8 @@ import 'package:frontend/features/analytics/data/datasources/mock_analytics_data
 import 'package:frontend/features/analytics/presentation/providers/analytics_providers.dart';
 import 'package:frontend/features/analytics/presentation/screens/analytics_screen.dart';
 import 'package:frontend/features/parts/presentation/providers/parts_providers.dart';
-import 'package:go_router/go_router.dart';
 import 'package:frontend/l10n/generated/app_localizations.dart';
+import 'package:go_router/go_router.dart';
 
 void main() {
   testWidgets('renders mocked analytics dashboard and switches periods', (

@@ -9,8 +9,8 @@ import 'package:frontend/features/analytics/domain/entities/analytics_summary.da
 import 'package:frontend/features/analytics/presentation/providers/analytics_providers.dart';
 import 'package:frontend/features/parts/presentation/providers/parts_providers.dart';
 import 'package:frontend/features/parts/presentation/widgets/maintenance_forecast_card.dart';
-import 'package:go_router/go_router.dart';
 import 'package:frontend/l10n/generated/app_localizations.dart';
+import 'package:go_router/go_router.dart';
 
 final class AnalyticsScreen extends ConsumerStatefulWidget {
   const AnalyticsScreen({required this.vehicleId, super.key});
@@ -762,7 +762,8 @@ final class _AnalyticsEmptyState extends StatelessWidget {
                 ),
                 _SuggestionChip(
                   label: l10n.addRepair,
-                  _openHistoryAdd(context, type: 'maintenance'),
+                  onPressed: () =>
+                      _openHistoryAdd(context, type: 'maintenance'),
                 ),
               ],
             ),
