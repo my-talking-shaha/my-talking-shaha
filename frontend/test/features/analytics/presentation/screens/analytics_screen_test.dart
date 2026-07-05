@@ -7,6 +7,7 @@ import 'package:frontend/features/analytics/presentation/providers/analytics_pro
 import 'package:frontend/features/analytics/presentation/screens/analytics_screen.dart';
 import 'package:frontend/features/parts/presentation/providers/parts_providers.dart';
 import 'package:frontend/l10n/generated/app_localizations.dart';
+import 'package:go_router/go_router.dart';
 
 void main() {
   testWidgets('renders mocked analytics dashboard and switches periods', (
@@ -44,7 +45,33 @@ void main() {
     expect(find.text('Add refueling'), findsOneWidget);
     expect(find.text('Add repair'), findsOneWidget);
   });
+
+  testWidgets('empty-state actions navigate to add history event flows', (
+    tester,
+  ) async {
+    await _pumpAnalyticsRouter(tester, vehicleId: 'vehicle_empty');
+
+    await tester.tap(find.text('Add trip'));
+    await tester.pumpAndSettle();
+    expect(find.text('add:trip:vehicle_empty'), findsOneWidget);
+
+    router.pop();
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.text('Add refueling'));
+    await tester.pumpAndSettle();
+    expect(find.text('add:fuel:vehicle_empty'), findsOneWidget);
+
+    router.pop();
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.text('Add repair'));
+    await tester.pumpAndSettle();
+    expect(find.text('add:maintenance:vehicle_empty'), findsOneWidget);
+  });
 }
+
+late GoRouter router;
 
 Future<void> _pumpAnalyticsScreen(
   WidgetTester tester, {
@@ -64,6 +91,48 @@ Future<void> _pumpAnalyticsScreen(
         supportedLocales: AppLocalizations.supportedLocales,
         theme: AppTheme.dark,
         home: AnalyticsScreen(vehicleId: vehicleId),
+      ),
+    ),
+  );
+  await tester.pumpAndSettle();
+}
+
+Future<void> _pumpAnalyticsRouter(
+  WidgetTester tester, {
+  required String vehicleId,
+}) async {
+  router = GoRouter(
+    initialLocation: '/analytics',
+    routes: [
+      GoRoute(
+        path: '/analytics',
+        builder: (context, state) => AnalyticsScreen(vehicleId: vehicleId),
+      ),
+      GoRoute(
+        path: '/vehicle/:vehicleId/history/add',
+        builder: (context, state) {
+          final vehicleId = state.pathParameters['vehicleId'] ?? '';
+          final type = state.uri.queryParameters['type'] ?? 'fuel';
+          return Scaffold(body: Text('add:$type:$vehicleId'));
+        },
+      ),
+    ],
+  );
+
+  await tester.pumpWidget(
+    ProviderScope(
+      overrides: [
+        analyticsDatasourceProvider.overrideWithValue(
+          MockAnalyticsDatasource(delay: Duration.zero),
+        ),
+        vehiclePartsProvider(vehicleId).overrideWith((ref) async => const []),
+      ],
+      child: MaterialApp.router(
+        locale: const Locale('en'),
+        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        supportedLocales: AppLocalizations.supportedLocales,
+        theme: AppTheme.dark,
+        routerConfig: router,
       ),
     ),
   );

@@ -10,6 +10,7 @@ import 'package:frontend/features/analytics/presentation/providers/analytics_pro
 import 'package:frontend/features/parts/presentation/providers/parts_providers.dart';
 import 'package:frontend/features/parts/presentation/widgets/maintenance_forecast_card.dart';
 import 'package:frontend/l10n/generated/app_localizations.dart';
+import 'package:go_router/go_router.dart';
 
 final class AnalyticsScreen extends ConsumerStatefulWidget {
   const AnalyticsScreen({required this.vehicleId, super.key});
@@ -55,7 +56,10 @@ final class _AnalyticsScreenState extends ConsumerState<AnalyticsScreen> {
         child: summaryState.when(
           data: (summary) {
             if (!summary.hasEnoughData) {
-              return _AnalyticsEmptyState(summary: summary);
+              return _AnalyticsEmptyState(
+                summary: summary,
+                vehicleId: widget.vehicleId,
+              );
             }
 
             return _AnalyticsDashboard(
@@ -711,9 +715,10 @@ final class _DashboardCard extends StatelessWidget {
 }
 
 final class _AnalyticsEmptyState extends StatelessWidget {
-  const _AnalyticsEmptyState({required this.summary});
+  const _AnalyticsEmptyState({required this.summary, required this.vehicleId});
 
   final AnalyticsSummary summary;
+  final String vehicleId;
 
   @override
   Widget build(BuildContext context) {
@@ -747,9 +752,19 @@ final class _AnalyticsEmptyState extends StatelessWidget {
               spacing: AppSpacing.sm,
               runSpacing: AppSpacing.sm,
               children: [
-                _SuggestionChip(label: l10n.addTrip),
-                _SuggestionChip(label: l10n.addRefuel),
-                _SuggestionChip(label: l10n.addRepair),
+                _SuggestionChip(
+                  label: l10n.addTrip,
+                  onPressed: () => _openHistoryAdd(context, type: 'trip'),
+                ),
+                _SuggestionChip(
+                  label: l10n.addRefuel,
+                  onPressed: () => _openHistoryAdd(context),
+                ),
+                _SuggestionChip(
+                  label: l10n.addRepair,
+                  onPressed: () =>
+                      _openHistoryAdd(context, type: 'maintenance'),
+                ),
               ],
             ),
           ],
@@ -757,16 +772,26 @@ final class _AnalyticsEmptyState extends StatelessWidget {
       ),
     );
   }
+
+  void _openHistoryAdd(BuildContext context, {String? type}) {
+    final route = Uri(
+      path: '/vehicle/$vehicleId/history/add',
+      queryParameters: type == null ? null : {'type': type},
+    ).toString();
+    unawaited(context.push(route));
+  }
 }
 
 final class _SuggestionChip extends StatelessWidget {
-  const _SuggestionChip({required this.label});
+  const _SuggestionChip({required this.label, required this.onPressed});
 
   final String label;
+  final VoidCallback onPressed;
 
   @override
   Widget build(BuildContext context) {
-    return Chip(
+    return ActionChip(
+      onPressed: onPressed,
       label: Text(label),
       backgroundColor: AppColors.surfaceHigh,
       side: const BorderSide(color: AppColors.border),
