@@ -6,6 +6,7 @@ import java.util.List;
 import java.util.UUID;
 
 import ru.talkingshaha.backend.timeline.model.TimelineEventType;
+import ru.talkingshaha.backend.timeline.model.TripCompletionStatus;
 import ru.talkingshaha.backend.vehicle.model.FuelType;
 
 public record TimelineEventResponse(
@@ -14,5 +15,6 @@ public record TimelineEventResponse(
         BigDecimal liters, FuelType fuelType, String fuelName, String stationName,
         Integer startMileageKm, Integer endMileageKm, Integer distanceKm, String route, Integer durationMinutes,
         BigDecimal averageFuelConsumptionLitersPerKm,
-        String name, String description, List<String> photoUrls) {
+        String name, String description, List<String> photoUrls,
+        OffsetDateTime endedAt, BigDecimal fuelLiters, String notes, TripCompletionStatus tripStatus) {
 }

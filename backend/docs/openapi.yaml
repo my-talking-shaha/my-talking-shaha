@@ -136,6 +136,19 @@ paths:
                 $ref: '#/components/schemas/Vehicle'
         '400':
           $ref: '#/components/responses/ValidationError'
+  /vehicles/brands:
+    get:
+      summary: List supported vehicle brands
+      tags: [ Vehicles ]
+      responses:
+        '200':
+          description: Vehicle brand names sorted alphabetically
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: string
   /vehicles/{vehicleId}:
     patch:
       summary: Update vehicle
@@ -457,6 +470,83 @@ paths:
           $ref: '#/components/responses/Forbidden'
         '404':
           $ref: '#/components/responses/NotFound'
+  /vehicles/{vehicleId}/chat/trips/start:
+    post:
+      summary: Start a trip from chat
+      tags: [ Chat, Trips ]
+      parameters:
+        - $ref: '#/components/parameters/VehicleId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TripStartRequest'
+      responses:
+        '201':
+          description: Started trip saved as an in-progress timeline event
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TripLifecycleResponse'
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /vehicles/{vehicleId}/chat/trips/{tripId}/end:
+    post:
+      summary: End a chat-started trip
+      tags: [ Chat, Trips ]
+      parameters:
+        - $ref: '#/components/parameters/VehicleId'
+        - $ref: '#/components/parameters/TripId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TripEndRequest'
+      responses:
+        '200':
+          description: Finished trip with missing required fields, if any
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TripLifecycleResponse'
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /vehicles/{vehicleId}/chat/trips/{tripId}/data:
+    post:
+      summary: Extract and save trip data from natural language
+      tags: [ Chat, Trips ]
+      parameters:
+        - $ref: '#/components/parameters/VehicleId'
+        - $ref: '#/components/parameters/TripId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TripDataCollectionRequest'
+      responses:
+        '200':
+          description: Extracted values and updated trip state
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TripLifecycleResponse'
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
 components:
   securitySchemes:
     bearerAuth:
@@ -466,6 +556,13 @@ components:
   parameters:
     VehicleId:
       name: vehicleId
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
+    TripId:
+      name: tripId
       in: path
       required: true
       schema:
@@ -979,6 +1076,18 @@ components:
         durationMinutes:
           type: integer
           nullable: true
+        endedAt:
+          type: string
+          format: date-time
+          nullable: true
+        fuelLiters:
+          type: number
+          nullable: true
+        notes:
+          type: string
+          nullable: true
+        tripStatus:
+          $ref: '#/components/schemas/TripCompletionStatus'
         averageFuelConsumptionLitersPerKm:
           type: number
           nullable: true
@@ -1005,6 +1114,9 @@ components:
     TimelineEventType:
       type: string
       enum: [ TRIP, REFUEL, REPAIR, MAINTENANCE, PART_REPLACEMENT, WARNING ]
+    TripCompletionStatus:
+      type: string
+      enum: [ IN_PROGRESS, COMPLETE, PARTIAL ]
     AnalyticsPeriod:
       type: string
       enum: [ MONTH, YEAR, ALL_TIME ]
@@ -1097,6 +1209,78 @@ components:
           type: integer
         averageTripKm:
           type: number
+    TripStartRequest:
+      type: object
+      properties:
+        startedAt:
+          type: string
+          format: date-time
+          nullable: true
+        notes:
+          type: string
+          maxLength: 1000
+          nullable: true
+          example: Morning commute
+    TripEndRequest:
+      type: object
+      properties:
+        endedAt:
+          type: string
+          format: date-time
+          nullable: true
+        distanceKm:
+          type: integer
+          minimum: 0
+          nullable: true
+          example: 42
+        durationMinutes:
+          type: integer
+          minimum: 1
+          nullable: true
+          example: 55
+        fuelLiters:
+          type: number
+          minimum: 0
+          exclusiveMinimum: true
+          nullable: true
+          example: 4.2
+        notes:
+          type: string
+          maxLength: 1000
+          nullable: true
+    TripDataCollectionRequest:
+      type: object
+      required: [ text ]
+      properties:
+        text:
+          type: string
+          minLength: 1
+          maxLength: 1000
+          example: We drove 42 km for 55 minutes and used about 4 liters
+    TripLifecycleResponse:
+      type: object
+      required: [ tripId, confirmation, missingRequiredFields, extractedValues, trip ]
+      properties:
+        tripId:
+          type: string
+          format: uuid
+        confirmation:
+          type: string
+          example: Trip finished and auto-saved as partial. Send the missing details when you have them.
+        missingRequiredFields:
+          type: array
+          items:
+            type: string
+            enum: [ distanceKm, fuelLiters, durationMinutes ]
+        extractedValues:
+          type: object
+          additionalProperties: true
+          example:
+            distanceKm: 42
+            durationMinutes: 55
+            fuelLiters: 4.2
+        trip:
+          $ref: '#/components/schemas/TimelineEvent'
     ChatState:
       type: object
       required: [ sessionId, quickQuestions, messages ]

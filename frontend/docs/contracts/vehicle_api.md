@@ -4,6 +4,21 @@ Base path: `/api/v1/vehicles`
 
 Auth: required.
 
+## List Vehicle Brands
+
+`GET /api/v1/vehicles/brands`
+
+Response:
+
+```json
+[
+  "Abarth",
+  "BMW"
+]
+```
+
+Use this list for brand selection instead of free-text brand entry.
+
 ## Get Vehicle Dashboard
 
 `GET /api/v1/vehicles/{vehicleId}/dashboard`
