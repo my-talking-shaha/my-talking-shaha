@@ -13,9 +13,14 @@ import 'package:frontend/l10n/generated/app_localizations.dart';
 import 'package:go_router/go_router.dart';
 
 final class AnalyticsScreen extends ConsumerStatefulWidget {
-  const AnalyticsScreen({required this.vehicleId, super.key});
+  const AnalyticsScreen({
+    required this.vehicleId,
+    this.launchedFromChat = false,
+    super.key,
+  });
 
   final String vehicleId;
+  final bool launchedFromChat;
 
   @override
   ConsumerState<AnalyticsScreen> createState() => _AnalyticsScreenState();
@@ -48,10 +53,22 @@ final class _AnalyticsScreenState extends ConsumerState<AnalyticsScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     final request = (vehicleId: widget.vehicleId, period: _selectedPeriod);
     final summaryState = ref.watch(analyticsSummaryProvider(request));
 
     return Scaffold(
+      appBar: widget.launchedFromChat
+          ? AppBar(
+              leading: IconButton(
+                onPressed: () =>
+                    context.go('/vehicle/${widget.vehicleId}/chat'),
+                tooltip: 'Back to chat',
+                icon: const Icon(Icons.chevron_left_rounded, size: 32),
+              ),
+              title: Text(l10n.analytics),
+            )
+          : null,
       body: SafeArea(
         child: summaryState.when(
           data: (summary) {

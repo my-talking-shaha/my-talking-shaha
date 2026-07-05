@@ -9,9 +9,14 @@ import 'package:frontend/l10n/generated/app_localizations.dart';
 import 'package:go_router/go_router.dart';
 
 final class DashboardScreen extends ConsumerWidget {
-  const DashboardScreen({required this.vehicleId, super.key});
+  const DashboardScreen({
+    required this.vehicleId,
+    this.launchedFromChat = false,
+    super.key,
+  });
 
   final String vehicleId;
+  final bool launchedFromChat;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -21,8 +26,10 @@ final class DashboardScreen extends ConsumerWidget {
     return Scaffold(
       appBar: AppBar(
         leading: IconButton(
-          onPressed: () => context.go('/garage'),
-          tooltip: l10n.openGarage,
+          onPressed: () => context.go(
+            launchedFromChat ? '/vehicle/$vehicleId/chat' : '/garage',
+          ),
+          tooltip: launchedFromChat ? 'Back to chat' : l10n.openGarage,
           icon: const Icon(Icons.chevron_left_rounded, size: 32),
         ),
         title: Text(l10n.myShaha),

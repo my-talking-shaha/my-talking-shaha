@@ -14,6 +14,12 @@ import 'package:frontend/features/auth/domain/repositories/auth_repository.dart'
 import 'package:frontend/features/auth/presentation/controllers/auth_controller.dart';
 import 'package:frontend/features/auth/presentation/providers/auth_providers.dart';
 import 'package:frontend/features/auth/presentation/widgets/auth_screen_scaffold.dart';
+import 'package:frontend/features/chat/domain/entities/chat_action.dart';
+import 'package:frontend/features/chat/domain/entities/chat_message.dart';
+import 'package:frontend/features/chat/domain/entities/chat_state.dart';
+import 'package:frontend/features/chat/domain/entities/send_message_result.dart';
+import 'package:frontend/features/chat/domain/repositories/chat_repository.dart';
+import 'package:frontend/features/chat/presentation/providers/chat_providers.dart';
 import 'package:frontend/features/dashboard/domain/entities/dashboard_data.dart';
 import 'package:frontend/features/dashboard/presentation/providers/dashboard_providers.dart';
 import 'package:frontend/features/dashboard/presentation/screens/dashboard_screen.dart';
@@ -208,6 +214,41 @@ void main() {
     },
   );
 
+  testWidgets('chat screen links select destination tab and return to chat', (
+    tester,
+  ) async {
+    const vehicleId = '096c10bb-13d1-4599-9109-e9e79789ea88';
+    final app = await _pumpApp(
+      tester,
+      initialLocation: '/vehicle/$vehicleId/chat',
+      chatRepository: const _ActionChatRepository(screen: 'ANALYTICS'),
+    );
+
+    expect(_navigationBar(tester).currentIndex, 2);
+
+    await tester.tap(find.byKey(const ValueKey('chat_message_action')));
+    await tester.pumpAndSettle();
+
+    expect(
+      app.router.routeInformationProvider.value.uri,
+      Uri(
+        path: '/vehicle/$vehicleId/analytics',
+        queryParameters: {'from': 'chat'},
+      ),
+    );
+    expect(_navigationBar(tester).currentIndex, 3);
+    expect(find.byTooltip('Back to chat'), findsOneWidget);
+
+    await tester.tap(find.byTooltip('Back to chat'));
+    await tester.pumpAndSettle();
+
+    expect(
+      app.router.routeInformationProvider.value.uri.path,
+      '/vehicle/$vehicleId/chat',
+    );
+    expect(_navigationBar(tester).currentIndex, 2);
+  });
+
   testWidgets('history add route opens outside the tab shell', (tester) async {
     await _pumpApp(
       tester,
@@ -353,6 +394,7 @@ Future<_TestApp> _pumpApp(
   WidgetTester tester, {
   String? initialLocation,
   AuthRepository authRepository = const _AuthenticatedRepository(),
+  ChatRepository? chatRepository,
   GarageDatasource? garageDatasource,
   HistoryDatasource? historyDatasource,
   bool settle = true,
@@ -364,6 +406,8 @@ Future<_TestApp> _pumpApp(
   final container = ProviderContainer(
     overrides: [
       authRepositoryProvider.overrideWithValue(authRepository),
+      if (chatRepository != null)
+        chatRepositoryProvider.overrideWithValue(chatRepository),
       garageDatasourceProvider.overrideWithValue(resolvedGarageDatasource),
       historyDatasourceProvider.overrideWithValue(resolvedHistoryDatasource),
       vehicleDashboardProvider.overrideWith((ref, vehicleId) {
@@ -414,6 +458,41 @@ final class _TestApp {
 
   final GoRouter router;
   final ProviderContainer container;
+}
+
+final class _ActionChatRepository implements ChatRepository {
+  const _ActionChatRepository({required this.screen});
+
+  final String screen;
+
+  @override
+  Future<ChatState> getState(String vehicleId) async {
+    return ChatState(
+      sessionId: 'chat-session',
+      quickQuestions: const [],
+      messages: [
+        ChatMessage(
+          id: 'message_1',
+          role: ChatMessageRole.assistant,
+          text: 'I can open that screen for you.',
+          createdAt: DateTime(2026, 6, 22, 10, 15),
+          action: ChatAction(
+            type: 'OPEN_SCREEN',
+            screen: screen,
+            prefill: const {},
+          ),
+        ),
+      ],
+    );
+  }
+
+  @override
+  Future<SendMessageResult> sendMessage({
+    required String vehicleId,
+    required String text,
+  }) {
+    throw UnimplementedError();
+  }
 }
 
 final class _MileageGarageDatasource implements GarageDatasource {
