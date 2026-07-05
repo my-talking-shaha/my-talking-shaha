@@ -120,6 +120,7 @@
   "diesel": "Diesel",
   "hybrid": "Hybrid",
   "electric": "Electric",
+  "powerOutput": "Power output",
   "powerOutputHp": "Power output (hp)",
   "engineVolumeL": "Engine volume (L)",
   "saveChanges": "Save changes",

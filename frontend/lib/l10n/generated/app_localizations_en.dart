@@ -318,6 +318,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get electric => 'Electric';
 
   @override
+  String get powerOutput => 'Power output';
+
+  @override
   String get powerOutputHp => 'Power output (hp)';
 
   @override

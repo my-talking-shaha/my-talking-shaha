@@ -176,6 +176,42 @@ void main() {
       expect(vehicle?.enginePowerHp, 283);
     });
 
+    test(
+      'converts kilowatts to horsepower when saving electric power',
+      () async {
+        final repository = _RecordingGarageRepository();
+        final controller = AddVehicleController(repository: repository);
+
+        controller
+          ..updateBrand('Tesla')
+          ..updateModel('Model 3')
+          ..updateYear('2024')
+          ..updateCurrentMileage('1000')
+          ..updateEngineType('electric')
+          ..updatePowerOutputUnit('kw')
+          ..updateEngineSpecification('100');
+
+        final vehicle = await controller.submit();
+
+        expect(vehicle?.enginePowerHp, 134);
+        expect(repository.createdDrafts.single.enginePowerHp, 134);
+      },
+    );
+
+    test('converts the entered power value when switching units', () {
+      final controller = AddVehicleController(
+        repository: _RecordingGarageRepository(),
+      );
+
+      controller
+        ..updateEngineType('electric')
+        ..updateEngineSpecification('283')
+        ..updatePowerOutputUnit('kw');
+
+      expect(controller.state.powerOutputUnit, 'kw');
+      expect(controller.state.engineSpecification, '211');
+    });
+
     test('rejects VIN values that are not exactly 17 characters', () async {
       final repository = _RecordingGarageRepository();
       final controller = AddVehicleController(repository: repository);

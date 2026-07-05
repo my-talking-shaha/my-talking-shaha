@@ -11,8 +11,22 @@ import 'package:frontend/features/garage/presentation/screens/garage_screen.dart
 import 'package:frontend/features/garage/presentation/widgets/vehicle_garage_card.dart';
 import 'package:frontend/l10n/generated/app_localizations.dart';
 import 'package:go_router/go_router.dart';
+import 'package:shared_preferences_platform_interface/in_memory_shared_preferences_async.dart';
+import 'package:shared_preferences_platform_interface/shared_preferences_async_platform_interface.dart';
 
 void main() {
+  late SharedPreferencesAsyncPlatform? originalPreferencesPlatform;
+
+  setUp(() {
+    originalPreferencesPlatform = SharedPreferencesAsyncPlatform.instance;
+    SharedPreferencesAsyncPlatform.instance =
+        InMemorySharedPreferencesAsync.empty();
+  });
+
+  tearDown(() {
+    SharedPreferencesAsyncPlatform.instance = originalPreferencesPlatform;
+  });
+
   testWidgets('shows an error without automatically retrying a failed load', (
     tester,
   ) async {
@@ -335,6 +349,58 @@ void main() {
     await tester.tapAt(const Offset(10, 160));
     await tester.pump();
     expect(FocusManager.instance.primaryFocus, isNot(textFieldFocus));
+  });
+
+  testWidgets('edit form switches electric power between HP and kW', (
+    tester,
+  ) async {
+    final repository = _FakeGarageRepository(
+      vehicles: [
+        _vehicle(
+          id: 'vehicle_123',
+          brand: 'Tesla',
+          model: 'Model 3',
+          year: 2024,
+          color: 'blue',
+          currentMileageKm: 1000,
+          engineType: 'electric',
+          engineVolumeLiters: 0,
+          enginePowerHp: 283,
+        ),
+      ],
+    );
+
+    await _pumpGarage(tester, repository);
+
+    await tester.drag(find.byType(VehicleGarageCard), const Offset(-160, 0));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const ValueKey('garage_swipe_action_edit')));
+    await tester.pumpAndSettle();
+
+    expect(find.text('HP'), findsOneWidget);
+    expect(find.text('kW'), findsOneWidget);
+    expect(
+      tester.widget<TextField>(find.byType(TextField).last).controller?.text,
+      '283',
+    );
+
+    await tester.ensureVisible(find.text('kW'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('kW'));
+    await tester.pumpAndSettle();
+
+    expect(
+      tester.widget<TextField>(find.byType(TextField).last).controller?.text,
+      '211',
+    );
+
+    await tester.ensureVisible(find.text('Save changes'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Save changes'));
+    await tester.pumpAndSettle();
+
+    final vehicles = await repository.getVehicles();
+    expect(vehicles.single.enginePowerHp, 283);
   });
 
   testWidgets('delete action requires confirmation and supports cancel', (

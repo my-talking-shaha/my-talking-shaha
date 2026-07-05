@@ -317,6 +317,9 @@ class AppLocalizationsRu extends AppLocalizations {
   String get electric => 'Электро';
 
   @override
+  String get powerOutput => 'Мощность';
+
+  @override
   String get powerOutputHp => 'Мощность (л.с.)';
 
   @override

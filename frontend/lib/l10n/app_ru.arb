@@ -120,6 +120,7 @@
   "diesel": "Дизель",
   "hybrid": "Гибрид",
   "electric": "Электро",
+  "powerOutput": "Мощность",
   "powerOutputHp": "Мощность (л.с.)",
   "engineVolumeL": "Объем двигателя (л)",
   "saveChanges": "Сохранить изменения",

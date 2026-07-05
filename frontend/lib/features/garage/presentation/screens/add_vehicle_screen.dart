@@ -6,6 +6,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:frontend/app/theme/app_theme.dart';
 import 'package:frontend/features/garage/presentation/controllers/add_vehicle_controller.dart';
+import 'package:frontend/features/garage/presentation/controllers/power_output_unit_controller.dart';
 import 'package:frontend/features/garage/presentation/providers/garage_providers.dart';
 import 'package:frontend/features/garage/presentation/state/add_vehicle_state.dart';
 import 'package:frontend/l10n/generated/app_localizations.dart';
@@ -136,6 +137,11 @@ final class _AddVehicleScreenState extends ConsumerState<AddVehicleScreen> {
     final l10n = AppLocalizations.of(context);
     final state = _controller.state;
     final vehicleBrands = ref.watch(vehicleBrandsProvider);
+    final powerOutputUnit = ref.watch(powerOutputUnitControllerProvider);
+    powerOutputUnit.whenData(_schedulePowerOutputUnitSync);
+    ref.listen(powerOutputUnitControllerProvider, (_, next) {
+      next.whenData(_schedulePowerOutputUnitSync);
+    });
     final hasEngineType = state.engineType.isNotEmpty;
     final isEditing = widget.vehicleId != null;
 
@@ -281,37 +287,45 @@ final class _AddVehicleScreenState extends ConsumerState<AddVehicleScreen> {
                       ),
                       if (hasEngineType) ...[
                         const SizedBox(height: 24),
-                        _GarageTextField(
-                          label: state.engineType == 'electric'
-                              ? l10n.powerOutputHp
-                              : l10n.engineVolumeL,
-                          hintText: state.engineType == 'electric'
-                              ? '283'
-                              : '1.6',
-                          controller: _engineSpecificationController,
-                          errorText: _localizedVehicleError(
-                            l10n,
-                            state.fieldErrors['engineSpecification'],
-                          ),
-                          keyboardType: state.engineType == 'electric'
-                              ? TextInputType.number
-                              : const TextInputType.numberWithOptions(
-                                  decimal: true,
-                                ),
-                          inputFormatters: [
-                            if (state.engineType == 'electric')
-                              FilteringTextInputFormatter.digitsOnly
-                            else
+                        if (state.engineType == 'electric')
+                          _GaragePowerOutputField(
+                            controller: _engineSpecificationController,
+                            selectedUnit: _powerOutputUnitFromState(
+                              powerOutputUnit,
+                            ),
+                            errorText: _localizedVehicleError(
+                              l10n,
+                              state.fieldErrors['engineSpecification'],
+                            ),
+                            onUnitChanged: _updatePowerOutputUnit,
+                            onChanged: (value) => _update(
+                              _controller.updateEngineSpecification,
+                              value,
+                            ),
+                          )
+                        else
+                          _GarageTextField(
+                            label: l10n.engineVolumeL,
+                            hintText: '1.6',
+                            controller: _engineSpecificationController,
+                            errorText: _localizedVehicleError(
+                              l10n,
+                              state.fieldErrors['engineSpecification'],
+                            ),
+                            keyboardType: const TextInputType.numberWithOptions(
+                              decimal: true,
+                            ),
+                            inputFormatters: [
                               FilteringTextInputFormatter.allow(
                                 RegExp('[0-9,.]'),
                               ),
-                          ],
-                          textInputAction: TextInputAction.done,
-                          onChanged: (value) => _update(
-                            _controller.updateEngineSpecification,
-                            value,
+                            ],
+                            textInputAction: TextInputAction.done,
+                            onChanged: (value) => _update(
+                              _controller.updateEngineSpecification,
+                              value,
+                            ),
                           ),
-                        ),
                       ],
                       if (state.errorMessage != null) ...[
                         const SizedBox(height: 24),
@@ -415,6 +429,44 @@ final class _AddVehicleScreenState extends ConsumerState<AddVehicleScreen> {
     if (!focusScope.hasPrimaryFocus) {
       focusScope.unfocus();
     }
+  }
+
+  PowerOutputUnit _powerOutputUnitFromState(
+    AsyncValue<PowerOutputUnit> persistedUnit,
+  ) {
+    return persistedUnit.whenOrNull(data: (unit) => unit) ??
+        PowerOutputUnit.fromValue(_controller.state.powerOutputUnit);
+  }
+
+  void _syncPowerOutputUnit(PowerOutputUnit unit) {
+    if (_controller.state.powerOutputUnit == unit.value) {
+      return;
+    }
+
+    setState(() {
+      _controller.updatePowerOutputUnit(unit.value);
+      _engineSpecificationController.text =
+          _controller.state.engineSpecification;
+    });
+  }
+
+  void _schedulePowerOutputUnitSync(PowerOutputUnit unit) {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) {
+        _syncPowerOutputUnit(unit);
+      }
+    });
+  }
+
+  void _updatePowerOutputUnit(PowerOutputUnit unit) {
+    setState(() {
+      _controller.updatePowerOutputUnit(unit.value);
+      _engineSpecificationController.text =
+          _controller.state.engineSpecification;
+    });
+    unawaited(
+      ref.read(powerOutputUnitControllerProvider.notifier).setUnit(unit),
+    );
   }
 
   void _updateEngineType(String value) {
@@ -889,6 +941,176 @@ final class _GarageEngineTypeField extends StatelessWidget {
       'electric' => l10n.electric,
       _ => value,
     };
+  }
+}
+
+final class _GaragePowerOutputField extends StatelessWidget {
+  const _GaragePowerOutputField({
+    required this.controller,
+    required this.selectedUnit,
+    required this.onUnitChanged,
+    required this.onChanged,
+    this.errorText,
+  });
+
+  static const _fieldColor = Color(0xFF20242D);
+  static const _borderColor = Color(0xFF3B4252);
+  static const _accentColor = Color(0xFFB8C3FF);
+  static const _hintColor = Color(0xFF6F7482);
+
+  final TextEditingController controller;
+  final PowerOutputUnit selectedUnit;
+  final ValueChanged<PowerOutputUnit> onUnitChanged;
+  final ValueChanged<String> onChanged;
+  final String? errorText;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        _GarageDropdownLabel(label: l10n.powerOutput),
+        const SizedBox(height: 10),
+        TextField(
+          controller: controller,
+          style: const TextStyle(color: Colors.white, fontSize: 16),
+          cursorColor: _accentColor,
+          keyboardType: const TextInputType.numberWithOptions(decimal: true),
+          inputFormatters: [
+            FilteringTextInputFormatter.allow(RegExp('[0-9,.]')),
+          ],
+          textInputAction: TextInputAction.done,
+          decoration: InputDecoration(
+            hintText: selectedUnit == PowerOutputUnit.kw ? '211' : '283',
+            errorText: errorText,
+            hintStyle: const TextStyle(color: _hintColor),
+            suffixIcon: Padding(
+              padding: const EdgeInsets.only(right: 8),
+              child: _PowerOutputUnitToggle(
+                selectedUnit: selectedUnit,
+                onChanged: onUnitChanged,
+              ),
+            ),
+            suffixIconConstraints: const BoxConstraints(
+              minWidth: 124,
+              minHeight: 44,
+            ),
+            filled: true,
+            fillColor: _fieldColor,
+            contentPadding: const EdgeInsets.symmetric(
+              horizontal: 16,
+              vertical: 18,
+            ),
+            enabledBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(8),
+              borderSide: const BorderSide(color: _borderColor),
+            ),
+            focusedBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(8),
+              borderSide: const BorderSide(color: _accentColor),
+            ),
+            errorBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(8),
+              borderSide: const BorderSide(color: AppColors.error),
+            ),
+            focusedErrorBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(8),
+              borderSide: const BorderSide(color: AppColors.error),
+            ),
+          ),
+          onChanged: onChanged,
+          onTapOutside: (_) => FocusScope.of(context).unfocus(),
+        ),
+      ],
+    );
+  }
+}
+
+final class _PowerOutputUnitToggle extends StatelessWidget {
+  const _PowerOutputUnitToggle({
+    required this.selectedUnit,
+    required this.onChanged,
+  });
+
+  static const _borderColor = Color(0xFF315BFF);
+  static const _fieldColor = Color(0xFF20242D);
+
+  final PowerOutputUnit selectedUnit;
+  final ValueChanged<PowerOutputUnit> onChanged;
+
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox(
+      width: 112,
+      height: 40,
+      child: DecoratedBox(
+        decoration: BoxDecoration(
+          color: _fieldColor,
+          border: Border.all(color: _borderColor, width: 1.5),
+          borderRadius: BorderRadius.circular(20),
+        ),
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(18.5),
+          child: Row(
+            children: [
+              _PowerOutputUnitOption(
+                unit: PowerOutputUnit.hp,
+                label: 'HP',
+                isSelected: selectedUnit == PowerOutputUnit.hp,
+                onChanged: onChanged,
+              ),
+              _PowerOutputUnitOption(
+                unit: PowerOutputUnit.kw,
+                label: 'kW',
+                isSelected: selectedUnit == PowerOutputUnit.kw,
+                onChanged: onChanged,
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+final class _PowerOutputUnitOption extends StatelessWidget {
+  const _PowerOutputUnitOption({
+    required this.unit,
+    required this.label,
+    required this.isSelected,
+    required this.onChanged,
+  });
+
+  static const _accentColor = Color(0xFFB8C3FF);
+  static const _selectedColor = Color(0xFF315BFF);
+
+  final PowerOutputUnit unit;
+  final String label;
+  final bool isSelected;
+  final ValueChanged<PowerOutputUnit> onChanged;
+
+  @override
+  Widget build(BuildContext context) {
+    return Expanded(
+      child: Material(
+        color: isSelected ? _selectedColor : Colors.transparent,
+        child: InkWell(
+          onTap: isSelected ? null : () => onChanged(unit),
+          child: Center(
+            child: Text(
+              label,
+              style: TextStyle(
+                color: isSelected ? Colors.white : _accentColor,
+                fontSize: 14,
+                fontWeight: FontWeight.w700,
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
   }
 }
 

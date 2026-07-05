@@ -698,6 +698,12 @@ abstract class AppLocalizations {
   /// **'Electric'**
   String get electric;
 
+  /// No description provided for @powerOutput.
+  ///
+  /// In en, this message translates to:
+  /// **'Power output'**
+  String get powerOutput;
+
   /// No description provided for @powerOutputHp.
   ///
   /// In en, this message translates to:
