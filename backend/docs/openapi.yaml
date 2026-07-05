@@ -1104,7 +1104,11 @@ components:
             type: string
     FuelType:
       type: string
-      enum: [ GASOLINE, DIESEL, ELECTRIC, HYBRID, OTHER ]
+      description: >
+        Fuel type of a vehicle or a refuel event. GASOLINE is a legacy generic
+        petrol value kept for already stored data; new clients should prefer
+        the octane-specific PETROL_* values.
+      enum: [ PETROL_92, PETROL_95, PETROL_100, DIESEL, LPG, CNG, ELECTRIC, HYBRID, PHEV, GASOLINE, OTHER ]
     PartCategory:
       type: string
       enum: [ ENGINE_OIL, OIL_FILTER, AIR_FILTER, BRAKE_PADS, TIMING_BELT, BATTERY, OTHER ]

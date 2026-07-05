@@ -226,6 +226,12 @@ Validation:
 - `mileageKm >= 0`;
 - `vin` is optional, but must contain exactly 17 symbols when provided.
 
+Supported `fuelType` values (also used by refuel timeline events):
+
+```text
+PETROL_92, PETROL_95, PETROL_100, DIESEL, LPG, CNG, ELECTRIC, HYBRID, PHEV,
+GASOLINE, OTHER
+```
 ### Get vehicle dashboard
 
 `GET /api/v1/vehicles/{vehicleId}/dashboard`
