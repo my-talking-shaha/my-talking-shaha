@@ -7,6 +7,7 @@ import 'package:flutter_svg/svg.dart';
 import 'package:frontend/app/theme/app_theme.dart';
 import 'package:frontend/features/garage/presentation/controllers/add_vehicle_controller.dart';
 import 'package:frontend/features/garage/presentation/providers/garage_providers.dart';
+import 'package:frontend/features/garage/presentation/state/add_vehicle_state.dart';
 import 'package:frontend/l10n/generated/app_localizations.dart';
 import 'package:go_router/go_router.dart';
 
@@ -28,6 +29,7 @@ final class _AddVehicleScreenState extends ConsumerState<AddVehicleScreen> {
   late final TextEditingController _colorController;
   late final TextEditingController _vinController;
   late final TextEditingController _engineSpecificationController;
+  late final FocusNode _brandFocusNode;
   bool _isLoadingVehicle = false;
 
   static const _backgroundColor = Color(0xFF0D111A);
@@ -63,6 +65,7 @@ final class _AddVehicleScreenState extends ConsumerState<AddVehicleScreen> {
     _colorController = TextEditingController();
     _vinController = TextEditingController();
     _engineSpecificationController = TextEditingController();
+    _brandFocusNode = FocusNode();
     unawaited(_loadVehicleForEdit());
   }
 
@@ -75,6 +78,7 @@ final class _AddVehicleScreenState extends ConsumerState<AddVehicleScreen> {
     _colorController.dispose();
     _vinController.dispose();
     _engineSpecificationController.dispose();
+    _brandFocusNode.dispose();
     super.dispose();
   }
 
@@ -131,6 +135,7 @@ final class _AddVehicleScreenState extends ConsumerState<AddVehicleScreen> {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
     final state = _controller.state;
+    final vehicleBrands = ref.watch(vehicleBrandsProvider);
     final hasEngineType = state.engineType.isNotEmpty;
     final isEditing = widget.vehicleId != null;
 
@@ -161,15 +166,15 @@ final class _AddVehicleScreenState extends ConsumerState<AddVehicleScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    _GarageTextField(
-                      label: l10n.brand,
-                      hintText: 'Lada',
+                    _GarageBrandField(
                       controller: _brandController,
-                      errorText: _localizedVehicleError(
-                        l10n,
-                        state.fieldErrors['brand'],
+                      focusNode: _brandFocusNode,
+                      brands: _brandOptions(
+                        vehicleBrands.whenOrNull(data: (brands) => brands),
                       ),
-                      textInputAction: TextInputAction.next,
+                      isLoading: vehicleBrands.isLoading,
+                      errorText: _brandErrorText(l10n, vehicleBrands, state),
+                      onRetry: () => ref.invalidate(vehicleBrandsProvider),
                       onChanged: (value) =>
                           _update(_controller.updateBrand, value),
                     ),
@@ -430,6 +435,33 @@ final class _AddVehicleScreenState extends ConsumerState<AddVehicleScreen> {
     );
   }
 
+  List<String> _brandOptions(List<String>? brands) {
+    final options = <String>[...?brands];
+    final selectedBrand = _controller.state.brand.trim();
+    if (selectedBrand.isNotEmpty && !options.contains(selectedBrand)) {
+      options.add(selectedBrand);
+    }
+
+    return List.unmodifiable(options);
+  }
+
+  String? _brandErrorText(
+    AppLocalizations l10n,
+    AsyncValue<List<String>> brands,
+    AddVehicleState state,
+  ) {
+    final fieldError = _localizedVehicleError(l10n, state.fieldErrors['brand']);
+    if (fieldError != null) {
+      return fieldError;
+    }
+
+    if (brands.hasError) {
+      return 'Could not load brands';
+    }
+
+    return null;
+  }
+
   void _update(void Function(String value) update, String value) {
     setState(() {
       update(value);
@@ -513,6 +545,161 @@ final class _AddVehicleScreenState extends ConsumerState<AddVehicleScreen> {
       ),
     );
     context.go('/garage');
+  }
+}
+
+final class _GarageBrandField extends StatelessWidget {
+  const _GarageBrandField({
+    required this.controller,
+    required this.focusNode,
+    required this.brands,
+    required this.isLoading,
+    required this.onChanged,
+    required this.onRetry,
+    this.errorText,
+  });
+
+  static const _fieldColor = Color(0xFF20242D);
+  static const _borderColor = Color(0xFF3B4252);
+  static const _accentColor = Color(0xFFB8C3FF);
+  static const _hintColor = Color(0xFF6F7482);
+
+  final TextEditingController controller;
+  final FocusNode focusNode;
+  final List<String> brands;
+  final bool isLoading;
+  final ValueChanged<String> onChanged;
+  final VoidCallback onRetry;
+  final String? errorText;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        _GarageDropdownLabel(label: l10n.brand),
+        const SizedBox(height: 10),
+        RawAutocomplete<String>(
+          textEditingController: controller,
+          focusNode: focusNode,
+          displayStringForOption: (brand) => brand,
+          optionsBuilder: (textEditingValue) {
+            final query = textEditingValue.text.trim().toLowerCase();
+            if (query.isEmpty) {
+              return const Iterable<String>.empty();
+            }
+
+            return brands.where((brand) => brand.toLowerCase().contains(query));
+          },
+          onSelected: onChanged,
+          fieldViewBuilder:
+              (context, textEditingController, focusNode, onFieldSubmitted) {
+                return TextField(
+                  controller: textEditingController,
+                  focusNode: focusNode,
+                  style: const TextStyle(color: Colors.white, fontSize: 16),
+                  cursorColor: _accentColor,
+                  textInputAction: TextInputAction.next,
+                  textCapitalization: TextCapitalization.words,
+                  decoration: InputDecoration(
+                    hintText: 'Lada',
+                    errorText: errorText,
+                    hintStyle: const TextStyle(color: _hintColor),
+                    suffixIcon: _suffixIcon(),
+                    filled: true,
+                    fillColor: _fieldColor,
+                    contentPadding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 18,
+                    ),
+                    enabledBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(8),
+                      borderSide: const BorderSide(color: _borderColor),
+                    ),
+                    focusedBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(8),
+                      borderSide: const BorderSide(color: _accentColor),
+                    ),
+                    errorBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(8),
+                      borderSide: const BorderSide(color: AppColors.error),
+                    ),
+                    focusedErrorBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(8),
+                      borderSide: const BorderSide(color: AppColors.error),
+                    ),
+                  ),
+                  onChanged: onChanged,
+                  onSubmitted: (_) => onFieldSubmitted(),
+                );
+              },
+          optionsViewBuilder: (context, onSelected, options) {
+            return Align(
+              alignment: Alignment.topLeft,
+              child: Material(
+                color: _fieldColor,
+                elevation: 8,
+                borderRadius: BorderRadius.circular(8),
+                child: ConstrainedBox(
+                  constraints: const BoxConstraints(
+                    maxHeight: 220,
+                    maxWidth: 480,
+                  ),
+                  child: ListView.builder(
+                    padding: EdgeInsets.zero,
+                    shrinkWrap: true,
+                    itemCount: options.length,
+                    itemBuilder: (context, index) {
+                      final brand = options.elementAt(index);
+                      return InkWell(
+                        onTap: () => onSelected(brand),
+                        child: Padding(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 16,
+                            vertical: 14,
+                          ),
+                          child: Text(
+                            brand,
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontSize: 16,
+                            ),
+                          ),
+                        ),
+                      );
+                    },
+                  ),
+                ),
+              ),
+            );
+          },
+        ),
+      ],
+    );
+  }
+
+  Widget? _suffixIcon() {
+    if (isLoading) {
+      return const Padding(
+        padding: EdgeInsets.all(14),
+        child: SizedBox(
+          width: 18,
+          height: 18,
+          child: CircularProgressIndicator(strokeWidth: 2),
+        ),
+      );
+    }
+
+    if (errorText == 'Could not load brands') {
+      return IconButton(
+        onPressed: onRetry,
+        icon: const Icon(Icons.refresh, color: _accentColor),
+      );
+    }
+
+    return const Icon(Icons.search, color: _accentColor);
   }
 }
 

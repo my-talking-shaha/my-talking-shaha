@@ -221,6 +221,11 @@ final class _RecordingGarageRepository implements GarageRepository {
   final List<VehicleDraft> createdDrafts = [];
 
   @override
+  Future<List<String>> getVehicleBrands() async {
+    return const ['Lada', 'Tesla'];
+  }
+
+  @override
   Future<List<GarageVehicle>> getVehicles() async => const [];
 
   @override

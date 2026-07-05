@@ -178,6 +178,44 @@ void main() {
     expect(find.textContaining('2107'), findsOneWidget);
   });
 
+  testWidgets('edit form suggests vehicle brands while typing', (tester) async {
+    final repository = _FakeGarageRepository(
+      vehicles: [
+        _vehicle(
+          id: 'vehicle_123',
+          brand: 'Lada',
+          model: '2106',
+          year: 1998,
+          color: 'blue',
+          currentMileageKm: 124580,
+          engineType: 'gasoline',
+        ),
+      ],
+    );
+
+    await _pumpGarage(tester, repository);
+
+    await tester.drag(find.byType(VehicleGarageCard), const Offset(-160, 0));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const ValueKey('garage_swipe_action_edit')));
+    await tester.pumpAndSettle();
+
+    await tester.enterText(find.byType(TextField).first, 'Toy');
+    await tester.pumpAndSettle();
+
+    expect(find.text('Toyota'), findsOneWidget);
+
+    await tester.tap(find.text('Toyota'));
+    await tester.pumpAndSettle();
+    await tester.ensureVisible(find.text('Save changes'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Save changes'));
+    await tester.pumpAndSettle();
+
+    final vehicles = await repository.getVehicles();
+    expect(vehicles.single.brand, 'Toyota');
+  });
+
   testWidgets('edit form saves a standard color from the dropdown', (
     tester,
   ) async {
@@ -399,6 +437,11 @@ final class _FakeGarageRepository implements GarageRepository {
   final Object? loadError;
   final List<String> deletedVehicleIds = [];
   int getVehiclesCalls = 0;
+
+  @override
+  Future<List<String>> getVehicleBrands() async {
+    return const ['Lada', 'Toyota'];
+  }
 
   @override
   Future<List<GarageVehicle>> getVehicles() async {

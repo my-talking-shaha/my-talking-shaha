@@ -22,6 +22,10 @@ final garageRepositoryProvider = Provider<GarageRepository>((ref) {
   return GarageRepositoryImpl(ref.watch(garageDatasourceProvider));
 });
 
+final vehicleBrandsProvider = FutureProvider.autoDispose<List<String>>((ref) {
+  return ref.watch(garageRepositoryProvider).getVehicleBrands();
+});
+
 final getGarageVehiclesProvider = Provider<GetGarageVehicles>((ref) {
   return GetGarageVehicles(ref.watch(garageRepositoryProvider));
 });
