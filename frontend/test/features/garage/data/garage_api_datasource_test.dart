@@ -1,8 +1,29 @@
+import 'dart:convert';
+import 'dart:typed_data';
+
+import 'package:dio/dio.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:frontend/features/garage/data/datasources/garage_api_datasource.dart';
 import 'package:frontend/features/garage/domain/entities/vehicle_draft.dart';
 
 void main() {
+  group('GarageApiDatasource', () {
+    test('loads vehicle brands from backend catalog', () async {
+      final adapter = _RecordingHttpClientAdapter(
+        responseData: const ['BMW', ' Lada ', '', 'Toyota'],
+      );
+      final datasource = GarageApiDatasource(
+        Dio(BaseOptions(baseUrl: 'http://localhost:8080/api/v1'))
+          ..httpClientAdapter = adapter,
+      );
+
+      final brands = await datasource.getVehicleBrands();
+
+      expect(adapter.requestedPath, '/api/v1/vehicles/brands');
+      expect(brands, ['BMW', 'Lada', 'Toyota']);
+    });
+  });
+
   group('GarageApiVehicleMapper', () {
     test('maps backend vehicle response to garage domain vehicle', () {
       final vehicle = GarageApiVehicleMapper.fromJson(const {
@@ -74,4 +95,30 @@ void main() {
       expect(vehicle.enginePowerHp, 283);
     });
   });
+}
+
+final class _RecordingHttpClientAdapter implements HttpClientAdapter {
+  _RecordingHttpClientAdapter({required this.responseData});
+
+  final Object? responseData;
+  String? requestedPath;
+
+  @override
+  Future<ResponseBody> fetch(
+    RequestOptions options,
+    Stream<Uint8List>? requestStream,
+    Future<void>? cancelFuture,
+  ) async {
+    requestedPath = options.uri.path;
+    return ResponseBody.fromString(
+      jsonEncode(responseData),
+      200,
+      headers: {
+        Headers.contentTypeHeader: [Headers.jsonContentType],
+      },
+    );
+  }
+
+  @override
+  void close({bool force = false}) {}
 }

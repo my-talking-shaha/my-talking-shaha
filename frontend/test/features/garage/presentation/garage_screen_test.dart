@@ -11,8 +11,22 @@ import 'package:frontend/features/garage/presentation/screens/garage_screen.dart
 import 'package:frontend/features/garage/presentation/widgets/vehicle_garage_card.dart';
 import 'package:frontend/l10n/generated/app_localizations.dart';
 import 'package:go_router/go_router.dart';
+import 'package:shared_preferences_platform_interface/in_memory_shared_preferences_async.dart';
+import 'package:shared_preferences_platform_interface/shared_preferences_async_platform_interface.dart';
 
 void main() {
+  late SharedPreferencesAsyncPlatform? originalPreferencesPlatform;
+
+  setUp(() {
+    originalPreferencesPlatform = SharedPreferencesAsyncPlatform.instance;
+    SharedPreferencesAsyncPlatform.instance =
+        InMemorySharedPreferencesAsync.empty();
+  });
+
+  tearDown(() {
+    SharedPreferencesAsyncPlatform.instance = originalPreferencesPlatform;
+  });
+
   testWidgets('shows an error without automatically retrying a failed load', (
     tester,
   ) async {
@@ -178,7 +192,45 @@ void main() {
     expect(find.textContaining('2107'), findsOneWidget);
   });
 
-  testWidgets('edit form saves a standard color from the dropdown', (
+  testWidgets('edit form suggests vehicle brands while typing', (tester) async {
+    final repository = _FakeGarageRepository(
+      vehicles: [
+        _vehicle(
+          id: 'vehicle_123',
+          brand: 'Lada',
+          model: '2106',
+          year: 1998,
+          color: 'blue',
+          currentMileageKm: 124580,
+          engineType: 'gasoline',
+        ),
+      ],
+    );
+
+    await _pumpGarage(tester, repository);
+
+    await tester.drag(find.byType(VehicleGarageCard), const Offset(-160, 0));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const ValueKey('garage_swipe_action_edit')));
+    await tester.pumpAndSettle();
+
+    await tester.enterText(find.byType(TextField).first, 'Toy');
+    await tester.pumpAndSettle();
+
+    expect(find.text('Toyota'), findsOneWidget);
+
+    await tester.tap(find.text('Toyota'));
+    await tester.pumpAndSettle();
+    await tester.ensureVisible(find.text('Save changes'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Save changes'));
+    await tester.pumpAndSettle();
+
+    final vehicles = await repository.getVehicles();
+    expect(vehicles.single.brand, 'Toyota');
+  });
+
+  testWidgets('edit form suggests standard colors while typing', (
     tester,
   ) async {
     final repository = _FakeGarageRepository(
@@ -202,11 +254,15 @@ void main() {
     await tester.tap(find.byKey(const ValueKey('garage_swipe_action_edit')));
     await tester.pumpAndSettle();
 
-    expect(find.text('Blue'), findsOneWidget);
+    final colorField = find.byKey(const ValueKey('vehicle_color_field'));
+    expect(tester.widget<TextField>(colorField).controller?.text, 'Blue');
 
-    await tester.tap(find.byKey(const ValueKey('vehicle_color_dropdown')));
+    await tester.enterText(colorField, 'Re');
     await tester.pumpAndSettle();
-    await tester.tap(find.text('Red').last);
+
+    expect(find.text('Red'), findsOneWidget);
+
+    await tester.tap(find.text('Red'));
     await tester.pumpAndSettle();
     await tester.ensureVisible(find.text('Save changes'));
     await tester.pumpAndSettle();
@@ -217,7 +273,46 @@ void main() {
     expect(vehicles.single.color, 'Red');
   });
 
-  testWidgets('edit form preserves custom colors through the Other field', (
+  testWidgets(
+    'edit form preserves custom colors through the color text field',
+    (tester) async {
+      final repository = _FakeGarageRepository(
+        vehicles: [
+          _vehicle(
+            id: 'vehicle_123',
+            brand: 'Lada',
+            model: '2106',
+            year: 1998,
+            color: 'Champagne',
+            currentMileageKm: 124580,
+            engineType: 'gasoline',
+          ),
+        ],
+      );
+
+      await _pumpGarage(tester, repository);
+
+      await tester.drag(find.byType(VehicleGarageCard), const Offset(-160, 0));
+      await tester.pumpAndSettle();
+      await tester.tap(find.byKey(const ValueKey('garage_swipe_action_edit')));
+      await tester.pumpAndSettle();
+
+      final colorField = tester.widget<TextField>(
+        find.byKey(const ValueKey('vehicle_color_field')),
+      );
+      expect(colorField.controller?.text, 'Champagne');
+
+      await tester.ensureVisible(find.text('Save changes'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Save changes'));
+      await tester.pumpAndSettle();
+
+      final vehicles = await repository.getVehicles();
+      expect(vehicles.single.color, 'Champagne');
+    },
+  );
+
+  testWidgets('edit form uses a compact engine menu and dismisses text focus', (
     tester,
   ) async {
     final repository = _FakeGarageRepository(
@@ -227,7 +322,7 @@ void main() {
           brand: 'Lada',
           model: '2106',
           year: 1998,
-          color: 'Champagne',
+          color: 'blue',
           currentMileageKm: 124580,
           engineType: 'gasoline',
         ),
@@ -241,11 +336,70 @@ void main() {
     await tester.tap(find.byKey(const ValueKey('garage_swipe_action_edit')));
     await tester.pumpAndSettle();
 
-    final customColorField = tester.widget<TextField>(
-      find.byKey(const ValueKey('vehicle_custom_color_field')),
+    final engineMenu = tester.widget<PopupMenuButton<String>>(
+      find.byType(PopupMenuButton<String>),
     );
-    expect(find.text('Other'), findsOneWidget);
-    expect(customColorField.controller?.text, 'Champagne');
+    expect(engineMenu.constraints?.maxWidth, 260);
+    final menuItems = engineMenu.itemBuilder(
+      tester.element(find.byType(PopupMenuButton<String>)),
+    );
+    expect(
+      menuItems.map((item) => (item as PopupMenuItem<String>).value),
+      containsAll(['gasoline', 'diesel', 'hybrid', 'phev', 'electric']),
+    );
+
+    await tester.tap(find.byType(TextField).at(1));
+    await tester.pump();
+    final textFieldFocus = FocusManager.instance.primaryFocus;
+    expect(textFieldFocus, isNotNull);
+
+    await tester.tapAt(const Offset(10, 160));
+    await tester.pump();
+    expect(FocusManager.instance.primaryFocus, isNot(textFieldFocus));
+  });
+
+  testWidgets('edit form switches electric power between HP and kW', (
+    tester,
+  ) async {
+    final repository = _FakeGarageRepository(
+      vehicles: [
+        _vehicle(
+          id: 'vehicle_123',
+          brand: 'Tesla',
+          model: 'Model 3',
+          year: 2024,
+          color: 'blue',
+          currentMileageKm: 1000,
+          engineType: 'electric',
+          engineVolumeLiters: 0,
+          enginePowerHp: 283,
+        ),
+      ],
+    );
+
+    await _pumpGarage(tester, repository);
+
+    await tester.drag(find.byType(VehicleGarageCard), const Offset(-160, 0));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const ValueKey('garage_swipe_action_edit')));
+    await tester.pumpAndSettle();
+
+    expect(find.text('HP'), findsOneWidget);
+    expect(find.text('kW'), findsOneWidget);
+    expect(
+      tester.widget<TextField>(find.byType(TextField).last).controller?.text,
+      '283',
+    );
+
+    await tester.ensureVisible(find.text('kW'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('kW'));
+    await tester.pumpAndSettle();
+
+    expect(
+      tester.widget<TextField>(find.byType(TextField).last).controller?.text,
+      '211',
+    );
 
     await tester.ensureVisible(find.text('Save changes'));
     await tester.pumpAndSettle();
@@ -253,7 +407,7 @@ void main() {
     await tester.pumpAndSettle();
 
     final vehicles = await repository.getVehicles();
-    expect(vehicles.single.color, 'Champagne');
+    expect(vehicles.single.enginePowerHp, 283);
   });
 
   testWidgets('delete action requires confirmation and supports cancel', (
@@ -399,6 +553,11 @@ final class _FakeGarageRepository implements GarageRepository {
   final Object? loadError;
   final List<String> deletedVehicleIds = [];
   int getVehiclesCalls = 0;
+
+  @override
+  Future<List<String>> getVehicleBrands() async {
+    return const ['Lada', 'Toyota'];
+  }
 
   @override
   Future<List<GarageVehicle>> getVehicles() async {

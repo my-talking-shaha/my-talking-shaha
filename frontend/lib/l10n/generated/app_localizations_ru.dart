@@ -314,7 +314,13 @@ class AppLocalizationsRu extends AppLocalizations {
   String get hybrid => 'Гибрид';
 
   @override
+  String get phev => 'PHEV';
+
+  @override
   String get electric => 'Электро';
+
+  @override
+  String get powerOutput => 'Мощность';
 
   @override
   String get powerOutputHp => 'Мощность (л.с.)';

@@ -7,6 +7,11 @@ final class InMemoryGarageDatasource implements GarageDatasource {
   int _nextVehicleNumber = 1;
 
   @override
+  Future<List<String>> getVehicleBrands() async {
+    return const ['BMW', 'Lada', 'Tesla', 'Toyota', 'VAZ'];
+  }
+
+  @override
   Future<List<Vehicle>> getVehicles() async {
     return List.unmodifiable(_vehicles);
   }

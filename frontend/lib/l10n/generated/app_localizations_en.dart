@@ -315,7 +315,13 @@ class AppLocalizationsEn extends AppLocalizations {
   String get hybrid => 'Hybrid';
 
   @override
+  String get phev => 'PHEV';
+
+  @override
   String get electric => 'Electric';
+
+  @override
+  String get powerOutput => 'Power output';
 
   @override
   String get powerOutputHp => 'Power output (hp)';
