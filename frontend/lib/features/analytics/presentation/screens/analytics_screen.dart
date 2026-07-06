@@ -366,6 +366,7 @@ final class _DateRangeSelector extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     final dateRange = selectedDateRange;
 
     return Row(
@@ -376,7 +377,7 @@ final class _DateRangeSelector extends StatelessWidget {
             onPressed: onSelect,
             icon: const Icon(Icons.calendar_month_outlined, size: 18),
             label: Text(
-              dateRange == null ? 'Custom range' : _dateRangeLabel(dateRange),
+              dateRange == null ? l10n.customRange : _dateRangeLabel(dateRange),
               overflow: TextOverflow.ellipsis,
             ),
             style: OutlinedButton.styleFrom(
@@ -403,7 +404,7 @@ final class _DateRangeSelector extends StatelessWidget {
           const SizedBox(width: AppSpacing.sm),
           IconButton(
             key: const ValueKey('analytics-clear-date-range'),
-            tooltip: 'Clear custom range',
+            tooltip: l10n.clearCustomRange,
             onPressed: onClear,
             icon: const Icon(Icons.close),
             style: IconButton.styleFrom(

@@ -314,6 +314,8 @@
   "analyticsEmptyDescription": "Добавьте поездки, заправки, ремонты или обслуживание.",
   "addRepair": "Добавить ремонт",
   "couldNotLoadAnalytics": "Не удалось загрузить аналитику",
+  "customRange": "Произвольный период",
+  "clearCustomRange": "Сбросить произвольный период",
   "month": "МЕСЯЦ",
   "yearPeriod": "ГОД",
   "allTime": "ВСЕ ВРЕМЯ",

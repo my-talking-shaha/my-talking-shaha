@@ -314,6 +314,8 @@
   "analyticsEmptyDescription": "Add trips, refueling, repairs, or maintenance records.",
   "addRepair": "Add repair",
   "couldNotLoadAnalytics": "Could not load analytics",
+  "customRange": "Custom range",
+  "clearCustomRange": "Clear custom range",
   "month": "MONTH",
   "yearPeriod": "YEAR",
   "allTime": "ALL TIME",

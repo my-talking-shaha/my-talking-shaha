@@ -753,6 +753,12 @@ class AppLocalizationsRu extends AppLocalizations {
   String get couldNotLoadAnalytics => 'Не удалось загрузить аналитику';
 
   @override
+  String get customRange => 'Произвольный период';
+
+  @override
+  String get clearCustomRange => 'Сбросить произвольный период';
+
+  @override
   String get month => 'МЕСЯЦ';
 
   @override
