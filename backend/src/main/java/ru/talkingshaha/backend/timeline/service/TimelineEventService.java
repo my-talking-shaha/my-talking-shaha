@@ -81,6 +81,7 @@ public class TimelineEventService {
         event.setVehicle(vehicle);
         event.setType(TimelineEventType.REFUEL);
         event.setEventDateTime(request.eventDateTime());
+        event.setTitle(request.title());
         event.setMileageKm(request.mileageKm());
         event.setLiters(request.liters());
         event.setCost(request.cost());
@@ -104,6 +105,7 @@ public class TimelineEventService {
         event.setVehicle(vehicle);
         event.setType(TimelineEventType.TRIP);
         event.setEventDateTime(request.eventDateTime());
+        event.setTitle(request.title());
         event.setStartMileageKm(request.startMileageKm());
         event.setEndMileageKm(request.endMileageKm());
         event.setRoute(request.route());
@@ -192,6 +194,7 @@ public class TimelineEventService {
 
     private void applyRefuelUpdate(RefuelEvent event, CreateRefuelEventRequest request) {
         event.setEventDateTime(request.eventDateTime());
+        event.setTitle(request.title());
         event.setMileageKm(request.mileageKm());
         event.setLiters(request.liters());
         event.setCost(request.cost());
@@ -205,6 +208,7 @@ public class TimelineEventService {
             throw new IllegalArgumentException("End mileage must be >= start mileage");
         }
         event.setEventDateTime(request.eventDateTime());
+        event.setTitle(request.title());
         event.setStartMileageKm(request.startMileageKm());
         event.setEndMileageKm(request.endMileageKm());
         event.setRoute(request.route());
@@ -252,7 +256,7 @@ public class TimelineEventService {
             case RefuelEvent r -> new TimelineEventResponse(
                     r.getId(),
                     r.getType(),
-                    refuelLabel(r),
+                    r.getTitle(),
                     r.getEventDateTime(),
                     r.getCost(),
                     r.getMileageKm(),
@@ -271,7 +275,7 @@ public class TimelineEventService {
                 yield new TimelineEventResponse(
                         t.getId(),
                         t.getType(),
-                        "Trip",
+                        t.getTitle(),
                         t.getEventDateTime(),
                         null,
                         t.getEndMileageKm(),
@@ -299,10 +303,6 @@ public class TimelineEventService {
                     List.copyOf(m.getPhotoUrls()));
             default -> throw new IllegalStateException("Unknown event type: " + event.getClass());
         };
-    }
-
-    private String refuelLabel(RefuelEvent event) {
-        return "Заправка";
     }
 
     private BigDecimal averageFuelConsumptionLitersPerKm(Vehicle vehicle) {

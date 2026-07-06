@@ -16,6 +16,9 @@ import ru.talkingshaha.backend.common.model.BaseEvent;
 @Table(name = "trips")
 public class TripEvent extends BaseEvent {
 
+    @Column(nullable = false, length = 255)
+    private String title;
+
     @Column(name = "start_mileage_km")
     private Integer startMileageKm;
 

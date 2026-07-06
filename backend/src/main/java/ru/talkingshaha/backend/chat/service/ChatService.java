@@ -219,6 +219,7 @@ public class ChatService {
                 vehicle.getId(),
                 new CreateRefuelEventRequest(
                         OffsetDateTime.now(),
+                        "Refuel",
                         mileageKm,
                         liters,
                         cost,
@@ -247,6 +248,7 @@ public class ChatService {
                 vehicle.getId(),
                 new CreateTripEventRequest(
                         OffsetDateTime.now(),
+                        stringField(fields, "route").orElse("Поездка"),
                         integerField(fields, "startMileageKm").orElse(null),
                         integerField(fields, "endMileageKm").orElseThrow(),
                         stringField(fields, "route").orElse(null),
