@@ -841,12 +841,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get couldNotLoadAnalytics => 'Could not load analytics';
 
   @override
-  String get customRange => 'Custom range';
-
-  @override
-  String get clearCustomRange => 'Clear custom range';
-
-  @override
   String get month => 'MONTH';
 
   @override

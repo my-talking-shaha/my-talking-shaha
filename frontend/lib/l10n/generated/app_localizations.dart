@@ -1688,18 +1688,6 @@ abstract class AppLocalizations {
   /// **'Could not load analytics'**
   String get couldNotLoadAnalytics;
 
-  /// No description provided for @customRange.
-  ///
-  /// In en, this message translates to:
-  /// **'Custom range'**
-  String get customRange;
-
-  /// No description provided for @clearCustomRange.
-  ///
-  /// In en, this message translates to:
-  /// **'Clear custom range'**
-  String get clearCustomRange;
-
   /// No description provided for @month.
   ///
   /// In en, this message translates to:
