@@ -224,10 +224,10 @@ final class _AnalyticsDashboard extends StatelessWidget {
         Text(
           l10n.intelligence,
           style: Theme.of(context).textTheme.headlineLarge?.copyWith(
-            color: AppColors.primaryLight,
-            fontSize: 28,
-            height: 1.1,
-          ),
+                color: AppColors.primaryLight,
+                fontSize: 28,
+                height: 1.1,
+              ),
         ),
         const SizedBox(height: 42),
         Text(l10n.analytics, style: Theme.of(context).textTheme.headlineMedium),
@@ -266,9 +266,11 @@ final class _AnalyticsDashboard extends StatelessWidget {
           accentColor: AppColors.primaryLight,
           chartType: _ChartType.line,
           trendPercent: summary.trendPercent,
+          labelFormatter: (label) => _localizedChartLabel(l10n, label),
+          axisValueFormatter: _formatCompactMoney,
         ),
         const SizedBox(height: AppSpacing.xxl),
-        const _SectionHeader(title: 'MILEAGE TREND'),
+        _SectionHeader(title: l10n.mileageTrend),
         const SizedBox(height: AppSpacing.md),
         _MileageTrendCard(
           trendState: mileageTrendState,
@@ -279,12 +281,11 @@ final class _AnalyticsDashboard extends StatelessWidget {
         ),
         const SizedBox(height: AppSpacing.xxl),
         Consumer(
-          builder: (context, ref, child) => ref
-              .watch(vehiclePartsProvider(vehicleId))
-              .maybeWhen(
-                data: (parts) => MaintenanceForecastCard(parts: parts),
-                orElse: () => const SizedBox.shrink(),
-              ),
+          builder: (context, ref, child) =>
+              ref.watch(vehiclePartsProvider(vehicleId)).maybeWhen(
+                    data: (parts) => MaintenanceForecastCard(parts: parts),
+                    orElse: () => const SizedBox.shrink(),
+                  ),
         ),
         const SizedBox(height: AppSpacing.xxl),
         _SectionHeader(title: l10n.historyAnalysis),
@@ -337,9 +338,9 @@ final class _PeriodSelector extends StatelessWidget {
                   ),
                   tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                   textStyle: Theme.of(context).textTheme.labelMedium?.copyWith(
-                    fontWeight: FontWeight.w800,
-                    letterSpacing: 0.6,
-                  ),
+                        fontWeight: FontWeight.w800,
+                        letterSpacing: 0.6,
+                      ),
                 ),
                 child: Text(_periodLabel(AppLocalizations.of(context), period)),
               ),
@@ -367,6 +368,7 @@ final class _DateRangeSelector extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final dateRange = selectedDateRange;
+    final l10n = AppLocalizations.of(context);
 
     return Row(
       children: [
@@ -376,7 +378,7 @@ final class _DateRangeSelector extends StatelessWidget {
             onPressed: onSelect,
             icon: const Icon(Icons.calendar_month_outlined, size: 18),
             label: Text(
-              dateRange == null ? 'Custom range' : _dateRangeLabel(dateRange),
+              dateRange == null ? l10n.customRange : _dateRangeLabel(dateRange),
               overflow: TextOverflow.ellipsis,
             ),
             style: OutlinedButton.styleFrom(
@@ -403,7 +405,7 @@ final class _DateRangeSelector extends StatelessWidget {
           const SizedBox(width: AppSpacing.sm),
           IconButton(
             key: const ValueKey('analytics-clear-date-range'),
-            tooltip: 'Clear custom range',
+            tooltip: l10n.clearCustomRange,
             onPressed: onClear,
             icon: const Icon(Icons.close),
             style: IconButton.styleFrom(
@@ -439,9 +441,9 @@ final class _AnalyticsSummaryCard extends StatelessWidget {
           Text(
             l10n.expensesLabel(_periodAdjective(l10n, summary.period)),
             style: Theme.of(context).textTheme.labelMedium?.copyWith(
-              color: AppColors.textSecondary,
-              letterSpacing: 1.2,
-            ),
+                  color: AppColors.textSecondary,
+                  letterSpacing: 1.2,
+                ),
           ),
           const SizedBox(height: AppSpacing.sm),
           FittedBox(
@@ -450,10 +452,10 @@ final class _AnalyticsSummaryCard extends StatelessWidget {
             child: Text(
               _formatMoney(totalExpenses.amount),
               style: Theme.of(context).textTheme.headlineLarge?.copyWith(
-                color: AppColors.primaryLight,
-                fontSize: 46,
-                height: 1.05,
-              ),
+                    color: AppColors.primaryLight,
+                    fontSize: 46,
+                    height: 1.05,
+                  ),
             ),
           ),
           const SizedBox(height: AppSpacing.xxl),
@@ -470,14 +472,16 @@ final class _AnalyticsSummaryCard extends StatelessWidget {
                     Text(
                       l10n.costPerKm,
                       style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                        color: AppColors.success,
-                        letterSpacing: 0.7,
-                      ),
+                            color: AppColors.success,
+                            letterSpacing: 0.7,
+                          ),
                     ),
                     const SizedBox(height: AppSpacing.xs),
                     Text(
                       '${_formatDecimal(mileage.costPerKm)} ₽',
-                      style: Theme.of(context).textTheme.headlineMedium
+                      style: Theme.of(context)
+                          .textTheme
+                          .headlineMedium
                           ?.copyWith(color: AppColors.success),
                     ),
                   ],
@@ -565,9 +569,9 @@ final class _TrendBadge extends StatelessWidget {
           Text(
             '${_formatDecimal(percent)}%',
             style: Theme.of(context).textTheme.labelMedium?.copyWith(
-              color: AppColors.success,
-              fontWeight: FontWeight.w800,
-            ),
+                  color: AppColors.success,
+                  fontWeight: FontWeight.w800,
+                ),
           ),
         ],
       ),
@@ -583,6 +587,8 @@ final class _ChartCard extends StatelessWidget {
     required this.accentColor,
     this.chartType = _ChartType.bar,
     this.trendPercent,
+    this.labelFormatter,
+    this.axisValueFormatter,
   });
 
   final List<AnalyticsChartPoint> points;
@@ -591,6 +597,8 @@ final class _ChartCard extends StatelessWidget {
   final Color accentColor;
   final _ChartType chartType;
   final double? trendPercent;
+  final String Function(String label)? labelFormatter;
+  final String Function(double value)? axisValueFormatter;
 
   @override
   Widget build(BuildContext context) {
@@ -608,6 +616,8 @@ final class _ChartCard extends StatelessWidget {
                 points: points,
                 accentColor: accentColor,
                 type: chartType,
+                labelFormatter: labelFormatter,
+                valueFormatter: axisValueFormatter ?? valueFormatter,
               ),
             ),
           ),
@@ -634,8 +644,8 @@ final class _ChartCard extends StatelessWidget {
                   context,
                 ).averageLabel(valueFormatter(average)),
                 style: Theme.of(context).textTheme.labelMedium?.copyWith(
-                  color: AppColors.primaryLight,
-                ),
+                      color: AppColors.primaryLight,
+                    ),
               ),
               if (trendPercent case final trend?) ...[
                 const SizedBox(width: AppSpacing.sm),
@@ -666,6 +676,8 @@ final class _MileageTrendCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+
     return _DashboardCard(
       padding: const EdgeInsets.all(AppSpacing.lg),
       child: Column(
@@ -691,20 +703,13 @@ final class _MileageTrendCard extends StatelessWidget {
                 _MileageFilterDropdown<int>(
                   key: const ValueKey('analytics-mileage-month-filter'),
                   value: selectedMonth ?? 0,
-                  items: const [
-                    DropdownMenuItem(value: 0, child: Text('All months')),
-                    DropdownMenuItem(value: 1, child: Text('January')),
-                    DropdownMenuItem(value: 2, child: Text('February')),
-                    DropdownMenuItem(value: 3, child: Text('March')),
-                    DropdownMenuItem(value: 4, child: Text('April')),
-                    DropdownMenuItem(value: 5, child: Text('May')),
-                    DropdownMenuItem(value: 6, child: Text('June')),
-                    DropdownMenuItem(value: 7, child: Text('July')),
-                    DropdownMenuItem(value: 8, child: Text('August')),
-                    DropdownMenuItem(value: 9, child: Text('September')),
-                    DropdownMenuItem(value: 10, child: Text('October')),
-                    DropdownMenuItem(value: 11, child: Text('November')),
-                    DropdownMenuItem(value: 12, child: Text('December')),
+                  items: [
+                    DropdownMenuItem(value: 0, child: Text(l10n.allMonths)),
+                    for (var month = 1; month <= 12; month++)
+                      DropdownMenuItem(
+                        value: month,
+                        child: Text(_monthName(l10n, month)),
+                      ),
                   ],
                   onChanged: (month) {
                     onMonthSelected(month == null || month == 0 ? null : month);
@@ -737,8 +742,8 @@ final class _MileageTrendCard extends StatelessWidget {
           trendState.when(
             data: (trend) {
               if (!trend.hasData || trend.points.isEmpty) {
-                return const _UnavailableText(
-                  message: 'Mileage data is not available for this filter',
+                return _UnavailableText(
+                  message: l10n.mileageDataUnavailableForFilter,
                 );
               }
 
@@ -760,6 +765,9 @@ final class _MileageTrendCard extends StatelessWidget {
                         points: chartPoints,
                         accentColor: AppColors.success,
                         type: _ChartType.line,
+                        labelFormatter: (label) =>
+                            _localizedChartLabel(l10n, label),
+                        valueFormatter: _formatCompactKilometers,
                       ),
                     ),
                   ),
@@ -778,14 +786,16 @@ final class _MileageTrendCard extends StatelessWidget {
                       Expanded(
                         child: Text(
                           selectedMonth == null
-                              ? 'Accumulated mileage by month'
-                              : 'Accumulated mileage by day',
+                              ? l10n.accumulatedMileageByMonth
+                              : l10n.accumulatedMileageByDay,
                           style: Theme.of(context).textTheme.labelMedium,
                         ),
                       ),
                       Text(
                         '${_formatNumber(trend.points.last.mileageKm)} km',
-                        style: Theme.of(context).textTheme.labelMedium
+                        style: Theme.of(context)
+                            .textTheme
+                            .labelMedium
                             ?.copyWith(color: AppColors.primaryLight),
                       ),
                     ],
@@ -798,7 +808,7 @@ final class _MileageTrendCard extends StatelessWidget {
               child: Center(child: CircularProgressIndicator()),
             ),
             error: (error, stackTrace) =>
-                const _UnavailableText(message: 'Could not load mileage trend'),
+                _UnavailableText(message: l10n.couldNotLoadMileageTrend),
           ),
         ],
       ),
@@ -864,9 +874,9 @@ final class _HistoryAnalysisCard extends StatelessWidget {
           Text(
             AppLocalizations.of(context).performanceTrendOverTime,
             style: Theme.of(context).textTheme.bodySmall?.copyWith(
-              color: AppColors.textSecondary,
-              letterSpacing: 0.8,
-            ),
+                  color: AppColors.textSecondary,
+                  letterSpacing: 0.8,
+                ),
           ),
           const SizedBox(height: AppSpacing.md),
           SizedBox(
@@ -878,6 +888,7 @@ final class _HistoryAnalysisCard extends StatelessWidget {
                 accentColor: AppColors.success,
                 type: _ChartType.bar,
                 showLabels: false,
+                valueFormatter: _formatCompactKilometers,
               ),
             ),
           ),
@@ -936,9 +947,9 @@ final class _CompanyMetrics extends StatelessWidget {
         Text(
           AppLocalizations.of(context).companyMetrics,
           style: Theme.of(context).textTheme.bodySmall?.copyWith(
-            color: AppColors.textSecondary,
-            letterSpacing: 0.7,
-          ),
+                color: AppColors.textSecondary,
+                letterSpacing: 0.7,
+              ),
         ),
         const SizedBox(height: AppSpacing.sm),
         for (final metric in history.companyMetrics) ...[
@@ -958,9 +969,12 @@ final class _CompanyMetrics extends StatelessWidget {
 }
 
 String _companyMetricLabel(AppLocalizations l10n, String label) {
-  return switch (label) {
-    'Events' => l10n.eventsMetric,
-    'Trip km' => l10n.tripKmMetric,
+  return switch (label.trim().toLowerCase()) {
+    'events' => l10n.eventsMetric,
+    'trip km' || 'trip kilometers' => l10n.tripKmMetric,
+    'reliability' => l10n.reliabilityMetric,
+    'efficiency' => l10n.efficiencyMetric,
+    'maintenance load' => l10n.maintenanceLoadMetric,
     _ => label,
   };
 }
@@ -978,9 +992,9 @@ final class _HistoryCounts extends StatelessWidget {
         Text(
           AppLocalizations.of(context).keyCounts,
           style: Theme.of(context).textTheme.bodySmall?.copyWith(
-            color: AppColors.textSecondary,
-            letterSpacing: 0.7,
-          ),
+                color: AppColors.textSecondary,
+                letterSpacing: 0.7,
+              ),
         ),
         const SizedBox(height: AppSpacing.sm),
         _MetricBullet(
@@ -1060,9 +1074,9 @@ final class _SectionHeader extends StatelessWidget {
           child: Text(
             title,
             style: Theme.of(context).textTheme.labelMedium?.copyWith(
-              color: AppColors.textSecondary,
-              letterSpacing: 1.1,
-            ),
+                  color: AppColors.textSecondary,
+                  letterSpacing: 1.1,
+                ),
           ),
         ),
         if (trailing != null)
@@ -1238,12 +1252,16 @@ final class _AnalyticsChartPainter extends CustomPainter {
     required this.accentColor,
     required this.type,
     this.showLabels = true,
+    this.labelFormatter,
+    this.valueFormatter = _formatCompactNumber,
   });
 
   final List<AnalyticsChartPoint> points;
   final Color accentColor;
   final _ChartType type;
   final bool showLabels;
+  final String Function(String label)? labelFormatter;
+  final String Function(double value) valueFormatter;
 
   @override
   void paint(Canvas canvas, Size size) {
@@ -1251,48 +1269,91 @@ final class _AnalyticsChartPainter extends CustomPainter {
       return;
     }
 
-    final chartHeight = showLabels ? size.height - 26 : size.height;
+    const axisWidth = 46.0;
+    const rightPadding = 4.0;
+    const topPadding = 10.0;
+    final bottomPadding = showLabels ? 26.0 : 4.0;
+    final plotRect = Rect.fromLTRB(
+      axisWidth,
+      topPadding,
+      size.width - rightPadding,
+      size.height - bottomPadding,
+    );
+    if (plotRect.width <= 0 || plotRect.height <= 0) {
+      return;
+    }
+
+    final maxValue = _niceAxisMax(
+      points.map((point) => point.value).reduce(math.max),
+    );
+
+    _drawValueAxis(canvas, plotRect, maxValue);
+
     final gridPaint = Paint()
       ..color = AppColors.border.withValues(alpha: 0.6)
       ..strokeWidth = 1;
-    for (var index = 0; index < 4; index++) {
-      final y = chartHeight * index / 3;
-      canvas.drawLine(Offset(0, y), Offset(size.width, y), gridPaint);
+    for (var index = 0; index <= 4; index++) {
+      final y = plotRect.top + (plotRect.height * index / 4);
+      canvas.drawLine(
+        Offset(plotRect.left, y),
+        Offset(plotRect.right, y),
+        gridPaint,
+      );
     }
-
-    final maxValue = points
-        .map((point) => point.value)
-        .reduce(math.max)
-        .clamp(1, double.infinity)
-        .toDouble();
 
     switch (type) {
       case _ChartType.bar:
-        _drawBars(canvas, size, chartHeight, maxValue);
+        _drawBars(canvas, plotRect, maxValue);
       case _ChartType.line:
-        _drawLine(canvas, size, chartHeight, maxValue);
+        _drawLine(canvas, plotRect, maxValue);
     }
 
     if (showLabels) {
-      _drawLabels(canvas, size, chartHeight);
+      _drawLabels(canvas, plotRect);
+    }
+  }
+
+  void _drawValueAxis(Canvas canvas, Rect plotRect, double maxValue) {
+    for (var index = 0; index <= 4; index++) {
+      final value = maxValue * (4 - index) / 4;
+      final y = plotRect.top + (plotRect.height * index / 4);
+      final painter = TextPainter(
+        text: TextSpan(
+          text: valueFormatter(value),
+          style: const TextStyle(
+            color: AppColors.textSecondary,
+            fontSize: 10,
+            fontWeight: FontWeight.w600,
+          ),
+        ),
+        textAlign: TextAlign.right,
+        textDirection: TextDirection.ltr,
+      )..layout(maxWidth: plotRect.left - AppSpacing.xs);
+      painter.paint(
+        canvas,
+        Offset(
+          plotRect.left - AppSpacing.xs - painter.width,
+          y - (painter.height / 2),
+        ),
+      );
     }
   }
 
   void _drawBars(
     Canvas canvas,
-    Size size,
-    double chartHeight,
+    Rect plotRect,
     double maxValue,
   ) {
-    final slotWidth = size.width / points.length;
+    final slotWidth = plotRect.width / points.length;
     final barWidth = math.min(42.0, slotWidth * 0.62);
     final paint = Paint()..color = accentColor.withValues(alpha: 0.72);
 
     for (var index = 0; index < points.length; index++) {
       final value = points[index].value;
-      final barHeight = chartHeight * (value / maxValue);
-      final left = (slotWidth * index) + ((slotWidth - barWidth) / 2);
-      final top = chartHeight - barHeight;
+      final barHeight = plotRect.height * (value / maxValue);
+      final left =
+          plotRect.left + (slotWidth * index) + ((slotWidth - barWidth) / 2);
+      final top = plotRect.bottom - barHeight;
       final rect = Rect.fromLTWH(left, top, barWidth, barHeight);
       canvas.drawRRect(
         RRect.fromRectAndRadius(rect, const Radius.circular(5)),
@@ -1303,23 +1364,26 @@ final class _AnalyticsChartPainter extends CustomPainter {
 
   void _drawLine(
     Canvas canvas,
-    Size size,
-    double chartHeight,
+    Rect plotRect,
     double maxValue,
   ) {
     final path = Path();
     final fillPath = Path();
-    final step = points.length == 1 ? 0.0 : size.width / (points.length - 1);
+    final step =
+        points.length == 1 ? 0.0 : plotRect.width / (points.length - 1);
 
     for (var index = 0; index < points.length; index++) {
-      final x = points.length == 1 ? size.width / 2 : step * index;
-      final y = chartHeight - (chartHeight * points[index].value / maxValue);
+      final x = points.length == 1
+          ? plotRect.left + (plotRect.width / 2)
+          : plotRect.left + (step * index);
+      final y =
+          plotRect.bottom - (plotRect.height * points[index].value / maxValue);
       final offset = Offset(x, y);
 
       if (index == 0) {
         path.moveTo(offset.dx, offset.dy);
         fillPath
-          ..moveTo(offset.dx, chartHeight)
+          ..moveTo(offset.dx, plotRect.bottom)
           ..lineTo(offset.dx, offset.dy);
       } else {
         path.lineTo(offset.dx, offset.dy);
@@ -1330,7 +1394,7 @@ final class _AnalyticsChartPainter extends CustomPainter {
     }
 
     fillPath
-      ..lineTo(size.width, chartHeight)
+      ..lineTo(plotRect.right, plotRect.bottom)
       ..close();
     canvas.drawPath(
       fillPath,
@@ -1346,13 +1410,15 @@ final class _AnalyticsChartPainter extends CustomPainter {
     );
   }
 
-  void _drawLabels(Canvas canvas, Size size, double chartHeight) {
-    final slotWidth = size.width / points.length;
+  void _drawLabels(Canvas canvas, Rect plotRect) {
+    final slotWidth = plotRect.width / points.length;
 
     for (var index = 0; index < points.length; index++) {
       final painter = TextPainter(
         text: TextSpan(
-          text: points[index].label.toUpperCase(),
+          text:
+              (labelFormatter?.call(points[index].label) ?? points[index].label)
+                  .toUpperCase(),
           style: const TextStyle(
             color: AppColors.textSecondary,
             fontSize: 10,
@@ -1361,8 +1427,10 @@ final class _AnalyticsChartPainter extends CustomPainter {
         ),
         textDirection: TextDirection.ltr,
       )..layout(maxWidth: slotWidth);
-      final x = (slotWidth * index) + ((slotWidth - painter.width) / 2);
-      painter.paint(canvas, Offset(x, chartHeight + AppSpacing.sm));
+      final x = plotRect.left +
+          (slotWidth * index) +
+          ((slotWidth - painter.width) / 2);
+      painter.paint(canvas, Offset(x, plotRect.bottom + AppSpacing.sm));
     }
   }
 
@@ -1371,7 +1439,9 @@ final class _AnalyticsChartPainter extends CustomPainter {
     return points != oldDelegate.points ||
         accentColor != oldDelegate.accentColor ||
         type != oldDelegate.type ||
-        showLabels != oldDelegate.showLabels;
+        showLabels != oldDelegate.showLabels ||
+        labelFormatter != oldDelegate.labelFormatter ||
+        valueFormatter != oldDelegate.valueFormatter;
   }
 }
 
@@ -1389,6 +1459,88 @@ String _periodAdjective(AppLocalizations l10n, AnalyticsPeriod period) {
     AnalyticsPeriod.year => l10n.annual,
     AnalyticsPeriod.all => l10n.allTimeAdjective,
   };
+}
+
+String _monthName(AppLocalizations l10n, int month) {
+  return switch (month) {
+    1 => l10n.january,
+    2 => l10n.february,
+    3 => l10n.march,
+    4 => l10n.april,
+    5 => l10n.may,
+    6 => l10n.june,
+    7 => l10n.july,
+    8 => l10n.august,
+    9 => l10n.september,
+    10 => l10n.october,
+    11 => l10n.november,
+    12 => l10n.december,
+    _ => month.toString(),
+  };
+}
+
+String _shortMonthName(AppLocalizations l10n, int month) {
+  final name = _monthName(l10n, month);
+  return name.length <= 3 ? name : name.substring(0, 3);
+}
+
+String _localizedChartLabel(AppLocalizations l10n, String label) {
+  final normalized = label.trim().toLowerCase();
+  final parts = normalized.split(RegExp(r'\s+'));
+  final leadingMonth = _monthNumber(parts.first);
+  if (leadingMonth != null) {
+    final monthLabel = _shortMonthName(l10n, leadingMonth);
+    return parts.length > 1
+        ? '$monthLabel ${parts.sublist(1).join(' ')}'
+        : monthLabel;
+  }
+
+  final monthValue = int.tryParse(normalized);
+  if (monthValue != null && monthValue >= 1 && monthValue <= 12) {
+    return _shortMonthName(l10n, monthValue);
+  }
+
+  return switch (normalized) {
+    'winter' => l10n.winter,
+    'spring' => l10n.spring,
+    'summer' => l10n.summer,
+    'autumn' || 'fall' => l10n.autumn,
+    _ => label,
+  };
+}
+
+int? _monthNumber(String label) {
+  return switch (label) {
+    'jan' || 'january' => 1,
+    'feb' || 'february' => 2,
+    'mar' || 'march' => 3,
+    'apr' || 'april' => 4,
+    'may' => 5,
+    'jun' || 'june' => 6,
+    'jul' || 'july' => 7,
+    'aug' || 'august' => 8,
+    'sep' || 'september' => 9,
+    'oct' || 'october' => 10,
+    'nov' || 'november' => 11,
+    'dec' || 'december' => 12,
+    _ => null,
+  };
+}
+
+double _niceAxisMax(double value) {
+  if (value <= 0) return 1;
+
+  final exponent = (math.log(value) / math.ln10).floor();
+  final magnitude = math.pow(10, exponent).toDouble();
+  final normalized = value / magnitude;
+  final niceNormalized = switch (normalized) {
+    <= 1 => 1,
+    <= 2 => 2,
+    <= 5 => 5,
+    _ => 10,
+  };
+
+  return niceNormalized * magnitude;
 }
 
 String _dateRangeLabel(AnalyticsDateRange dateRange) {
@@ -1417,6 +1569,33 @@ String _categoryLabel(AppLocalizations l10n, ExpenseCategory category) {
 
 String _formatMoney(int amount) {
   return '${_formatNumber(amount)} ₽';
+}
+
+String _formatCompactMoney(double value) {
+  return '${_formatCompactNumber(value)} ₽';
+}
+
+String _formatCompactKilometers(double value) {
+  return '${_formatCompactNumber(value)} km';
+}
+
+String _formatCompactNumber(double value) {
+  final absValue = value.abs();
+  if (absValue >= 1000000) {
+    return '${_formatCompactDecimal(value / 1000000)}M';
+  }
+  if (absValue >= 1000) {
+    return '${_formatCompactDecimal(value / 1000)}K';
+  }
+  return _formatNumber(value);
+}
+
+String _formatCompactDecimal(double value) {
+  final rounded = (value * 10).round() / 10;
+  if (rounded == rounded.roundToDouble()) {
+    return rounded.round().toString();
+  }
+  return rounded.toStringAsFixed(1);
 }
 
 String _formatNumber(num value) {
