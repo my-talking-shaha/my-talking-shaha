@@ -2,12 +2,18 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:frontend/app/providers/vehicle_mileage_provider.dart';
 import 'package:frontend/app/theme/app_theme.dart';
+import 'package:frontend/features/analytics/domain/entities/analytics_period.dart';
+import 'package:frontend/features/analytics/presentation/providers/analytics_providers.dart';
+import 'package:frontend/features/dashboard/presentation/providers/dashboard_providers.dart';
+import 'package:frontend/features/garage/presentation/providers/garage_providers.dart';
 import 'package:frontend/features/history/domain/entities/event_details.dart';
 import 'package:frontend/features/history/domain/entities/history_event.dart';
 import 'package:frontend/features/history/domain/entities/history_event_type.dart';
 import 'package:frontend/features/history/presentation/providers/history_providers.dart';
 import 'package:frontend/features/history/presentation/widgets/event_card.dart';
+import 'package:frontend/features/parts/presentation/providers/parts_providers.dart';
 import 'package:go_router/go_router.dart';
 
 final class HistoryScreen extends ConsumerStatefulWidget {
@@ -22,6 +28,7 @@ final class HistoryScreen extends ConsumerStatefulWidget {
 final class _HistoryScreenState extends ConsumerState<HistoryScreen> {
   String _query = '';
   HistoryEventType? _selectedType;
+  int _cardStateRevision = 0;
 
   @override
   Widget build(BuildContext context) {
@@ -31,11 +38,13 @@ final class _HistoryScreenState extends ConsumerState<HistoryScreen> {
       appBar: AppBar(title: const Text('Maintenance History')),
       floatingActionButton: FloatingActionButton(
         onPressed: () async {
-          await context.push<HistoryEvent>(
+          final event = await context.push<HistoryEvent>(
             '/vehicle/${widget.vehicleId}/history/add',
           );
-          if (mounted) {
-            ref.invalidate(historyEventsProvider(widget.vehicleId));
+          if (!mounted) return;
+          if (event != null) {
+            _invalidateAfterHistoryMutation(affectsMileage: true);
+            _showSuccessMessage('Event added.');
           }
         },
         tooltip: 'Add event',
@@ -82,6 +91,7 @@ final class _HistoryScreenState extends ConsumerState<HistoryScreen> {
 
                   return _HistoryEventsList(
                     events: filteredEvents,
+                    cardStateRevision: _cardStateRevision,
                     onEditEvent: _editEvent,
                     onDeleteEvent: (event) {
                       unawaited(_confirmDelete(event));
@@ -117,12 +127,15 @@ final class _HistoryScreenState extends ConsumerState<HistoryScreen> {
   }
 
   Future<void> _editEvent(HistoryEvent event) async {
-    await context.push<HistoryEvent>(
+    final updatedEvent = await context.push<HistoryEvent>(
       '/vehicle/${widget.vehicleId}/history/${event.id}/edit',
       extra: event,
     );
-    if (mounted) {
-      ref.invalidate(historyEventsProvider(widget.vehicleId));
+    if (!mounted) return;
+    if (updatedEvent != null) {
+      _invalidateAfterHistoryMutation(affectsMileage: true);
+      setState(() => _cardStateRevision++);
+      _showSuccessMessage('Event updated.');
     }
   }
 
@@ -155,13 +168,41 @@ final class _HistoryScreenState extends ConsumerState<HistoryScreen> {
       await ref
           .read(deleteHistoryEventProvider)
           .call(widget.vehicleId, event.id);
-      ref.invalidate(historyEventsProvider(widget.vehicleId));
+      if (!mounted) return;
+      _invalidateAfterHistoryMutation(affectsMileage: false);
+      setState(() => _cardStateRevision++);
+      _showSuccessMessage('Event deleted.');
     } catch (_) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Could not delete the event. Try again.')),
       );
     }
+  }
+
+  void _showSuccessMessage(String message) {
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(SnackBar(content: Text(message)));
+  }
+
+  void _invalidateAfterHistoryMutation({required bool affectsMileage}) {
+    final vehicleId = widget.vehicleId;
+    ref.invalidate(historyEventsProvider(vehicleId));
+    ref.invalidate(vehicleDashboardProvider(vehicleId));
+    for (final period in AnalyticsPeriod.values) {
+      ref.invalidate(
+        analyticsSummaryProvider((vehicleId: vehicleId, period: period)),
+      );
+    }
+
+    if (!affectsMileage) {
+      return;
+    }
+
+    ref.invalidate(garageControllerProvider);
+    ref.invalidate(vehicleMileageProvider(vehicleId));
+    ref.invalidate(vehiclePartsProvider(vehicleId));
   }
 }
 
@@ -249,11 +290,13 @@ final class _TypeFilters extends StatelessWidget {
 final class _HistoryEventsList extends StatelessWidget {
   const _HistoryEventsList({
     required this.events,
+    required this.cardStateRevision,
     required this.onEditEvent,
     required this.onDeleteEvent,
   });
 
   final List<HistoryEvent> events;
+  final int cardStateRevision;
   final ValueChanged<HistoryEvent> onEditEvent;
   final ValueChanged<HistoryEvent> onDeleteEvent;
 
@@ -294,6 +337,10 @@ final class _HistoryEventsList extends StatelessWidget {
               ),
               for (var index = 0; index < group.events.length; index++) ...[
                 EventCard(
+                  key: ValueKey(
+                    'history_event_${group.events[index].id}_'
+                    '$cardStateRevision',
+                  ),
                   event: group.events[index],
                   onEdit: () => onEditEvent(group.events[index]),
                   onDelete: () => onDeleteEvent(group.events[index]),

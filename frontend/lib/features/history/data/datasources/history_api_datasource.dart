@@ -48,9 +48,7 @@ final class HistoryApiDatasource implements HistoryDatasource {
 
   @override
   Future<void> deleteEvent(String vehicleId, String eventId) async {
-    await _dio.delete<Map<String, dynamic>>(
-      '/vehicles/$vehicleId/timeline/$eventId',
-    );
+    await _dio.delete<void>('/vehicles/$vehicleId/timeline/$eventId');
   }
 }
 
@@ -58,10 +56,6 @@ abstract final class HistoryApiEventMapper {
   static HistoryEvent fromJson(Map<String, dynamic> json, String vehicleId) {
     final backendType = _stringValue(json['type']);
     final type = _eventType(backendType);
-    final title =
-        _nullableStringValue(json['title']) ??
-        _nullableStringValue(json['name']) ??
-        _fallbackTitle(type);
     final mileageKm =
         _intValue(json['mileageKm']) ??
         _intValue(json['endMileageKm']) ??
@@ -73,7 +67,7 @@ abstract final class HistoryApiEventMapper {
       carId: vehicleId,
       type: type,
       occurredAt: _dateTimeValue(json['eventDateTime']),
-      title: title,
+      title: _title(json, type),
       currentMileageKm: mileageKm,
       details: switch (type) {
         HistoryEventType.fuel => FuelDetails(
@@ -101,6 +95,7 @@ abstract final class HistoryApiEventMapper {
 
     return switch (details) {
       FuelDetails() => {
+        'title': event.title,
         'eventDateTime': _dateTimePayload(event.occurredAt),
         'mileageKm': event.currentMileageKm,
         'liters': details.liters,
@@ -119,6 +114,7 @@ abstract final class HistoryApiEventMapper {
           'photoUrls': details.photoUrls,
       },
       TripDetails() => {
+        'title': event.title,
         'eventDateTime': _dateTimePayload(event.occurredAt),
         'startMileageKm': details.startKm,
         'endMileageKm': details.endKm,
@@ -145,6 +141,55 @@ abstract final class HistoryApiEventMapper {
       HistoryEventType.maintenance => 'Maintenance',
       HistoryEventType.trip => 'Trip',
     };
+  }
+
+  static String _title(Map<String, dynamic> json, HistoryEventType type) {
+    return switch (type) {
+      HistoryEventType.fuel => _refuelTitle(json),
+      HistoryEventType.trip => _tripTitle(json),
+      HistoryEventType.maintenance =>
+        _nullableStringValue(json['name']) ??
+            _nullableStringValue(json['title']) ??
+            _fallbackTitle(type),
+    };
+  }
+
+  static String _refuelTitle(Map<String, dynamic> json) {
+    final title = _nullableStringValue(json['title']);
+    if (title != null && !_isGenericRefuelTitle(title)) {
+      return title;
+    }
+
+    final fuelName = _nullableStringValue(json['fuelName']);
+    return fuelName == null ? 'Refueling' : 'Refueling $fuelName';
+  }
+
+  static String _tripTitle(Map<String, dynamic> json) {
+    final title = _nullableStringValue(json['title']);
+    if (title != null && !_isGenericTripTitle(title)) {
+      return title;
+    }
+
+    final route = _nullableStringValue(json['route']);
+    if (route != null) {
+      return route;
+    }
+
+    final distanceKm = _intValue(json['distanceKm']);
+    return distanceKm == null ? 'Trip' : 'Trip $distanceKm km';
+  }
+
+  static bool _isGenericRefuelTitle(String title) {
+    final normalizedTitle = title.trim().toLowerCase();
+    return normalizedTitle == 'заправка' ||
+        normalizedTitle == 'refueling' ||
+        normalizedTitle == 'fueling' ||
+        normalizedTitle == 'fuel';
+  }
+
+  static bool _isGenericTripTitle(String title) {
+    final normalizedTitle = title.trim().toLowerCase();
+    return normalizedTitle == 'trip' || normalizedTitle == 'поездка';
   }
 
   static String _fuelLabel(Map<String, dynamic> json) {
