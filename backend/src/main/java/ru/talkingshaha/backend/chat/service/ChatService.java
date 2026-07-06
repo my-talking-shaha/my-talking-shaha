@@ -154,8 +154,8 @@ public class ChatService {
         ChatActionResponse action = action(decision, userText);
         String context = contextForDecision(decision, dashboard, analyticsOverview, action);
         String text = aiChatClient.answer(userText, decision, context)
-                .orElseGet(() -> templateAnswer(decision, dashboard, analyticsOverview, action));
-        return new AssistantDraft(text, action, null);
+                .orElseGet(() -> templateAnswer(userText, decision, dashboard, analyticsOverview, action));
+        return new AssistantDraft(polishAssistantText(text, userText, decision.language()), action, null);
     }
 
     private Optional<AssistantDraft> autoCreateEvent(
@@ -823,6 +823,7 @@ public class ChatService {
     }
 
     private String templateAnswer(
+            String userText,
             ChatDecision decision,
             VehicleDashboardResponse dashboard,
             AnalyticsOverviewResponse analyticsOverview,
@@ -832,7 +833,7 @@ public class ChatService {
             case OPEN_REFUEL_FORM, OPEN_TRIP_FORM, OPEN_PART_FORM, OPEN_REPAIR_FORM -> formAnswer(decision.language(), action);
             case ASK_REPAIR_NEED -> repairAnswer(decision.language(), dashboard);
             case ASK_FUEL -> fuelAnswer(decision.language(), analyticsOverview);
-            case CASUAL -> casualAnswer(decision.language(), dashboard);
+            case CASUAL -> casualAnswer(decision.language(), dashboard, userText);
             case ASK_STATUS -> statusAnswer(decision.language(), dashboard);
             case UNCLEAR -> unclearAnswer(decision.language());
         };
@@ -913,14 +914,40 @@ public class ChatService {
                         .formatted(decimal(overview.fuel().totalLiters()), decimal(overview.fuel().averageConsumptionLitersPer100Km()));
     }
 
-    private String casualAnswer(ChatLanguage language, VehicleDashboardResponse dashboard) {
-        return language == ChatLanguage.RU
-                ? "Привет! Я тут, на связи. Я %s %s, сейчас у меня %s км пробега, статус обслуживания: %s."
-                        .formatted(dashboard.vehicle().brand(), dashboard.vehicle().model(),
-                                dashboard.vehicle().mileageKm(), dashboard.maintenanceForecast().overallStatus())
-                : "Hi! I am here and online. I am your %s %s, my current mileage is %s km, and my maintenance status is %s."
-                        .formatted(dashboard.vehicle().brand(), dashboard.vehicle().model(),
-                                dashboard.vehicle().mileageKm(), dashboard.maintenanceForecast().overallStatus());
+    private String casualAnswer(ChatLanguage language, VehicleDashboardResponse dashboard, String userText) {
+        boolean greeted = userGreeted(userText);
+        if (language == ChatLanguage.RU) {
+            String prefix = greeted ? "Привет! " : "";
+            return prefix + "Я тут, на связи. Сейчас у меня %s км пробега, статус обслуживания: %s."
+                    .formatted(dashboard.vehicle().mileageKm(), dashboard.maintenanceForecast().overallStatus());
+        }
+        String prefix = greeted ? "Hi! " : "";
+        return prefix + "I am here and online. My current mileage is %s km, and my maintenance status is %s."
+                .formatted(dashboard.vehicle().mileageKm(), dashboard.maintenanceForecast().overallStatus());
+    }
+
+    private String polishAssistantText(String text, String userText, ChatLanguage language) {
+        String polished = text
+                .replaceAll("(?iu),?\\s*\\bхозяин\\b,?", "")
+                .replaceAll("(?iu),?\\s*\\b(owner|master)\\b,?", "")
+                .replaceAll("\\s{2,}", " ")
+                .strip();
+        if (!userGreeted(userText)) {
+            polished = stripLeadingGreeting(polished, language);
+        }
+        return polished;
+    }
+
+    private String stripLeadingGreeting(String text, ChatLanguage language) {
+        String stripped = language == ChatLanguage.RU
+                ? text.replaceFirst("(?iu)^\\s*(привет|здравствуй|здравствуйте|добрый день)[!,.\\s]+", "")
+                : text.replaceFirst("(?iu)^\\s*(hi|hello|hey)[!,.\\s]+", "");
+        return stripped.strip();
+    }
+
+    private boolean userGreeted(String userText) {
+        String text = normalizedText(userText);
+        return text.matches("(?su).*\\b(hi|hello|hey|привет|здравствуй|здравствуйте|добрый день)\\b.*");
     }
 
     private String unclearAnswer(ChatLanguage language) {
