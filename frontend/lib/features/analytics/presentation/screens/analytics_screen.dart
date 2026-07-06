@@ -368,8 +368,8 @@ final class _DateRangeSelector extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final dateRange = selectedDateRange;
     final l10n = AppLocalizations.of(context);
+    final dateRange = selectedDateRange;
 
     return Row(
       children: [
