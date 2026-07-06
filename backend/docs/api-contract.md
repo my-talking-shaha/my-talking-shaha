@@ -229,7 +229,7 @@ Validation:
 Supported `fuelType` values (also used by refuel timeline events):
 
 ```text
-PETROL_92, PETROL_95, PETROL_100, DIESEL, LPG, CNG, ELECTRIC, HYBRID, PHEV,
+PETROL_92, PETROL_95, PETROL_98, PETROL_100, DIESEL, ELECTRIC, HYBRID, PHEV,
 GASOLINE, OTHER
 ```
 ### Get vehicle dashboard
@@ -695,7 +695,7 @@ draft and asks for the cost; a follow-up like `for 1000 rubles` completes valida
 creates the `REFUEL` timeline event.
 
 For chat-created refuel records, `fuelName` must match one of the currently supported
-frontend values: `92 octane`, `95 octane`, `98 octane`, or `Diesel`.
+frontend values: `92 octane`, `95 octane`, `98 octane`, `100 octane`, or `Diesel`.
 
 Generic repair intent such as `I want to record the repair` must not create a maintenance
 event by itself. The backend asks for the repair/work description and validates mileage

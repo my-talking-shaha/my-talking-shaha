@@ -56,7 +56,7 @@ public class ChatService {
     private static final Pattern DISTANCE_PATTERN = Pattern.compile("(-?\\d+)\\s*(?:km|км)" + UNIT_END, Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE);
     private static final Pattern DURATION_PATTERN = Pattern.compile("(-?\\d+)\\s*(?:min|mins|minute|minutes|мин|минут|минуты)" + UNIT_END, Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE);
     private static final Pattern FUEL_GRADE_PATTERN = Pattern.compile("(?:ai[-\\s]?)?(\\d{2,3})\\s*(?:[-\\s]?(?:й|м))?\\s*(?:gas|fuel|petrol|бенз|бензин)", Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE);
-    private static final List<String> SUPPORTED_FUEL_NAMES = List.of("92 octane", "95 octane", "98 octane", "Diesel");
+    private static final List<String> SUPPORTED_FUEL_NAMES = List.of("92 octane", "95 octane", "98 octane", "100 octane", "Diesel");
 
     private final VehicleService vehicles;
     private final AnalyticsService analytics;
@@ -651,6 +651,7 @@ public class ChatService {
             case "92" -> Optional.of("92 octane");
             case "95" -> Optional.of("95 octane");
             case "98" -> Optional.of("98 octane");
+            case "100" -> Optional.of("100 octane");
             default -> Optional.empty();
         };
     }
