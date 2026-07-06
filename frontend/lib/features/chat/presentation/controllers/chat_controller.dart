@@ -108,7 +108,11 @@ final class ChatController extends AsyncNotifier<ChatScreenState> {
     ref.invalidate(vehicleDashboardProvider(vehicleId));
     for (final period in AnalyticsPeriod.values) {
       ref.invalidate(
-        analyticsSummaryProvider((vehicleId: vehicleId, period: period)),
+        analyticsSummaryProvider((
+          vehicleId: vehicleId,
+          period: period,
+          dateRange: null,
+        )),
       );
     }
   }

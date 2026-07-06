@@ -17,8 +17,12 @@ void main() {
 
     expect(find.text('Intelligence'), findsOneWidget);
     expect(find.text('Analytics'), findsOneWidget);
-    expect(find.text('342,500 ₽'), findsOneWidget);
+    expect(find.text('1,258,700 ₽'), findsOneWidget);
     expect(find.text('ANNUAL EXPENSES'), findsOneWidget);
+    expect(
+      find.byKey(const ValueKey('analytics-custom-date-range')),
+      findsOneWidget,
+    );
     expect(find.text('MAINTENANCE'), findsOneWidget);
     expect(find.text('FUEL'), findsOneWidget);
     expect(find.textContaining('Forecast'), findsNothing);
@@ -26,8 +30,33 @@ void main() {
     await tester.tap(find.byKey(const ValueKey('analytics-period-month')));
     await tester.pumpAndSettle();
 
-    expect(find.text('15,650 ₽'), findsOneWidget);
+    expect(find.text('184,950 ₽'), findsOneWidget);
     expect(find.text('MONTHLY EXPENSES'), findsWidgets);
+
+    await tester.dragUntilVisible(
+      find.text('MILEAGE TREND'),
+      find.byType(ListView),
+      const Offset(0, -300),
+    );
+    expect(find.text('MILEAGE TREND'), findsOneWidget);
+    expect(
+      find.byKey(const ValueKey('analytics-mileage-year-filter')),
+      findsOneWidget,
+    );
+    expect(
+      find.byKey(const ValueKey('analytics-mileage-month-filter')),
+      findsOneWidget,
+    );
+    expect(find.text('Accumulated mileage by month'), findsOneWidget);
+
+    await tester.tap(
+      find.byKey(const ValueKey('analytics-mileage-month-filter')),
+    );
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('June').last);
+    await tester.pumpAndSettle();
+
+    expect(find.text('Accumulated mileage by day'), findsOneWidget);
 
     await tester.dragUntilVisible(
       find.text('HISTORY ANALYSIS'),
