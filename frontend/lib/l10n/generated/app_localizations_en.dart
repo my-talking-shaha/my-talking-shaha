@@ -315,7 +315,13 @@ class AppLocalizationsEn extends AppLocalizations {
   String get hybrid => 'Hybrid';
 
   @override
+  String get phev => 'PHEV';
+
+  @override
   String get electric => 'Electric';
+
+  @override
+  String get powerOutput => 'Power output';
 
   @override
   String get powerOutputHp => 'Power output (hp)';
@@ -689,12 +695,85 @@ class AppLocalizationsEn extends AppLocalizations {
   String get seasonalExpenses => 'SEASONAL EXPENSES';
 
   @override
+  String get mileageTrend => 'MILEAGE TREND';
+
+  @override
+  String get customRange => 'Custom range';
+
+  @override
+  String get clearCustomRange => 'Clear custom range';
+
+  @override
   String totalAmount(Object amount) {
     return 'TOTAL: $amount';
   }
 
   @override
   String get monthlyExpenseTrend => 'Monthly expense trend';
+
+  @override
+  String get allMonths => 'All months';
+
+  @override
+  String get january => 'January';
+
+  @override
+  String get february => 'February';
+
+  @override
+  String get march => 'March';
+
+  @override
+  String get april => 'April';
+
+  @override
+  String get may => 'May';
+
+  @override
+  String get june => 'June';
+
+  @override
+  String get july => 'July';
+
+  @override
+  String get august => 'August';
+
+  @override
+  String get september => 'September';
+
+  @override
+  String get october => 'October';
+
+  @override
+  String get november => 'November';
+
+  @override
+  String get december => 'December';
+
+  @override
+  String get winter => 'Winter';
+
+  @override
+  String get spring => 'Spring';
+
+  @override
+  String get summer => 'Summer';
+
+  @override
+  String get autumn => 'Autumn';
+
+  @override
+  String get mileageDataUnavailableForFilter =>
+      'Mileage data is not available for this filter';
+
+  @override
+  String get accumulatedMileageByMonth => 'Accumulated mileage by month';
+
+  @override
+  String get accumulatedMileageByDay => 'Accumulated mileage by day';
+
+  @override
+  String get couldNotLoadMileageTrend => 'Could not load mileage trend';
 
   @override
   String get historyAnalysis => 'HISTORY ANALYSIS';
@@ -732,6 +811,15 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get tripKmMetric => 'Trip km';
+
+  @override
+  String get reliabilityMetric => 'Reliability';
+
+  @override
+  String get efficiencyMetric => 'Efficiency';
+
+  @override
+  String get maintenanceLoadMetric => 'Maintenance load';
 
   @override
   String get subscription => 'Subscription';

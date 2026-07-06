@@ -80,6 +80,11 @@ class _FakeGarageRepository implements GarageRepository {
   final List<VehicleDraft> createdDrafts = [];
 
   @override
+  Future<List<String>> getVehicleBrands() async {
+    return const ['Lada'];
+  }
+
+  @override
   Future<GarageVehicle> addVehicle(VehicleDraft draft) async {
     createdDrafts.add(draft);
     return GarageVehicle(

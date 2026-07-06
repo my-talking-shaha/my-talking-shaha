@@ -6,6 +6,7 @@ enum GarageVehicleEngineType {
   gasoline('gasoline'),
   diesel('diesel'),
   hybrid('hybrid'),
+  phev('phev'),
   electric('electric');
 
   const GarageVehicleEngineType(this.value);

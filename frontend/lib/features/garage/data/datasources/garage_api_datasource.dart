@@ -9,6 +9,17 @@ final class GarageApiDatasource implements GarageDatasource {
   final Dio _dio;
 
   @override
+  Future<List<String>> getVehicleBrands() async {
+    final response = await _dio.get<List<dynamic>>('/vehicles/brands');
+    final data = response.data ?? const [];
+
+    return data
+        .map((brand) => brand.toString().trim())
+        .where((brand) => brand.isNotEmpty)
+        .toList(growable: false);
+  }
+
+  @override
   Future<List<Vehicle>> getVehicles() async {
     final response = await _dio.get<List<dynamic>>('/vehicles');
     final data = response.data ?? const [];
