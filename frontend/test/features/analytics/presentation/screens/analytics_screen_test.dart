@@ -66,9 +66,7 @@ void main() {
     expect(find.text('HISTORY ANALYSIS'), findsOneWidget);
   });
 
-  testWidgets('localizes analytics chart labels', (
-    tester,
-  ) async {
+  testWidgets('localizes analytics chart labels', (tester) async {
     await _pumpAnalyticsScreen(
       tester,
       vehicleId: 'vehicle_1',
