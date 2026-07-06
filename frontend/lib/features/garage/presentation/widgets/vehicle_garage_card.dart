@@ -151,6 +151,7 @@ String _engineTypeLabel(AppLocalizations l10n, String value) {
     'gasoline' => l10n.gasoline,
     'diesel' => l10n.diesel,
     'hybrid' => l10n.hybrid,
+    'phev' => l10n.phev,
     'electric' => l10n.electric,
     _ => value,
   };

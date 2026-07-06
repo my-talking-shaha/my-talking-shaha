@@ -340,6 +340,13 @@ void main() {
       find.byType(PopupMenuButton<String>),
     );
     expect(engineMenu.constraints?.maxWidth, 260);
+    final menuItems = engineMenu.itemBuilder(
+      tester.element(find.byType(PopupMenuButton<String>)),
+    );
+    expect(
+      menuItems.map((item) => (item as PopupMenuItem<String>).value),
+      containsAll(['gasoline', 'diesel', 'hybrid', 'phev', 'electric']),
+    );
 
     await tester.tap(find.byType(TextField).at(1));
     await tester.pump();

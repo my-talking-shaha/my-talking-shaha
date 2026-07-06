@@ -119,6 +119,7 @@
   "gasoline": "Gasoline",
   "diesel": "Diesel",
   "hybrid": "Hybrid",
+  "phev": "PHEV",
   "electric": "Electric",
   "powerOutput": "Power output",
   "powerOutputHp": "Power output (hp)",

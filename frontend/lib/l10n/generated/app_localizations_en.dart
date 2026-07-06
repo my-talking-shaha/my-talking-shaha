@@ -315,6 +315,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get hybrid => 'Hybrid';
 
   @override
+  String get phev => 'PHEV';
+
+  @override
   String get electric => 'Electric';
 
   @override

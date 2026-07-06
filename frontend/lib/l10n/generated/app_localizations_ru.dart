@@ -314,6 +314,9 @@ class AppLocalizationsRu extends AppLocalizations {
   String get hybrid => 'Гибрид';
 
   @override
+  String get phev => 'PHEV';
+
+  @override
   String get electric => 'Электро';
 
   @override

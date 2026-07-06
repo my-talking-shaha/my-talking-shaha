@@ -692,6 +692,12 @@ abstract class AppLocalizations {
   /// **'Hybrid'**
   String get hybrid;
 
+  /// No description provided for @phev.
+  ///
+  /// In en, this message translates to:
+  /// **'PHEV'**
+  String get phev;
+
   /// No description provided for @electric.
   ///
   /// In en, this message translates to:

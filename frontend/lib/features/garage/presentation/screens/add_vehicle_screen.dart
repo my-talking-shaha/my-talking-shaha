@@ -870,6 +870,7 @@ final class _GarageEngineTypeField extends StatelessWidget {
             _engineItem(l10n, 'gasoline'),
             _engineItem(l10n, 'diesel'),
             _engineItem(l10n, 'hybrid'),
+            _engineItem(l10n, 'phev'),
             _engineItem(l10n, 'electric'),
           ],
           child: InputDecorator(
@@ -938,6 +939,7 @@ final class _GarageEngineTypeField extends StatelessWidget {
       'gasoline' => l10n.gasoline,
       'diesel' => l10n.diesel,
       'hybrid' => l10n.hybrid,
+      'phev' => l10n.phev,
       'electric' => l10n.electric,
       _ => value,
     };

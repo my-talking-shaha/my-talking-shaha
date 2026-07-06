@@ -119,6 +119,7 @@
   "gasoline": "Бензин",
   "diesel": "Дизель",
   "hybrid": "Гибрид",
+  "phev": "PHEV",
   "electric": "Электро",
   "powerOutput": "Мощность",
   "powerOutputHp": "Мощность (л.с.)",
