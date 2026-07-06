@@ -3,11 +3,13 @@ package ru.talkingshaha.backend.chat.controller;
 import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.hasSize;
 import static org.hamcrest.Matchers.not;
+import static org.hamcrest.Matchers.startsWith;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+import java.time.LocalDate;
 import java.time.OffsetDateTime;
 import java.util.UUID;
 import org.junit.jupiter.api.BeforeEach;
@@ -255,6 +257,21 @@ class ChatFlowTest {
     }
 
     @Test
+    void createsTripEventWithRouteAndHourDurationFromChatMessage() throws Exception {
+        String vehicleId = createVehicle();
+        mockMvc.perform(post("/api/v1/vehicles/{vehicleId}/chat/messages", vehicleId)
+                        .header("Authorization", bearer())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"text\":\"у меня сегодня была поездка из Иннополиса в Казань, за 1 час проехала 60 км\"}"))
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.createdEvent.type").value("TRIP"))
+                .andExpect(jsonPath("$.createdEvent.route").value("Иннополис -> Казань"))
+                .andExpect(jsonPath("$.createdEvent.distanceKm").value(60))
+                .andExpect(jsonPath("$.createdEvent.durationMinutes").value(60))
+                .andExpect(jsonPath("$.assistantMessage.action").doesNotExist());
+    }
+
+    @Test
     void startsAndCompletesTripLifecycleFromNaturalChatMessages() throws Exception {
         String vehicleId = createVehicle();
         mockMvc.perform(post("/api/v1/vehicles/{vehicleId}/chat/messages", vehicleId)
@@ -431,7 +448,8 @@ class ChatFlowTest {
                         .content("{\"text\":\"Поменяла двигатель, пробег 11000 км, стоимость 1000 рублей\"}"))
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.createdEvent.type").value("MAINTENANCE"))
-                .andExpect(jsonPath("$.createdEvent.name").value("поменяла двигатель"))
+                .andExpect(jsonPath("$.createdEvent.name").value("замена двигателя"))
+                .andExpect(jsonPath("$.createdEvent.description").value("поменяла двигатель\nReplaced parts: двигатель"))
                 .andExpect(jsonPath("$.createdEvent.mileageKm").value(11000))
                 .andExpect(jsonPath("$.createdEvent.cost").value(1000))
                 .andExpect(jsonPath("$.assistantMessage.action").doesNotExist());
@@ -453,7 +471,8 @@ class ChatFlowTest {
                         .content("{\"text\":\"заменила двигатель на пробеге 10000 за 50000 рублей\"}"))
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.createdEvent.type").value("MAINTENANCE"))
-                .andExpect(jsonPath("$.createdEvent.name", containsString("заменила двигатель")))
+                .andExpect(jsonPath("$.createdEvent.name").value("замена двигателя"))
+                .andExpect(jsonPath("$.createdEvent.description").value("заменила двигатель\nReplaced parts: двигатель"))
                 .andExpect(jsonPath("$.createdEvent.cost").value(50000))
                 .andExpect(jsonPath("$.assistantMessage.action").doesNotExist());
         mockMvc.perform(get("/api/v1/vehicles/{vehicleId}/timeline?type=MAINTENANCE", vehicleId)
@@ -461,7 +480,7 @@ class ChatFlowTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.events", hasSize(1)))
                 .andExpect(jsonPath("$.events[0].type").value("MAINTENANCE"))
-                .andExpect(jsonPath("$.events[0].name", containsString("заменила двигатель")));
+                .andExpect(jsonPath("$.events[0].name").value("замена двигателя"));
     }
 
     @Test
@@ -473,7 +492,8 @@ class ChatFlowTest {
                         .content("{\"text\":\"я ещё поменяла двигатель, пробег сейчас 11000 км, стоило 1000 рублей\"}"))
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.createdEvent.type").value("MAINTENANCE"))
-                .andExpect(jsonPath("$.createdEvent.name", containsString("поменяла двигатель")))
+                .andExpect(jsonPath("$.createdEvent.name").value("замена двигателя"))
+                .andExpect(jsonPath("$.createdEvent.description").value("поменяла двигатель\nReplaced parts: двигатель"))
                 .andExpect(jsonPath("$.createdEvent.mileageKm").value(11000))
                 .andExpect(jsonPath("$.createdEvent.cost").value(1000))
                 .andExpect(jsonPath("$.assistantMessage.action").doesNotExist());
@@ -484,11 +504,11 @@ class ChatFlowTest {
         String vehicleId = createVehicle();
         mockMvc.perform(post("/api/v1/vehicles/{vehicleId}/chat/messages", vehicleId)
                         .header("Authorization", bearer())
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"text\":\"How are you?\"}"))
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("{\"text\":\"How are you?\"}"))
                 .andExpect(status().isCreated())
-                .andExpect(jsonPath("$.assistantMessage.text", containsString("Hi!")))
-                .andExpect(jsonPath("$.assistantMessage.text", containsString("I am your")))
+                .andExpect(jsonPath("$.assistantMessage.text", not(containsString("Hi!"))))
+                .andExpect(jsonPath("$.assistantMessage.text", containsString("I am here")))
                 .andExpect(jsonPath("$.assistantMessage.text", containsString("10000 km")))
                 .andExpect(jsonPath("$.assistantMessage.action").doesNotExist());
     }

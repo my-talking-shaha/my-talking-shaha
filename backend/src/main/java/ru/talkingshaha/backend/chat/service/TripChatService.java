@@ -30,6 +30,9 @@ public class TripChatService {
     private static final Pattern DURATION_PATTERN = Pattern.compile(
             "(-?\\d+)\\s*(?:min|mins|minute|minutes|м|мин|минут|минуты)" + UNIT_END,
             Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE);
+    private static final Pattern HOURS_PATTERN = Pattern.compile(
+            "(-?\\d+)\\s*(?:h|hour|hours|час|часа|часов)" + UNIT_END,
+            Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE);
     private static final Pattern FUEL_PATTERN = Pattern.compile(
             "(-?\\d+(?:[.,]\\d+)?)\\s*(?:l|liter|liters|л|литр|литра|литров)" + UNIT_END,
             Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE);
@@ -115,9 +118,17 @@ public class TripChatService {
     private Map<String, Object> extract(String text) {
         Map<String, Object> values = new LinkedHashMap<>();
         firstInteger(text, DISTANCE_PATTERN).ifPresent(value -> values.put("distanceKm", value));
-        firstInteger(text, DURATION_PATTERN).ifPresent(value -> values.put("durationMinutes", value));
+        durationMinutes(text).ifPresent(value -> values.put("durationMinutes", value));
         firstDecimal(text, FUEL_PATTERN).ifPresent(value -> values.put("fuelLiters", value));
         return values;
+    }
+
+    private java.util.Optional<Integer> durationMinutes(String text) {
+        java.util.Optional<Integer> explicitMinutes = firstInteger(text, DURATION_PATTERN);
+        if (explicitMinutes.isPresent()) {
+            return explicitMinutes;
+        }
+        return firstInteger(text, HOURS_PATTERN).map(hours -> hours * 60);
     }
 
     private java.util.Optional<Integer> firstInteger(String text, Pattern pattern) {

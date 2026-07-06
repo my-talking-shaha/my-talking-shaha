@@ -4,6 +4,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.time.OffsetDateTime;
 import java.util.Comparator;
 import java.util.LinkedHashMap;
@@ -55,6 +56,14 @@ public class ChatService {
     private static final Pattern MILEAGE_PATTERN = Pattern.compile("(?:mileage|odometer|пробег|на пробеге)\\D{0,12}(-?\\d+)\\s*(?:km|км)" + UNIT_END, Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE);
     private static final Pattern DISTANCE_PATTERN = Pattern.compile("(-?\\d+)\\s*(?:km|км)" + UNIT_END, Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE);
     private static final Pattern DURATION_PATTERN = Pattern.compile("(-?\\d+)\\s*(?:min|mins|minute|minutes|мин|минут|минуты)" + UNIT_END, Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE);
+    private static final Pattern HOURS_PATTERN = Pattern.compile("(-?\\d+)\\s*(?:h|hour|hours|час|часа|часов)" + UNIT_END, Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE);
+    private static final Pattern TEXT_DATE_PATTERN = Pattern.compile(
+            "(?<!\\d)(\\d{1,2})(?:\\s*[-–—]?\\s*(?:го|ое|е))?\\s+"
+                    + "(января|январь|февраля|февраль|марта|март|апреля|апрель|мая|май|июня|июнь|июля|июль|"
+                    + "августа|август|сентября|сентябрь|октября|октябрь|ноября|ноябрь|декабря|декабрь)"
+                    + "(?:\\s+(\\d{4}))?(?!\\p{L})",
+            Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE);
+    private static final Pattern NUMERIC_DATE_PATTERN = Pattern.compile("\\b(\\d{1,2})[./-](\\d{1,2})(?:[./-](\\d{2,4}))?\\b");
     private static final Pattern FUEL_GRADE_PATTERN = Pattern.compile("(?:ai[-\\s]?)?(\\d{2,3})\\s*(?:[-\\s]?(?:й|м))?\\s*(?:gas|fuel|petrol|бенз|бензин)", Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE);
     private static final List<String> SUPPORTED_FUEL_NAMES = List.of("92 octane", "95 octane", "98 octane", "Diesel");
 
@@ -237,7 +246,7 @@ public class ChatService {
         TimelineEventResponse event = timelineEvents.createRefuelEvent(
                 vehicle.getId(),
                 new CreateRefuelEventRequest(
-                        OffsetDateTime.now(),
+                        eventDateTime(userText),
                         mileageKm,
                         liters,
                         cost,
@@ -255,7 +264,7 @@ public class ChatService {
         fields.putIfAbsent("startMileageKm", vehicle.getMileageKm());
         firstInteger(userText, DISTANCE_PATTERN).ifPresent(distance ->
                 fields.putIfAbsent("endMileageKm", vehicle.getMileageKm() + distance));
-        firstInteger(userText, DURATION_PATTERN).ifPresent(duration ->
+        durationMinutes(userText).ifPresent(duration ->
                 fields.put("durationMinutes", duration));
         route(userText).ifPresent(route -> fields.put("route", route));
         List<String> errors = tripValidationErrors(fields, vehicle);
@@ -265,7 +274,7 @@ public class ChatService {
         TimelineEventResponse event = timelineEvents.createTripEvent(
                 vehicle.getId(),
                 new CreateTripEventRequest(
-                        OffsetDateTime.now(),
+                        eventDateTime(userText),
                         integerField(fields, "startMileageKm").orElse(null),
                         integerField(fields, "endMileageKm").orElseThrow(),
                         stringField(fields, "route").orElse(null),
@@ -300,7 +309,7 @@ public class ChatService {
             Map<String, Object> carriedFields) {
         Map<String, Object> fields = mergedFields(carriedFields, prefill(userText));
         firstInteger(userText, DISTANCE_PATTERN).ifPresent(distance -> fields.put("distanceKm", distance));
-        firstInteger(userText, DURATION_PATTERN).ifPresent(duration -> fields.put("durationMinutes", duration));
+        durationMinutes(userText).ifPresent(duration -> fields.put("durationMinutes", duration));
         decimalField(fields, "liters").ifPresent(fuelLiters -> fields.put("fuelLiters", fuelLiters));
         OffsetDateTime endedAt = endsTripConversation(userText) || hasLifecycleCompletionFields(fields)
                 ? OffsetDateTime.now()
@@ -329,19 +338,21 @@ public class ChatService {
             Map<String, Object> carriedFields) {
         Map<String, Object> fields = mergedFields(carriedFields, prefill(userText));
         fields.putIfAbsent("mileageKm", vehicle.getMileageKm());
-        maintenanceName(userText).ifPresent(name -> fields.putIfAbsent("name", name));
+        MaintenanceDraft draft = maintenanceDraft(userText);
+        draft.name().ifPresent(name -> fields.putIfAbsent("name", name));
         firstDecimal(userText, MONEY_PATTERN).ifPresent(cost -> fields.put("cost", cost));
         List<String> errors = maintenanceValidationErrors(fields, vehicle);
         if (!errors.isEmpty()) {
             return Optional.of(new AssistantDraft(missingOrInvalidAnswer("ремонт", errors), pendingAction("MAINTENANCE", fields), null));
         }
+        String description = draft.description().orElse(userText);
         TimelineEventResponse event = timelineEvents.createMaintenanceEvent(
                 vehicle.getId(),
                 new CreateMaintenanceEventRequest(
-                        OffsetDateTime.now(),
+                        eventDateTime(userText),
                         integerField(fields, "mileageKm").orElseThrow(),
                         stringField(fields, "name").orElseThrow(),
-                        userText,
+                        description,
                         decimalField(fields, "cost").orElse(null),
                         List.of()));
         return Optional.of(new AssistantDraft(maintenanceCreatedAnswer(event), null, event));
@@ -686,12 +697,126 @@ public class ChatService {
     }
 
     private Optional<String> route(String userText) {
-        Matcher matcher = Pattern.compile("(?:from|из|от)\\s+(.+?)\\s+(?:to|до|в)\\s+(.+?)(?:\\s+\\d|$)", Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE)
+        Matcher matcher = Pattern.compile(
+                        "(?:from|из|от)\\s+(.+?)\\s+(?:to|до|в)\\s+(.+?)(?=,?\\s+(?:за|for)|\\s+\\d|$)",
+                        Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE)
                 .matcher(userText);
         if (matcher.find()) {
-            return Optional.of(matcher.group(1).strip() + " -> " + matcher.group(2).strip());
+            String from = cleanRoutePlace(matcher.group(1));
+            String to = cleanRoutePlace(matcher.group(2));
+            if (!from.isBlank() && !to.isBlank()) {
+                return Optional.of(from + " -> " + to);
+            }
         }
         return Optional.empty();
+    }
+
+    private String cleanRoutePlace(String place) {
+        String cleaned = place
+                .replaceAll("(?iu),?\\s*(?:за|for)(?:\\s+.*)?$", " ")
+                .replaceAll("(?iu)\\s+проехал[а]?\\s+.*", " ")
+                .replaceAll("(?iu)\\s+drove\\s+.*", " ")
+                .replaceAll("[\\p{Punct}&&[^-]]+$", " ")
+                .replaceAll("\\s+", " ")
+                .strip();
+        return normalizeRoutePlace(cleaned);
+    }
+
+    private String normalizeRoutePlace(String place) {
+        if (place.split("\\s+").length == 1 && place.toLowerCase(Locale.ROOT).endsWith("иса")) {
+            return place.substring(0, place.length() - 1);
+        }
+        return place;
+    }
+
+    private Optional<Integer> durationMinutes(String userText) {
+        Optional<Integer> explicitMinutes = firstInteger(userText, DURATION_PATTERN);
+        if (explicitMinutes.isPresent()) {
+            return explicitMinutes;
+        }
+        return firstInteger(userText, HOURS_PATTERN).map(hours -> hours * 60);
+    }
+
+    private OffsetDateTime eventDateTime(String userText) {
+        OffsetDateTime now = OffsetDateTime.now();
+        String text = normalizedText(userText);
+        if (text.contains("позавчера")) {
+            return now.minusDays(2);
+        }
+        if (text.contains("вчера") || text.contains("yesterday")) {
+            return now.minusDays(1);
+        }
+        Optional<LocalDate> explicitDate = explicitEventDate(text, now.toLocalDate());
+        if (explicitDate.isPresent()) {
+            return now.withYear(explicitDate.get().getYear())
+                    .withMonth(explicitDate.get().getMonthValue())
+                    .withDayOfMonth(explicitDate.get().getDayOfMonth());
+        }
+        return now;
+    }
+
+    private Optional<LocalDate> explicitEventDate(String text, LocalDate today) {
+        Matcher textDate = TEXT_DATE_PATTERN.matcher(text);
+        if (textDate.find()) {
+            return localDate(
+                    parseInteger(textDate.group(1)),
+                    monthNumber(textDate.group(2)).orElse(null),
+                    year(textDate.group(3), today),
+                    today);
+        }
+
+        Matcher numericDate = NUMERIC_DATE_PATTERN.matcher(text);
+        if (numericDate.find()) {
+            return localDate(
+                    parseInteger(numericDate.group(1)),
+                    parseInteger(numericDate.group(2)),
+                    year(numericDate.group(3), today),
+                    today);
+        }
+
+        return Optional.empty();
+    }
+
+    private Optional<LocalDate> localDate(Integer day, Integer month, Integer year, LocalDate today) {
+        if (day == null || month == null || year == null) {
+            return Optional.empty();
+        }
+        try {
+            LocalDate date = LocalDate.of(year, month, day);
+            return Optional.of(date.isAfter(today) ? date.minusYears(1) : date);
+        } catch (RuntimeException ignored) {
+            return Optional.empty();
+        }
+    }
+
+    private Integer parseInteger(String value) {
+        return value == null || value.isBlank() ? null : Integer.parseInt(value);
+    }
+
+    private Integer year(String value, LocalDate today) {
+        if (value == null || value.isBlank()) {
+            return today.getYear();
+        }
+        int year = Integer.parseInt(value);
+        return year < 100 ? 2000 + year : year;
+    }
+
+    private Optional<Integer> monthNumber(String month) {
+        return switch (month.toLowerCase(Locale.ROOT)) {
+            case "января", "январь" -> Optional.of(1);
+            case "февраля", "февраль" -> Optional.of(2);
+            case "марта", "март" -> Optional.of(3);
+            case "апреля", "апрель" -> Optional.of(4);
+            case "мая", "май" -> Optional.of(5);
+            case "июня", "июнь" -> Optional.of(6);
+            case "июля", "июль" -> Optional.of(7);
+            case "августа", "август" -> Optional.of(8);
+            case "сентября", "сентябрь" -> Optional.of(9);
+            case "октября", "октябрь" -> Optional.of(10);
+            case "ноября", "ноябрь" -> Optional.of(11);
+            case "декабря", "декабрь" -> Optional.of(12);
+            default -> Optional.empty();
+        };
     }
 
     private boolean asksForRequiredFields(String userText) {
@@ -706,12 +831,34 @@ public class ChatService {
     }
 
     private Optional<String> maintenanceName(String userText) {
-        String stripped = userText
-                .replaceAll("(?iu)(?:на\\s+)?пробег(?:е)?\\D{0,12}-?\\d+\\s*(?:km|км).*", " ")
-                .replaceAll("(?iu)(?:стоимость|цена|cost)\\D{0,12}-?\\d+(?:[.,]\\d+)?\\s*(?:rub|ruble|rubles|₽|р|руб|рублей|рубля).*", " ")
+        String stripped = maintenanceWorkText(userText);
+        if (stripped.isBlank() || stripped.length() < 4 || stripped.equals("записать") || stripped.equals("добавить")) {
+            return Optional.empty();
+        }
+        return Optional.of(replacementParts(stripped)
+                .map(part -> replacementTitle(part, stripped))
+                .orElse(stripped.substring(0, Math.min(120, stripped.length()))));
+    }
+
+    private MaintenanceDraft maintenanceDraft(String userText) {
+        String workText = maintenanceWorkText(userText);
+        Optional<String> name = maintenanceName(userText);
+        Optional<String> parts = replacementParts(workText);
+        String description = workText.isBlank() ? userText : workText;
+        if (parts.isPresent()) {
+            description = description + "\nReplaced parts: " + parts.get();
+        }
+        return new MaintenanceDraft(name, Optional.of(description));
+    }
+
+    private String maintenanceWorkText(String userText) {
+        return removeExplicitDates(userText)
+                .replaceAll("(?iu)(?:на\\s+)?пробег(?:е)?\\D{0,12}-?\\d+\\s*(?:km|км)?", " ")
+                .replaceAll("(?iu)(?:стоимость|цена|стоил[ао]?|cost)\\D{0,12}-?\\d+(?:[.,]\\d+)?\\s*(?:rub|ruble|rubles|₽|р|руб|рублей|рубля).*", " ")
                 .replaceAll("(?iu)(?:^|\\s)за\\s+-?\\d+(?:[.,]\\d+)?\\s*(?:rub|ruble|rubles|₽|р|руб|рублей|рубля).*", " ")
                 .toLowerCase()
                 .replaceAll("(?iu)(^|\\s)(я|i)(?=\\s|$)", " ")
+                .replaceAll("(?iu)(^|\\s)(сегодня|вчера|завтра|today|yesterday|tomorrow|ещё|еще|сейчас)(?=\\s|$)", " ")
                 .replaceAll("(?iu)(^|\\s)(хочу|want|need|нужно|надо)(?=\\s|$)", " ")
                 .replaceAll("(?iu)add repair|record repair|new repair|repair record", " ")
                 .replaceAll("(?iu)добавить ремонт|записать ремонт|новый ремонт|запись ремонта", " ")
@@ -720,10 +867,53 @@ public class ChatService {
                 .replaceAll("[\\p{Punct}&&[^-]]+", " ")
                 .replaceAll("\\s+", " ")
                 .strip();
-        if (stripped.isBlank() || stripped.length() < 4 || stripped.equals("записать") || stripped.equals("добавить")) {
+    }
+
+    private String removeExplicitDates(String text) {
+        return NUMERIC_DATE_PATTERN.matcher(TEXT_DATE_PATTERN.matcher(text).replaceAll(" ")).replaceAll(" ");
+    }
+
+    private Optional<String> replacementParts(String workText) {
+        Matcher matcher = Pattern.compile(
+                        "(?iu)(?:поменял[аи]?|заменил[аи]?|менял[аи]?|замена|changed|replaced|replace)\\s+(.+)")
+                .matcher(workText);
+        if (!matcher.find()) {
             return Optional.empty();
         }
-        return Optional.of(stripped.substring(0, Math.min(120, stripped.length())));
+        String parts = matcher.group(1)
+                .replaceAll("(?iu)\\s+(?:на|for|with)\\s+.*", " ")
+                .replaceAll("\\s+", " ")
+                .strip();
+        return parts.isBlank() ? Optional.empty() : Optional.of(parts.substring(0, Math.min(120, parts.length())));
+    }
+
+    private String replacementTitle(String parts, String fallback) {
+        if (parts.chars().anyMatch(ch -> Character.UnicodeBlock.of(ch) == Character.UnicodeBlock.CYRILLIC)) {
+            return "замена " + replacementTitleParts(parts);
+        }
+        return "Replacement: " + parts;
+    }
+
+    private String replacementTitleParts(String parts) {
+        return List.of(parts.split("\\s+")).stream()
+                .map(this::genitivePartName)
+                .reduce((left, right) -> left + " " + right)
+                .orElse(parts)
+                .strip();
+    }
+
+    private String genitivePartName(String part) {
+        return switch (part) {
+            case "двигатель" -> "двигателя";
+            case "мотор" -> "мотора";
+            case "фильтр" -> "фильтра";
+            case "аккумулятор" -> "аккумулятора";
+            case "ремень" -> "ремня";
+            case "масло" -> "масла";
+            case "свечи" -> "свечей";
+            case "колодки" -> "колодок";
+            default -> part;
+        };
     }
 
     private String refuelRequiredFieldsAnswer() {
@@ -1069,5 +1259,8 @@ public class ChatService {
     }
 
     private record AssistantDraft(String text, ChatActionResponse action, TimelineEventResponse createdEvent) {
+    }
+
+    private record MaintenanceDraft(Optional<String> name, Optional<String> description) {
     }
 }
