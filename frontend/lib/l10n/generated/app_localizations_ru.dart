@@ -695,12 +695,86 @@ class AppLocalizationsRu extends AppLocalizations {
   String get seasonalExpenses => 'СЕЗОННЫЕ РАСХОДЫ';
 
   @override
+  String get mileageTrend => 'ДИНАМИКА ПРОБЕГА';
+
+  @override
+  String get customRange => 'Свой период';
+
+  @override
+  String get clearCustomRange => 'Очистить свой период';
+
+  @override
   String totalAmount(Object amount) {
     return 'ИТОГО: $amount';
   }
 
   @override
   String get monthlyExpenseTrend => 'Динамика расходов по месяцам';
+
+  @override
+  String get allMonths => 'Все месяцы';
+
+  @override
+  String get january => 'Январь';
+
+  @override
+  String get february => 'Февраль';
+
+  @override
+  String get march => 'Март';
+
+  @override
+  String get april => 'Апрель';
+
+  @override
+  String get may => 'Май';
+
+  @override
+  String get june => 'Июнь';
+
+  @override
+  String get july => 'Июль';
+
+  @override
+  String get august => 'Август';
+
+  @override
+  String get september => 'Сентябрь';
+
+  @override
+  String get october => 'Октябрь';
+
+  @override
+  String get november => 'Ноябрь';
+
+  @override
+  String get december => 'Декабрь';
+
+  @override
+  String get winter => 'Зима';
+
+  @override
+  String get spring => 'Весна';
+
+  @override
+  String get summer => 'Лето';
+
+  @override
+  String get autumn => 'Осень';
+
+  @override
+  String get mileageDataUnavailableForFilter =>
+      'Данные о пробеге недоступны для этого фильтра';
+
+  @override
+  String get accumulatedMileageByMonth => 'Накопленный пробег по месяцам';
+
+  @override
+  String get accumulatedMileageByDay => 'Накопленный пробег по дням';
+
+  @override
+  String get couldNotLoadMileageTrend =>
+      'Не удалось загрузить динамику пробега';
 
   @override
   String get historyAnalysis => 'АНАЛИЗ ИСТОРИИ';
@@ -738,6 +812,15 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get tripKmMetric => 'Км поездок';
+
+  @override
+  String get reliabilityMetric => 'Надежность';
+
+  @override
+  String get efficiencyMetric => 'Эффективность';
+
+  @override
+  String get maintenanceLoadMetric => 'Нагрузка обслуживания';
 
   @override
   String get subscription => 'Подписка';

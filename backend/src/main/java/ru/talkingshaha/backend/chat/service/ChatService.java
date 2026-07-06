@@ -124,7 +124,7 @@ public class ChatService {
         ChatMessage userMessage = saveMessage(session, ChatMessageRole.USER, request.text());
 
         VehicleDashboardResponse dashboard = vehicles.dashboard(vehicleId);
-        AnalyticsOverviewResponse analyticsOverview = analytics.overview(vehicleId, AnalyticsPeriod.ALL_TIME);
+        AnalyticsOverviewResponse analyticsOverview = analytics.overview(vehicleId, AnalyticsPeriod.ALL_TIME, null, null);
         String baseContext = context(dashboard, analyticsOverview);
         ChatDecision decision = intentResolver.resolve(request.text(), baseContext);
         AssistantDraft assistantDraft = assistantDraft(request.text(), decision, session, vehicle, dashboard, analyticsOverview);
