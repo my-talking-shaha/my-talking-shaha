@@ -131,6 +131,69 @@ final routerProvider = Provider<GoRouter>((ref) {
           );
         },
       ),
+      GoRoute(
+        path: '/vehicle/:vehicleId/history/:eventId/edit',
+        builder: (context, state) {
+          final vehicleId = state.pathParameters['vehicleId'] ?? '';
+          final eventId = state.pathParameters['eventId'] ?? '';
+          final initialEvent = state.extra is HistoryEvent
+              ? state.extra as HistoryEvent
+              : null;
+
+          return Consumer(
+            builder: (context, ref, _) {
+              Widget screenFor(HistoryEvent event) {
+                return AddHistoryEventScreen(
+                  vehicleId: vehicleId,
+                  initialEvent: event,
+                  initialMileageKm: event.currentMileageKm,
+                  initialType: event.type,
+                  onSave: ref.read(updateHistoryEventProvider),
+                  persistPhoto: ref
+                      .read(historyPhotoStorageProvider)
+                      .persistPhoto,
+                  deletePhoto: ref
+                      .read(historyPhotoStorageProvider)
+                      .deletePhoto,
+                );
+              }
+
+              if (initialEvent != null) {
+                return screenFor(initialEvent);
+              }
+
+              final eventsState = ref.watch(historyEventsProvider(vehicleId));
+              return eventsState.when(
+                data: (events) {
+                  final event = _historyEventById(events, eventId);
+                  if (event == null) {
+                    return Scaffold(
+                      appBar: AppBar(),
+                      body: const Center(child: Text('Event not found')),
+                    );
+                  }
+
+                  return screenFor(event);
+                },
+                loading: () => const Scaffold(
+                  body: Center(child: CircularProgressIndicator()),
+                ),
+                error: (error, stackTrace) => Scaffold(
+                  appBar: AppBar(),
+                  body: Center(
+                    child: TextButton(
+                      onPressed: () {
+                        ref.invalidate(historyEventsProvider(vehicleId));
+                      },
+                      child: const Text('Retry'),
+                    ),
+                  ),
+                ),
+              );
+            },
+          );
+        },
+      ),
       StatefulShellRoute.indexedStack(
         builder: (context, state, navigationShell) {
           return NavigationShell(
@@ -335,6 +398,16 @@ HistoryEventType _historyEventTypeFromQuery(String? value) {
     'maintenance' || 'part_replacement' => HistoryEventType.maintenance,
     _ => HistoryEventType.fuel,
   };
+}
+
+HistoryEvent? _historyEventById(List<HistoryEvent> events, String eventId) {
+  for (final event in events) {
+    if (event.id == eventId) {
+      return event;
+    }
+  }
+
+  return null;
 }
 
 bool _launchedFromChat(Uri uri) {

@@ -15,6 +15,9 @@ import ru.talkingshaha.backend.vehicle.model.FuelType;
 @Table(name = "refuel")
 public class RefuelEvent extends BaseEvent {
 
+    @Column(nullable = false, length = 255)
+    private String title;
+
     @Column(nullable = false)
     private Integer mileageKm;
 

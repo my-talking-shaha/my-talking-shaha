@@ -152,6 +152,7 @@ public class DemoDataSeeder implements ApplicationRunner {
         event.setVehicle(vehicle);
         event.setType(TimelineEventType.REFUEL);
         event.setEventDateTime(eventDateTime);
+        event.setTitle(stationName);
         event.setMileageKm(mileageKm);
         event.setLiters(new BigDecimal(liters));
         event.setCost(new BigDecimal(cost));
@@ -172,6 +173,7 @@ public class DemoDataSeeder implements ApplicationRunner {
         event.setVehicle(vehicle);
         event.setType(TimelineEventType.TRIP);
         event.setEventDateTime(eventDateTime);
+        event.setTitle(route);
         event.setStartMileageKm(startMileageKm);
         event.setEndMileageKm(endMileageKm);
         event.setRoute(route);
