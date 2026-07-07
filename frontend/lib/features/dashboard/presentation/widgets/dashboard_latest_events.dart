@@ -2,9 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:frontend/app/theme/app_theme.dart';
 import 'package:frontend/features/dashboard/domain/entities/dashboard_data.dart';
-import 'package:frontend/features/dashboard/presentation/utils/dashboard_utils.dart';
 import 'package:frontend/features/dashboard/presentation/widgets/dashboard_section_header.dart';
 import 'package:frontend/features/history/domain/entities/history_event_type.dart';
+import 'package:frontend/l10n/generated/app_localizations.dart';
 import 'package:go_router/go_router.dart';
 
 final class DashboardLatestEvents extends StatelessWidget {
@@ -19,19 +19,21 @@ final class DashboardLatestEvents extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         DashboardSectionHeader(
-          title: 'LATEST EVENTS',
+          title: l10n.latestEvents,
           trailing: TextButton(
             onPressed: () => context.go('/vehicle/$vehicleId/history'),
-            child: const Text('View all'),
+            child: Text(l10n.viewAll),
           ),
         ),
         const SizedBox(height: AppSpacing.sm),
         if (events.isEmpty)
-          const _EventsMessage(message: 'No events yet')
+          _EventsMessage(message: l10n.noEventsYet)
         else
           Column(
             children: [
@@ -108,13 +110,34 @@ final class _RecentEventTile extends StatelessWidget {
           ),
           const SizedBox(width: AppSpacing.sm),
           Text(
-            DashboardUtils.relativeDate(event.occurredAt),
+            _relativeDate(context, event.occurredAt),
             style: Theme.of(context).textTheme.bodySmall,
           ),
         ],
       ),
     );
   }
+}
+
+String _relativeDate(BuildContext context, DateTime value) {
+  final local = value.toLocal();
+  final now = DateTime.now();
+  final today = DateTime(now.year, now.month, now.day);
+  final eventDay = DateTime(local.year, local.month, local.day);
+  final difference = today.difference(eventDay).inDays;
+  final materialLocalizations = MaterialLocalizations.of(context);
+
+  if (difference == 0) {
+    return materialLocalizations.formatTimeOfDay(
+      TimeOfDay.fromDateTime(local),
+      alwaysUse24HourFormat: true,
+    );
+  }
+  if (difference == 1) {
+    return materialLocalizations.formatMediumDate(local).toUpperCase();
+  }
+
+  return materialLocalizations.formatShortMonthDay(local).toUpperCase();
 }
 
 final class _EventsMessage extends StatelessWidget {

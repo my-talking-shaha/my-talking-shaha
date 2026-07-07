@@ -6,7 +6,10 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:frontend/app/theme/app_theme.dart';
 import 'package:frontend/features/garage/presentation/controllers/add_vehicle_controller.dart';
+import 'package:frontend/features/garage/presentation/controllers/power_output_unit_controller.dart';
 import 'package:frontend/features/garage/presentation/providers/garage_providers.dart';
+import 'package:frontend/features/garage/presentation/state/add_vehicle_state.dart';
+import 'package:frontend/l10n/generated/app_localizations.dart';
 import 'package:go_router/go_router.dart';
 
 final class AddVehicleScreen extends ConsumerStatefulWidget {
@@ -27,13 +30,27 @@ final class _AddVehicleScreenState extends ConsumerState<AddVehicleScreen> {
   late final TextEditingController _colorController;
   late final TextEditingController _vinController;
   late final TextEditingController _engineSpecificationController;
+  late final FocusNode _brandFocusNode;
+  late final FocusNode _colorFocusNode;
   bool _isLoadingVehicle = false;
 
   static const _backgroundColor = Color(0xFF0D111A);
-  static const _fieldColor = Color(0xFF20242D);
-  static const _borderColor = Color(0xFF3B4252);
   static const _accentColor = Color(0xFFB8C3FF);
-  static const _hintColor = Color(0xFF6F7482);
+  static const _standardVehicleColors = [
+    'White',
+    'Black',
+    'Silver',
+    'Grey',
+    'Red',
+    'Blue',
+    'Green',
+    'Yellow',
+    'Orange',
+    'Brown',
+    'Beige',
+    'Gold',
+    'Purple',
+  ];
 
   @override
   void initState() {
@@ -46,6 +63,8 @@ final class _AddVehicleScreenState extends ConsumerState<AddVehicleScreen> {
     _colorController = TextEditingController();
     _vinController = TextEditingController();
     _engineSpecificationController = TextEditingController();
+    _brandFocusNode = FocusNode();
+    _colorFocusNode = FocusNode();
     unawaited(_loadVehicleForEdit());
   }
 
@@ -58,6 +77,8 @@ final class _AddVehicleScreenState extends ConsumerState<AddVehicleScreen> {
     _colorController.dispose();
     _vinController.dispose();
     _engineSpecificationController.dispose();
+    _brandFocusNode.dispose();
+    _colorFocusNode.dispose();
     super.dispose();
   }
 
@@ -81,9 +102,9 @@ final class _AddVehicleScreenState extends ConsumerState<AddVehicleScreen> {
         return;
       }
 
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(const SnackBar(content: Text('Vehicle was not found')));
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(AppLocalizations.of(context).vehicleNotFound)),
+      );
       context.go('/garage');
       return;
     } finally {
@@ -97,18 +118,30 @@ final class _AddVehicleScreenState extends ConsumerState<AddVehicleScreen> {
 
   void _syncTextControllers() {
     final state = _controller.state;
-    _brandController.text = state.brand;
-    _modelController.text = state.model;
-    _yearController.text = state.year;
-    _mileageController.text = state.currentMileage;
-    _colorController.text = state.color;
-    _vinController.text = state.vin;
-    _engineSpecificationController.text = state.engineSpecification;
+    final canonicalColor = _canonicalVehicleColor(state.color);
+    if (canonicalColor != null && canonicalColor != state.color) {
+      _controller.updateColor(canonicalColor);
+    }
+    final syncedState = _controller.state;
+    _brandController.text = syncedState.brand;
+    _modelController.text = syncedState.model;
+    _yearController.text = syncedState.year;
+    _mileageController.text = syncedState.currentMileage;
+    _colorController.text = syncedState.color;
+    _vinController.text = syncedState.vin;
+    _engineSpecificationController.text = syncedState.engineSpecification;
   }
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     final state = _controller.state;
+    final vehicleBrands = ref.watch(vehicleBrandsProvider);
+    final powerOutputUnit = ref.watch(powerOutputUnitControllerProvider);
+    powerOutputUnit.whenData(_schedulePowerOutputUnitSync);
+    ref.listen(powerOutputUnitControllerProvider, (_, next) {
+      next.whenData(_schedulePowerOutputUnitSync);
+    });
     final hasEngineType = state.engineType.isNotEmpty;
     final isEditing = widget.vehicleId != null;
 
@@ -120,7 +153,7 @@ final class _AddVehicleScreenState extends ConsumerState<AddVehicleScreen> {
         titleSpacing: 0,
         iconTheme: const IconThemeData(color: _accentColor),
         title: Text(
-          isEditing ? 'Edit car' : 'Car Specifications',
+          isEditing ? l10n.editCar : l10n.carSpecifications,
           style: const TextStyle(
             color: _accentColor,
             fontWeight: FontWeight.w700,
@@ -131,261 +164,258 @@ final class _AddVehicleScreenState extends ConsumerState<AddVehicleScreen> {
           icon: const Icon(Icons.arrow_back),
         ),
       ),
-      body: SafeArea(
-        child: _isLoadingVehicle
-            ? const Center(child: CircularProgressIndicator())
-            : SingleChildScrollView(
-                padding: const EdgeInsets.fromLTRB(20, 20, 20, 24),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    _GarageTextField(
-                      label: 'Brand',
-                      hintText: 'Lada',
-                      controller: _brandController,
-                      errorText: state.fieldErrors['brand'],
-                      textInputAction: TextInputAction.next,
-                      onChanged: (value) =>
-                          _update(_controller.updateBrand, value),
-                    ),
-                    const SizedBox(height: 24),
-                    _GarageTextField(
-                      label: 'Model',
-                      hintText: '2106',
-                      controller: _modelController,
-                      errorText: state.fieldErrors['model'],
-                      textInputAction: TextInputAction.next,
-                      onChanged: (value) =>
-                          _update(_controller.updateModel, value),
-                    ),
-                    const SizedBox(height: 24),
-                    Row(
-                      children: [
-                        Expanded(
-                          child: _GarageTextField(
-                            label: 'Year',
-                            hintText: '1998',
-                            controller: _yearController,
-                            errorText: state.fieldErrors['year'],
-                            keyboardType: TextInputType.number,
-                            inputFormatters: [
-                              FilteringTextInputFormatter.digitsOnly,
-                            ],
-                            textInputAction: TextInputAction.next,
-                            onChanged: (value) =>
-                                _update(_controller.updateYear, value),
-                          ),
+      body: GestureDetector(
+        behavior: HitTestBehavior.translucent,
+        onTap: _dismissKeyboard,
+        child: SafeArea(
+          child: _isLoadingVehicle
+              ? const Center(child: CircularProgressIndicator())
+              : SingleChildScrollView(
+                  keyboardDismissBehavior:
+                      ScrollViewKeyboardDismissBehavior.onDrag,
+                  padding: const EdgeInsets.fromLTRB(20, 20, 20, 24),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      _GarageBrandField(
+                        controller: _brandController,
+                        focusNode: _brandFocusNode,
+                        brands: _brandOptions(
+                          vehicleBrands.whenOrNull(data: (brands) => brands),
                         ),
-                        const SizedBox(width: 16),
-                        Expanded(
-                          child: _GarageTextField(
-                            label: 'Current mileage',
-                            hintText: '124580',
-                            controller: _mileageController,
-                            errorText: state.fieldErrors['currentMileageKm'],
-                            keyboardType: TextInputType.number,
-                            inputFormatters: [
-                              FilteringTextInputFormatter.digitsOnly,
-                            ],
-                            textInputAction: TextInputAction.next,
+                        isLoading: vehicleBrands.isLoading,
+                        errorText: _brandErrorText(l10n, vehicleBrands, state),
+                        onRetry: () => ref.invalidate(vehicleBrandsProvider),
+                        onChanged: (value) =>
+                            _update(_controller.updateBrand, value),
+                      ),
+                      const SizedBox(height: 24),
+                      _GarageTextField(
+                        label: l10n.model,
+                        hintText: '2106',
+                        controller: _modelController,
+                        errorText: _localizedVehicleError(
+                          l10n,
+                          state.fieldErrors['model'],
+                        ),
+                        textInputAction: TextInputAction.next,
+                        onChanged: (value) =>
+                            _update(_controller.updateModel, value),
+                      ),
+                      const SizedBox(height: 24),
+                      Row(
+                        children: [
+                          Expanded(
+                            child: _GarageTextField(
+                              label: l10n.year,
+                              hintText: '1998',
+                              controller: _yearController,
+                              errorText: _localizedVehicleError(
+                                l10n,
+                                state.fieldErrors['year'],
+                              ),
+                              keyboardType: TextInputType.number,
+                              inputFormatters: [
+                                FilteringTextInputFormatter.digitsOnly,
+                              ],
+                              textInputAction: TextInputAction.next,
+                              onChanged: (value) =>
+                                  _update(_controller.updateYear, value),
+                            ),
+                          ),
+                          const SizedBox(width: 16),
+                          Expanded(
+                            child: _GarageTextField(
+                              label: l10n.currentMileage,
+                              hintText: '124580',
+                              controller: _mileageController,
+                              errorText: _localizedVehicleError(
+                                l10n,
+                                state.fieldErrors['currentMileageKm'],
+                              ),
+                              keyboardType: TextInputType.number,
+                              inputFormatters: [
+                                FilteringTextInputFormatter.digitsOnly,
+                              ],
+                              textInputAction: TextInputAction.next,
+                              onChanged: (value) => _update(
+                                _controller.updateCurrentMileage,
+                                value,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 24),
+                      _GarageColorField(
+                        controller: _colorController,
+                        focusNode: _colorFocusNode,
+                        colors: _standardVehicleColors,
+                        onChanged: (value) =>
+                            _update(_controller.updateColor, value),
+                      ),
+                      const SizedBox(height: 24),
+                      _GarageTextField(
+                        label: l10n.vinOptional,
+                        hintText: 'XTA21060012345678',
+                        controller: _vinController,
+                        errorText: _localizedVehicleError(
+                          l10n,
+                          state.fieldErrors['vin'],
+                        ),
+                        inputFormatters: [
+                          LengthLimitingTextInputFormatter(17),
+                          FilteringTextInputFormatter.allow(
+                            RegExp('[a-zA-Z0-9]'),
+                          ),
+                        ],
+                        textCapitalization: TextCapitalization.characters,
+                        textInputAction: TextInputAction.next,
+                        onChanged: (value) =>
+                            _update(_controller.updateVin, value),
+                      ),
+                      const SizedBox(height: 24),
+                      _GarageEngineTypeField(
+                        selectedValue: state.engineType,
+                        errorText: _localizedVehicleError(
+                          l10n,
+                          state.fieldErrors['engineType'],
+                        ),
+                        onChanged: state.isSubmitting
+                            ? null
+                            : _updateEngineType,
+                      ),
+                      if (hasEngineType) ...[
+                        const SizedBox(height: 24),
+                        if (state.engineType == 'electric')
+                          _GaragePowerOutputField(
+                            controller: _engineSpecificationController,
+                            selectedUnit: _powerOutputUnitFromState(
+                              powerOutputUnit,
+                            ),
+                            errorText: _localizedVehicleError(
+                              l10n,
+                              state.fieldErrors['engineSpecification'],
+                            ),
+                            onUnitChanged: _updatePowerOutputUnit,
                             onChanged: (value) => _update(
-                              _controller.updateCurrentMileage,
+                              _controller.updateEngineSpecification,
+                              value,
+                            ),
+                          )
+                        else
+                          _GarageTextField(
+                            label: l10n.engineVolumeL,
+                            hintText: '1.6',
+                            controller: _engineSpecificationController,
+                            errorText: _localizedVehicleError(
+                              l10n,
+                              state.fieldErrors['engineSpecification'],
+                            ),
+                            keyboardType: const TextInputType.numberWithOptions(
+                              decimal: true,
+                            ),
+                            inputFormatters: [
+                              FilteringTextInputFormatter.allow(
+                                RegExp('[0-9,.]'),
+                              ),
+                            ],
+                            textInputAction: TextInputAction.done,
+                            onChanged: (value) => _update(
+                              _controller.updateEngineSpecification,
                               value,
                             ),
                           ),
+                      ],
+                      if (state.errorMessage != null) ...[
+                        const SizedBox(height: 24),
+                        Text(
+                          _localizedVehicleError(l10n, state.errorMessage)!,
+                          style: Theme.of(context).textTheme.bodyMedium
+                              ?.copyWith(color: AppColors.error),
                         ),
                       ],
-                    ),
-                    const SizedBox(height: 24),
-                    _GarageTextField(
-                      label: 'Color',
-                      hintText: 'blue',
-                      controller: _colorController,
-                      textInputAction: TextInputAction.next,
-                      onChanged: (value) =>
-                          _update(_controller.updateColor, value),
-                    ),
-                    const SizedBox(height: 24),
-                    _GarageTextField(
-                      label: 'VIN number (optional)',
-                      hintText: 'XTA21060012345678',
-                      controller: _vinController,
-                      errorText: state.fieldErrors['vin'],
-                      inputFormatters: [
-                        LengthLimitingTextInputFormatter(17),
-                        FilteringTextInputFormatter.allow(
-                          RegExp('[a-zA-Z0-9]'),
-                        ),
-                      ],
-                      textCapitalization: TextCapitalization.characters,
-                      textInputAction: TextInputAction.next,
-                      onChanged: (value) =>
-                          _update(_controller.updateVin, value),
-                    ),
-                    const SizedBox(height: 24),
-                    const _GarageDropdownLabel(label: 'Engine type'),
-                    const SizedBox(height: 10),
-                    DropdownButtonFormField<String>(
-                      key: ValueKey(state.engineType),
-                      initialValue: state.engineType.isEmpty
-                          ? null
-                          : state.engineType,
-                      dropdownColor: _fieldColor,
-                      borderRadius: BorderRadius.circular(8),
-                      icon: const Icon(
-                        Icons.keyboard_arrow_down_rounded,
-                        color: _accentColor,
-                      ),
-                      style: const TextStyle(color: Colors.white, fontSize: 16),
-                      decoration: InputDecoration(
-                        errorText: state.fieldErrors['engineType'],
-                        filled: true,
-                        fillColor: _fieldColor,
-                        contentPadding: const EdgeInsets.symmetric(
-                          horizontal: 16,
-                          vertical: 18,
-                        ),
-                        enabledBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(8),
-                          borderSide: const BorderSide(color: _borderColor),
-                        ),
-                        focusedBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(8),
-                          borderSide: const BorderSide(color: _accentColor),
-                        ),
-                        errorBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(8),
-                          borderSide: const BorderSide(color: AppColors.error),
-                        ),
-                        focusedErrorBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(8),
-                          borderSide: const BorderSide(color: AppColors.error),
-                        ),
-                        floatingLabelStyle: hasEngineType
-                            ? const TextStyle(color: _accentColor)
-                            : null,
-                      ),
-                      hint: const Text(
-                        'Select engine type',
-                        style: TextStyle(color: _hintColor),
-                      ),
-                      items: const [
-                        DropdownMenuItem(
-                          value: 'gasoline',
-                          child: Text('gasoline'),
-                        ),
-                        DropdownMenuItem(
-                          value: 'diesel',
-                          child: Text('diesel'),
-                        ),
-                        DropdownMenuItem(
-                          value: 'hybrid',
-                          child: Text('hybrid'),
-                        ),
-                        DropdownMenuItem(
-                          value: 'electric',
-                          child: Text('electric'),
-                        ),
-                      ],
-                      onChanged: state.isSubmitting
-                          ? null
-                          : (value) {
-                              _updateEngineType(value ?? '');
-                            },
-                    ),
-                    if (hasEngineType) ...[
-                      const SizedBox(height: 24),
-                      _GarageTextField(
-                        label: state.engineType == 'electric'
-                            ? 'Power output (hp)'
-                            : 'Engine volume (L)',
-                        hintText: state.engineType == 'electric'
-                            ? '283'
-                            : '1.6',
-                        controller: _engineSpecificationController,
-                        errorText: state.fieldErrors['engineSpecification'],
-                        keyboardType: state.engineType == 'electric'
-                            ? TextInputType.number
-                            : const TextInputType.numberWithOptions(
-                                decimal: true,
-                              ),
-                        inputFormatters: [
-                          if (state.engineType == 'electric')
-                            FilteringTextInputFormatter.digitsOnly
-                          else
-                            FilteringTextInputFormatter.allow(
-                              RegExp('[0-9,.]'),
+                      const SizedBox(height: 40),
+                      SizedBox(
+                        width: double.infinity,
+                        height: 64,
+                        child: ElevatedButton(
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: const Color(0xFF315BFF),
+                            foregroundColor: Colors.white,
+                            disabledBackgroundColor: const Color(
+                              0xFF315BFF,
+                            ).withValues(alpha: 0.5),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(10),
                             ),
-                        ],
-                        textInputAction: TextInputAction.done,
-                        onChanged: (value) => _update(
-                          _controller.updateEngineSpecification,
-                          value,
-                        ),
-                      ),
-                    ],
-                    if (state.errorMessage != null) ...[
-                      const SizedBox(height: 24),
-                      Text(
-                        state.errorMessage!,
-                        style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                          color: AppColors.error,
-                        ),
-                      ),
-                    ],
-                    const SizedBox(height: 40),
-                    SizedBox(
-                      width: double.infinity,
-                      height: 64,
-                      child: ElevatedButton(
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: const Color(0xFF315BFF),
-                          foregroundColor: Colors.white,
-                          disabledBackgroundColor: const Color(
-                            0xFF315BFF,
-                          ).withValues(alpha: 0.5),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(10),
+                            elevation: 12,
+                            shadowColor: const Color(0xFF315BFF),
                           ),
-                          elevation: 12,
-                          shadowColor: const Color(0xFF315BFF),
-                        ),
-                        onPressed: state.isSubmitting ? null : _submit,
-                        child: state.isSubmitting
-                            ? const SizedBox(
-                                width: 20,
-                                height: 20,
-                                child: CircularProgressIndicator(
-                                  strokeWidth: 2,
-                                ),
-                              )
-                            : Row(
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  SvgPicture.asset(
-                                    'assets/icons/garage/rocket.svg',
-                                    width: 20,
-                                    height: 20,
+                          onPressed: state.isSubmitting ? null : _submit,
+                          child: state.isSubmitting
+                              ? const SizedBox(
+                                  width: 20,
+                                  height: 20,
+                                  child: CircularProgressIndicator(
+                                    strokeWidth: 2,
                                   ),
-                                  const SizedBox(width: 8),
-                                  Text(
-                                    isEditing
-                                        ? 'Save changes'
-                                        : 'Start new shaha!',
-                                    style: const TextStyle(
-                                      fontWeight: FontWeight.w700,
-                                      letterSpacing: 1.2,
+                                )
+                              : Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    SvgPicture.asset(
+                                      'assets/icons/garage/rocket.svg',
+                                      width: 20,
+                                      height: 20,
                                     ),
-                                  ),
-                                ],
-                              ),
+                                    const SizedBox(width: 8),
+                                    Text(
+                                      isEditing
+                                          ? l10n.saveChanges
+                                          : l10n.startNewShaha,
+                                      style: const TextStyle(
+                                        fontWeight: FontWeight.w700,
+                                        letterSpacing: 1.2,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                        ),
                       ),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
-              ),
+        ),
       ),
     );
+  }
+
+  List<String> _brandOptions(List<String>? brands) {
+    final options = <String>[...?brands];
+    final selectedBrand = _controller.state.brand.trim();
+    if (selectedBrand.isNotEmpty && !options.contains(selectedBrand)) {
+      options.add(selectedBrand);
+    }
+
+    return List.unmodifiable(options);
+  }
+
+  String? _brandErrorText(
+    AppLocalizations l10n,
+    AsyncValue<List<String>> brands,
+    AddVehicleState state,
+  ) {
+    final fieldError = _localizedVehicleError(l10n, state.fieldErrors['brand']);
+    if (fieldError != null) {
+      return fieldError;
+    }
+
+    if (brands.hasError) {
+      return 'Could not load brands';
+    }
+
+    return null;
   }
 
   void _update(void Function(String value) update, String value) {
@@ -394,7 +424,53 @@ final class _AddVehicleScreenState extends ConsumerState<AddVehicleScreen> {
     });
   }
 
+  void _dismissKeyboard() {
+    final focusScope = FocusScope.of(context);
+    if (!focusScope.hasPrimaryFocus) {
+      focusScope.unfocus();
+    }
+  }
+
+  PowerOutputUnit _powerOutputUnitFromState(
+    AsyncValue<PowerOutputUnit> persistedUnit,
+  ) {
+    return persistedUnit.whenOrNull(data: (unit) => unit) ??
+        PowerOutputUnit.fromValue(_controller.state.powerOutputUnit);
+  }
+
+  void _syncPowerOutputUnit(PowerOutputUnit unit) {
+    if (_controller.state.powerOutputUnit == unit.value) {
+      return;
+    }
+
+    setState(() {
+      _controller.updatePowerOutputUnit(unit.value);
+      _engineSpecificationController.text =
+          _controller.state.engineSpecification;
+    });
+  }
+
+  void _schedulePowerOutputUnitSync(PowerOutputUnit unit) {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) {
+        _syncPowerOutputUnit(unit);
+      }
+    });
+  }
+
+  void _updatePowerOutputUnit(PowerOutputUnit unit) {
+    setState(() {
+      _controller.updatePowerOutputUnit(unit.value);
+      _engineSpecificationController.text =
+          _controller.state.engineSpecification;
+    });
+    unawaited(
+      ref.read(powerOutputUnitControllerProvider.notifier).setUnit(unit),
+    );
+  }
+
   void _updateEngineType(String value) {
+    _dismissKeyboard();
     setState(() {
       _controller.updateEngineType(value);
       _engineSpecificationController.text =
@@ -402,7 +478,23 @@ final class _AddVehicleScreenState extends ConsumerState<AddVehicleScreen> {
     });
   }
 
+  String? _canonicalVehicleColor(String color) {
+    final normalizedColor = color.trim().toLowerCase();
+    if (normalizedColor.isEmpty) {
+      return null;
+    }
+
+    for (final standardColor in _standardVehicleColors) {
+      if (standardColor.toLowerCase() == normalizedColor) {
+        return standardColor;
+      }
+    }
+
+    return null;
+  }
+
   Future<void> _submit() async {
+    final l10n = AppLocalizations.of(context);
     FocusScope.of(context).unfocus();
     final isEditing = widget.vehicleId != null;
 
@@ -421,10 +513,638 @@ final class _AddVehicleScreenState extends ConsumerState<AddVehicleScreen> {
 
     ref.invalidate(garageControllerProvider);
     ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(isEditing ? 'Vehicle updated' : 'Vehicle added')),
+      SnackBar(
+        content: Text(isEditing ? l10n.vehicleUpdated : l10n.vehicleAdded),
+      ),
     );
     context.go('/garage');
   }
+}
+
+final class _GarageBrandField extends StatelessWidget {
+  const _GarageBrandField({
+    required this.controller,
+    required this.focusNode,
+    required this.brands,
+    required this.isLoading,
+    required this.onChanged,
+    required this.onRetry,
+    this.errorText,
+  });
+
+  static const _fieldColor = Color(0xFF20242D);
+  static const _borderColor = Color(0xFF3B4252);
+  static const _accentColor = Color(0xFFB8C3FF);
+  static const _hintColor = Color(0xFF6F7482);
+
+  final TextEditingController controller;
+  final FocusNode focusNode;
+  final List<String> brands;
+  final bool isLoading;
+  final ValueChanged<String> onChanged;
+  final VoidCallback onRetry;
+  final String? errorText;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        _GarageDropdownLabel(label: l10n.brand),
+        const SizedBox(height: 10),
+        RawAutocomplete<String>(
+          textEditingController: controller,
+          focusNode: focusNode,
+          displayStringForOption: (brand) => brand,
+          optionsBuilder: (textEditingValue) {
+            final query = textEditingValue.text.trim().toLowerCase();
+            if (query.isEmpty) {
+              return const Iterable<String>.empty();
+            }
+
+            return brands.where((brand) => brand.toLowerCase().contains(query));
+          },
+          onSelected: onChanged,
+          fieldViewBuilder:
+              (context, textEditingController, focusNode, onFieldSubmitted) {
+                return TextField(
+                  controller: textEditingController,
+                  focusNode: focusNode,
+                  style: const TextStyle(color: Colors.white, fontSize: 16),
+                  cursorColor: _accentColor,
+                  textInputAction: TextInputAction.next,
+                  textCapitalization: TextCapitalization.words,
+                  decoration: InputDecoration(
+                    hintText: 'Lada',
+                    errorText: errorText,
+                    hintStyle: const TextStyle(color: _hintColor),
+                    suffixIcon: _suffixIcon(),
+                    filled: true,
+                    fillColor: _fieldColor,
+                    contentPadding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 18,
+                    ),
+                    enabledBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(8),
+                      borderSide: const BorderSide(color: _borderColor),
+                    ),
+                    focusedBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(8),
+                      borderSide: const BorderSide(color: _accentColor),
+                    ),
+                    errorBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(8),
+                      borderSide: const BorderSide(color: AppColors.error),
+                    ),
+                    focusedErrorBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(8),
+                      borderSide: const BorderSide(color: AppColors.error),
+                    ),
+                  ),
+                  onChanged: onChanged,
+                  onSubmitted: (_) => onFieldSubmitted(),
+                  onTapOutside: (_) => FocusScope.of(context).unfocus(),
+                );
+              },
+          optionsViewBuilder: (context, onSelected, options) {
+            return Align(
+              alignment: Alignment.topLeft,
+              child: Material(
+                color: _fieldColor,
+                elevation: 8,
+                borderRadius: BorderRadius.circular(8),
+                child: ConstrainedBox(
+                  constraints: const BoxConstraints(
+                    maxHeight: 220,
+                    maxWidth: 480,
+                  ),
+                  child: ListView.builder(
+                    padding: EdgeInsets.zero,
+                    shrinkWrap: true,
+                    itemCount: options.length,
+                    itemBuilder: (context, index) {
+                      final brand = options.elementAt(index);
+                      return InkWell(
+                        onTap: () => onSelected(brand),
+                        child: Padding(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 16,
+                            vertical: 14,
+                          ),
+                          child: Text(
+                            brand,
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontSize: 16,
+                            ),
+                          ),
+                        ),
+                      );
+                    },
+                  ),
+                ),
+              ),
+            );
+          },
+        ),
+      ],
+    );
+  }
+
+  Widget? _suffixIcon() {
+    if (isLoading) {
+      return const Padding(
+        padding: EdgeInsets.all(14),
+        child: SizedBox(
+          width: 18,
+          height: 18,
+          child: CircularProgressIndicator(strokeWidth: 2),
+        ),
+      );
+    }
+
+    if (errorText == 'Could not load brands') {
+      return IconButton(
+        onPressed: onRetry,
+        icon: const Icon(Icons.refresh, color: _accentColor),
+      );
+    }
+
+    return const Icon(Icons.search, color: _accentColor);
+  }
+}
+
+final class _GarageColorField extends StatelessWidget {
+  const _GarageColorField({
+    required this.controller,
+    required this.focusNode,
+    required this.colors,
+    required this.onChanged,
+  });
+
+  static const _fieldColor = Color(0xFF20242D);
+  static const _borderColor = Color(0xFF3B4252);
+  static const _accentColor = Color(0xFFB8C3FF);
+  static const _hintColor = Color(0xFF6F7482);
+
+  final TextEditingController controller;
+  final FocusNode focusNode;
+  final List<String> colors;
+  final ValueChanged<String> onChanged;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        _GarageDropdownLabel(label: l10n.color),
+        const SizedBox(height: 10),
+        RawAutocomplete<String>(
+          textEditingController: controller,
+          focusNode: focusNode,
+          displayStringForOption: (color) =>
+              _localizedVehicleColor(l10n, color),
+          optionsBuilder: (textEditingValue) {
+            final query = textEditingValue.text.trim().toLowerCase();
+            if (query.isEmpty) {
+              return const Iterable<String>.empty();
+            }
+
+            return colors.where((color) {
+              return color.toLowerCase().contains(query) ||
+                  _localizedVehicleColor(
+                    l10n,
+                    color,
+                  ).toLowerCase().contains(query);
+            });
+          },
+          onSelected: (color) {
+            controller.text = _localizedVehicleColor(l10n, color);
+            onChanged(color);
+          },
+          fieldViewBuilder:
+              (context, textEditingController, focusNode, onFieldSubmitted) {
+                return TextField(
+                  key: const ValueKey('vehicle_color_field'),
+                  controller: textEditingController,
+                  focusNode: focusNode,
+                  style: const TextStyle(color: Colors.white, fontSize: 16),
+                  cursorColor: _accentColor,
+                  textInputAction: TextInputAction.next,
+                  textCapitalization: TextCapitalization.words,
+                  decoration: InputDecoration(
+                    hintText: l10n.selectColor,
+                    hintStyle: const TextStyle(color: _hintColor),
+                    suffixIcon: const Icon(Icons.search, color: _accentColor),
+                    filled: true,
+                    fillColor: _fieldColor,
+                    contentPadding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 18,
+                    ),
+                    enabledBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(8),
+                      borderSide: const BorderSide(color: _borderColor),
+                    ),
+                    focusedBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(8),
+                      borderSide: const BorderSide(color: _accentColor),
+                    ),
+                  ),
+                  onChanged: onChanged,
+                  onSubmitted: (_) => onFieldSubmitted(),
+                  onTapOutside: (_) => FocusScope.of(context).unfocus(),
+                );
+              },
+          optionsViewBuilder: (context, onSelected, options) {
+            return Align(
+              alignment: Alignment.topLeft,
+              child: Material(
+                color: _fieldColor,
+                elevation: 8,
+                borderRadius: BorderRadius.circular(8),
+                child: ConstrainedBox(
+                  constraints: const BoxConstraints(
+                    maxHeight: 220,
+                    maxWidth: 480,
+                  ),
+                  child: ListView.builder(
+                    padding: EdgeInsets.zero,
+                    shrinkWrap: true,
+                    itemCount: options.length,
+                    itemBuilder: (context, index) {
+                      final color = options.elementAt(index);
+                      return InkWell(
+                        onTap: () => onSelected(color),
+                        child: Padding(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 16,
+                            vertical: 14,
+                          ),
+                          child: Text(
+                            _localizedVehicleColor(l10n, color),
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontSize: 16,
+                            ),
+                          ),
+                        ),
+                      );
+                    },
+                  ),
+                ),
+              ),
+            );
+          },
+        ),
+      ],
+    );
+  }
+
+  String _localizedVehicleColor(AppLocalizations l10n, String color) {
+    return switch (color) {
+      'White' => l10n.vehicleColorWhite,
+      'Black' => l10n.vehicleColorBlack,
+      'Silver' => l10n.vehicleColorSilver,
+      'Grey' => l10n.vehicleColorGrey,
+      'Red' => l10n.vehicleColorRed,
+      'Blue' => l10n.vehicleColorBlue,
+      'Green' => l10n.vehicleColorGreen,
+      'Yellow' => l10n.vehicleColorYellow,
+      'Orange' => l10n.vehicleColorOrange,
+      'Brown' => l10n.vehicleColorBrown,
+      'Beige' => l10n.vehicleColorBeige,
+      'Gold' => l10n.vehicleColorGold,
+      'Purple' => l10n.vehicleColorPurple,
+      _ => color,
+    };
+  }
+}
+
+final class _GarageEngineTypeField extends StatelessWidget {
+  const _GarageEngineTypeField({
+    required this.selectedValue,
+    required this.onChanged,
+    this.errorText,
+  });
+
+  static const _fieldColor = Color(0xFF20242D);
+  static const _borderColor = Color(0xFF3B4252);
+  static const _accentColor = Color(0xFFB8C3FF);
+  static const _hintColor = Color(0xFF6F7482);
+
+  final String selectedValue;
+  final ValueChanged<String>? onChanged;
+  final String? errorText;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+    final valueText = selectedValue.isEmpty
+        ? l10n.selectEngineType
+        : _localizedEngineType(l10n, selectedValue);
+    final hasError = errorText != null;
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        _GarageDropdownLabel(label: l10n.engineType),
+        const SizedBox(height: 10),
+        PopupMenuButton<String>(
+          enabled: onChanged != null,
+          color: _fieldColor,
+          elevation: 8,
+          onOpened: () => FocusScope.of(context).unfocus(),
+          constraints: const BoxConstraints(minWidth: 220, maxWidth: 260),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(8),
+            side: const BorderSide(color: _borderColor),
+          ),
+          onSelected: onChanged,
+          itemBuilder: (context) => [
+            _engineItem(l10n, 'gasoline'),
+            _engineItem(l10n, 'diesel'),
+            _engineItem(l10n, 'hybrid'),
+            _engineItem(l10n, 'phev'),
+            _engineItem(l10n, 'electric'),
+          ],
+          child: InputDecorator(
+            decoration: InputDecoration(
+              errorText: errorText,
+              filled: true,
+              fillColor: _fieldColor,
+              contentPadding: const EdgeInsets.symmetric(
+                horizontal: 16,
+                vertical: 18,
+              ),
+              enabledBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(8),
+                borderSide: BorderSide(
+                  color: hasError ? AppColors.error : _borderColor,
+                ),
+              ),
+              focusedBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(8),
+                borderSide: const BorderSide(color: _accentColor),
+              ),
+              errorBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(8),
+                borderSide: const BorderSide(color: AppColors.error),
+              ),
+              focusedErrorBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(8),
+                borderSide: const BorderSide(color: AppColors.error),
+              ),
+            ),
+            child: Row(
+              children: [
+                Expanded(
+                  child: Text(
+                    valueText,
+                    style: TextStyle(
+                      color: selectedValue.isEmpty ? _hintColor : Colors.white,
+                      fontSize: 16,
+                    ),
+                  ),
+                ),
+                const Icon(
+                  Icons.keyboard_arrow_down_rounded,
+                  color: _accentColor,
+                ),
+              ],
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  PopupMenuItem<String> _engineItem(AppLocalizations l10n, String value) {
+    return PopupMenuItem(
+      value: value,
+      child: Text(
+        _localizedEngineType(l10n, value),
+        style: const TextStyle(color: Colors.white),
+      ),
+    );
+  }
+
+  String _localizedEngineType(AppLocalizations l10n, String value) {
+    return switch (value) {
+      'gasoline' => l10n.gasoline,
+      'diesel' => l10n.diesel,
+      'hybrid' => l10n.hybrid,
+      'phev' => l10n.phev,
+      'electric' => l10n.electric,
+      _ => value,
+    };
+  }
+}
+
+final class _GaragePowerOutputField extends StatelessWidget {
+  const _GaragePowerOutputField({
+    required this.controller,
+    required this.selectedUnit,
+    required this.onUnitChanged,
+    required this.onChanged,
+    this.errorText,
+  });
+
+  static const _fieldColor = Color(0xFF20242D);
+  static const _borderColor = Color(0xFF3B4252);
+  static const _accentColor = Color(0xFFB8C3FF);
+  static const _hintColor = Color(0xFF6F7482);
+
+  final TextEditingController controller;
+  final PowerOutputUnit selectedUnit;
+  final ValueChanged<PowerOutputUnit> onUnitChanged;
+  final ValueChanged<String> onChanged;
+  final String? errorText;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        _GarageDropdownLabel(label: l10n.powerOutput),
+        const SizedBox(height: 10),
+        TextField(
+          controller: controller,
+          style: const TextStyle(color: Colors.white, fontSize: 16),
+          cursorColor: _accentColor,
+          keyboardType: const TextInputType.numberWithOptions(decimal: true),
+          inputFormatters: [
+            FilteringTextInputFormatter.allow(RegExp('[0-9,.]')),
+          ],
+          textInputAction: TextInputAction.done,
+          decoration: InputDecoration(
+            hintText: selectedUnit == PowerOutputUnit.kw ? '211' : '283',
+            errorText: errorText,
+            hintStyle: const TextStyle(color: _hintColor),
+            suffixIcon: Padding(
+              padding: const EdgeInsets.only(right: 8),
+              child: _PowerOutputUnitToggle(
+                selectedUnit: selectedUnit,
+                onChanged: onUnitChanged,
+              ),
+            ),
+            suffixIconConstraints: const BoxConstraints(
+              minWidth: 124,
+              minHeight: 44,
+            ),
+            filled: true,
+            fillColor: _fieldColor,
+            contentPadding: const EdgeInsets.symmetric(
+              horizontal: 16,
+              vertical: 18,
+            ),
+            enabledBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(8),
+              borderSide: const BorderSide(color: _borderColor),
+            ),
+            focusedBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(8),
+              borderSide: const BorderSide(color: _accentColor),
+            ),
+            errorBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(8),
+              borderSide: const BorderSide(color: AppColors.error),
+            ),
+            focusedErrorBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(8),
+              borderSide: const BorderSide(color: AppColors.error),
+            ),
+          ),
+          onChanged: onChanged,
+          onTapOutside: (_) => FocusScope.of(context).unfocus(),
+        ),
+      ],
+    );
+  }
+}
+
+final class _PowerOutputUnitToggle extends StatelessWidget {
+  const _PowerOutputUnitToggle({
+    required this.selectedUnit,
+    required this.onChanged,
+  });
+
+  static const _borderColor = Color(0xFF315BFF);
+  static const _fieldColor = Color(0xFF20242D);
+
+  final PowerOutputUnit selectedUnit;
+  final ValueChanged<PowerOutputUnit> onChanged;
+
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox(
+      width: 112,
+      height: 40,
+      child: DecoratedBox(
+        decoration: BoxDecoration(
+          color: _fieldColor,
+          border: Border.all(color: _borderColor, width: 1.5),
+          borderRadius: BorderRadius.circular(20),
+        ),
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(18.5),
+          child: Row(
+            children: [
+              _PowerOutputUnitOption(
+                unit: PowerOutputUnit.hp,
+                label: 'HP',
+                isSelected: selectedUnit == PowerOutputUnit.hp,
+                onChanged: onChanged,
+              ),
+              _PowerOutputUnitOption(
+                unit: PowerOutputUnit.kw,
+                label: 'kW',
+                isSelected: selectedUnit == PowerOutputUnit.kw,
+                onChanged: onChanged,
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+final class _PowerOutputUnitOption extends StatelessWidget {
+  const _PowerOutputUnitOption({
+    required this.unit,
+    required this.label,
+    required this.isSelected,
+    required this.onChanged,
+  });
+
+  static const _accentColor = Color(0xFFB8C3FF);
+  static const _selectedColor = Color(0xFF315BFF);
+
+  final PowerOutputUnit unit;
+  final String label;
+  final bool isSelected;
+  final ValueChanged<PowerOutputUnit> onChanged;
+
+  @override
+  Widget build(BuildContext context) {
+    return Expanded(
+      child: Material(
+        color: isSelected ? _selectedColor : Colors.transparent,
+        child: InkWell(
+          onTap: isSelected ? null : () => onChanged(unit),
+          child: Center(
+            child: Text(
+              label,
+              style: TextStyle(
+                color: isSelected ? Colors.white : _accentColor,
+                fontSize: 14,
+                fontWeight: FontWeight.w700,
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+String? _localizedVehicleError(AppLocalizations l10n, String? message) {
+  if (message == null) return null;
+
+  final yearMatch = RegExp(
+    r'Enter a production year from 1900 to (\d+)',
+  ).firstMatch(message);
+  if (yearMatch != null) {
+    return l10n.enterProductionYearRange(int.parse(yearMatch.group(1)!));
+  }
+
+  return switch (message) {
+    'Check the vehicle details' => l10n.checkVehicleDetails,
+    'Could not update the vehicle' => l10n.couldNotUpdateVehicle,
+    'Could not save the vehicle' => l10n.couldNotSaveVehicle,
+    'Enter a brand' => l10n.enterBrand,
+    'Enter a model' => l10n.enterModel,
+    'Enter a production year' => l10n.enterProductionYear,
+    'Mileage cannot be negative' => l10n.mileageCannotBeNegative,
+    'Enter current mileage' => l10n.enterCurrentMileage,
+    'Select an engine type' => l10n.selectEngineType,
+    'Enter either engine volume or power output' =>
+      l10n.enterEngineSpecification,
+    'Power output must be greater than zero' => l10n.powerOutputPositive,
+    'Engine volume must be greater than zero' => l10n.engineVolumePositive,
+    'Enter power output' => l10n.enterPowerOutput,
+    'Enter engine volume' => l10n.enterEngineVolume,
+    'VIN must contain exactly 17 characters' => l10n.vinLengthError,
+    _ => message,
+  };
 }
 
 final class _GarageTextField extends StatelessWidget {
@@ -498,6 +1218,7 @@ final class _GarageTextField extends StatelessWidget {
           textInputAction: textInputAction,
           textCapitalization: textCapitalization,
           onChanged: onChanged,
+          onTapOutside: (_) => FocusScope.of(context).unfocus(),
         ),
       ],
     );

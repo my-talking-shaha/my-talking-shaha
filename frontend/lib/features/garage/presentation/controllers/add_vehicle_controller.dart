@@ -81,6 +81,30 @@ final class AddVehicleController {
     );
   }
 
+  void updatePowerOutputUnit(String value) {
+    final normalizedUnit = _normalizePowerUnit(value);
+    final currentUnit = _normalizePowerUnit(state.powerOutputUnit);
+    final isElectric = state.engineType.trim().toLowerCase() == 'electric';
+    final parsedPower = double.tryParse(
+      state.engineSpecification.trim().replaceAll(',', '.'),
+    );
+    final convertedPower =
+        isElectric && parsedPower != null && currentUnit != normalizedUnit
+        ? _formatPower(
+            normalizedUnit == 'kw'
+                ? _horsepowerToKilowatts(parsedPower)
+                : _kilowattsToHorsepower(parsedPower),
+          )
+        : state.engineSpecification;
+
+    state = state.copyWith(
+      powerOutputUnit: normalizedUnit,
+      engineSpecification: convertedPower,
+      fieldErrors: _withoutError('engineSpecification'),
+      clearErrorMessage: true,
+    );
+  }
+
   void updateEngineSpecification(String value) {
     state = state.copyWith(
       engineSpecification: value,
@@ -148,8 +172,11 @@ final class AddVehicleController {
         : double.tryParse(
             state.engineSpecification.trim().replaceAll(',', '.'),
           );
-    final parsedEnginePower = isElectric
-        ? int.tryParse(state.engineSpecification.trim())
+    final parsedPowerInput = double.tryParse(
+      state.engineSpecification.trim().replaceAll(',', '.'),
+    );
+    final parsedEnginePower = isElectric && parsedPowerInput != null
+        ? _powerInputToHorsepower(parsedPowerInput)
         : null;
 
     if (state.brand.trim().isEmpty) {
@@ -220,5 +247,26 @@ final class AddVehicleController {
       errors.remove(field);
     }
     return Map.unmodifiable(errors);
+  }
+
+  String _normalizePowerUnit(String value) {
+    return value == 'kw' ? 'kw' : 'hp';
+  }
+
+  int _powerInputToHorsepower(double value) {
+    final unit = _normalizePowerUnit(state.powerOutputUnit);
+    final horsepower = unit == 'kw' ? _kilowattsToHorsepower(value) : value;
+    return horsepower.round();
+  }
+
+  double _kilowattsToHorsepower(double value) => value * 1.34102209;
+
+  double _horsepowerToKilowatts(double value) => value / 1.34102209;
+
+  String _formatPower(double value) {
+    final rounded = (value * 10).roundToDouble() / 10;
+    return rounded == rounded.roundToDouble()
+        ? rounded.toStringAsFixed(0)
+        : rounded.toStringAsFixed(1);
   }
 }

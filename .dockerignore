@@ -16,6 +16,10 @@
 .tmp/
 
 cars/
+!cars/
+!cars/csv/
+cars/csv/*
+!cars/csv/marks.csv
 docs/
 backend/docs/
 frontend/docs/

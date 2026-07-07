@@ -18,6 +18,14 @@ void main() {
     );
   });
 
+  test('validates fuel amount range and decimals', () {
+    expect(HistoryEventFormUtils.validateFuelLiters('42.5'), isNull);
+    expect(HistoryEventFormUtils.validateFuelLiters('42,5'), isNull);
+    expect(HistoryEventFormUtils.validateFuelLiters('0'), '> 0 L');
+    expect(HistoryEventFormUtils.validateFuelLiters('100.1'), 'Max 100 L');
+    expect(HistoryEventFormUtils.validateFuelLiters('abc'), 'Enter number');
+  });
+
   test('formats and normalizes form values', () {
     expect(
       HistoryEventFormUtils.formatDateTime(DateTime(2026, 6, 20, 9, 5)),

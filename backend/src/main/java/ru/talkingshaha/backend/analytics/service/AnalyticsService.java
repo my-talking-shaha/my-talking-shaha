@@ -7,10 +7,15 @@ import java.time.Month;
 import java.time.OffsetDateTime;
 import java.time.YearMonth;
 import java.time.ZoneOffset;
+import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
+import java.time.format.TextStyle;
 import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
+import java.util.Optional;
+import java.util.TreeMap;
 import java.util.UUID;
 
 import org.springframework.stereotype.Service;
@@ -19,6 +24,8 @@ import ru.talkingshaha.backend.analytics.dto.AnalyticsOverviewResponse;
 import ru.talkingshaha.backend.analytics.dto.CostPerKilometerResponse;
 import ru.talkingshaha.backend.analytics.dto.FuelAnalyticsResponse;
 import ru.talkingshaha.backend.analytics.dto.HistoryAnalysisResponse;
+import ru.talkingshaha.backend.analytics.dto.MileageTrendPointResponse;
+import ru.talkingshaha.backend.analytics.dto.MileageTrendResponse;
 import ru.talkingshaha.backend.analytics.dto.MonthlyExpenseResponse;
 import ru.talkingshaha.backend.analytics.dto.SeasonalExpenseResponse;
 import ru.talkingshaha.backend.analytics.model.AnalyticsPeriod;
@@ -38,6 +45,7 @@ public class AnalyticsService {
 
     private static final String CURRENCY = "RUB";
     private static final DateTimeFormatter MONTH_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM");
+    private static final DateTimeFormatter DAY_LABEL_FORMATTER = DateTimeFormatter.ofPattern("MMM d", Locale.ENGLISH);
 
     private final VehicleService vehicles;
     private final TimelineEventRepository events;
@@ -50,9 +58,9 @@ public class AnalyticsService {
     }
 
     @Transactional(readOnly = true)
-    public AnalyticsOverviewResponse overview(UUID vehicleId, AnalyticsPeriod period) {
+    public AnalyticsOverviewResponse overview(UUID vehicleId, AnalyticsPeriod period, LocalDate startDate, LocalDate endDate) {
         Vehicle vehicle = vehicles.requireOwnedVehicle(vehicleId);
-        PeriodRange range = range(period);
+        PeriodRange range = range(period, startDate, endDate);
         List<BaseEvent> filteredEvents = events.findAllByVehicleOrderByEventDateTimeDesc(vehicle).stream()
                 .filter(event -> inRange(event.getEventDateTime(), range))
                 .toList();
@@ -74,6 +82,74 @@ public class AnalyticsService {
                 new FuelAnalyticsResponse(totalLiters, consumptionPer100Km(totalLiters, totalKm)),
                 historyAnalysis(filteredEvents, totalKm),
                 !filteredEvents.isEmpty() || !filteredParts.isEmpty());
+    }
+
+    @Transactional(readOnly = true)
+    public MileageTrendResponse mileageTrend(UUID vehicleId, Integer year, Integer month) {
+        validateMileageTrendFilter(year, month);
+        Vehicle vehicle = vehicles.requireOwnedVehicle(vehicleId);
+        List<BaseEvent> vehicleEvents = events.findAllByVehicleOrderByEventDateTimeDesc(vehicle);
+        List<MileageTrendPointResponse> points = month == null
+                ? yearlyMileageTrend(vehicleEvents, year)
+                : monthlyMileageTrend(vehicleEvents, year, month);
+        return new MileageTrendResponse(year, month, points, !points.isEmpty());
+    }
+
+    private void validateMileageTrendFilter(Integer year, Integer month) {
+        if (year == null) {
+            throw new IllegalArgumentException("year is required");
+        }
+        if (year < 1900) {
+            throw new IllegalArgumentException("year must not be before 1900");
+        }
+        if (month != null && (month < 1 || month > 12)) {
+            throw new IllegalArgumentException("month must be between 1 and 12");
+        }
+    }
+
+    private List<MileageTrendPointResponse> yearlyMileageTrend(List<BaseEvent> vehicleEvents, int year) {
+        Map<Month, Integer> mileageByMonth = new TreeMap<>();
+        for (BaseEvent event : vehicleEvents) {
+            ZonedDateTime dateTime = event.getEventDateTime().atZoneSameInstant(ZoneOffset.UTC);
+            if (dateTime.getYear() != year) {
+                continue;
+            }
+            mileageAt(event).ifPresent(mileage -> mileageByMonth.merge(dateTime.getMonth(), mileage, Math::max));
+        }
+        return mileageByMonth.entrySet().stream()
+                .map(entry -> new MileageTrendPointResponse(
+                        entry.getKey().getDisplayName(TextStyle.SHORT, Locale.ENGLISH), entry.getValue()))
+                .toList();
+    }
+
+    private List<MileageTrendPointResponse> monthlyMileageTrend(List<BaseEvent> vehicleEvents, int year, int month) {
+        Map<LocalDate, Integer> mileageByDay = new TreeMap<>();
+        for (BaseEvent event : vehicleEvents) {
+            ZonedDateTime dateTime = event.getEventDateTime().atZoneSameInstant(ZoneOffset.UTC);
+            if (dateTime.getYear() != year || dateTime.getMonthValue() != month) {
+                continue;
+            }
+            LocalDate day = dateTime.toLocalDate();
+            mileageAt(event).ifPresent(mileage -> mileageByDay.merge(day, mileage, Math::max));
+        }
+        return mileageByDay.entrySet().stream()
+                .map(entry -> new MileageTrendPointResponse(entry.getKey().format(DAY_LABEL_FORMATTER), entry.getValue()))
+                .toList();
+    }
+
+    private Optional<Integer> mileageAt(BaseEvent event) {
+        if (event instanceof RefuelEvent refuel) {
+            return Optional.ofNullable(refuel.getMileageKm());
+        }
+        if (event instanceof MaintenanceEvent maintenance) {
+            return Optional.ofNullable(maintenance.getMileageKm());
+        }
+        if (event instanceof TripEvent trip) {
+            return trip.getEndMileageKm() != null
+                    ? Optional.of(trip.getEndMileageKm())
+                    : Optional.ofNullable(trip.getStartMileageKm());
+        }
+        return Optional.empty();
     }
 
     private Map<String, BigDecimal> categoryTotals(List<BaseEvent> filteredEvents, List<Part> filteredParts) {
@@ -157,10 +233,18 @@ public class AnalyticsService {
         return filteredEvents.stream()
                 .filter(TripEvent.class::isInstance)
                 .map(TripEvent.class::cast)
-                .mapToInt(trip -> trip.getStartMileageKm() == null
-                        ? 0
-                        : Math.max(0, trip.getEndMileageKm() - trip.getStartMileageKm()))
+                .mapToInt(this::tripDistanceKm)
                 .sum();
+    }
+
+    private int tripDistanceKm(TripEvent trip) {
+        if (trip.getDistanceKm() != null) {
+            return Math.max(0, trip.getDistanceKm());
+        }
+        if (trip.getStartMileageKm() == null || trip.getEndMileageKm() == null) {
+            return 0;
+        }
+        return Math.max(0, trip.getEndMileageKm() - trip.getStartMileageKm());
     }
 
     private BigDecimal totalLiters(List<BaseEvent> filteredEvents) {
@@ -227,8 +311,14 @@ public class AnalyticsService {
         };
     }
 
-    private PeriodRange range(AnalyticsPeriod period) {
+    private PeriodRange range(AnalyticsPeriod period, LocalDate startDate, LocalDate endDate) {
+        validateCustomRange(startDate, endDate);
         OffsetDateTime now = OffsetDateTime.now();
+        if (startDate != null) {
+            OffsetDateTime start = startDate.atStartOfDay().atOffset(now.getOffset());
+            OffsetDateTime end = endDate.plusDays(1).atStartOfDay().atOffset(now.getOffset());
+            return new PeriodRange(start, end);
+        }
         return switch (period) {
             case MONTH ->
                     new PeriodRange(now.withDayOfMonth(1).toLocalDate().atStartOfDay().atOffset(now.getOffset()), null);
@@ -238,12 +328,27 @@ public class AnalyticsService {
         };
     }
 
+    private void validateCustomRange(LocalDate startDate, LocalDate endDate) {
+        if ((startDate == null) != (endDate == null)) {
+            throw new IllegalArgumentException("startDate and endDate must be provided together");
+        }
+        if (startDate != null && startDate.isAfter(endDate)) {
+            throw new IllegalArgumentException("startDate must not be after endDate");
+        }
+    }
+
     private boolean inRange(OffsetDateTime dateTime, PeriodRange range) {
-        return range.start() == null || !dateTime.isBefore(range.start());
+        if (range.start() != null && dateTime.isBefore(range.start())) {
+            return false;
+        }
+        return range.end() == null || dateTime.isBefore(range.end());
     }
 
     private boolean inRange(LocalDate date, PeriodRange range) {
-        return range.start() == null || !date.isBefore(range.start().toLocalDate());
+        if (range.start() != null && date.isBefore(range.start().toLocalDate())) {
+            return false;
+        }
+        return range.end() == null || date.isBefore(range.end().toLocalDate());
     }
 
     private record PeriodRange(OffsetDateTime start, OffsetDateTime end) {
