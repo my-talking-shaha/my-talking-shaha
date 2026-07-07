@@ -29,6 +29,16 @@ final class HistoryRepositoryImpl implements HistoryRepository {
     return _datasource.addEvent(event);
   }
 
+  @override
+  Future<void> updateEvent(HistoryEvent event) {
+    return _datasource.updateEvent(event);
+  }
+
+  @override
+  Future<void> deleteEvent(String vehicleId, String eventId) {
+    return _datasource.deleteEvent(vehicleId, eventId);
+  }
+
   Future<HistoryEvent> _withCachedPhotos(HistoryEvent event) async {
     final details = event.details;
     if (details is! MaintenanceDetails) return event;

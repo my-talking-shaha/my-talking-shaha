@@ -1,6 +1,7 @@
 package ru.talkingshaha.backend.timeline.repository;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -13,4 +14,6 @@ public interface TimelineEventRepository extends JpaRepository<BaseEvent, UUID> 
     List<BaseEvent> findAllByVehicleOrderByEventDateTimeDesc(Vehicle vehicle);
 
     List<BaseEvent> findAllByVehicleAndTypeOrderByEventDateTimeDesc(Vehicle vehicle, TimelineEventType type);
+
+    Optional<BaseEvent> findByIdAndVehicle(UUID id, Vehicle vehicle);
 }

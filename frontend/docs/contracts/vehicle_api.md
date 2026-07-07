@@ -19,6 +19,42 @@ Response:
 
 Use this list for brand selection instead of free-text brand entry.
 
+## List Fuel Types
+
+`GET /api/v1/vehicles/fuel-types`
+
+Response:
+
+```json
+[
+  { "code": "PETROL_92", "label": "Petrol (92)" },
+  { "code": "PETROL_95", "label": "Petrol (95)" },
+  { "code": "PETROL_98", "label": "Petrol (98)" },
+  { "code": "PETROL_100", "label": "Petrol (100)" },
+  { "code": "DIESEL", "label": "Diesel" }
+]
+```
+
+Use this list for the fuel type dropdown. Send `code` back as `fuelType`; show `label`.
+
+## List Engine Types
+
+`GET /api/v1/vehicles/engine-types`
+
+Response:
+
+```json
+[
+  { "code": "GASOLINE", "label": "Gasoline" },
+  { "code": "DIESEL", "label": "Diesel" },
+  { "code": "HYBRID", "label": "Hybrid" },
+  { "code": "PHEV", "label": "PHEV" },
+  { "code": "ELECTRIC", "label": "Electric" }
+]
+```
+
+Use this list for the engine type dropdown. Send `code` back as `fuelType`; show `label`.
+
 ## Get Vehicle Dashboard
 
 `GET /api/v1/vehicles/{vehicleId}/dashboard`

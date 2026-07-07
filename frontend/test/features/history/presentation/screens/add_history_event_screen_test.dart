@@ -3,6 +3,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:frontend/app/theme/app_theme.dart';
 import 'package:frontend/features/history/domain/entities/event_details.dart';
 import 'package:frontend/features/history/domain/entities/history_event.dart';
+import 'package:frontend/features/history/domain/entities/history_event_type.dart';
 import 'package:frontend/features/history/presentation/screens/add_history_event_screen.dart';
 import 'package:frontend/l10n/generated/app_localizations.dart';
 import 'package:image_picker/image_picker.dart';
@@ -191,6 +192,98 @@ void main() {
     expect(details.photoUrls, hasLength(2));
     expect(details.photoUrls?.first, startsWith('/documents/history_photos/'));
   });
+
+  testWidgets('prefills existing event and saves changes with same id', (
+    tester,
+  ) async {
+    HistoryEvent? savedEvent;
+    final initialEvent = HistoryEvent(
+      id: 'fuel_1',
+      carId: 'vehicle_1',
+      type: HistoryEventType.fuel,
+      occurredAt: DateTime(2026, 6, 15, 14, 30),
+      title: 'Refueling AI-95',
+      currentMileageKm: 124580,
+      details: FuelDetails(cost: 2450, liters: 45, fuelType: 'AI-95'),
+    );
+
+    await _pumpScreen(
+      tester,
+      initialEvent: initialEvent,
+      onSave: (event) async => savedEvent = event,
+    );
+
+    expect(find.text('Edit refueling'), findsOneWidget);
+    expect(
+      tester
+          .widget<TextFormField>(find.byKey(const ValueKey('event-title')))
+          .controller
+          ?.text,
+      'Refueling AI-95',
+    );
+    expect(
+      tester
+          .widget<TextFormField>(
+            find.descendant(
+              of: find.byKey(const ValueKey('fuel-mileage')),
+              matching: find.byType(TextFormField),
+            ),
+          )
+          .controller
+          ?.text,
+      '124580',
+    );
+    expect(find.text('AI-95'), findsOneWidget);
+
+    await tester.enterText(
+      find.byKey(const ValueKey('event-title')),
+      'Updated fuel stop',
+    );
+    await _tapSave(tester, label: 'Save changes');
+
+    expect(savedEvent?.id, 'fuel_1');
+    expect(savedEvent?.title, 'Updated fuel stop');
+    expect(savedEvent?.occurredAt, DateTime(2026, 6, 15, 14, 30));
+    expect((savedEvent?.details as FuelDetails).fuelType, 'AI-95');
+  });
+
+  testWidgets('allows saving an edited trip with its original start mileage', (
+    tester,
+  ) async {
+    HistoryEvent? savedEvent;
+    final initialEvent = HistoryEvent(
+      id: 'trip_1',
+      carId: 'vehicle_1',
+      type: HistoryEventType.trip,
+      occurredAt: DateTime(2026, 6, 1, 9, 15),
+      title: 'Long-distance trip',
+      currentMileageKm: 123600,
+      details: const TripDetails(
+        startKm: 123180,
+        endKm: 123600,
+        route: 'Moscow — Tula — Moscow',
+        duration: Duration(hours: 7, minutes: 12),
+      ),
+    );
+
+    await _pumpScreen(
+      tester,
+      initialEvent: initialEvent,
+      onSave: (event) async => savedEvent = event,
+    );
+
+    await tester.enterText(
+      find.byKey(const ValueKey('event-title')),
+      'Updated trip',
+    );
+    await _tapSave(tester, label: 'Save changes');
+
+    expect(savedEvent?.id, 'trip_1');
+    expect(savedEvent?.title, 'Updated trip');
+    final details = savedEvent?.details as TripDetails;
+    expect(details.startKm, 123180);
+    expect(details.endKm, 123600);
+  });
 }
 
 Future<void> _pumpScreen(
@@ -201,6 +294,7 @@ Future<void> _pumpScreen(
   PersistHistoryPhoto? persistPhoto,
   DeleteHistoryPhoto? deletePhoto,
   Locale locale = const Locale('en'),
+  HistoryEvent? initialEvent,
 }) async {
   await tester.pumpWidget(
     MaterialApp(
@@ -210,6 +304,7 @@ Future<void> _pumpScreen(
       theme: AppTheme.dark,
       home: AddHistoryEventScreen(
         vehicleId: 'vehicle_1',
+        initialEvent: initialEvent,
         initialMileageKm: 124580,
         initialOccurredAt: DateTime(2026, 6, 20, 12),
         onSave: onSave,
@@ -237,7 +332,6 @@ Future<void> _tapSave(WidgetTester tester, {String label = 'Save'}) async {
     const Offset(0, -520),
     maxIteration: 20,
   );
-  await tester.pumpAndSettle();
-  await tester.tap(saveButton);
+  tester.widget<ElevatedButton>(saveButton).onPressed?.call();
   await tester.pump();
 }

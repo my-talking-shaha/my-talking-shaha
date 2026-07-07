@@ -149,6 +149,32 @@ paths:
                 type: array
                 items:
                   type: string
+  /vehicles/fuel-types:
+    get:
+      summary: List supported fuel types
+      tags: [ Vehicles ]
+      responses:
+        '200':
+          description: Fuel type options for selection lists
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/FuelTypeOption'
+  /vehicles/engine-types:
+    get:
+      summary: List supported engine types
+      tags: [ Vehicles ]
+      responses:
+        '200':
+          description: Engine type options for selection lists
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/FuelTypeOption'
   /vehicles/{vehicleId}:
     patch:
       summary: Update vehicle
@@ -477,6 +503,53 @@ paths:
           $ref: '#/components/responses/ValidationError'
         '404':
           $ref: '#/components/responses/NotFound'
+  /vehicles/{vehicleId}/timeline/{eventId}:
+    patch:
+      summary: Update timeline event
+      description: >
+        Updates a timeline event using the same event-specific fields and validation
+        as the matching add endpoint. The event type is determined by the stored
+        event and cannot be changed.
+      tags: [ Timeline ]
+      parameters:
+        - $ref: '#/components/parameters/VehicleId'
+        - $ref: '#/components/parameters/EventId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              oneOf:
+                - $ref: '#/components/schemas/CreateRefuelEventRequest'
+                - $ref: '#/components/schemas/CreateTripEventRequest'
+                - $ref: '#/components/schemas/CreateMaintenanceEventRequest'
+                - $ref: '#/components/schemas/CreatePartEventRequest'
+      responses:
+        '200':
+          description: Updated timeline event
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TimelineEvent'
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+    delete:
+      summary: Delete timeline event
+      tags: [ Timeline ]
+      parameters:
+        - $ref: '#/components/parameters/VehicleId'
+        - $ref: '#/components/parameters/EventId'
+      responses:
+        '204':
+          description: Event deleted
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
   /vehicles/{vehicleId}/analytics:
     get:
       summary: Get analytics overview
@@ -703,6 +776,13 @@ components:
   parameters:
     VehicleId:
       name: vehicleId
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
+    EventId:
+      name: eventId
       in: path
       required: true
       schema:
@@ -1082,11 +1162,14 @@ components:
             $ref: '#/components/schemas/VehiclePhoto'
     CreateRefuelEventRequest:
       type: object
-      required: [ eventDateTime, mileageKm, liters, cost, fuelType ]
+      required: [ eventDateTime, title, mileageKm, liters, cost, fuelType ]
       properties:
         eventDateTime:
           type: string
           format: date-time
+        title:
+          type: string
+          maxLength: 255
         mileageKm:
           type: integer
           minimum: 0
@@ -1108,11 +1191,14 @@ components:
           nullable: true
     CreateTripEventRequest:
       type: object
-      required: [ eventDateTime, endMileageKm, durationMinutes ]
+      required: [ eventDateTime, title, endMileageKm, durationMinutes ]
       properties:
         eventDateTime:
           type: string
           format: date-time
+        title:
+          type: string
+          maxLength: 255
         startMileageKm:
           type: integer
           minimum: 0
@@ -1268,7 +1354,20 @@ components:
             type: string
     FuelType:
       type: string
-      enum: [ GASOLINE, DIESEL, ELECTRIC, HYBRID, OTHER ]
+      description: >
+        Fuel type of a vehicle or a refuel event. GASOLINE is a legacy generic
+        petrol value kept for already stored data; new clients should prefer
+        the octane-specific PETROL_* values.
+      enum: [ PETROL_92, PETROL_95, PETROL_98, PETROL_100, DIESEL, ELECTRIC, HYBRID, PHEV, GASOLINE, OTHER ]
+    FuelTypeOption:
+      type: object
+      description: A selectable fuel type or engine type option.
+      properties:
+        code:
+          $ref: '#/components/schemas/FuelType'
+        label:
+          type: string
+          example: Petrol (95)
     PartCategory:
       type: string
       enum: [ ENGINE_OIL, OIL_FILTER, AIR_FILTER, BRAKE_PADS, TIMING_BELT, BATTERY, OTHER ]
