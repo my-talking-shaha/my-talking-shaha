@@ -214,6 +214,7 @@ abstract final class HistoryApiEventMapper {
       replacedParts: replacedParts.isEmpty ? null : replacedParts,
     );
   }
+
   static String _dateTimePayload(DateTime dateTime) {
     return dateTime.toUtc().toIso8601String();
   }
@@ -236,6 +237,14 @@ abstract final class HistoryApiEventMapper {
       int intValue => intValue,
       num numValue => numValue.toInt(),
       String stringValue => num.tryParse(stringValue)?.toInt(),
+      _ => null,
+    };
+  }
+
+  static double? _doubleValue(Object? value) {
+    return switch (value) {
+      num numValue => numValue.toDouble(),
+      String stringValue => num.tryParse(stringValue)?.toDouble(),
       _ => null,
     };
   }
