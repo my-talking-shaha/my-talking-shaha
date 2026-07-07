@@ -463,6 +463,40 @@ Response `201`: timeline event with `type = PART_REPLACEMENT`.
 Creating any event with a `mileageKm`/`endMileageKm` higher than the vehicle's current
 mileage advances the vehicle mileage and recalculates its parts.
 
+### Update event
+
+`PATCH /api/v1/vehicles/{vehicleId}/timeline/{eventId}`
+
+Request body uses the same event-specific fields as the matching add endpoint:
+
+- refuel: `eventDateTime`, `mileageKm`, `liters`, `cost`, `fuelType`, optional
+  `fuelName`, optional `stationName`;
+- trip: `eventDateTime`, `endMileageKm`, `durationMinutes`, optional
+  `startMileageKm`, optional `route`;
+- maintenance/part: `eventDateTime`, `mileageKm`, `name`, optional `description`,
+  optional `cost`, optional `photoUrls`.
+
+Field validation is the same as the matching add endpoint. The event type is
+determined by the stored event and is not changed by this endpoint.
+
+Response `200`: the updated timeline event in the same shape as list/create
+responses.
+
+Updating an event with a `mileageKm`/`endMileageKm` higher than the vehicle's
+current mileage advances the vehicle mileage and recalculates its parts. The
+vehicle mileage is never lowered automatically.
+
+### Delete event
+
+`DELETE /api/v1/vehicles/{vehicleId}/timeline/{eventId}`
+
+Response `204` with empty body. Deleting an event does not change the vehicle's
+current mileage.
+
+Both endpoints return `404 NOT_FOUND` when the event does not exist or belongs
+to another vehicle, and `403 FORBIDDEN` when the vehicle belongs to another
+user.
+
 ## Parts
 
 ### List vehicle parts

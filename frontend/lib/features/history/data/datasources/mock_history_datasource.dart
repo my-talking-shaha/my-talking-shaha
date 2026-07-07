@@ -23,11 +23,7 @@ final class MockHistoryDatasource implements HistoryDatasource {
     await Future<void>.delayed(delay);
 
     final events = _eventsFor(event.carId);
-    final maximumMileage = events.fold<int>(
-      0,
-      (maximum, item) =>
-          item.currentMileageKm > maximum ? item.currentMileageKm : maximum,
-    );
+    final maximumMileage = _maximumMileage(events);
     if (event.currentMileageKm < maximumMileage) {
       throw ArgumentError.value(
         event.currentMileageKm,
@@ -36,6 +32,48 @@ final class MockHistoryDatasource implements HistoryDatasource {
       );
     }
 
+    _validateTripMileage(event);
+
+    events.add(event);
+  }
+
+  @override
+  Future<void> updateEvent(HistoryEvent event) async {
+    await Future<void>.delayed(delay);
+
+    final events = _eventsFor(event.carId);
+    final index = events.indexWhere((item) => item.id == event.id);
+    if (index == -1) {
+      throw StateError('History event ${event.id} was not found');
+    }
+
+    _validateTripMileage(event);
+    events[index] = event;
+  }
+
+  @override
+  Future<void> deleteEvent(String vehicleId, String eventId) async {
+    await Future<void>.delayed(delay);
+
+    _eventsFor(vehicleId).removeWhere((event) => event.id == eventId);
+  }
+
+  List<HistoryEvent> _eventsFor(String vehicleId) {
+    return _eventsByVehicleId.putIfAbsent(
+      vehicleId,
+      () => _initialEvents(vehicleId),
+    );
+  }
+
+  int _maximumMileage(List<HistoryEvent> events) {
+    return events.fold<int>(
+      0,
+      (maximum, item) =>
+          item.currentMileageKm > maximum ? item.currentMileageKm : maximum,
+    );
+  }
+
+  void _validateTripMileage(HistoryEvent event) {
     final details = event.details;
     if (details is TripDetails && details.endKm != event.currentMileageKm) {
       throw ArgumentError.value(
@@ -44,15 +82,6 @@ final class MockHistoryDatasource implements HistoryDatasource {
         'Trip end mileage must match the event current mileage',
       );
     }
-
-    events.add(event);
-  }
-
-  List<HistoryEvent> _eventsFor(String vehicleId) {
-    return _eventsByVehicleId.putIfAbsent(
-      vehicleId,
-      () => _initialEvents(vehicleId),
-    );
   }
 
   List<HistoryEvent> _initialEvents(String vehicleId) {

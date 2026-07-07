@@ -2,13 +2,16 @@ package ru.talkingshaha.backend.timeline.controller;
 
 import java.util.UUID;
 
+import com.fasterxml.jackson.databind.JsonNode;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -87,5 +90,21 @@ public class TimelineEventController {
             @PathVariable UUID vehicleId,
             @Valid @RequestBody CreatePartEventRequest request) {
         return service.createPartEvent(vehicleId, request);
+    }
+
+    @PatchMapping("/{eventId}")
+    public TimelineEventResponse updateEvent(
+            @PathVariable UUID vehicleId,
+            @PathVariable UUID eventId,
+            @RequestBody JsonNode body) {
+        return service.updateEvent(vehicleId, eventId, body);
+    }
+
+    @DeleteMapping("/{eventId}")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void deleteEvent(
+            @PathVariable UUID vehicleId,
+            @PathVariable UUID eventId) {
+        service.deleteEvent(vehicleId, eventId);
     }
 }

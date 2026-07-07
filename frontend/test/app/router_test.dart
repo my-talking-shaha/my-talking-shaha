@@ -370,10 +370,11 @@ void main() {
       find.byType(ListView),
       const Offset(0, -300),
     );
-    await tester.tap(saveButton);
+    tester.widget<ElevatedButton>(saveButton).onPressed?.call();
     await tester.pumpAndSettle();
 
-    await tester.tap(find.byType(FloatingActionButton));
+    final fabFinder = find.byType(FloatingActionButton);
+    tester.widget<FloatingActionButton>(fabFinder).onPressed?.call();
     await tester.pumpAndSettle();
 
     final screen = tester.widget<AddHistoryEventScreen>(
@@ -542,6 +543,19 @@ final class _MileageUpdatingHistoryDatasource implements HistoryDatasource {
   Future<void> addEvent(HistoryEvent event) async {
     _events.add(event);
     garageDatasource.mileageKm = event.currentMileageKm;
+  }
+
+  @override
+  Future<void> updateEvent(HistoryEvent event) async {
+    final index = _events.indexWhere((existing) => existing.id == event.id);
+    if (index != -1) {
+      _events[index] = event;
+    }
+  }
+
+  @override
+  Future<void> deleteEvent(String vehicleId, String eventId) async {
+    _events.removeWhere((event) => event.id == eventId);
   }
 }
 

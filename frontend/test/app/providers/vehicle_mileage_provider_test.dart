@@ -19,6 +19,29 @@ void main() {
 
     expect(await _readMileage(container, 'missing'), 0);
   });
+
+  test('uses refreshed garage state after invalidation', () async {
+    final garageDatasource = InMemoryGarageDatasource();
+    await garageDatasource.addVehicle(_vehicleDraft(mileageKm: 120000));
+    final container = ProviderContainer(
+      overrides: [garageDatasourceProvider.overrideWithValue(garageDatasource)],
+    );
+    addTearDown(container.dispose);
+
+    expect(await _readMileage(container, 'vehicle_1'), 120000);
+
+    await garageDatasource.updateVehicle(
+      'vehicle_1',
+      _vehicleDraft(mileageKm: 125000),
+    );
+
+    expect(await _readMileage(container, 'vehicle_1'), 120000);
+
+    container.invalidate(garageControllerProvider);
+    container.invalidate(vehicleMileageProvider('vehicle_1'));
+
+    expect(await _readMileage(container, 'vehicle_1'), 125000);
+  });
 }
 
 Future<int> _readMileage(ProviderContainer container, String vehicleId) async {
@@ -33,19 +56,21 @@ Future<int> _readMileage(ProviderContainer container, String vehicleId) async {
 
 Future<ProviderContainer> _containerWithMileage(int mileageKm) async {
   final garageDatasource = InMemoryGarageDatasource();
-  await garageDatasource.addVehicle(
-    VehicleDraft(
-      brand: 'Lada',
-      model: '2106',
-      year: 1998,
-      currentMileageKm: mileageKm,
-      engineType: 'gasoline',
-      engineVolumeLiters: 1.6,
-      enginePowerHp: null,
-    ),
-  );
+  await garageDatasource.addVehicle(_vehicleDraft(mileageKm: mileageKm));
 
   return ProviderContainer(
     overrides: [garageDatasourceProvider.overrideWithValue(garageDatasource)],
+  );
+}
+
+VehicleDraft _vehicleDraft({required int mileageKm}) {
+  return VehicleDraft(
+    brand: 'Lada',
+    model: '2106',
+    year: 1998,
+    currentMileageKm: mileageKm,
+    engineType: 'gasoline',
+    engineVolumeLiters: 1.6,
+    enginePowerHp: null,
   );
 }

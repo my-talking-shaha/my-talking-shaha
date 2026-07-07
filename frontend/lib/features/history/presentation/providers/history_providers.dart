@@ -33,3 +33,16 @@ typedef AddHistoryEvent = Future<void> Function(HistoryEvent event);
 final addHistoryEventProvider = Provider<AddHistoryEvent>((ref) {
   return ref.watch(historyRepositoryProvider).addEvent;
 });
+
+typedef UpdateHistoryEvent = Future<void> Function(HistoryEvent event);
+
+final updateHistoryEventProvider = Provider<UpdateHistoryEvent>((ref) {
+  return ref.watch(historyRepositoryProvider).updateEvent;
+});
+
+typedef DeleteHistoryEvent =
+    Future<void> Function(String vehicleId, String eventId);
+
+final deleteHistoryEventProvider = Provider<DeleteHistoryEvent>((ref) {
+  return ref.watch(historyRepositoryProvider).deleteEvent;
+});
