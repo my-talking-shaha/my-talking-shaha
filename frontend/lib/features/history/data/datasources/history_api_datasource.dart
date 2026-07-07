@@ -61,6 +61,9 @@ abstract final class HistoryApiEventMapper {
         _intValue(json['endMileageKm']) ??
         _intValue(json['startMileageKm']) ??
         0;
+    final maintenanceDescription = _maintenanceDetailsDescription(
+      _nullableStringValue(json['description']) ?? '',
+    );
 
     return HistoryEvent(
       id: _stringValue(json['id']),
@@ -72,12 +75,13 @@ abstract final class HistoryApiEventMapper {
       details: switch (type) {
         HistoryEventType.fuel => FuelDetails(
           cost: _intValue(json['cost']) ?? 0,
-          liters: _intValue(json['liters']) ?? 0,
+          liters: _doubleValue(json['liters']) ?? 0,
           fuelType: _fuelLabel(json),
         ),
         HistoryEventType.maintenance => MaintenanceDetails(
-          description: _nullableStringValue(json['description']) ?? '',
+          description: maintenanceDescription.description,
           cost: _intValue(json['cost']),
+          replacedParts: maintenanceDescription.replacedParts,
           photoUrls: _stringListValue(json['photoUrls']),
         ),
         HistoryEventType.trip => TripDetails(
@@ -249,6 +253,37 @@ abstract final class HistoryApiEventMapper {
     return '${details.description}\nReplaced parts: ${replacedParts.join(', ')}';
   }
 
+  static ({String description, List<String>? replacedParts})
+  _maintenanceDetailsDescription(String description) {
+    final lines = description.split('\n');
+    final cleanDescription = <String>[];
+    final replacedParts = <String>[];
+
+    for (final line in lines) {
+      final match = RegExp(
+        r'^\s*Replaced parts:\s*(.+)$',
+        caseSensitive: false,
+      ).firstMatch(line);
+      if (match == null) {
+        cleanDescription.add(line);
+        continue;
+      }
+
+      replacedParts.addAll(
+        match
+            .group(1)!
+            .split(',')
+            .map((part) => part.trim())
+            .where((part) => part.isNotEmpty),
+      );
+    }
+
+    return (
+      description: cleanDescription.join('\n').trim(),
+      replacedParts: replacedParts.isEmpty ? null : replacedParts,
+    );
+  }
+
   static String _dateTimePayload(DateTime dateTime) {
     return dateTime.toUtc().toIso8601String();
   }
@@ -271,6 +306,14 @@ abstract final class HistoryApiEventMapper {
       int intValue => intValue,
       num numValue => numValue.toInt(),
       String stringValue => num.tryParse(stringValue)?.toInt(),
+      _ => null,
+    };
+  }
+
+  static double? _doubleValue(Object? value) {
+    return switch (value) {
+      num numValue => numValue.toDouble(),
+      String stringValue => num.tryParse(stringValue)?.toDouble(),
       _ => null,
     };
   }

@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:frontend/app/theme/app_theme.dart';
 
+enum AuthMode { login, register }
+
 final class AuthScreenScaffold extends StatelessWidget {
   const AuthScreenScaffold({
     required this.child,
@@ -33,13 +35,74 @@ final class AuthScreenScaffold extends StatelessWidget {
                     constraints: BoxConstraints(
                       minHeight: constraints.maxHeight - AppSpacing.xxxl * 2,
                     ),
-                    child: Center(child: child),
+                    child: Center(
+                      child: ConstrainedBox(
+                        constraints: const BoxConstraints(maxWidth: 350),
+                        child: child,
+                      ),
+                    ),
                   ),
                 );
               },
             ),
           ),
         ],
+      ),
+    );
+  }
+}
+
+final class AuthModeSwitch extends StatelessWidget {
+  const AuthModeSwitch({
+    required this.selectedMode,
+    required this.onModeSelected,
+    super.key,
+  });
+
+  final AuthMode selectedMode;
+  final ValueChanged<AuthMode> onModeSelected;
+
+  @override
+  Widget build(BuildContext context) {
+    return SegmentedButton<AuthMode>(
+      showSelectedIcon: false,
+      segments: const [
+        ButtonSegment<AuthMode>(
+          value: AuthMode.login,
+          icon: Icon(Icons.login_outlined),
+          label: Text('Login'),
+        ),
+        ButtonSegment<AuthMode>(
+          value: AuthMode.register,
+          icon: Icon(Icons.person_add_alt_1_outlined),
+          label: Text('Register'),
+        ),
+      ],
+      selected: {selectedMode},
+      onSelectionChanged: (selection) {
+        onModeSelected(selection.first);
+      },
+      style: ButtonStyle(
+        visualDensity: VisualDensity.standard,
+        side: WidgetStateProperty.resolveWith((states) {
+          final color = states.contains(WidgetState.selected)
+              ? AppColors.primary
+              : AppColors.border;
+          return BorderSide(color: color);
+        }),
+        foregroundColor: WidgetStateProperty.resolveWith((states) {
+          return states.contains(WidgetState.selected)
+              ? AppColors.white
+              : AppColors.textSecondary;
+        }),
+        backgroundColor: WidgetStateProperty.resolveWith((states) {
+          return states.contains(WidgetState.selected)
+              ? AppColors.primary
+              : AppColors.surfaceHigh;
+        }),
+        textStyle: WidgetStateProperty.all(
+          const TextStyle(fontSize: 14, fontWeight: FontWeight.w700),
+        ),
       ),
     );
   }
@@ -56,9 +119,9 @@ final class AuthFormCard extends StatelessWidget {
       width: double.infinity,
       constraints: const BoxConstraints(maxWidth: 350),
       padding: const EdgeInsets.fromLTRB(
-        AppSpacing.xxxl,
-        AppSpacing.xxxl,
-        AppSpacing.xxxl,
+        AppSpacing.xxl,
+        AppSpacing.xxl,
+        AppSpacing.xxl,
         AppSpacing.xxl,
       ),
       decoration: BoxDecoration(

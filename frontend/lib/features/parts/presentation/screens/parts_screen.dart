@@ -4,6 +4,7 @@ import 'package:frontend/app/theme/app_theme.dart';
 import 'package:frontend/features/parts/presentation/providers/parts_providers.dart';
 import 'package:frontend/features/parts/presentation/widgets/maintenance_forecast_card.dart';
 import 'package:frontend/features/parts/presentation/widgets/parts_design_tokens.dart';
+import 'package:frontend/l10n/generated/app_localizations.dart';
 import 'package:go_router/go_router.dart';
 
 final class PartsScreen extends ConsumerWidget {
@@ -13,11 +14,12 @@ final class PartsScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = AppLocalizations.of(context);
     final partsState = ref.watch(vehiclePartsProvider(vehicleId));
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Maintenance forecast'),
+        title: Text(l10n.maintenanceForecast),
         leading: IconButton(
           onPressed: () => context.go('/garage'),
           icon: const Icon(Icons.arrow_back),
@@ -72,6 +74,8 @@ final class _PartsEmptyState extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+
     return Center(
       key: const ValueKey('parts_empty_state'),
       child: Padding(
@@ -94,14 +98,13 @@ final class _PartsEmptyState extends StatelessWidget {
             ),
             const SizedBox(height: AppSpacing.lg),
             Text(
-              'No parts added',
+              l10n.noPartsAdded,
               textAlign: TextAlign.center,
               style: Theme.of(context).textTheme.titleLarge,
             ),
             const SizedBox(height: AppSpacing.sm),
             Text(
-              'When part lifetime data appears, the maintenance forecast '
-              'will be shown here.',
+              l10n.partsEmptyDescription,
               textAlign: TextAlign.center,
               style: Theme.of(context).textTheme.bodyMedium,
             ),
@@ -119,6 +122,8 @@ final class _PartsErrorState extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+
     return Center(
       key: const ValueKey('parts_error_state'),
       child: Padding(
@@ -129,13 +134,13 @@ final class _PartsErrorState extends StatelessWidget {
             const Icon(Icons.error_outline, color: AppColors.error, size: 42),
             const SizedBox(height: AppSpacing.lg),
             Text(
-              'Could not load parts lifetime',
+              l10n.couldNotLoadParts,
               textAlign: TextAlign.center,
               style: Theme.of(context).textTheme.titleLarge,
             ),
             const SizedBox(height: AppSpacing.sm),
             Text(
-              'Try again to refresh the maintenance forecast.',
+              l10n.partsRetryDescription,
               textAlign: TextAlign.center,
               style: Theme.of(context).textTheme.bodyMedium,
             ),
@@ -144,7 +149,7 @@ final class _PartsErrorState extends StatelessWidget {
               key: const ValueKey('parts_retry_action'),
               onPressed: onRetry,
               icon: const Icon(Icons.refresh),
-              label: const Text('Try again'),
+              label: Text(l10n.tryAgain),
             ),
           ],
         ),

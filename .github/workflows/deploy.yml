@@ -49,23 +49,60 @@ jobs:
           SERVER_PORT: ${{ secrets.SERVER_PORT }}
           SERVER_USER: ${{ secrets.SERVER_USER }}
           SERVER_APP_PATH: ${{ secrets.SERVER_APP_PATH }}
+          JWT_SECRET: ${{ secrets.JWT_SECRET }}
+          DB_USERNAME: ${{ secrets.DB_USERNAME }}
+          DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
           TIMEWEB_AI_BASE_URL: ${{ secrets.TIMEWEB_AI_BASE_URL }}
           TIMEWEB_AI_TOKEN: ${{ secrets.TIMEWEB_AI_TOKEN }}
+          DEPLOY_IMAGE_TAG: ${{ github.event.workflow_run.head_sha }}
         run: |
           set -euo pipefail
 
           : "${SERVER_HOST:?SERVER_HOST secret is required}"
           : "${SERVER_USER:?SERVER_USER secret is required}"
           : "${SERVER_APP_PATH:?SERVER_APP_PATH secret is required}"
+          : "${JWT_SECRET:?JWT_SECRET secret is required}"
+          : "${DB_USERNAME:?DB_USERNAME secret is required}"
+          : "${DB_PASSWORD:?DB_PASSWORD secret is required}"
           : "${TIMEWEB_AI_BASE_URL:?TIMEWEB_AI_BASE_URL secret is required}"
           : "${TIMEWEB_AI_TOKEN:?TIMEWEB_AI_TOKEN secret is required}"
+
+          if [ "${#JWT_SECRET}" -lt 32 ]; then
+            echo "JWT_SECRET secret must be at least 32 bytes" >&2
+            exit 1
+          fi
+
+          if [ "$JWT_SECRET" = "dev-secret-change-me-please-32+bytes-minimum-0123456789" ]; then
+            echo "JWT_SECRET secret must not use the committed development placeholder" >&2
+            exit 1
+          fi
+
+          if [ "$DB_USERNAME" = "shaha_user" ] || [ "$DB_PASSWORD" = "shaha_password" ]; then
+            echo "DB_USERNAME and DB_PASSWORD secrets must not use committed development defaults" >&2
+            exit 1
+          fi
+
+          remote_command="$(
+            printf 'SERVER_APP_PATH=%q JWT_SECRET=%q DB_USERNAME=%q DB_PASSWORD=%q TIMEWEB_AI_BASE_URL=%q TIMEWEB_AI_TOKEN=%q DEPLOY_IMAGE_TAG=%q bash -s' \
+              "$SERVER_APP_PATH" \
+              "$JWT_SECRET" \
+              "$DB_USERNAME" \
+              "$DB_PASSWORD" \
+              "$TIMEWEB_AI_BASE_URL" \
+              "$TIMEWEB_AI_TOKEN" \
+              "$DEPLOY_IMAGE_TAG"
+          )"
 
           ssh -i ~/.ssh/deploy_key \
             -p "${SERVER_PORT:-22}" \
             -o IdentitiesOnly=yes \
             "$SERVER_USER@$SERVER_HOST" \
-            "SERVER_APP_PATH='$SERVER_APP_PATH' TIMEWEB_AI_BASE_URL='$TIMEWEB_AI_BASE_URL' TIMEWEB_AI_TOKEN='$TIMEWEB_AI_TOKEN' bash -s" <<'REMOTE'
+            "$remote_command" <<'REMOTE'
           set -euo pipefail
+
+          : "${JWT_SECRET:?JWT_SECRET secret is required}"
+          : "${DB_USERNAME:?DB_USERNAME secret is required}"
+          : "${DB_PASSWORD:?DB_PASSWORD secret is required}"
 
           cd "$SERVER_APP_PATH"
 
@@ -73,95 +110,9 @@ jobs:
           git checkout main
           git pull --ff-only origin main
 
-          if docker compose version >/dev/null 2>&1; then
-            COMPOSE="docker compose"
-          elif command -v docker-compose >/dev/null 2>&1; then
-            COMPOSE="docker-compose"
-          else
-            echo "Docker Compose is not installed" >&2
-            exit 1
-          fi
-
-          dump_deploy_diagnostics() {
-            status=$?
-            echo "Remote deploy failed with exit code ${status}" >&2
-            echo "Disk usage:" >&2
-            df -h >&2 || true
-            echo "Memory usage:" >&2
-            free -h >&2 || true
-            echo "Docker disk usage:" >&2
-            docker system df >&2 || true
-            echo "Docker containers:" >&2
-            docker ps -a >&2 || true
-            echo "Compose status:" >&2
-            $COMPOSE -f docker/docker-compose.yml ps postgres backend frontend >&2 || true
-            echo "Compose logs:" >&2
-            $COMPOSE -f docker/docker-compose.yml logs --no-color --tail=200 postgres backend frontend >&2 || true
-            exit "$status"
-          }
-
-          trap dump_deploy_diagnostics ERR
-
           export DOCKER_BUILDKIT=1
           export BUILDKIT_PROGRESS=plain
           export COMPOSE_PROGRESS=plain
 
-          BUILD_PROGRESS_ARGS=""
-          if $COMPOSE -f docker/docker-compose.yml build --help 2>&1 | grep -q -- "--progress"; then
-            BUILD_PROGRESS_ARGS="--progress=plain"
-          fi
-
-          build_services() {
-            $COMPOSE -f docker/docker-compose.yml build $BUILD_PROGRESS_ARGS backend frontend
-          }
-
-          if ! build_services; then
-            echo "Initial Docker build failed; pruning BuildKit cache and retrying once" >&2
-            docker builder prune -af >&2 || true
-            build_services
-          fi
-
-          $COMPOSE -f docker/docker-compose.yml down -v --remove-orphans
-          $COMPOSE -f docker/docker-compose.yml up -d --no-build --remove-orphans backend frontend
-
-          for attempt in {1..30}; do
-            if curl -fsS http://localhost:8080/actuator/health; then
-              backend_ready=1
-              break
-            fi
-
-            echo "Backend is not healthy yet, retry $attempt/30"
-            sleep 5
-          done
-
-          if [ "${backend_ready:-0}" != "1" ]; then
-            echo "Backend did not become healthy in time" >&2
-            $COMPOSE -f docker/docker-compose.yml ps postgres backend frontend
-            $COMPOSE -f docker/docker-compose.yml logs --no-color postgres backend frontend
-            exit 1
-          fi
-
-          for attempt in {1..30}; do
-            if curl -fsS http://localhost/health; then
-              frontend_ready=1
-              break
-            fi
-
-            echo "Frontend is not healthy yet, retry $attempt/30"
-            sleep 5
-          done
-
-          if [ "${frontend_ready:-0}" != "1" ]; then
-            echo "Frontend did not become healthy in time" >&2
-            $COMPOSE -f docker/docker-compose.yml ps postgres backend frontend
-            $COMPOSE -f docker/docker-compose.yml logs --no-color postgres backend frontend
-            exit 1
-          fi
-
-          curl -fsS http://localhost/v3/api-docs >/dev/null
-          curl -fsS http://localhost/swagger-ui.html | grep -q "SwaggerUIBundle"
-          curl -fsS http://localhost/webjars/swagger-ui/5.32.2/swagger-ui.css | grep -q "swagger-ui"
-
-          $COMPOSE -f docker/docker-compose.yml ps postgres backend frontend
-          docker image prune -f
+          bash docker/deploy-blue-green.sh
           REMOTE

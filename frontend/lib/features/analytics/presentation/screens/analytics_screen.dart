@@ -6,14 +6,22 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:frontend/app/theme/app_theme.dart';
 import 'package:frontend/features/analytics/domain/entities/analytics_period.dart';
 import 'package:frontend/features/analytics/domain/entities/analytics_summary.dart';
+import 'package:frontend/features/analytics/domain/entities/mileage_trend.dart';
 import 'package:frontend/features/analytics/presentation/providers/analytics_providers.dart';
 import 'package:frontend/features/parts/presentation/providers/parts_providers.dart';
 import 'package:frontend/features/parts/presentation/widgets/maintenance_forecast_card.dart';
+import 'package:frontend/l10n/generated/app_localizations.dart';
+import 'package:go_router/go_router.dart';
 
 final class AnalyticsScreen extends ConsumerStatefulWidget {
-  const AnalyticsScreen({required this.vehicleId, super.key});
+  const AnalyticsScreen({
+    required this.vehicleId,
+    this.launchedFromChat = false,
+    super.key,
+  });
 
   final String vehicleId;
+  final bool launchedFromChat;
 
   @override
   ConsumerState<AnalyticsScreen> createState() => _AnalyticsScreenState();
@@ -23,6 +31,9 @@ final class _AnalyticsScreenState extends ConsumerState<AnalyticsScreen> {
   static const _pollingInterval = Duration(seconds: 60);
 
   AnalyticsPeriod _selectedPeriod = AnalyticsPeriod.year;
+  AnalyticsDateRange? _selectedDateRange;
+  int _selectedMileageYear = DateTime.now().year;
+  int? _selectedMileageMonth;
   Timer? _pollingTimer;
 
   @override
@@ -33,8 +44,22 @@ final class _AnalyticsScreenState extends ConsumerState<AnalyticsScreen> {
         return;
       }
 
-      final request = (vehicleId: widget.vehicleId, period: _selectedPeriod);
-      ref.invalidate(analyticsSummaryProvider(request));
+      ref.invalidate(
+        analyticsSummaryProvider((
+          vehicleId: widget.vehicleId,
+          period: _selectedPeriod,
+          dateRange: _selectedDateRange,
+        )),
+      );
+      ref.invalidate(
+        mileageTrendProvider((
+          vehicleId: widget.vehicleId,
+          filter: MileageTrendFilter(
+            year: _selectedMileageYear,
+            month: _selectedMileageMonth,
+          ),
+        )),
+      );
     });
   }
 
@@ -46,23 +71,69 @@ final class _AnalyticsScreenState extends ConsumerState<AnalyticsScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final request = (vehicleId: widget.vehicleId, period: _selectedPeriod);
+    final request = (
+      vehicleId: widget.vehicleId,
+      period: _selectedPeriod,
+      dateRange: _selectedDateRange,
+    );
+    final l10n = AppLocalizations.of(context);
     final summaryState = ref.watch(analyticsSummaryProvider(request));
+    final mileageTrendRequest = (
+      vehicleId: widget.vehicleId,
+      filter: MileageTrendFilter(
+        year: _selectedMileageYear,
+        month: _selectedMileageMonth,
+      ),
+    );
+    final mileageTrendState = ref.watch(
+      mileageTrendProvider(mileageTrendRequest),
+    );
 
     return Scaffold(
+      appBar: widget.launchedFromChat
+          ? AppBar(
+              leading: IconButton(
+                onPressed: () =>
+                    context.go('/vehicle/${widget.vehicleId}/chat'),
+                tooltip: 'Back to chat',
+                icon: const Icon(Icons.chevron_left_rounded, size: 32),
+              ),
+              title: Text(l10n.analytics),
+            )
+          : null,
       body: SafeArea(
         child: summaryState.when(
           data: (summary) {
             if (!summary.hasEnoughData) {
-              return _AnalyticsEmptyState(summary: summary);
+              return _AnalyticsEmptyState(
+                summary: summary,
+                vehicleId: widget.vehicleId,
+              );
             }
 
             return _AnalyticsDashboard(
               summary: summary,
               vehicleId: widget.vehicleId,
               selectedPeriod: _selectedPeriod,
+              selectedDateRange: _selectedDateRange,
+              mileageTrendState: mileageTrendState,
+              selectedMileageYear: _selectedMileageYear,
+              selectedMileageMonth: _selectedMileageMonth,
               onPeriodSelected: (period) {
-                setState(() => _selectedPeriod = period);
+                setState(() {
+                  _selectedPeriod = period;
+                  _selectedDateRange = null;
+                });
+              },
+              onDateRangeSelected: _selectDateRange,
+              onDateRangeCleared: () {
+                setState(() => _selectedDateRange = null);
+              },
+              onMileageYearSelected: (year) {
+                setState(() => _selectedMileageYear = year);
+              },
+              onMileageMonthSelected: (month) {
+                setState(() => _selectedMileageMonth = month);
               },
             );
           },
@@ -70,11 +141,41 @@ final class _AnalyticsScreenState extends ConsumerState<AnalyticsScreen> {
           error: (error, stackTrace) => _AnalyticsErrorState(
             onRetry: () {
               ref.invalidate(analyticsSummaryProvider(request));
+              ref.invalidate(mileageTrendProvider(mileageTrendRequest));
             },
           ),
         ),
       ),
     );
+  }
+
+  Future<void> _selectDateRange() async {
+    final now = DateTime.now();
+    final initialRange = _selectedDateRange;
+    final pickedRange = await showDateRangePicker(
+      context: context,
+      firstDate: DateTime(now.year - 10),
+      lastDate: now,
+      initialDateRange: DateTimeRange(
+        start:
+            initialRange?.startDate ?? now.subtract(const Duration(days: 30)),
+        end: initialRange?.endDate ?? now,
+      ),
+      builder: (context, child) {
+        return Theme(data: Theme.of(context), child: child!);
+      },
+    );
+
+    if (pickedRange == null || !mounted) {
+      return;
+    }
+
+    setState(() {
+      _selectedDateRange = AnalyticsDateRange(
+        startDate: pickedRange.start,
+        endDate: pickedRange.end,
+      );
+    });
   }
 }
 
@@ -83,16 +184,33 @@ final class _AnalyticsDashboard extends StatelessWidget {
     required this.summary,
     required this.vehicleId,
     required this.selectedPeriod,
+    required this.selectedDateRange,
+    required this.mileageTrendState,
+    required this.selectedMileageYear,
+    required this.selectedMileageMonth,
     required this.onPeriodSelected,
+    required this.onDateRangeSelected,
+    required this.onDateRangeCleared,
+    required this.onMileageYearSelected,
+    required this.onMileageMonthSelected,
   });
 
   final AnalyticsSummary summary;
   final String vehicleId;
   final AnalyticsPeriod selectedPeriod;
+  final AnalyticsDateRange? selectedDateRange;
+  final AsyncValue<MileageTrend> mileageTrendState;
+  final int selectedMileageYear;
+  final int? selectedMileageMonth;
   final ValueChanged<AnalyticsPeriod> onPeriodSelected;
+  final VoidCallback onDateRangeSelected;
+  final VoidCallback onDateRangeCleared;
+  final ValueChanged<int> onMileageYearSelected;
+  final ValueChanged<int?> onMileageMonthSelected;
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     final charts = summary.charts!;
 
     return ListView(
@@ -104,7 +222,7 @@ final class _AnalyticsDashboard extends StatelessWidget {
       ),
       children: [
         Text(
-          'Intelligence',
+          l10n.intelligence,
           style: Theme.of(context).textTheme.headlineLarge?.copyWith(
             color: AppColors.primaryLight,
             fontSize: 28,
@@ -112,10 +230,10 @@ final class _AnalyticsDashboard extends StatelessWidget {
           ),
         ),
         const SizedBox(height: 42),
-        Text('Analytics', style: Theme.of(context).textTheme.headlineMedium),
+        Text(l10n.analytics, style: Theme.of(context).textTheme.headlineMedium),
         const SizedBox(height: AppSpacing.sm),
         Text(
-          'Performance and spending overview',
+          l10n.performanceOverview,
           style: Theme.of(
             context,
           ).textTheme.bodyLarge?.copyWith(color: AppColors.textSecondary),
@@ -125,21 +243,41 @@ final class _AnalyticsDashboard extends StatelessWidget {
           selectedPeriod: selectedPeriod,
           onSelected: onPeriodSelected,
         ),
+        const SizedBox(height: AppSpacing.md),
+        _DateRangeSelector(
+          selectedDateRange: selectedDateRange,
+          onSelect: onDateRangeSelected,
+          onClear: onDateRangeCleared,
+        ),
         const SizedBox(height: AppSpacing.xl),
         _AnalyticsSummaryCard(summary: summary),
         const SizedBox(height: AppSpacing.xxl),
         _SectionHeader(
-          title: 'SEASONAL EXPENSES',
-          trailing: 'TOTAL: ${_formatMoney(summary.totalExpenses!.amount)}',
+          title: l10n.seasonalExpenses,
+          trailing: l10n.totalAmount(
+            _formatMoney(summary.totalExpenses!.amount),
+          ),
         ),
         const SizedBox(height: AppSpacing.md),
         _ChartCard(
           points: charts.expensesByMonth,
           valueFormatter: (value) => _formatMoney(value.round()),
-          legend: 'Monthly expense trend',
+          legend: l10n.monthlyExpenseTrend,
           accentColor: AppColors.primaryLight,
           chartType: _ChartType.line,
           trendPercent: summary.trendPercent,
+          labelFormatter: (label) => _localizedChartLabel(l10n, label),
+          axisValueFormatter: _formatCompactMoney,
+        ),
+        const SizedBox(height: AppSpacing.xxl),
+        _SectionHeader(title: l10n.mileageTrend),
+        const SizedBox(height: AppSpacing.md),
+        _MileageTrendCard(
+          trendState: mileageTrendState,
+          selectedYear: selectedMileageYear,
+          selectedMonth: selectedMileageMonth,
+          onYearSelected: onMileageYearSelected,
+          onMonthSelected: onMileageMonthSelected,
         ),
         const SizedBox(height: AppSpacing.xxl),
         Consumer(
@@ -151,7 +289,7 @@ final class _AnalyticsDashboard extends StatelessWidget {
               ),
         ),
         const SizedBox(height: AppSpacing.xxl),
-        const _SectionHeader(title: 'HISTORY ANALYSIS'),
+        _SectionHeader(title: l10n.historyAnalysis),
         const SizedBox(height: AppSpacing.md),
         _HistoryAnalysisCard(summary: summary),
       ],
@@ -205,12 +343,80 @@ final class _PeriodSelector extends StatelessWidget {
                     letterSpacing: 0.6,
                   ),
                 ),
-                child: Text(_periodLabel(period)),
+                child: Text(_periodLabel(AppLocalizations.of(context), period)),
               ),
             ),
           ),
           if (period != AnalyticsPeriod.values.last)
             const SizedBox(width: AppSpacing.sm),
+        ],
+      ],
+    );
+  }
+}
+
+final class _DateRangeSelector extends StatelessWidget {
+  const _DateRangeSelector({
+    required this.selectedDateRange,
+    required this.onSelect,
+    required this.onClear,
+  });
+
+  final AnalyticsDateRange? selectedDateRange;
+  final VoidCallback onSelect;
+  final VoidCallback onClear;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+    final dateRange = selectedDateRange;
+
+    return Row(
+      children: [
+        Expanded(
+          child: OutlinedButton.icon(
+            key: const ValueKey('analytics-custom-date-range'),
+            onPressed: onSelect,
+            icon: const Icon(Icons.calendar_month_outlined, size: 18),
+            label: Text(
+              dateRange == null ? l10n.customRange : _dateRangeLabel(dateRange),
+              overflow: TextOverflow.ellipsis,
+            ),
+            style: OutlinedButton.styleFrom(
+              foregroundColor: dateRange == null
+                  ? AppColors.textSecondary
+                  : AppColors.primaryLight,
+              side: BorderSide(
+                color: dateRange == null
+                    ? AppColors.border
+                    : AppColors.primaryLight,
+              ),
+              shape: const RoundedRectangleBorder(
+                borderRadius: AppRadius.input,
+              ),
+              minimumSize: const Size(0, 44),
+              padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md),
+              textStyle: Theme.of(
+                context,
+              ).textTheme.labelMedium?.copyWith(fontWeight: FontWeight.w800),
+            ),
+          ),
+        ),
+        if (dateRange != null) ...[
+          const SizedBox(width: AppSpacing.sm),
+          IconButton(
+            key: const ValueKey('analytics-clear-date-range'),
+            tooltip: l10n.clearCustomRange,
+            onPressed: onClear,
+            icon: const Icon(Icons.close),
+            style: IconButton.styleFrom(
+              foregroundColor: AppColors.textSecondary,
+              backgroundColor: AppColors.surfaceHigh,
+              shape: const RoundedRectangleBorder(
+                borderRadius: AppRadius.input,
+              ),
+            ),
+          ),
         ],
       ],
     );
@@ -224,6 +430,7 @@ final class _AnalyticsSummaryCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     final totalExpenses = summary.totalExpenses!;
     final mileage = summary.mileage!;
 
@@ -233,7 +440,7 @@ final class _AnalyticsSummaryCard extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            '${_periodAdjective(summary.period)} EXPENSES',
+            l10n.expensesLabel(_periodAdjective(l10n, summary.period)),
             style: Theme.of(context).textTheme.labelMedium?.copyWith(
               color: AppColors.textSecondary,
               letterSpacing: 1.2,
@@ -264,7 +471,7 @@ final class _AnalyticsSummaryCard extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      'COST PER KM',
+                      l10n.costPerKm,
                       style: Theme.of(context).textTheme.bodySmall?.copyWith(
                         color: AppColors.success,
                         letterSpacing: 0.7,
@@ -314,7 +521,10 @@ final class _ExpenseCategoryGrid extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      _categoryLabel(category.category).toUpperCase(),
+                      _categoryLabel(
+                        AppLocalizations.of(context),
+                        category.category,
+                      ).toUpperCase(),
                       style: Theme.of(
                         context,
                       ).textTheme.bodySmall?.copyWith(letterSpacing: 0.7),
@@ -376,6 +586,8 @@ final class _ChartCard extends StatelessWidget {
     required this.accentColor,
     this.chartType = _ChartType.bar,
     this.trendPercent,
+    this.labelFormatter,
+    this.axisValueFormatter,
   });
 
   final List<AnalyticsChartPoint> points;
@@ -384,6 +596,8 @@ final class _ChartCard extends StatelessWidget {
   final Color accentColor;
   final _ChartType chartType;
   final double? trendPercent;
+  final String Function(String label)? labelFormatter;
+  final String Function(double value)? axisValueFormatter;
 
   @override
   Widget build(BuildContext context) {
@@ -401,6 +615,8 @@ final class _ChartCard extends StatelessWidget {
                 points: points,
                 accentColor: accentColor,
                 type: chartType,
+                labelFormatter: labelFormatter,
+                valueFormatter: axisValueFormatter ?? valueFormatter,
               ),
             ),
           ),
@@ -423,7 +639,9 @@ final class _ChartCard extends StatelessWidget {
                 ),
               ),
               Text(
-                'Avg: ${valueFormatter(average)}',
+                AppLocalizations.of(
+                  context,
+                ).averageLabel(valueFormatter(average)),
                 style: Theme.of(context).textTheme.labelMedium?.copyWith(
                   color: AppColors.primaryLight,
                 ),
@@ -436,6 +654,201 @@ final class _ChartCard extends StatelessWidget {
           ),
         ],
       ),
+    );
+  }
+}
+
+final class _MileageTrendCard extends StatelessWidget {
+  const _MileageTrendCard({
+    required this.trendState,
+    required this.selectedYear,
+    required this.selectedMonth,
+    required this.onYearSelected,
+    required this.onMonthSelected,
+  });
+
+  final AsyncValue<MileageTrend> trendState;
+  final int selectedYear;
+  final int? selectedMonth;
+  final ValueChanged<int> onYearSelected;
+  final ValueChanged<int?> onMonthSelected;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+
+    return _DashboardCard(
+      padding: const EdgeInsets.all(AppSpacing.lg),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          LayoutBuilder(
+            builder: (context, constraints) {
+              final compact = constraints.maxWidth < 360;
+              final children = [
+                _MileageFilterDropdown<int>(
+                  key: const ValueKey('analytics-mileage-year-filter'),
+                  value: selectedYear,
+                  items: [
+                    for (final year in _mileageYearOptions())
+                      DropdownMenuItem(value: year, child: Text('$year')),
+                  ],
+                  onChanged: (year) {
+                    if (year != null) {
+                      onYearSelected(year);
+                    }
+                  },
+                ),
+                _MileageFilterDropdown<int>(
+                  key: const ValueKey('analytics-mileage-month-filter'),
+                  value: selectedMonth ?? 0,
+                  items: [
+                    DropdownMenuItem(value: 0, child: Text(l10n.allMonths)),
+                    for (var month = 1; month <= 12; month++)
+                      DropdownMenuItem(
+                        value: month,
+                        child: Text(_monthName(l10n, month)),
+                      ),
+                  ],
+                  onChanged: (month) {
+                    onMonthSelected(month == null || month == 0 ? null : month);
+                  },
+                ),
+              ];
+
+              if (compact) {
+                return Column(
+                  children: [
+                    for (var index = 0; index < children.length; index++) ...[
+                      children[index],
+                      if (index != children.length - 1)
+                        const SizedBox(height: AppSpacing.sm),
+                    ],
+                  ],
+                );
+              }
+
+              return Row(
+                children: [
+                  Expanded(child: children.first),
+                  const SizedBox(width: AppSpacing.sm),
+                  Expanded(child: children.last),
+                ],
+              );
+            },
+          ),
+          const SizedBox(height: AppSpacing.lg),
+          trendState.when(
+            data: (trend) {
+              if (!trend.hasData || trend.points.isEmpty) {
+                return _UnavailableText(
+                  message: l10n.mileageDataUnavailableForFilter,
+                );
+              }
+
+              final chartPoints = [
+                for (final point in trend.points)
+                  AnalyticsChartPoint(
+                    label: point.label,
+                    value: point.mileageKm.toDouble(),
+                  ),
+              ];
+
+              return Column(
+                children: [
+                  SizedBox(
+                    height: 160,
+                    width: double.infinity,
+                    child: CustomPaint(
+                      painter: _AnalyticsChartPainter(
+                        points: chartPoints,
+                        accentColor: AppColors.success,
+                        type: _ChartType.line,
+                        labelFormatter: (label) =>
+                            _localizedChartLabel(l10n, label),
+                        valueFormatter: _formatCompactKilometers,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: AppSpacing.md),
+                  Row(
+                    children: [
+                      Container(
+                        width: 12,
+                        height: 12,
+                        decoration: const BoxDecoration(
+                          color: AppColors.success,
+                          shape: BoxShape.circle,
+                        ),
+                      ),
+                      const SizedBox(width: AppSpacing.sm),
+                      Expanded(
+                        child: Text(
+                          selectedMonth == null
+                              ? l10n.accumulatedMileageByMonth
+                              : l10n.accumulatedMileageByDay,
+                          style: Theme.of(context).textTheme.labelMedium,
+                        ),
+                      ),
+                      Text(
+                        '${_formatNumber(trend.points.last.mileageKm)} km',
+                        style: Theme.of(context).textTheme.labelMedium
+                            ?.copyWith(color: AppColors.primaryLight),
+                      ),
+                    ],
+                  ),
+                ],
+              );
+            },
+            loading: () => const SizedBox(
+              height: 160,
+              child: Center(child: CircularProgressIndicator()),
+            ),
+            error: (error, stackTrace) =>
+                _UnavailableText(message: l10n.couldNotLoadMileageTrend),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+final class _MileageFilterDropdown<T> extends StatelessWidget {
+  const _MileageFilterDropdown({
+    required this.value,
+    required this.items,
+    required this.onChanged,
+    super.key,
+  });
+
+  final T value;
+  final List<DropdownMenuItem<T>> items;
+  final ValueChanged<T?> onChanged;
+
+  @override
+  Widget build(BuildContext context) {
+    return DropdownButtonFormField<T>(
+      initialValue: value,
+      items: items,
+      onChanged: onChanged,
+      dropdownColor: AppColors.surfaceHigh,
+      decoration: const InputDecoration(
+        isDense: true,
+        contentPadding: EdgeInsets.symmetric(
+          horizontal: AppSpacing.md,
+          vertical: AppSpacing.sm,
+        ),
+        enabledBorder: OutlineInputBorder(
+          borderRadius: AppRadius.input,
+          borderSide: BorderSide(color: AppColors.border),
+        ),
+        focusedBorder: OutlineInputBorder(
+          borderRadius: AppRadius.input,
+          borderSide: BorderSide(color: AppColors.primaryLight),
+        ),
+      ),
+      style: Theme.of(context).textTheme.labelMedium,
+      iconEnabledColor: AppColors.textSecondary,
     );
   }
 }
@@ -456,7 +869,7 @@ final class _HistoryAnalysisCard extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            'PERFORMANCE TREND OVER TIME',
+            AppLocalizations.of(context).performanceTrendOverTime,
             style: Theme.of(context).textTheme.bodySmall?.copyWith(
               color: AppColors.textSecondary,
               letterSpacing: 0.8,
@@ -472,6 +885,7 @@ final class _HistoryAnalysisCard extends StatelessWidget {
                 accentColor: AppColors.success,
                 type: _ChartType.bar,
                 showLabels: false,
+                valueFormatter: _formatCompactKilometers,
               ),
             ),
           ),
@@ -490,16 +904,20 @@ final class _HistoryAnalysisCard extends StatelessWidget {
                   SizedBox(
                     width: itemWidth,
                     child: history == null
-                        ? const _UnavailableText(
-                            message: 'Company metrics are not available',
+                        ? _UnavailableText(
+                            message: AppLocalizations.of(
+                              context,
+                            ).companyMetricsUnavailable,
                           )
                         : _CompanyMetrics(history: history),
                   ),
                   SizedBox(
                     width: itemWidth,
                     child: history == null
-                        ? const _UnavailableText(
-                            message: 'Counts are not available',
+                        ? _UnavailableText(
+                            message: AppLocalizations.of(
+                              context,
+                            ).countsUnavailable,
                           )
                         : _HistoryCounts(history: history),
                   ),
@@ -524,7 +942,7 @@ final class _CompanyMetrics extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          'COMPANY METRICS',
+          AppLocalizations.of(context).companyMetrics,
           style: Theme.of(context).textTheme.bodySmall?.copyWith(
             color: AppColors.textSecondary,
             letterSpacing: 0.7,
@@ -533,7 +951,10 @@ final class _CompanyMetrics extends StatelessWidget {
         const SizedBox(height: AppSpacing.sm),
         for (final metric in history.companyMetrics) ...[
           _MetricBullet(
-            label: metric.label,
+            label: _companyMetricLabel(
+              AppLocalizations.of(context),
+              metric.label,
+            ),
             value: '${metric.value}/${metric.maxValue}',
           ),
           if (metric != history.companyMetrics.last)
@@ -542,6 +963,17 @@ final class _CompanyMetrics extends StatelessWidget {
       ],
     );
   }
+}
+
+String _companyMetricLabel(AppLocalizations l10n, String label) {
+  return switch (label.trim().toLowerCase()) {
+    'events' => l10n.eventsMetric,
+    'trip km' || 'trip kilometers' => l10n.tripKmMetric,
+    'reliability' => l10n.reliabilityMetric,
+    'efficiency' => l10n.efficiencyMetric,
+    'maintenance load' => l10n.maintenanceLoadMetric,
+    _ => label,
+  };
 }
 
 final class _HistoryCounts extends StatelessWidget {
@@ -555,7 +987,7 @@ final class _HistoryCounts extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          'KEY COUNTS',
+          AppLocalizations.of(context).keyCounts,
           style: Theme.of(context).textTheme.bodySmall?.copyWith(
             color: AppColors.textSecondary,
             letterSpacing: 0.7,
@@ -563,12 +995,12 @@ final class _HistoryCounts extends StatelessWidget {
         ),
         const SizedBox(height: AppSpacing.sm),
         _MetricBullet(
-          label: 'Subscription',
+          label: AppLocalizations.of(context).subscription,
           value: '${history.subscriptionCount}',
         ),
         const SizedBox(height: AppSpacing.xs),
         _MetricBullet(
-          label: 'Electronics',
+          label: AppLocalizations.of(context).electronics,
           value: '${history.electronicsCount}',
         ),
       ],
@@ -686,12 +1118,14 @@ final class _DashboardCard extends StatelessWidget {
 }
 
 final class _AnalyticsEmptyState extends StatelessWidget {
-  const _AnalyticsEmptyState({required this.summary});
+  const _AnalyticsEmptyState({required this.summary, required this.vehicleId});
 
   final AnalyticsSummary summary;
+  final String vehicleId;
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     return Center(
       child: SingleChildScrollView(
         padding: const EdgeInsets.all(AppSpacing.xl),
@@ -705,26 +1139,35 @@ final class _AnalyticsEmptyState extends StatelessWidget {
             ),
             const SizedBox(height: AppSpacing.lg),
             Text(
-              'Not enough data for analytics',
+              l10n.notEnoughAnalytics,
               textAlign: TextAlign.center,
               style: Theme.of(context).textTheme.titleLarge,
             ),
             const SizedBox(height: AppSpacing.sm),
             Text(
-              summary.message ??
-                  'Add trips, refueling, repairs, or maintenance records.',
+              l10n.analyticsEmptyDescription,
               textAlign: TextAlign.center,
               style: Theme.of(context).textTheme.bodyMedium,
             ),
             const SizedBox(height: AppSpacing.xl),
-            const Wrap(
+            Wrap(
               alignment: WrapAlignment.center,
               spacing: AppSpacing.sm,
               runSpacing: AppSpacing.sm,
               children: [
-                _SuggestionChip(label: 'Add trip'),
-                _SuggestionChip(label: 'Add refueling'),
-                _SuggestionChip(label: 'Add repair'),
+                _SuggestionChip(
+                  label: l10n.addTrip,
+                  onPressed: () => _openHistoryAdd(context, type: 'trip'),
+                ),
+                _SuggestionChip(
+                  label: l10n.addRefuel,
+                  onPressed: () => _openHistoryAdd(context),
+                ),
+                _SuggestionChip(
+                  label: l10n.addRepair,
+                  onPressed: () =>
+                      _openHistoryAdd(context, type: 'maintenance'),
+                ),
               ],
             ),
           ],
@@ -732,16 +1175,26 @@ final class _AnalyticsEmptyState extends StatelessWidget {
       ),
     );
   }
+
+  void _openHistoryAdd(BuildContext context, {String? type}) {
+    final route = Uri(
+      path: '/vehicle/$vehicleId/history/add',
+      queryParameters: type == null ? null : {'type': type},
+    ).toString();
+    unawaited(context.push(route));
+  }
 }
 
 final class _SuggestionChip extends StatelessWidget {
-  const _SuggestionChip({required this.label});
+  const _SuggestionChip({required this.label, required this.onPressed});
 
   final String label;
+  final VoidCallback onPressed;
 
   @override
   Widget build(BuildContext context) {
-    return Chip(
+    return ActionChip(
+      onPressed: onPressed,
       label: Text(label),
       backgroundColor: AppColors.surfaceHigh,
       side: const BorderSide(color: AppColors.border),
@@ -767,6 +1220,7 @@ final class _AnalyticsErrorState extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     return Center(
       child: Padding(
         padding: const EdgeInsets.all(AppSpacing.xl),
@@ -774,12 +1228,12 @@ final class _AnalyticsErrorState extends StatelessWidget {
           mainAxisSize: MainAxisSize.min,
           children: [
             Text(
-              'Could not load analytics',
+              l10n.couldNotLoadAnalytics,
               textAlign: TextAlign.center,
               style: Theme.of(context).textTheme.titleLarge,
             ),
             const SizedBox(height: AppSpacing.md),
-            TextButton(onPressed: onRetry, child: const Text('Retry')),
+            TextButton(onPressed: onRetry, child: Text(l10n.retry)),
           ],
         ),
       ),
@@ -795,12 +1249,16 @@ final class _AnalyticsChartPainter extends CustomPainter {
     required this.accentColor,
     required this.type,
     this.showLabels = true,
+    this.labelFormatter,
+    this.valueFormatter = _formatCompactNumber,
   });
 
   final List<AnalyticsChartPoint> points;
   final Color accentColor;
   final _ChartType type;
   final bool showLabels;
+  final String Function(String label)? labelFormatter;
+  final String Function(double value) valueFormatter;
 
   @override
   void paint(Canvas canvas, Size size) {
@@ -808,48 +1266,87 @@ final class _AnalyticsChartPainter extends CustomPainter {
       return;
     }
 
-    final chartHeight = showLabels ? size.height - 26 : size.height;
+    const axisWidth = 46.0;
+    const rightPadding = 4.0;
+    const topPadding = 10.0;
+    final bottomPadding = showLabels ? 26.0 : 4.0;
+    final plotRect = Rect.fromLTRB(
+      axisWidth,
+      topPadding,
+      size.width - rightPadding,
+      size.height - bottomPadding,
+    );
+    if (plotRect.width <= 0 || plotRect.height <= 0) {
+      return;
+    }
+
+    final maxValue = _niceAxisMax(
+      points.map((point) => point.value).reduce(math.max),
+    );
+
+    _drawValueAxis(canvas, plotRect, maxValue);
+
     final gridPaint = Paint()
       ..color = AppColors.border.withValues(alpha: 0.6)
       ..strokeWidth = 1;
-    for (var index = 0; index < 4; index++) {
-      final y = chartHeight * index / 3;
-      canvas.drawLine(Offset(0, y), Offset(size.width, y), gridPaint);
+    for (var index = 0; index <= 4; index++) {
+      final y = plotRect.top + (plotRect.height * index / 4);
+      canvas.drawLine(
+        Offset(plotRect.left, y),
+        Offset(plotRect.right, y),
+        gridPaint,
+      );
     }
-
-    final maxValue = points
-        .map((point) => point.value)
-        .reduce(math.max)
-        .clamp(1, double.infinity)
-        .toDouble();
 
     switch (type) {
       case _ChartType.bar:
-        _drawBars(canvas, size, chartHeight, maxValue);
+        _drawBars(canvas, plotRect, maxValue);
       case _ChartType.line:
-        _drawLine(canvas, size, chartHeight, maxValue);
+        _drawLine(canvas, plotRect, maxValue);
     }
 
     if (showLabels) {
-      _drawLabels(canvas, size, chartHeight);
+      _drawLabels(canvas, plotRect);
     }
   }
 
-  void _drawBars(
-    Canvas canvas,
-    Size size,
-    double chartHeight,
-    double maxValue,
-  ) {
-    final slotWidth = size.width / points.length;
+  void _drawValueAxis(Canvas canvas, Rect plotRect, double maxValue) {
+    for (var index = 0; index <= 4; index++) {
+      final value = maxValue * (4 - index) / 4;
+      final y = plotRect.top + (plotRect.height * index / 4);
+      final painter = TextPainter(
+        text: TextSpan(
+          text: valueFormatter(value),
+          style: const TextStyle(
+            color: AppColors.textSecondary,
+            fontSize: 10,
+            fontWeight: FontWeight.w600,
+          ),
+        ),
+        textAlign: TextAlign.right,
+        textDirection: TextDirection.ltr,
+      )..layout(maxWidth: plotRect.left - AppSpacing.xs);
+      painter.paint(
+        canvas,
+        Offset(
+          plotRect.left - AppSpacing.xs - painter.width,
+          y - (painter.height / 2),
+        ),
+      );
+    }
+  }
+
+  void _drawBars(Canvas canvas, Rect plotRect, double maxValue) {
+    final slotWidth = plotRect.width / points.length;
     final barWidth = math.min(42.0, slotWidth * 0.62);
     final paint = Paint()..color = accentColor.withValues(alpha: 0.72);
 
     for (var index = 0; index < points.length; index++) {
       final value = points[index].value;
-      final barHeight = chartHeight * (value / maxValue);
-      final left = (slotWidth * index) + ((slotWidth - barWidth) / 2);
-      final top = chartHeight - barHeight;
+      final barHeight = plotRect.height * (value / maxValue);
+      final left =
+          plotRect.left + (slotWidth * index) + ((slotWidth - barWidth) / 2);
+      final top = plotRect.bottom - barHeight;
       final rect = Rect.fromLTWH(left, top, barWidth, barHeight);
       canvas.drawRRect(
         RRect.fromRectAndRadius(rect, const Radius.circular(5)),
@@ -858,25 +1355,25 @@ final class _AnalyticsChartPainter extends CustomPainter {
     }
   }
 
-  void _drawLine(
-    Canvas canvas,
-    Size size,
-    double chartHeight,
-    double maxValue,
-  ) {
+  void _drawLine(Canvas canvas, Rect plotRect, double maxValue) {
     final path = Path();
     final fillPath = Path();
-    final step = points.length == 1 ? 0.0 : size.width / (points.length - 1);
+    final step = points.length == 1
+        ? 0.0
+        : plotRect.width / (points.length - 1);
 
     for (var index = 0; index < points.length; index++) {
-      final x = points.length == 1 ? size.width / 2 : step * index;
-      final y = chartHeight - (chartHeight * points[index].value / maxValue);
+      final x = points.length == 1
+          ? plotRect.left + (plotRect.width / 2)
+          : plotRect.left + (step * index);
+      final y =
+          plotRect.bottom - (plotRect.height * points[index].value / maxValue);
       final offset = Offset(x, y);
 
       if (index == 0) {
         path.moveTo(offset.dx, offset.dy);
         fillPath
-          ..moveTo(offset.dx, chartHeight)
+          ..moveTo(offset.dx, plotRect.bottom)
           ..lineTo(offset.dx, offset.dy);
       } else {
         path.lineTo(offset.dx, offset.dy);
@@ -887,7 +1384,7 @@ final class _AnalyticsChartPainter extends CustomPainter {
     }
 
     fillPath
-      ..lineTo(size.width, chartHeight)
+      ..lineTo(plotRect.right, plotRect.bottom)
       ..close();
     canvas.drawPath(
       fillPath,
@@ -903,13 +1400,15 @@ final class _AnalyticsChartPainter extends CustomPainter {
     );
   }
 
-  void _drawLabels(Canvas canvas, Size size, double chartHeight) {
-    final slotWidth = size.width / points.length;
+  void _drawLabels(Canvas canvas, Rect plotRect) {
+    final slotWidth = plotRect.width / points.length;
 
     for (var index = 0; index < points.length; index++) {
       final painter = TextPainter(
         text: TextSpan(
-          text: points[index].label.toUpperCase(),
+          text:
+              (labelFormatter?.call(points[index].label) ?? points[index].label)
+                  .toUpperCase(),
           style: const TextStyle(
             color: AppColors.textSecondary,
             fontSize: 10,
@@ -918,8 +1417,11 @@ final class _AnalyticsChartPainter extends CustomPainter {
         ),
         textDirection: TextDirection.ltr,
       )..layout(maxWidth: slotWidth);
-      final x = (slotWidth * index) + ((slotWidth - painter.width) / 2);
-      painter.paint(canvas, Offset(x, chartHeight + AppSpacing.sm));
+      final x =
+          plotRect.left +
+          (slotWidth * index) +
+          ((slotWidth - painter.width) / 2);
+      painter.paint(canvas, Offset(x, plotRect.bottom + AppSpacing.sm));
     }
   }
 
@@ -928,37 +1430,163 @@ final class _AnalyticsChartPainter extends CustomPainter {
     return points != oldDelegate.points ||
         accentColor != oldDelegate.accentColor ||
         type != oldDelegate.type ||
-        showLabels != oldDelegate.showLabels;
+        showLabels != oldDelegate.showLabels ||
+        labelFormatter != oldDelegate.labelFormatter ||
+        valueFormatter != oldDelegate.valueFormatter;
   }
 }
 
-String _periodLabel(AnalyticsPeriod period) {
+String _periodLabel(AppLocalizations l10n, AnalyticsPeriod period) {
   return switch (period) {
-    AnalyticsPeriod.month => 'MONTH',
-    AnalyticsPeriod.year => 'YEAR',
-    AnalyticsPeriod.all => 'ALL TIME',
+    AnalyticsPeriod.month => l10n.month,
+    AnalyticsPeriod.year => l10n.yearPeriod,
+    AnalyticsPeriod.all => l10n.allTime,
   };
 }
 
-String _periodAdjective(AnalyticsPeriod period) {
+String _periodAdjective(AppLocalizations l10n, AnalyticsPeriod period) {
   return switch (period) {
-    AnalyticsPeriod.month => 'MONTHLY',
-    AnalyticsPeriod.year => 'ANNUAL',
-    AnalyticsPeriod.all => 'ALL-TIME',
+    AnalyticsPeriod.month => l10n.monthly,
+    AnalyticsPeriod.year => l10n.annual,
+    AnalyticsPeriod.all => l10n.allTimeAdjective,
   };
 }
 
-String _categoryLabel(ExpenseCategory category) {
+String _monthName(AppLocalizations l10n, int month) {
+  return switch (month) {
+    1 => l10n.january,
+    2 => l10n.february,
+    3 => l10n.march,
+    4 => l10n.april,
+    5 => l10n.may,
+    6 => l10n.june,
+    7 => l10n.july,
+    8 => l10n.august,
+    9 => l10n.september,
+    10 => l10n.october,
+    11 => l10n.november,
+    12 => l10n.december,
+    _ => month.toString(),
+  };
+}
+
+String _shortMonthName(AppLocalizations l10n, int month) {
+  final name = _monthName(l10n, month);
+  return name.length <= 3 ? name : name.substring(0, 3);
+}
+
+String _localizedChartLabel(AppLocalizations l10n, String label) {
+  final normalized = label.trim().toLowerCase();
+  final parts = normalized.split(RegExp(r'\s+'));
+  final leadingMonth = _monthNumber(parts.first);
+  if (leadingMonth != null) {
+    final monthLabel = _shortMonthName(l10n, leadingMonth);
+    return parts.length > 1
+        ? '$monthLabel ${parts.sublist(1).join(' ')}'
+        : monthLabel;
+  }
+
+  final monthValue = int.tryParse(normalized);
+  if (monthValue != null && monthValue >= 1 && monthValue <= 12) {
+    return _shortMonthName(l10n, monthValue);
+  }
+
+  return switch (normalized) {
+    'winter' => l10n.winter,
+    'spring' => l10n.spring,
+    'summer' => l10n.summer,
+    'autumn' || 'fall' => l10n.autumn,
+    _ => label,
+  };
+}
+
+int? _monthNumber(String label) {
+  return switch (label) {
+    'jan' || 'january' => 1,
+    'feb' || 'february' => 2,
+    'mar' || 'march' => 3,
+    'apr' || 'april' => 4,
+    'may' => 5,
+    'jun' || 'june' => 6,
+    'jul' || 'july' => 7,
+    'aug' || 'august' => 8,
+    'sep' || 'september' => 9,
+    'oct' || 'october' => 10,
+    'nov' || 'november' => 11,
+    'dec' || 'december' => 12,
+    _ => null,
+  };
+}
+
+double _niceAxisMax(double value) {
+  if (value <= 0) return 1;
+
+  final exponent = (math.log(value) / math.ln10).floor();
+  final magnitude = math.pow(10, exponent).toDouble();
+  final normalized = value / magnitude;
+  final niceNormalized = switch (normalized) {
+    <= 1 => 1,
+    <= 2 => 2,
+    <= 5 => 5,
+    _ => 10,
+  };
+
+  return niceNormalized * magnitude;
+}
+
+String _dateRangeLabel(AnalyticsDateRange dateRange) {
+  return '${_dateLabel(dateRange.startDate)} - ${_dateLabel(dateRange.endDate)}';
+}
+
+String _dateLabel(DateTime date) {
+  final day = date.day.toString().padLeft(2, '0');
+  final month = date.month.toString().padLeft(2, '0');
+  return '$day.$month.${date.year}';
+}
+
+List<int> _mileageYearOptions() {
+  final currentYear = DateTime.now().year;
+  return [for (var year = currentYear; year >= currentYear - 4; year--) year];
+}
+
+String _categoryLabel(AppLocalizations l10n, ExpenseCategory category) {
   return switch (category) {
-    ExpenseCategory.fuel => 'Fuel',
-    ExpenseCategory.maintenance => 'Maintenance',
-    ExpenseCategory.parts => 'Parts',
-    ExpenseCategory.other => 'Other',
+    ExpenseCategory.fuel => l10n.fuelCategory,
+    ExpenseCategory.maintenance => l10n.maintenanceCategory,
+    ExpenseCategory.parts => l10n.partsCategory,
+    ExpenseCategory.other => l10n.otherCategory,
   };
 }
 
 String _formatMoney(int amount) {
   return '${_formatNumber(amount)} ₽';
+}
+
+String _formatCompactMoney(double value) {
+  return '${_formatCompactNumber(value)} ₽';
+}
+
+String _formatCompactKilometers(double value) {
+  return '${_formatCompactNumber(value)} km';
+}
+
+String _formatCompactNumber(double value) {
+  final absValue = value.abs();
+  if (absValue >= 1000000) {
+    return '${_formatCompactDecimal(value / 1000000)}M';
+  }
+  if (absValue >= 1000) {
+    return '${_formatCompactDecimal(value / 1000)}K';
+  }
+  return _formatNumber(value);
+}
+
+String _formatCompactDecimal(double value) {
+  final rounded = (value * 10).round() / 10;
+  if (rounded == rounded.roundToDouble()) {
+    return rounded.round().toString();
+  }
+  return rounded.toStringAsFixed(1);
 }
 
 String _formatNumber(num value) {

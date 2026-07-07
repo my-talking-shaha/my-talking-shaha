@@ -38,6 +38,9 @@ Thumbs.db
 ### Claude Code (local only) ###
 .claude/
 
+### Deployment state ###
+.deploy/
+
 ### ML ###
 __pycache__/
 *.pyc

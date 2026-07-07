@@ -2,7 +2,9 @@ package ru.talkingshaha.backend.timeline.service;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
+import java.time.OffsetDateTime;
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
 
@@ -15,6 +17,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import ru.talkingshaha.backend.common.error.ResourceNotFoundException;
 import ru.talkingshaha.backend.common.model.BaseEvent;
+import ru.talkingshaha.backend.common.error.ResourceNotFoundException;
+import ru.talkingshaha.backend.chat.model.ChatSession;
 import ru.talkingshaha.backend.timeline.dto.CreateMaintenanceEventRequest;
 import ru.talkingshaha.backend.timeline.dto.CreatePartEventRequest;
 import ru.talkingshaha.backend.timeline.dto.CreateRefuelEventRequest;
@@ -24,6 +28,7 @@ import ru.talkingshaha.backend.timeline.dto.TimelineEventResponse;
 import ru.talkingshaha.backend.timeline.model.MaintenanceEvent;
 import ru.talkingshaha.backend.timeline.model.RefuelEvent;
 import ru.talkingshaha.backend.timeline.model.TimelineEventType;
+import ru.talkingshaha.backend.timeline.model.TripCompletionStatus;
 import ru.talkingshaha.backend.timeline.model.TripEvent;
 import ru.talkingshaha.backend.timeline.repository.MaintenanceEventRepository;
 import ru.talkingshaha.backend.timeline.repository.RefuelEventRepository;
@@ -96,11 +101,9 @@ public class TimelineEventService {
     public TimelineEventResponse createTripEvent(UUID vehicleId, CreateTripEventRequest request) {
         Vehicle vehicle = vehicles.requireOwnedVehicle(vehicleId);
         validateMileage(vehicle, request.endMileageKm());
-
         if (request.startMileageKm() != null && request.endMileageKm() < request.startMileageKm()) {
             throw new IllegalArgumentException("End mileage must be >= start mileage");
         }
-
         TripEvent event = new TripEvent();
         event.setVehicle(vehicle);
         event.setType(TimelineEventType.TRIP);
@@ -108,10 +111,89 @@ public class TimelineEventService {
         event.setTitle(request.title());
         event.setStartMileageKm(request.startMileageKm());
         event.setEndMileageKm(request.endMileageKm());
+        if (request.startMileageKm() != null && request.endMileageKm() != null) {
+            event.setDistanceKm(request.endMileageKm() - request.startMileageKm());
+        }
         event.setRoute(request.route());
         event.setDurationMinutes(request.durationMinutes());
+        event.setEndedAt(request.eventDateTime().plusMinutes(request.durationMinutes()));
+        event.setStatus(TripCompletionStatus.COMPLETE);
         updateVehicleMileage(vehicle, request.endMileageKm());
         return toResponse(trips.save(event));
+    }
+
+    @Transactional
+    public TimelineEventResponse startChatTrip(UUID vehicleId, ChatSession session, OffsetDateTime startedAt, String notes) {
+        Vehicle vehicle = vehicles.requireOwnedVehicle(vehicleId);
+        TripEvent event = new TripEvent();
+        event.setVehicle(vehicle);
+        event.setType(TimelineEventType.TRIP);
+        event.setEventDateTime(startedAt == null ? OffsetDateTime.now() : startedAt);
+        event.setStartMileageKm(vehicle.getMileageKm());
+        event.setNotes(notes);
+        event.setStatus(TripCompletionStatus.IN_PROGRESS);
+        event.setChatSession(session);
+        return toResponse(trips.save(event));
+    }
+
+    @Transactional
+    public TimelineEventResponse updateChatTrip(UUID vehicleId, UUID tripId, ChatSession session, TripUpdate update) {
+        Vehicle vehicle = vehicles.requireOwnedVehicle(vehicleId);
+        TripEvent event = trips.findByIdAndVehicle(tripId, vehicle)
+                .orElseThrow(() -> new ResourceNotFoundException("Trip not found"));
+        if (event.getChatSession() != null && !event.getChatSession().getId().equals(session.getId())) {
+            throw new IllegalArgumentException("Trip belongs to another chat session");
+        }
+        event.setChatSession(session);
+        if (update.endedAt() != null) {
+            event.setEndedAt(update.endedAt());
+        }
+        if (update.distanceKm() != null) {
+            if (update.distanceKm() < 0) {
+                throw new IllegalArgumentException("Distance must be greater than or equal to 0");
+            }
+            event.setDistanceKm(update.distanceKm());
+            if (event.getStartMileageKm() != null) {
+                event.setEndMileageKm(event.getStartMileageKm() + update.distanceKm());
+            }
+        }
+        if (update.durationMinutes() != null) {
+            if (update.durationMinutes() <= 0) {
+                throw new IllegalArgumentException("Duration must be greater than 0");
+            }
+            event.setDurationMinutes(update.durationMinutes());
+        }
+        if (update.fuelLiters() != null) {
+            if (update.fuelLiters().compareTo(BigDecimal.ZERO) <= 0) {
+                throw new IllegalArgumentException("Fuel amount must be greater than 0");
+            }
+            event.setFuelLiters(update.fuelLiters());
+        }
+        if (update.notes() != null && !update.notes().isBlank()) {
+            event.setNotes(update.notes());
+            if (event.getRoute() == null || event.getRoute().isBlank()) {
+                event.setRoute(update.notes());
+            }
+        }
+        event.setStatus(missingRequiredTripFields(event).isEmpty()
+                ? TripCompletionStatus.COMPLETE
+                : TripCompletionStatus.PARTIAL);
+        updateVehicleMileage(vehicle, event.getEndMileageKm());
+        return toResponse(event);
+    }
+
+    @Transactional(readOnly = true)
+    public Optional<UUID> activeChatTripId(ChatSession session) {
+        return trips.findTopByChatSessionAndStatusOrderByEventDateTimeDesc(session, TripCompletionStatus.IN_PROGRESS)
+                .map(TripEvent::getId);
+    }
+
+    @Transactional(readOnly = true)
+    public List<String> missingRequiredTripFields(UUID vehicleId, UUID tripId) {
+        Vehicle vehicle = vehicles.requireOwnedVehicle(vehicleId);
+        TripEvent event = trips.findByIdAndVehicle(tripId, vehicle)
+                .orElseThrow(() -> new ResourceNotFoundException("Trip not found"));
+        return missingRequiredTripFields(event);
     }
 
     @Transactional
@@ -129,7 +211,6 @@ public class TimelineEventService {
         if (request.photoUrls() != null) {
             event.getPhotoUrls().addAll(request.photoUrls());
         }
-
         updateVehicleMileage(vehicle, request.mileageKm());
         return toResponse(maintenances.save(event));
     }
@@ -149,7 +230,6 @@ public class TimelineEventService {
         if (request.photoUrls() != null) {
             event.getPhotoUrls().addAll(request.photoUrls());
         }
-
         updateVehicleMileage(vehicle, request.mileageKm());
         return toResponse(maintenances.save(event));
     }
@@ -266,9 +346,12 @@ public class TimelineEventService {
                     r.getStationName(),
                     null, null, null, null, null,
                     null,
-                    null, null, null);
+                    null, null, null,
+                    null, null, null, null);
             case TripEvent t -> {
-                Integer distance = (t.getStartMileageKm() != null && t.getEndMileageKm() != null)
+                Integer distance = t.getDistanceKm() != null
+                        ? t.getDistanceKm()
+                        : (t.getStartMileageKm() != null && t.getEndMileageKm() != null)
                         ? t.getEndMileageKm() - t.getStartMileageKm()
                         : null;
                 BigDecimal averageConsumption = averageFuelConsumptionLitersPerKm(t.getVehicle());
@@ -286,7 +369,8 @@ public class TimelineEventService {
                         t.getRoute(),
                         t.getDurationMinutes(),
                         averageConsumption,
-                        null, null, null);
+                        null, null, null,
+                        t.getEndedAt(), t.getFuelLiters(), t.getNotes(), t.getStatus());
             }
             case MaintenanceEvent m -> new TimelineEventResponse(
                     m.getId(),
@@ -300,7 +384,8 @@ public class TimelineEventService {
                     null,
                     m.getName(),
                     m.getDescription(),
-                    List.copyOf(m.getPhotoUrls()));
+                    List.copyOf(m.getPhotoUrls()),
+                    null, null, null, null);
             default -> throw new IllegalStateException("Unknown event type: " + event.getClass());
         };
     }
@@ -317,12 +402,36 @@ public class TimelineEventService {
                 .filter(TripEvent.class::isInstance)
                 .map(TripEvent.class::cast)
                 .mapToInt(trip -> trip.getStartMileageKm() == null
-                        ? 0
-                        : Math.max(0, trip.getEndMileageKm() - trip.getStartMileageKm()))
+                        ? Math.max(0, trip.getDistanceKm() == null ? 0 : trip.getDistanceKm())
+                        : Math.max(0, trip.getEndMileageKm() == null
+                                ? trip.getDistanceKm() == null ? 0 : trip.getDistanceKm()
+                                : trip.getEndMileageKm() - trip.getStartMileageKm()))
                 .sum();
         if (distanceKm == 0 || liters.compareTo(BigDecimal.ZERO) == 0) {
             return BigDecimal.ZERO;
         }
         return liters.divide(BigDecimal.valueOf(distanceKm), 4, RoundingMode.HALF_UP);
+    }
+
+    private List<String> missingRequiredTripFields(TripEvent event) {
+        List<String> missing = new java.util.ArrayList<>();
+        if (event.getDistanceKm() == null && (event.getStartMileageKm() == null || event.getEndMileageKm() == null)) {
+            missing.add("distanceKm");
+        }
+        if (event.getFuelLiters() == null) {
+            missing.add("fuelLiters");
+        }
+        if (event.getDurationMinutes() == null) {
+            missing.add("durationMinutes");
+        }
+        return missing;
+    }
+
+    public record TripUpdate(
+            OffsetDateTime endedAt,
+            Integer distanceKm,
+            Integer durationMinutes,
+            BigDecimal fuelLiters,
+            String notes) {
     }
 }

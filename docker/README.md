@@ -5,21 +5,27 @@
 - `Dockerfile.backend` - Multi-stage build for Spring Boot backend
 - `Dockerfile.frontend` - Multi-stage build for Flutter web frontend
 - `docker-compose.yml` - Orchestration configuration
-- `nginx.conf` - Nginx configuration for frontend and API routing
+- `nginx.conf` - Nginx configuration inside each frontend container
+- `router.local.conf` - stable local routing layer for frontend, API, OpenAPI, and Swagger UI
+- `docker-compose.blue-green.yml` - blue-green deployment topology
+- `router.blue-green.conf` - stable deployment router that switches between blue and green slots
+- `deploy-blue-green.sh` - remote deployment script used by GitHub Actions
 
 ## Prerequisites
 
 - Docker
 - Docker Compose (v3.8 or higher)
-- Timeweb AI token for AI chat. Copy `.env.example` to `.env` in the repository root
-  and set `TIMEWEB_AI_BASE_URL` and `TIMEWEB_AI_TOKEN`.
+- Explicit local secrets. Copy `.env.example` to `.env` in the repository root
+  and replace `JWT_SECRET`, `DB_USERNAME`, `DB_PASSWORD`, and `TIMEWEB_AI_TOKEN`.
+  The example placeholders and local development values must not be reused for
+  shared, staging, or production-like deployments.
 
 ## Building and Running
 
 ### Quick Start
 
 ```bash
-docker-compose -f docker/docker-compose.yml up --build
+docker compose --env-file .env -f docker/docker-compose.yml up --build
 ```
 
 The app will be available at [http://localhost](http://localhost)
@@ -30,6 +36,7 @@ Docker Compose will automatically build:
 
 - **Backend**: Multi-stage Maven build for Spring Boot application
 - **Frontend**: Uses a prebuilt Flutter SDK image, installs dependencies, and builds the web app
+- **Router**: Nginx container that owns public port `80` and proxies to the frontend/backend containers
 
 The Dockerfiles use BuildKit cache mounts for downloaded dependencies:
 
@@ -42,7 +49,7 @@ GitHub Actions smoke tests additionally use `docker/docker-compose.ci.yml` with 
 The frontend build uses `ghcr.io/cirruslabs/flutter:stable` by default and retries transient network steps such as Flutter web precache and `flutter pub get`. Override the Flutter SDK image when needed:
 
 ```bash
-docker-compose -f docker/docker-compose.yml build --build-arg FLUTTER_IMAGE=ghcr.io/cirruslabs/flutter:stable frontend
+docker compose --env-file .env -f docker/docker-compose.yml build --build-arg FLUTTER_IMAGE=ghcr.io/cirruslabs/flutter:stable frontend
 ```
 
 Use `--no-cache` only when you intentionally want to redownload everything.
@@ -50,24 +57,24 @@ Use `--no-cache` only when you intentionally want to redownload everything.
 ### Running in Background
 
 ```bash
-docker-compose -f docker/docker-compose.yml up -d --build
+docker compose --env-file .env -f docker/docker-compose.yml up -d --build
 ```
 
 ### Stopping Services
 
 ```bash
-docker-compose -f docker/docker-compose.yml down
+docker compose --env-file .env -f docker/docker-compose.yml down
 ```
 
 ### Viewing Logs
 
 ```bash
 # All services
-docker-compose -f docker/docker-compose.yml logs -f
+docker compose --env-file .env -f docker/docker-compose.yml logs -f
 
 # Specific service
-docker-compose -f docker/docker-compose.yml logs -f backend
-docker-compose -f docker/docker-compose.yml logs -f frontend
+docker compose --env-file .env -f docker/docker-compose.yml logs -f backend
+docker compose --env-file .env -f docker/docker-compose.yml logs -f frontend
 ```
 
 ## Accessing the Application
@@ -76,3 +83,7 @@ docker-compose -f docker/docker-compose.yml logs -f frontend
 - **Backend API**: http://localhost:8080, bound to localhost only
 - **Health Check**: http://localhost/health
 - **Database**: postgres://localhost:5432/talking_shaha, bound to localhost only
+
+In the blue-green deployment topology, only `talking-shaha-router` binds public
+port `80`. The blue and green frontend/backend app containers expose ports only
+inside Docker networks, and the router reloads nginx upstreams to switch traffic.

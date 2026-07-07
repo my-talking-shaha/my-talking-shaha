@@ -3,13 +3,16 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:frontend/app/providers/vehicle_mileage_provider.dart';
 import 'package:frontend/core/ui/navigation_shell.dart';
 import 'package:frontend/core/utils/uuid_format.dart';
+import 'package:frontend/features/analytics/presentation/providers/analytics_providers.dart';
 import 'package:frontend/features/analytics/presentation/screens/analytics_screen.dart';
 import 'package:frontend/features/auth/domain/entities/auth_session.dart';
 import 'package:frontend/features/auth/presentation/providers/auth_providers.dart';
 import 'package:frontend/features/auth/presentation/screens/login_screen.dart';
 import 'package:frontend/features/auth/presentation/screens/registration_screen.dart';
 import 'package:frontend/features/chat/presentation/screens/chat_screen.dart';
+import 'package:frontend/features/dashboard/presentation/providers/dashboard_providers.dart';
 import 'package:frontend/features/dashboard/presentation/screens/dashboard_screen.dart';
+import 'package:frontend/features/garage/presentation/providers/garage_providers.dart';
 import 'package:frontend/features/garage/presentation/screens/add_vehicle_screen.dart';
 import 'package:frontend/features/garage/presentation/screens/garage_screen.dart';
 import 'package:frontend/features/history/domain/entities/history_event.dart';
@@ -19,7 +22,9 @@ import 'package:frontend/features/history/presentation/screens/add_history_event
 import 'package:frontend/features/history/presentation/screens/history_screen.dart';
 import 'package:frontend/features/notifications/presentation/screens/notification_details_screen.dart';
 import 'package:frontend/features/notifications/presentation/screens/notifications_screen.dart';
+import 'package:frontend/features/parts/presentation/providers/parts_providers.dart';
 import 'package:frontend/features/settings/presentation/screens/settings_screen.dart';
+import 'package:frontend/l10n/generated/app_localizations.dart';
 import 'package:go_router/go_router.dart';
 
 final routerProvider = Provider<GoRouter>((ref) {
@@ -98,7 +103,7 @@ final routerProvider = Provider<GoRouter>((ref) {
                     vehicleId: vehicleId,
                     initialMileageKm: initialMileageKm,
                     initialType: initialType,
-                    onSave: ref.read(addHistoryEventProvider),
+                    onSave: (event) => _saveHistoryEvent(ref, event),
                     persistPhoto: ref
                         .read(historyPhotoStorageProvider)
                         .persistPhoto,
@@ -117,7 +122,7 @@ final routerProvider = Provider<GoRouter>((ref) {
                       onPressed: () {
                         ref.invalidate(vehicleMileageProvider(vehicleId));
                       },
-                      child: const Text('Retry'),
+                      child: Text(AppLocalizations.of(context).retry),
                     ),
                   ),
                 ),
@@ -210,7 +215,10 @@ final routerProvider = Provider<GoRouter>((ref) {
                   final vehicleId = state.pathParameters['vehicleId'] ?? '';
                   return _tabPage(
                     state: state,
-                    child: DashboardScreen(vehicleId: vehicleId),
+                    child: DashboardScreen(
+                      vehicleId: vehicleId,
+                      launchedFromChat: _launchedFromChat(state.uri),
+                    ),
                   );
                 },
               ),
@@ -228,7 +236,10 @@ final routerProvider = Provider<GoRouter>((ref) {
                   final vehicleId = state.pathParameters['vehicleId'] ?? '';
                   return _tabPage(
                     state: state,
-                    child: HistoryScreen(vehicleId: vehicleId),
+                    child: HistoryScreen(
+                      vehicleId: vehicleId,
+                      launchedFromChat: _launchedFromChat(state.uri),
+                    ),
                   );
                 },
               ),
@@ -261,7 +272,10 @@ final routerProvider = Provider<GoRouter>((ref) {
                   final vehicleId = state.pathParameters['vehicleId'] ?? '';
                   return _tabPage(
                     state: state,
-                    child: AnalyticsScreen(vehicleId: vehicleId),
+                    child: AnalyticsScreen(
+                      vehicleId: vehicleId,
+                      launchedFromChat: _launchedFromChat(state.uri),
+                    ),
                   );
                 },
               ),
@@ -394,4 +408,19 @@ HistoryEvent? _historyEventById(List<HistoryEvent> events, String eventId) {
   }
 
   return null;
+}
+
+bool _launchedFromChat(Uri uri) {
+  return uri.queryParameters['from'] == 'chat';
+}
+
+Future<void> _saveHistoryEvent(WidgetRef ref, HistoryEvent event) async {
+  await ref.read(addHistoryEventProvider)(event);
+  final vehicleId = event.carId;
+  ref.invalidate(historyEventsProvider(vehicleId));
+  ref.invalidate(garageControllerProvider);
+  ref.invalidate(vehicleMileageProvider(vehicleId));
+  ref.invalidate(vehicleDashboardProvider(vehicleId));
+  ref.invalidate(vehiclePartsProvider(vehicleId));
+  ref.invalidate(analyticsSummaryProvider);
 }

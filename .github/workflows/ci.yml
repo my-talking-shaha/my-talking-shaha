@@ -83,6 +83,10 @@ jobs:
       - frontend
     runs-on: ubuntu-latest
     timeout-minutes: 45
+    env:
+      DB_USERNAME: ci_shaha_user
+      DB_PASSWORD: ci-db-password-32-bytes
+      JWT_SECRET: ci-jwt-secret-with-more-than-32-bytes
 
     steps:
       - name: Checkout repository
@@ -94,7 +98,7 @@ jobs:
       - name: Build and start application stack
         env:
           DOCKER_BUILDKIT: 1
-        run: docker compose -f docker/docker-compose.yml -f docker/docker-compose.ci.yml up -d --build --remove-orphans backend frontend
+        run: docker compose -f docker/docker-compose.yml -f docker/docker-compose.ci.yml up -d --build --remove-orphans backend frontend router
 
       - name: Wait for backend health
         run: |
@@ -110,8 +114,8 @@ jobs:
           done
 
           echo "Backend did not become healthy in time" >&2
-          docker compose -f docker/docker-compose.yml -f docker/docker-compose.ci.yml ps postgres backend frontend
-          docker compose -f docker/docker-compose.yml -f docker/docker-compose.ci.yml logs --no-color postgres backend frontend
+          docker compose -f docker/docker-compose.yml -f docker/docker-compose.ci.yml ps postgres backend frontend router
+          docker compose -f docker/docker-compose.yml -f docker/docker-compose.ci.yml logs --no-color postgres backend frontend router
           exit 1
 
       - name: Wait for frontend health
@@ -127,9 +131,9 @@ jobs:
             sleep 5
           done
 
-          echo "Frontend did not become healthy in time" >&2
-          docker compose -f docker/docker-compose.yml -f docker/docker-compose.ci.yml ps postgres backend frontend
-          docker compose -f docker/docker-compose.yml -f docker/docker-compose.ci.yml logs --no-color postgres backend frontend
+          echo "Frontend router did not become healthy in time" >&2
+          docker compose -f docker/docker-compose.yml -f docker/docker-compose.ci.yml ps postgres backend frontend router
+          docker compose -f docker/docker-compose.yml -f docker/docker-compose.ci.yml logs --no-color postgres backend frontend router
           exit 1
 
       - name: Verify OpenAPI docs
@@ -190,8 +194,8 @@ jobs:
 
       - name: Dump application stack logs
         if: always()
-        run: docker compose -f docker/docker-compose.yml -f docker/docker-compose.ci.yml logs --no-color postgres backend frontend || true
+        run: docker compose -f docker/docker-compose.yml -f docker/docker-compose.ci.yml logs --no-color postgres backend frontend router || true
 
       - name: Stop application stack
         if: always()
-        run: docker compose -f docker/docker-compose.yml -f docker/docker-compose.ci.yml down -v --remove-orphans
+        run: docker compose -f docker/docker-compose.yml -f docker/docker-compose.ci.yml down --remove-orphans

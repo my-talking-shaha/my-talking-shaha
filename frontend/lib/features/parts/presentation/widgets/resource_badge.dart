@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:frontend/app/theme/app_theme.dart';
 import 'package:frontend/features/parts/presentation/widgets/parts_design_tokens.dart';
+import 'package:frontend/l10n/generated/app_localizations.dart';
 
 final class ResourceBadge extends StatelessWidget {
   const ResourceBadge({required this.percent, super.key});
@@ -36,7 +37,7 @@ final class ResourceBadge extends StatelessWidget {
           ),
           const SizedBox(height: AppSpacing.xs),
           Text(
-            'RESOURCE',
+            AppLocalizations.of(context).resource,
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
             style: Theme.of(context).textTheme.bodySmall?.copyWith(

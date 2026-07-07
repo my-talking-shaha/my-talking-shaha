@@ -4,10 +4,12 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.time.OffsetDateTime;
 import java.util.Comparator;
 import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
@@ -54,6 +56,14 @@ public class ChatService {
     private static final Pattern MILEAGE_PATTERN = Pattern.compile("(?:mileage|odometer|пробег|на пробеге)\\D{0,12}(-?\\d+)\\s*(?:km|км)" + UNIT_END, Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE);
     private static final Pattern DISTANCE_PATTERN = Pattern.compile("(-?\\d+)\\s*(?:km|км)" + UNIT_END, Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE);
     private static final Pattern DURATION_PATTERN = Pattern.compile("(-?\\d+)\\s*(?:min|mins|minute|minutes|мин|минут|минуты)" + UNIT_END, Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE);
+    private static final Pattern HOURS_PATTERN = Pattern.compile("(-?\\d+)\\s*(?:h|hour|hours|час|часа|часов)" + UNIT_END, Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE);
+    private static final Pattern TEXT_DATE_PATTERN = Pattern.compile(
+            "(?<!\\d)(\\d{1,2})(?:\\s*[-–—]?\\s*(?:го|ое|е))?\\s+"
+                    + "(января|январь|февраля|февраль|марта|март|апреля|апрель|мая|май|июня|июнь|июля|июль|"
+                    + "августа|август|сентября|сентябрь|октября|октябрь|ноября|ноябрь|декабря|декабрь)"
+                    + "(?:\\s+(\\d{4}))?(?!\\p{L})",
+            Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE);
+    private static final Pattern NUMERIC_DATE_PATTERN = Pattern.compile("\\b(\\d{1,2})[./-](\\d{1,2})(?:[./-](\\d{2,4}))?\\b");
     private static final Pattern FUEL_GRADE_PATTERN = Pattern.compile("(?:ai[-\\s]?)?(\\d{2,3})\\s*(?:[-\\s]?(?:й|м))?\\s*(?:gas|fuel|petrol|бенз|бензин)", Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE);
     private static final List<String> SUPPORTED_FUEL_NAMES = List.of("92 octane", "95 octane", "98 octane", "Diesel");
 
@@ -111,13 +121,19 @@ public class ChatService {
     }
 
     @Transactional
+    public ChatSession activeSession(UUID vehicleId, ChatLanguage language) {
+        Vehicle vehicle = vehicles.requireOwnedVehicle(vehicleId);
+        return getOrCreateSession(vehicle, language);
+    }
+
+    @Transactional
     public SendMessageResponse send(UUID vehicleId, SendMessageRequest request) {
         Vehicle vehicle = vehicles.requireOwnedVehicle(vehicleId);
         ChatSession session = getOrCreateSession(vehicle, ChatLanguage.EN);
         ChatMessage userMessage = saveMessage(session, ChatMessageRole.USER, request.text());
 
         VehicleDashboardResponse dashboard = vehicles.dashboard(vehicleId);
-        AnalyticsOverviewResponse analyticsOverview = analytics.overview(vehicleId, AnalyticsPeriod.ALL_TIME);
+        AnalyticsOverviewResponse analyticsOverview = analytics.overview(vehicleId, AnalyticsPeriod.ALL_TIME, null, null);
         String baseContext = context(dashboard, analyticsOverview);
         ChatDecision decision = intentResolver.resolve(request.text(), baseContext);
         AssistantDraft assistantDraft = assistantDraft(request.text(), decision, session, vehicle, dashboard, analyticsOverview);
@@ -147,8 +163,8 @@ public class ChatService {
         ChatActionResponse action = action(decision, userText);
         String context = contextForDecision(decision, dashboard, analyticsOverview, action);
         String text = aiChatClient.answer(userText, decision, context)
-                .orElseGet(() -> templateAnswer(decision, dashboard, analyticsOverview, action));
-        return new AssistantDraft(text, action, null);
+                .orElseGet(() -> templateAnswer(userText, decision, dashboard, analyticsOverview, action));
+        return new AssistantDraft(polishAssistantText(text, userText, decision.language()), action, null);
     }
 
     private Optional<AssistantDraft> autoCreateEvent(
@@ -157,9 +173,15 @@ public class ChatService {
             ChatSession session,
             Vehicle vehicle) {
         try {
+            if (decision.intent() == ChatIntent.OPEN_TRIP_FORM && startsTripConversation(userText)) {
+                return startTripFromChatMessage(userText, session, vehicle);
+            }
             Optional<ChatActionResponse> pending = latestPendingAction(session);
             if (pending.isPresent()) {
-                return continuePendingEvent(userText, pending.get(), vehicle);
+                return continuePendingEvent(userText, pending.get(), session, vehicle);
+            }
+            if (decision.intent() == ChatIntent.OPEN_TRIP_FORM && endsTripConversation(userText)) {
+                return endActiveTripFromChatMessage(userText, session, vehicle);
             }
             if (asksForRequiredFields(userText)) {
                 Map<String, Object> fields = prefill(userText);
@@ -182,7 +204,11 @@ public class ChatService {
         }
     }
 
-    private Optional<AssistantDraft> continuePendingEvent(String userText, ChatActionResponse pending, Vehicle vehicle) {
+    private Optional<AssistantDraft> continuePendingEvent(
+            String userText,
+            ChatActionResponse pending,
+            ChatSession session,
+            Vehicle vehicle) {
         Map<String, Object> merged = new LinkedHashMap<>(pending.prefill());
         Map<String, Object> newFields = prefill(userText);
         if ("REFUEL".equals(pending.form())) {
@@ -191,7 +217,9 @@ public class ChatService {
         merged.putAll(newFields);
         return switch (pending.form()) {
             case "REFUEL" -> createRefuelFromText(userText, vehicle, merged);
-            case "TRIP" -> createTripFromText(userText, vehicle, merged);
+            case "TRIP" -> uuidField(merged, "tripId")
+                    .map(tripId -> updateLifecycleTripFromText(userText, vehicle, session, tripId, merged))
+                    .orElseGet(() -> createTripFromText(userText, vehicle, merged));
             case "MAINTENANCE" -> createMaintenanceFromText(userText, vehicle, merged);
             default -> Optional.empty();
         };
@@ -218,7 +246,7 @@ public class ChatService {
         TimelineEventResponse event = timelineEvents.createRefuelEvent(
                 vehicle.getId(),
                 new CreateRefuelEventRequest(
-                        OffsetDateTime.now(),
+                        eventDateTime(userText),
                         "Refuel",
                         mileageKm,
                         liters,
@@ -237,7 +265,7 @@ public class ChatService {
         fields.putIfAbsent("startMileageKm", vehicle.getMileageKm());
         firstInteger(userText, DISTANCE_PATTERN).ifPresent(distance ->
                 fields.putIfAbsent("endMileageKm", vehicle.getMileageKm() + distance));
-        firstInteger(userText, DURATION_PATTERN).ifPresent(duration ->
+        durationMinutes(userText).ifPresent(duration ->
                 fields.put("durationMinutes", duration));
         route(userText).ifPresent(route -> fields.put("route", route));
         List<String> errors = tripValidationErrors(fields, vehicle);
@@ -247,7 +275,7 @@ public class ChatService {
         TimelineEventResponse event = timelineEvents.createTripEvent(
                 vehicle.getId(),
                 new CreateTripEventRequest(
-                        OffsetDateTime.now(),
+                        eventDateTime(userText),
                         stringField(fields, "route").orElse("Поездка"),
                         integerField(fields, "startMileageKm").orElse(null),
                         integerField(fields, "endMileageKm").orElseThrow(),
@@ -256,25 +284,77 @@ public class ChatService {
         return Optional.of(new AssistantDraft(tripCreatedAnswer(event), null, event));
     }
 
+    private Optional<AssistantDraft> startTripFromChatMessage(String userText, ChatSession session, Vehicle vehicle) {
+        TimelineEventResponse event = timelineEvents.startChatTrip(vehicle.getId(), session, OffsetDateTime.now(), userText);
+        Map<String, Object> fields = new LinkedHashMap<>();
+        fields.put("tripId", event.id().toString());
+        return Optional.of(new AssistantDraft(
+                tripStartedAnswer(event),
+                pendingAction("TRIP", fields),
+                event));
+    }
+
+    private Optional<AssistantDraft> endActiveTripFromChatMessage(String userText, ChatSession session, Vehicle vehicle) {
+        return timelineEvents.activeChatTripId(session)
+                .map(tripId -> updateLifecycleTripFromText(userText, vehicle, session, tripId, Map.of()))
+                .orElseGet(() -> Optional.of(new AssistantDraft(
+                        "\u041d\u0435 \u0432\u0438\u0436\u0443 \u0430\u043a\u0442\u0438\u0432\u043d\u043e\u0439 \u043f\u043e\u0435\u0437\u0434\u043a\u0438 \u0434\u043b\u044f \u0437\u0430\u0432\u0435\u0440\u0448\u0435\u043d\u0438\u044f. \u0421\u043d\u0430\u0447\u0430\u043b\u0430 \u043d\u0430\u0447\u043d\u0438 \u043f\u043e\u0435\u0437\u0434\u043a\u0443, \u0430 \u043f\u043e\u0442\u043e\u043c \u044f \u0441\u043e\u0445\u0440\u0430\u043d\u044e \u0432\u0440\u0435\u043c\u044f \u0444\u0438\u043d\u0438\u0448\u0430.",
+                        null,
+                        null)));
+    }
+
+    private Optional<AssistantDraft> updateLifecycleTripFromText(
+            String userText,
+            Vehicle vehicle,
+            ChatSession session,
+            UUID tripId,
+            Map<String, Object> carriedFields) {
+        Map<String, Object> fields = mergedFields(carriedFields, prefill(userText));
+        firstInteger(userText, DISTANCE_PATTERN).ifPresent(distance -> fields.put("distanceKm", distance));
+        durationMinutes(userText).ifPresent(duration -> fields.put("durationMinutes", duration));
+        decimalField(fields, "liters").ifPresent(fuelLiters -> fields.put("fuelLiters", fuelLiters));
+        OffsetDateTime endedAt = endsTripConversation(userText) || hasLifecycleCompletionFields(fields)
+                ? OffsetDateTime.now()
+                : null;
+        TimelineEventResponse event = timelineEvents.updateChatTrip(
+                vehicle.getId(),
+                tripId,
+                session,
+                new TimelineEventService.TripUpdate(
+                        endedAt,
+                        integerField(fields, "distanceKm").orElse(null),
+                        integerField(fields, "durationMinutes").orElse(null),
+                        decimalField(fields, "fuelLiters").orElse(null),
+                        userText));
+        if (event.tripStatus() == ru.talkingshaha.backend.timeline.model.TripCompletionStatus.COMPLETE) {
+            return Optional.of(new AssistantDraft(tripLifecycleCompletedAnswer(event), null, event));
+        }
+        Map<String, Object> nextFields = new LinkedHashMap<>(fields);
+        nextFields.put("tripId", tripId.toString());
+        return Optional.of(new AssistantDraft(tripLifecyclePartialAnswer(event), pendingAction("TRIP", nextFields), event));
+    }
+
     private Optional<AssistantDraft> createMaintenanceFromText(
             String userText,
             Vehicle vehicle,
             Map<String, Object> carriedFields) {
         Map<String, Object> fields = mergedFields(carriedFields, prefill(userText));
         fields.putIfAbsent("mileageKm", vehicle.getMileageKm());
-        maintenanceName(userText).ifPresent(name -> fields.putIfAbsent("name", name));
+        MaintenanceDraft draft = maintenanceDraft(userText);
+        draft.name().ifPresent(name -> fields.putIfAbsent("name", name));
         firstDecimal(userText, MONEY_PATTERN).ifPresent(cost -> fields.put("cost", cost));
         List<String> errors = maintenanceValidationErrors(fields, vehicle);
         if (!errors.isEmpty()) {
             return Optional.of(new AssistantDraft(missingOrInvalidAnswer("ремонт", errors), pendingAction("MAINTENANCE", fields), null));
         }
+        String description = draft.description().orElse(userText);
         TimelineEventResponse event = timelineEvents.createMaintenanceEvent(
                 vehicle.getId(),
                 new CreateMaintenanceEventRequest(
-                        OffsetDateTime.now(),
+                        eventDateTime(userText),
                         integerField(fields, "mileageKm").orElseThrow(),
                         stringField(fields, "name").orElseThrow(),
-                        userText,
+                        description,
                         decimalField(fields, "cost").orElse(null),
                         List.of()));
         return Optional.of(new AssistantDraft(maintenanceCreatedAnswer(event), null, event));
@@ -319,6 +399,31 @@ public class ChatService {
 
     private ChatActionResponse pendingAction(String form, Map<String, Object> fields) {
         return new ChatActionResponse("PENDING_EVENT", form, null, fields);
+    }
+
+    private boolean startsTripConversation(String userText) {
+        String text = normalizedText(userText);
+        boolean hasTrip = text.contains("trip") || text.contains("\u043f\u043e\u0435\u0437\u0434");
+        return hasTrip && (text.contains("start")
+                || text.contains("begin")
+                || text.contains("\u043d\u0430\u0447")
+                || text.contains("\u0441\u0442\u0430\u0440\u0442")
+                || text.contains("\u043f\u043e\u0435\u0445\u0430\u043b"));
+    }
+
+    private boolean endsTripConversation(String userText) {
+        String text = normalizedText(userText);
+        boolean hasTrip = text.contains("trip") || text.contains("\u043f\u043e\u0435\u0437\u0434");
+        return hasTrip && (text.contains("end")
+                || text.contains("finish")
+                || text.contains("complete")
+                || text.contains("\u0437\u0430\u043a\u043e\u043d\u0447")
+                || text.contains("\u0437\u0430\u0432\u0435\u0440\u0448")
+                || text.contains("\u0444\u0438\u043d\u0438\u0448"));
+    }
+
+    private String normalizedText(String userText) {
+        return userText == null ? "" : userText.toLowerCase(Locale.ROOT);
     }
 
     private Map<String, Object> mergedFields(Map<String, Object> first, Map<String, Object> second) {
@@ -450,6 +555,27 @@ public class ChatService {
         return Optional.empty();
     }
 
+    private Optional<UUID> uuidField(Map<String, Object> fields, String key) {
+        Object value = fields.get(key);
+        if (value instanceof UUID uuid) {
+            return Optional.of(uuid);
+        }
+        if (value instanceof String string && !string.isBlank()) {
+            try {
+                return Optional.of(UUID.fromString(string));
+            } catch (IllegalArgumentException ignored) {
+                return Optional.empty();
+            }
+        }
+        return Optional.empty();
+    }
+
+    private boolean hasLifecycleCompletionFields(Map<String, Object> fields) {
+        return integerField(fields, "distanceKm").isPresent()
+                && integerField(fields, "durationMinutes").isPresent()
+                && decimalField(fields, "fuelLiters").isPresent();
+    }
+
     private Optional<BigDecimal> decimalField(Map<String, Object> fields, String key) {
         Object value = fields.get(key);
         if (value instanceof BigDecimal decimal) {
@@ -573,12 +699,126 @@ public class ChatService {
     }
 
     private Optional<String> route(String userText) {
-        Matcher matcher = Pattern.compile("(?:from|из|от)\\s+(.+?)\\s+(?:to|до|в)\\s+(.+?)(?:\\s+\\d|$)", Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE)
+        Matcher matcher = Pattern.compile(
+                        "(?:from|из|от)\\s+(.+?)\\s+(?:to|до|в)\\s+(.+?)(?=,?\\s+(?:за|for)|\\s+\\d|$)",
+                        Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE)
                 .matcher(userText);
         if (matcher.find()) {
-            return Optional.of(matcher.group(1).strip() + " -> " + matcher.group(2).strip());
+            String from = cleanRoutePlace(matcher.group(1));
+            String to = cleanRoutePlace(matcher.group(2));
+            if (!from.isBlank() && !to.isBlank()) {
+                return Optional.of(from + " -> " + to);
+            }
         }
         return Optional.empty();
+    }
+
+    private String cleanRoutePlace(String place) {
+        String cleaned = place
+                .replaceAll("(?iu),?\\s*(?:за|for)(?:\\s+.*)?$", " ")
+                .replaceAll("(?iu)\\s+проехал[а]?\\s+.*", " ")
+                .replaceAll("(?iu)\\s+drove\\s+.*", " ")
+                .replaceAll("[\\p{Punct}&&[^-]]+$", " ")
+                .replaceAll("\\s+", " ")
+                .strip();
+        return normalizeRoutePlace(cleaned);
+    }
+
+    private String normalizeRoutePlace(String place) {
+        if (place.split("\\s+").length == 1 && place.toLowerCase(Locale.ROOT).endsWith("иса")) {
+            return place.substring(0, place.length() - 1);
+        }
+        return place;
+    }
+
+    private Optional<Integer> durationMinutes(String userText) {
+        Optional<Integer> explicitMinutes = firstInteger(userText, DURATION_PATTERN);
+        if (explicitMinutes.isPresent()) {
+            return explicitMinutes;
+        }
+        return firstInteger(userText, HOURS_PATTERN).map(hours -> hours * 60);
+    }
+
+    private OffsetDateTime eventDateTime(String userText) {
+        OffsetDateTime now = OffsetDateTime.now();
+        String text = normalizedText(userText);
+        if (text.contains("позавчера")) {
+            return now.minusDays(2);
+        }
+        if (text.contains("вчера") || text.contains("yesterday")) {
+            return now.minusDays(1);
+        }
+        Optional<LocalDate> explicitDate = explicitEventDate(text, now.toLocalDate());
+        if (explicitDate.isPresent()) {
+            return now.withYear(explicitDate.get().getYear())
+                    .withMonth(explicitDate.get().getMonthValue())
+                    .withDayOfMonth(explicitDate.get().getDayOfMonth());
+        }
+        return now;
+    }
+
+    private Optional<LocalDate> explicitEventDate(String text, LocalDate today) {
+        Matcher textDate = TEXT_DATE_PATTERN.matcher(text);
+        if (textDate.find()) {
+            return localDate(
+                    parseInteger(textDate.group(1)),
+                    monthNumber(textDate.group(2)).orElse(null),
+                    year(textDate.group(3), today),
+                    today);
+        }
+
+        Matcher numericDate = NUMERIC_DATE_PATTERN.matcher(text);
+        if (numericDate.find()) {
+            return localDate(
+                    parseInteger(numericDate.group(1)),
+                    parseInteger(numericDate.group(2)),
+                    year(numericDate.group(3), today),
+                    today);
+        }
+
+        return Optional.empty();
+    }
+
+    private Optional<LocalDate> localDate(Integer day, Integer month, Integer year, LocalDate today) {
+        if (day == null || month == null || year == null) {
+            return Optional.empty();
+        }
+        try {
+            LocalDate date = LocalDate.of(year, month, day);
+            return Optional.of(date.isAfter(today) ? date.minusYears(1) : date);
+        } catch (RuntimeException ignored) {
+            return Optional.empty();
+        }
+    }
+
+    private Integer parseInteger(String value) {
+        return value == null || value.isBlank() ? null : Integer.parseInt(value);
+    }
+
+    private Integer year(String value, LocalDate today) {
+        if (value == null || value.isBlank()) {
+            return today.getYear();
+        }
+        int year = Integer.parseInt(value);
+        return year < 100 ? 2000 + year : year;
+    }
+
+    private Optional<Integer> monthNumber(String month) {
+        return switch (month.toLowerCase(Locale.ROOT)) {
+            case "января", "январь" -> Optional.of(1);
+            case "февраля", "февраль" -> Optional.of(2);
+            case "марта", "март" -> Optional.of(3);
+            case "апреля", "апрель" -> Optional.of(4);
+            case "мая", "май" -> Optional.of(5);
+            case "июня", "июнь" -> Optional.of(6);
+            case "июля", "июль" -> Optional.of(7);
+            case "августа", "август" -> Optional.of(8);
+            case "сентября", "сентябрь" -> Optional.of(9);
+            case "октября", "октябрь" -> Optional.of(10);
+            case "ноября", "ноябрь" -> Optional.of(11);
+            case "декабря", "декабрь" -> Optional.of(12);
+            default -> Optional.empty();
+        };
     }
 
     private boolean asksForRequiredFields(String userText) {
@@ -593,12 +833,34 @@ public class ChatService {
     }
 
     private Optional<String> maintenanceName(String userText) {
-        String stripped = userText
-                .replaceAll("(?iu)(?:на\\s+)?пробег(?:е)?\\D{0,12}-?\\d+\\s*(?:km|км).*", " ")
-                .replaceAll("(?iu)(?:стоимость|цена|cost)\\D{0,12}-?\\d+(?:[.,]\\d+)?\\s*(?:rub|ruble|rubles|₽|р|руб|рублей|рубля).*", " ")
+        String stripped = maintenanceWorkText(userText);
+        if (stripped.isBlank() || stripped.length() < 4 || stripped.equals("записать") || stripped.equals("добавить")) {
+            return Optional.empty();
+        }
+        return Optional.of(replacementParts(stripped)
+                .map(part -> replacementTitle(part, stripped))
+                .orElse(stripped.substring(0, Math.min(120, stripped.length()))));
+    }
+
+    private MaintenanceDraft maintenanceDraft(String userText) {
+        String workText = maintenanceWorkText(userText);
+        Optional<String> name = maintenanceName(userText);
+        Optional<String> parts = replacementParts(workText);
+        String description = workText.isBlank() ? userText : workText;
+        if (parts.isPresent()) {
+            description = description + "\nReplaced parts: " + parts.get();
+        }
+        return new MaintenanceDraft(name, Optional.of(description));
+    }
+
+    private String maintenanceWorkText(String userText) {
+        return removeExplicitDates(userText)
+                .replaceAll("(?iu)(?:на\\s+)?пробег(?:е)?\\D{0,12}-?\\d+\\s*(?:km|км)?", " ")
+                .replaceAll("(?iu)(?:стоимость|цена|стоил[ао]?|cost)\\D{0,12}-?\\d+(?:[.,]\\d+)?\\s*(?:rub|ruble|rubles|₽|р|руб|рублей|рубля).*", " ")
                 .replaceAll("(?iu)(?:^|\\s)за\\s+-?\\d+(?:[.,]\\d+)?\\s*(?:rub|ruble|rubles|₽|р|руб|рублей|рубля).*", " ")
                 .toLowerCase()
                 .replaceAll("(?iu)(^|\\s)(я|i)(?=\\s|$)", " ")
+                .replaceAll("(?iu)(^|\\s)(сегодня|вчера|завтра|today|yesterday|tomorrow|ещё|еще|сейчас)(?=\\s|$)", " ")
                 .replaceAll("(?iu)(^|\\s)(хочу|want|need|нужно|надо)(?=\\s|$)", " ")
                 .replaceAll("(?iu)add repair|record repair|new repair|repair record", " ")
                 .replaceAll("(?iu)добавить ремонт|записать ремонт|новый ремонт|запись ремонта", " ")
@@ -607,10 +869,53 @@ public class ChatService {
                 .replaceAll("[\\p{Punct}&&[^-]]+", " ")
                 .replaceAll("\\s+", " ")
                 .strip();
-        if (stripped.isBlank() || stripped.length() < 4 || stripped.equals("записать") || stripped.equals("добавить")) {
+    }
+
+    private String removeExplicitDates(String text) {
+        return NUMERIC_DATE_PATTERN.matcher(TEXT_DATE_PATTERN.matcher(text).replaceAll(" ")).replaceAll(" ");
+    }
+
+    private Optional<String> replacementParts(String workText) {
+        Matcher matcher = Pattern.compile(
+                        "(?iu)(?:поменял[аи]?|заменил[аи]?|менял[аи]?|замена|changed|replaced|replace)\\s+(.+)")
+                .matcher(workText);
+        if (!matcher.find()) {
             return Optional.empty();
         }
-        return Optional.of(stripped.substring(0, Math.min(120, stripped.length())));
+        String parts = matcher.group(1)
+                .replaceAll("(?iu)\\s+(?:на|for|with)\\s+.*", " ")
+                .replaceAll("\\s+", " ")
+                .strip();
+        return parts.isBlank() ? Optional.empty() : Optional.of(parts.substring(0, Math.min(120, parts.length())));
+    }
+
+    private String replacementTitle(String parts, String fallback) {
+        if (parts.chars().anyMatch(ch -> Character.UnicodeBlock.of(ch) == Character.UnicodeBlock.CYRILLIC)) {
+            return "замена " + replacementTitleParts(parts);
+        }
+        return "Replacement: " + parts;
+    }
+
+    private String replacementTitleParts(String parts) {
+        return List.of(parts.split("\\s+")).stream()
+                .map(this::genitivePartName)
+                .reduce((left, right) -> left + " " + right)
+                .orElse(parts)
+                .strip();
+    }
+
+    private String genitivePartName(String part) {
+        return switch (part) {
+            case "двигатель" -> "двигателя";
+            case "мотор" -> "мотора";
+            case "фильтр" -> "фильтра";
+            case "аккумулятор" -> "аккумулятора";
+            case "ремень" -> "ремня";
+            case "масло" -> "масла";
+            case "свечи" -> "свечей";
+            case "колодки" -> "колодок";
+            default -> part;
+        };
     }
 
     private String refuelRequiredFieldsAnswer() {
@@ -640,6 +945,19 @@ public class ChatService {
     private String maintenanceCreatedAnswer(TimelineEventResponse event) {
         return "Записала ремонт в свою историю: %s, пробег %s км."
                 .formatted(event.name(), event.mileageKm());
+    }
+
+    private String tripStartedAnswer(TimelineEventResponse event) {
+        return "\u041f\u043e\u0435\u0437\u0434\u043a\u0443 \u043d\u0430\u0447\u0430\u043b\u0430 \u0438 \u0441\u043e\u0445\u0440\u0430\u043d\u0438\u043b\u0430 \u0441\u0442\u0430\u0440\u0442. \u041a\u043e\u0433\u0434\u0430 \u0437\u0430\u043a\u043e\u043d\u0447\u0438\u0448\u044c, \u043d\u0430\u043f\u0438\u0448\u0438 \u0441\u044e\u0434\u0430 \u0434\u0438\u0441\u0442\u0430\u043d\u0446\u0438\u044e, \u0434\u043b\u0438\u0442\u0435\u043b\u044c\u043d\u043e\u0441\u0442\u044c \u0438 \u0440\u0430\u0441\u0445\u043e\u0434 \u0442\u043e\u043f\u043b\u0438\u0432\u0430.";
+    }
+
+    private String tripLifecyclePartialAnswer(TimelineEventResponse event) {
+        return "\u0421\u043e\u0445\u0440\u0430\u043d\u0438\u043b\u0430 \u043f\u043e\u0435\u0437\u0434\u043a\u0443 \u0447\u0430\u0441\u0442\u0438\u0447\u043d\u043e. \u041f\u0440\u0438\u0448\u043b\u0438 \u043d\u0435\u0434\u043e\u0441\u0442\u0430\u044e\u0449\u0438\u0435 \u0434\u0430\u043d\u043d\u044b\u0435: \u0434\u0438\u0441\u0442\u0430\u043d\u0446\u0438\u044e, \u0434\u043b\u0438\u0442\u0435\u043b\u044c\u043d\u043e\u0441\u0442\u044c \u0438\u043b\u0438 \u0440\u0430\u0441\u0445\u043e\u0434 \u0442\u043e\u043f\u043b\u0438\u0432\u0430.";
+    }
+
+    private String tripLifecycleCompletedAnswer(TimelineEventResponse event) {
+        return "\u041f\u043e\u0435\u0437\u0434\u043a\u0443 \u0437\u0430\u0432\u0435\u0440\u0448\u0438\u043b\u0430: %s \u043a\u043c \u0437\u0430 %s \u043c\u0438\u043d\u0443\u0442, \u0440\u0430\u0441\u0445\u043e\u0434 \u0442\u043e\u043f\u043b\u0438\u0432\u0430 %s \u043b."
+                .formatted(event.distanceKm(), event.durationMinutes(), decimal(event.fuelLiters()));
     }
 
     private String contextForDecision(
@@ -697,6 +1015,7 @@ public class ChatService {
     }
 
     private String templateAnswer(
+            String userText,
             ChatDecision decision,
             VehicleDashboardResponse dashboard,
             AnalyticsOverviewResponse analyticsOverview,
@@ -706,7 +1025,7 @@ public class ChatService {
             case OPEN_REFUEL_FORM, OPEN_TRIP_FORM, OPEN_PART_FORM, OPEN_REPAIR_FORM -> formAnswer(decision.language(), action);
             case ASK_REPAIR_NEED -> repairAnswer(decision.language(), dashboard);
             case ASK_FUEL -> fuelAnswer(decision.language(), analyticsOverview);
-            case CASUAL -> casualAnswer(decision.language(), dashboard);
+            case CASUAL -> casualAnswer(decision.language(), dashboard, userText);
             case ASK_STATUS -> statusAnswer(decision.language(), dashboard);
             case UNCLEAR -> unclearAnswer(decision.language());
         };
@@ -787,14 +1106,40 @@ public class ChatService {
                         .formatted(decimal(overview.fuel().totalLiters()), decimal(overview.fuel().averageConsumptionLitersPer100Km()));
     }
 
-    private String casualAnswer(ChatLanguage language, VehicleDashboardResponse dashboard) {
-        return language == ChatLanguage.RU
-                ? "Привет! Я тут, на связи. Я %s %s, сейчас у меня %s км пробега, статус обслуживания: %s."
-                        .formatted(dashboard.vehicle().brand(), dashboard.vehicle().model(),
-                                dashboard.vehicle().mileageKm(), dashboard.maintenanceForecast().overallStatus())
-                : "Hi! I am here and online. I am your %s %s, my current mileage is %s km, and my maintenance status is %s."
-                        .formatted(dashboard.vehicle().brand(), dashboard.vehicle().model(),
-                                dashboard.vehicle().mileageKm(), dashboard.maintenanceForecast().overallStatus());
+    private String casualAnswer(ChatLanguage language, VehicleDashboardResponse dashboard, String userText) {
+        boolean greeted = userGreeted(userText);
+        if (language == ChatLanguage.RU) {
+            String prefix = greeted ? "Привет! " : "";
+            return prefix + "Я тут, на связи. Сейчас у меня %s км пробега, статус обслуживания: %s."
+                    .formatted(dashboard.vehicle().mileageKm(), dashboard.maintenanceForecast().overallStatus());
+        }
+        String prefix = greeted ? "Hi! " : "";
+        return prefix + "I am here and online. My current mileage is %s km, and my maintenance status is %s."
+                .formatted(dashboard.vehicle().mileageKm(), dashboard.maintenanceForecast().overallStatus());
+    }
+
+    private String polishAssistantText(String text, String userText, ChatLanguage language) {
+        String polished = text
+                .replaceAll("(?iu),?\\s*\\bхозяин\\b,?", "")
+                .replaceAll("(?iu),?\\s*\\b(owner|master)\\b,?", "")
+                .replaceAll("\\s{2,}", " ")
+                .strip();
+        if (!userGreeted(userText)) {
+            polished = stripLeadingGreeting(polished, language);
+        }
+        return polished;
+    }
+
+    private String stripLeadingGreeting(String text, ChatLanguage language) {
+        String stripped = language == ChatLanguage.RU
+                ? text.replaceFirst("(?iu)^\\s*(привет|здравствуй|здравствуйте|добрый день)[!,.\\s]+", "")
+                : text.replaceFirst("(?iu)^\\s*(hi|hello|hey)[!,.\\s]+", "");
+        return stripped.strip();
+    }
+
+    private boolean userGreeted(String userText) {
+        String text = normalizedText(userText);
+        return text.matches("(?su).*\\b(hi|hello|hey|привет|здравствуй|здравствуйте|добрый день)\\b.*");
     }
 
     private String unclearAnswer(ChatLanguage language) {
@@ -916,5 +1261,8 @@ public class ChatService {
     }
 
     private record AssistantDraft(String text, ChatActionResponse action, TimelineEventResponse createdEvent) {
+    }
+
+    private record MaintenanceDraft(Optional<String> name, Optional<String> description) {
     }
 }

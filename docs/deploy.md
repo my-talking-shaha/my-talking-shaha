@@ -2,10 +2,11 @@
 
 Autodeploy runs from GitHub Actions after every push to `main`.
 
-This deployment profile is for the shared development server only. It resets the
-Postgres Docker volume on each deploy so Flyway always applies the current
-migration set from a clean database. Do not use this flow for staging or
-production data.
+This deployment profile is for the shared development server only. It uses a
+blue-green Docker deployment and preserves the Postgres Docker volume on each
+deploy, so Flyway applies new migrations to the existing database. Do not use
+this flow for staging or production data without reviewing the runtime settings
+and migration policy.
 
 ## One-time server setup
 
@@ -25,12 +26,26 @@ production data.
 
    Log out and log back in after changing groups.
 
-4. Run the application once manually:
+4. Optionally run the application once manually for a private local smoke test
+   with explicit local-only values:
 
    ```bash
-   docker compose -f docker/docker-compose.yml down -v
-   docker compose -f docker/docker-compose.yml up -d --build --remove-orphans
+   cat > .env <<'EOF'
+   JWT_SECRET=local-jwt-secret-with-more-than-32-bytes
+   DB_USERNAME=local_shaha_user
+   DB_PASSWORD=local-db-password-32-bytes
+   TIMEWEB_AI_BASE_URL=https://agent.timeweb.cloud/api/v1/cloud-ai/agents/YOUR_AGENT_ID/v1
+   TIMEWEB_AI_TOKEN=local-placeholder-token
+   TIMEWEB_AI_MODEL=timeweb-agent
+   EOF
+
+   docker compose --env-file .env -f docker/docker-compose.yml down --remove-orphans
+   docker compose --env-file .env -f docker/docker-compose.yml up -d --build --remove-orphans backend frontend router
    ```
+
+   These local values are development-only. Do not leave them on the shared
+   development server, staging, or production-like deployment. Those
+   environments must use GitHub secrets or real environment variables instead.
 
 ## GitHub secrets
 
@@ -41,38 +56,47 @@ Add these secrets in GitHub:
 - `SERVER_SSH_KEY` - private SSH key with access to the server.
 - `SERVER_APP_PATH` - repository path on the server, for example `/opt/my-talking-shaha`.
 - `SERVER_PORT` - optional SSH port. If omitted, port `22` is used.
+- `JWT_SECRET` - production-grade JWT signing secret, at least 32 bytes, not
+  the local development placeholder.
+- `DB_USERNAME` - production database username, not the committed local default.
+- `DB_PASSWORD` - production database password, not the committed local default.
 - `TIMEWEB_AI_BASE_URL` - OpenAI-compatible Timeweb AI base URL, for example
   `https://agent.timeweb.cloud/api/v1/cloud-ai/agents/<agent_id>/v1`.
 - `TIMEWEB_AI_TOKEN` - Timeweb AI API token for the agent or AI Gateway.
+
+The backend fails during startup outside `local` or `test` profiles when
+`JWT_SECRET`, `DB_USERNAME`, or `DB_PASSWORD` are missing or still set to known
+development placeholders. The deploy workflow checks the same required GitHub
+secrets before it starts the remote Docker stack.
 
 ## Deployment flow
 
 On every push to `main`, the workflow:
 
 1. Checks out the repository on the GitHub Actions runner.
-2. Builds and starts the application Docker stack with Postgres.
+2. Builds and starts the application Docker stack with Postgres and the router.
 3. Waits for `http://localhost:8080/actuator/health`.
 4. Waits for `http://localhost/health`.
 5. Verifies the generated OpenAPI docs at `http://localhost/v3/api-docs`.
-6. Stops the smoke-test stack.
+6. Verifies Swagger UI and an authenticated API smoke flow through `/api`.
 7. Connects to the server over SSH.
 8. Goes to `SERVER_APP_PATH`.
 9. Runs `git fetch --prune origin main`.
 10. Updates the server checkout with `git pull --ff-only origin main`.
-11. Builds backend and frontend images before stopping the current stack.
-12. If the first Docker build fails, prunes the BuildKit cache and retries once.
-13. Removes the previous development stack and Postgres volume.
-14. Starts the already built stack from a clean database.
-15. Verifies backend health, frontend health, generated OpenAPI docs, and Swagger UI.
+11. Reads `.deploy/active-slot` to find the active slot, either `blue` or `green`.
+12. Selects the inactive slot as the target slot.
+13. Builds backend and frontend images for the target slot while the active slot keeps serving traffic.
+14. If the first Docker build fails, prunes the BuildKit cache and retries once.
+15. Starts the target backend and frontend containers without binding either app container to public port `80`.
+16. Verifies the target slot before switching traffic:
+    backend health, frontend health, OpenAPI, Swagger UI, Swagger CSS, and an expected `/api/v1/users/me` unauthorized response through the target frontend nginx.
+17. Switches traffic by updating `.deploy/nginx/active-upstreams.conf` and reloading the stable `talking-shaha-router` nginx container.
+18. Verifies public traffic after the switch:
+    backend health, frontend health, OpenAPI, Swagger UI, Swagger CSS, and `/api` routing.
+19. If public post-switch verification fails, automatically reloads the router back to the previous slot and stops the failed target slot.
 
    ```bash
-   docker compose -f docker/docker-compose.yml build backend frontend
-   docker compose -f docker/docker-compose.yml down -v
-   docker compose -f docker/docker-compose.yml up -d --no-build --remove-orphans backend frontend
-
-   curl --fail --retry 30 --retry-delay 2 --retry-all-errors http://localhost:8080/actuator/health
-   curl --fail --retry 30 --retry-delay 2 --retry-all-errors http://localhost/health
-   curl --fail --retry 30 --retry-delay 2 --retry-all-errors http://localhost/v3/api-docs
+   bash docker/deploy-blue-green.sh
    ```
 
 After deployment, the web app should be available at `http://SERVER_HOST`.
@@ -80,13 +104,78 @@ After deployment, the web app should be available at `http://SERVER_HOST`.
 Swagger UI should be available at `http://SERVER_HOST/swagger-ui.html`.
 The generated OpenAPI JSON should be available at `http://SERVER_HOST/v3/api-docs`.
 
+## Blue-green runtime
+
+The blue-green deployment uses `docker/docker-compose.blue-green.yml`.
+
+- `backend-blue` and `frontend-blue` are the blue slot.
+- `backend-green` and `frontend-green` are the green slot.
+- `router` is the only service that binds public port `80`.
+- app containers expose ports only on Docker networks.
+- `postgres` is shared by both slots and keeps the `postgres-data` volume.
+- `.deploy/active-slot` stores the active slot name.
+- `.deploy/nginx/active-upstreams.conf` stores the nginx upstreams used by the router.
+
+Deployment logs include `active_slot`, `target_slot`, `switch_result`, and
+`rollback_status`. A healthy deploy ends with:
+
+```text
+[blue-green] switch_result=switched previous_slot=<old> active_slot=<new>
+[blue-green] rollback_status=not_needed active_slot=<new>
+```
+
+If target verification fails before traffic switches, the workflow logs
+`switch_result=not_attempted` and leaves the previous active slot running. If
+post-switch verification fails, the workflow logs `switch_result=failed_post_switch`,
+reloads the router to the previous slot, verifies public traffic again, and logs
+`rollback_status=succeeded` when rollback is complete.
+
+## Manual rollback
+
+Automatic rollback runs only during the deploy job after a failed post-switch
+verification. To roll back manually later, SSH to the server and switch the
+router back to the inactive slot:
+
+```bash
+cd /opt/my-talking-shaha
+
+previous_slot=blue # or green
+mkdir -p .deploy/nginx
+cat > .deploy/nginx/active-upstreams.conf <<EOF
+upstream frontend_active {
+    server frontend-${previous_slot}:80;
+}
+
+upstream backend_active {
+    server backend-${previous_slot}:8080;
+}
+EOF
+printf '%s\n' "$previous_slot" > .deploy/active-slot
+docker exec talking-shaha-router nginx -t
+docker exec talking-shaha-router nginx -s reload
+
+curl --fail http://localhost/health
+curl --fail http://localhost/v3/api-docs >/dev/null
+curl --fail http://localhost/swagger-ui.html >/dev/null
+```
+
+After confirming the rollback, optionally stop the bad inactive slot:
+
+```bash
+docker compose -f docker/docker-compose.blue-green.yml stop frontend-green backend-green
+```
+
+Replace `green` with `blue` if blue is the bad inactive slot.
+
 ## Database note
 
 The current Docker Compose file sets `SPRING_JPA_HIBERNATE_DDL_AUTO=validate`
-and leaves schema changes to Flyway migrations. Because this development
-deployment runs `docker compose down -v`, the `postgres-data` volume is deleted
-on each deploy. This is acceptable only while the server has no important data.
+and leaves schema changes to Flyway migrations. The development deployment
+preserves the `postgres-data` volume, so migrations must be safe to apply to the
+existing database.
 
-For staging or production, remove the `down -v` step and never edit migrations
-that have already been applied to a shared database. Add schema changes as new
-versions, for example `V03__add_maintenance_name.sql`.
+Never edit migrations that have already been applied to a shared database. Add
+schema changes as new versions, for example `V03__add_maintenance_name.sql`.
+Because the inactive backend may run Flyway while the previous active slot is
+still serving traffic, schema changes must be backward-compatible with the
+previous app version for at least one deployment.
