@@ -174,6 +174,44 @@ Response `200`:
 ]
 ```
 
+### List fuel types
+
+`GET /api/v1/vehicles/fuel-types`
+
+Returns the fuel type options for selection lists. Requires authentication. `code` is the
+value submitted back as `fuelType`; `label` is the text shown to the user.
+
+Response `200`:
+
+```json
+[
+  { "code": "PETROL_92", "label": "Petrol (92)" },
+  { "code": "PETROL_95", "label": "Petrol (95)" },
+  { "code": "PETROL_98", "label": "Petrol (98)" },
+  { "code": "PETROL_100", "label": "Petrol (100)" },
+  { "code": "DIESEL", "label": "Diesel" }
+]
+```
+
+### List engine types
+
+`GET /api/v1/vehicles/engine-types`
+
+Returns the engine type options for selection lists. Requires authentication. `code` is the
+value submitted back as `fuelType`; `label` is the text shown to the user.
+
+Response `200`:
+
+```json
+[
+  { "code": "GASOLINE", "label": "Gasoline" },
+  { "code": "DIESEL", "label": "Diesel" },
+  { "code": "HYBRID", "label": "Hybrid" },
+  { "code": "PHEV", "label": "PHEV" },
+  { "code": "ELECTRIC", "label": "Electric" }
+]
+```
+
 ### List garage vehicles
 
 `GET /api/v1/vehicles`

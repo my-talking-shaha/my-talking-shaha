@@ -149,6 +149,32 @@ paths:
                 type: array
                 items:
                   type: string
+  /vehicles/fuel-types:
+    get:
+      summary: List supported fuel types
+      tags: [ Vehicles ]
+      responses:
+        '200':
+          description: Fuel type options for selection lists
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/FuelTypeOption'
+  /vehicles/engine-types:
+    get:
+      summary: List supported engine types
+      tags: [ Vehicles ]
+      responses:
+        '200':
+          description: Engine type options for selection lists
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/FuelTypeOption'
   /vehicles/{vehicleId}:
     patch:
       summary: Update vehicle
@@ -1109,6 +1135,15 @@ components:
         petrol value kept for already stored data; new clients should prefer
         the octane-specific PETROL_* values.
       enum: [ PETROL_92, PETROL_95, PETROL_98, PETROL_100, DIESEL, ELECTRIC, HYBRID, PHEV, GASOLINE, OTHER ]
+    FuelTypeOption:
+      type: object
+      description: A selectable fuel type or engine type option.
+      properties:
+        code:
+          $ref: '#/components/schemas/FuelType'
+        label:
+          type: string
+          example: Petrol (95)
     PartCategory:
       type: string
       enum: [ ENGINE_OIL, OIL_FILTER, AIR_FILTER, BRAKE_PADS, TIMING_BELT, BATTERY, OTHER ]
