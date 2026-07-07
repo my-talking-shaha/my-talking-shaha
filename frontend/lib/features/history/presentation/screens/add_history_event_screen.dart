@@ -13,8 +13,11 @@ import 'package:frontend/features/history/presentation/utils/history_event_form_
 import 'package:frontend/l10n/generated/app_localizations.dart';
 import 'package:image_picker/image_picker.dart';
 
+part 'add_history_event_widgets.dart';
+
 typedef SaveHistoryEvent = Future<void> Function(HistoryEvent event);
 typedef PickHistoryPhoto = Future<XFile?> Function();
+typedef PickHistoryPhotos = Future<List<XFile>> Function();
 typedef PersistHistoryPhoto =
     Future<String> Function({
       required String sourcePath,
@@ -32,6 +35,7 @@ final class AddHistoryEventScreen extends StatefulWidget {
     required this.persistPhoto,
     required this.deletePhoto,
     this.pickPhoto,
+    this.pickPhotos,
     this.initialEvent,
     this.initialMileageKm = 0,
     this.initialType = HistoryEventType.fuel,
@@ -44,6 +48,7 @@ final class AddHistoryEventScreen extends StatefulWidget {
   final PersistHistoryPhoto persistPhoto;
   final DeleteHistoryPhoto deletePhoto;
   final PickHistoryPhoto? pickPhoto;
+  final PickHistoryPhotos? pickPhotos;
   final HistoryEvent? initialEvent;
   final int initialMileageKm;
   final HistoryEventType initialType;
@@ -60,7 +65,8 @@ final class _AddHistoryEventScreenState extends State<AddHistoryEventScreen> {
   late DateTime _occurredAt;
   bool _isSaving = false;
   bool _isPickingPhoto = false;
-  XFile? _selectedPhoto;
+  final List<XFile> _selectedPhotos = [];
+  final List<String> _removedExistingPhotoUrls = [];
   List<String>? _existingPhotoUrls;
 
   final _imagePicker = ImagePicker();
@@ -106,7 +112,10 @@ final class _AddHistoryEventScreenState extends State<AddHistoryEventScreen> {
       _mileageController.text = widget.initialMileageKm.toString();
       _tripStartController.text = widget.initialMileageKm.toString();
     }
-    if (!kIsWeb && widget.pickPhoto == null && Platform.isAndroid) {
+    if (!kIsWeb &&
+        widget.pickPhoto == null &&
+        widget.pickPhotos == null &&
+        Platform.isAndroid) {
       unawaited(_restoreLostPhoto());
     }
   }
@@ -367,12 +376,12 @@ final class _AddHistoryEventScreenState extends State<AddHistoryEventScreen> {
       if (!kIsWeb) ...[
         const SizedBox(height: AppSpacing.md),
         _PhotoCard(
-          photo: _selectedPhoto,
+          existingPhotoUrls: _existingPhotoUrls ?? const [],
+          photos: _selectedPhotos,
           isPicking: _isPickingPhoto,
-          onPick: _pickPhoto,
-          onRemove: _selectedPhoto == null
-              ? null
-              : () => setState(() => _selectedPhoto = null),
+          onPick: _pickPhotos,
+          onRemove: _removePhoto,
+          onRemoveExisting: _removeExistingPhoto,
         ),
       ],
     ];
@@ -465,29 +474,37 @@ final class _AddHistoryEventScreenState extends State<AddHistoryEventScreen> {
     if (!(_formKey.currentState?.validate() ?? false)) return;
 
     setState(() => _isSaving = true);
-    String? persistedPhotoPath;
+    final persistedPhotoPaths = <String>[];
     try {
       final eventId =
           widget.initialEvent?.id ??
           'local-${DateTime.now().microsecondsSinceEpoch}';
-      final photo = _type == HistoryEventType.maintenance
-          ? _selectedPhoto
-          : null;
-      if (photo != null) {
-        persistedPhotoPath = await widget.persistPhoto(
-          sourcePath: photo.path,
-          originalName: photo.name,
-          eventId: eventId,
+      final eventWithoutPhotos = _createEvent(
+        id: eventId,
+        photoPaths: const [],
+      );
+      final photoCacheKey = _photoCacheKey(eventWithoutPhotos);
+      final photos = _type == HistoryEventType.maintenance
+          ? List<XFile>.of(_selectedPhotos)
+          : const <XFile>[];
+      for (final photo in photos) {
+        persistedPhotoPaths.add(
+          await widget.persistPhoto(
+            sourcePath: photo.path,
+            originalName: photo.name,
+            eventId: photoCacheKey,
+          ),
         );
       }
 
-      final event = _createEvent(id: eventId, photoPath: persistedPhotoPath);
+      final event = _createEvent(id: eventId, photoPaths: persistedPhotoPaths);
       await widget.onSave(event);
+      await _deleteRemovedExistingPhotos();
       if (mounted) Navigator.of(context).pop(event);
     } catch (_) {
-      if (persistedPhotoPath != null) {
+      for (final photoPath in persistedPhotoPaths) {
         try {
-          await widget.deletePhoto(persistedPhotoPath);
+          await widget.deletePhoto(photoPath);
         } catch (_) {
           // The original save error is more useful to the user.
         }
@@ -520,7 +537,9 @@ final class _AddHistoryEventScreenState extends State<AddHistoryEventScreen> {
         _maintenanceDescriptionController.text = description;
         _maintenanceCostController.text = cost?.toString() ?? '';
         _replacedPartsController.text = replacedParts?.join(', ') ?? '';
-        _existingPhotoUrls = photoUrls;
+        _existingPhotoUrls = photoUrls
+            ?.where((url) => url.trim().isNotEmpty)
+            .toList(growable: false);
       case TripDetails(
         :final startKm,
         :final endKm,
@@ -534,7 +553,7 @@ final class _AddHistoryEventScreenState extends State<AddHistoryEventScreen> {
     }
   }
 
-  Future<void> _pickPhoto() async {
+  Future<void> _pickPhotos() async {
     if (_isPickingPhoto) return;
     final l10n = AppLocalizations.of(context);
     final accessError = l10n.couldNotAccessPhotoLibrary;
@@ -542,16 +561,9 @@ final class _AddHistoryEventScreenState extends State<AddHistoryEventScreen> {
     setState(() => _isPickingPhoto = true);
 
     try {
-      final photo = widget.pickPhoto != null
-          ? await widget.pickPhoto!()
-          : await _imagePicker.pickImage(
-              source: ImageSource.gallery,
-              imageQuality: 85,
-              maxWidth: 1600,
-              requestFullMetadata: false,
-            );
-      if (photo != null && mounted) {
-        setState(() => _selectedPhoto = photo);
+      final photos = await _selectPhotosFromGallery();
+      if (photos.isNotEmpty && mounted) {
+        setState(() => _selectedPhotos.addAll(photos));
       }
     } on PlatformException {
       _showPhotoError(accessError);
@@ -562,13 +574,30 @@ final class _AddHistoryEventScreenState extends State<AddHistoryEventScreen> {
     }
   }
 
+  Future<List<XFile>> _selectPhotosFromGallery() async {
+    if (widget.pickPhotos != null) {
+      return widget.pickPhotos!();
+    }
+
+    if (widget.pickPhoto != null) {
+      final photo = await widget.pickPhoto!();
+      return photo == null ? const [] : [photo];
+    }
+
+    return _imagePicker.pickMultiImage(
+      imageQuality: 85,
+      maxWidth: 1600,
+      requestFullMetadata: false,
+    );
+  }
+
   Future<void> _restoreLostPhoto() async {
     final restoreError = AppLocalizations.of(context).couldNotRestorePhoto;
     try {
       final response = await _imagePicker.retrieveLostData();
       final files = response.files;
       if (files != null && files.isNotEmpty && mounted) {
-        setState(() => _selectedPhoto = files.first);
+        setState(() => _selectedPhotos.addAll(files));
       } else if (response.exception != null) {
         _showPhotoError(restoreError);
       }
@@ -582,6 +611,31 @@ final class _AddHistoryEventScreenState extends State<AddHistoryEventScreen> {
     ScaffoldMessenger.maybeOf(
       context,
     )?.showSnackBar(SnackBar(content: Text(message)));
+  }
+
+  void _removePhoto(XFile photo) {
+    setState(() => _selectedPhotos.remove(photo));
+  }
+
+  void _removeExistingPhoto(String url) {
+    setState(() {
+      _existingPhotoUrls = (_existingPhotoUrls ?? const <String>[])
+          .where((item) => item != url)
+          .toList(growable: false);
+      _removedExistingPhotoUrls.add(url);
+    });
+  }
+
+  Future<void> _deleteRemovedExistingPhotos() async {
+    for (final url in _removedExistingPhotoUrls) {
+      final path = url.trim();
+      if (path.isEmpty || _isRemoteUrl(path)) continue;
+      try {
+        await widget.deletePhoto(path);
+      } catch (_) {
+        // The event was saved; stale local files can be retried on event delete.
+      }
+    }
   }
 
   Future<void> _selectOccurredAt() async {
@@ -610,7 +664,10 @@ final class _AddHistoryEventScreenState extends State<AddHistoryEventScreen> {
     });
   }
 
-  HistoryEvent _createEvent({required String id, String? photoPath}) {
+  HistoryEvent _createEvent({
+    required String id,
+    required List<String> photoPaths,
+  }) {
     return switch (_type) {
       HistoryEventType.fuel => HistoryEvent(
         id: id,
@@ -640,7 +697,7 @@ final class _AddHistoryEventScreenState extends State<AddHistoryEventScreen> {
           replacedParts: HistoryEventFormUtils.parseCommaSeparated(
             _replacedPartsController.text,
           ),
-          photoUrls: photoPath == null ? _existingPhotoUrls : [photoPath],
+          photoUrls: _maintenancePhotoUrls(photoPaths),
         ),
       ),
       HistoryEventType.trip => HistoryEvent(
@@ -659,372 +716,28 @@ final class _AddHistoryEventScreenState extends State<AddHistoryEventScreen> {
       ),
     };
   }
-}
 
-final class _EventTypeSelector extends StatelessWidget {
-  const _EventTypeSelector({
-    required this.selectedType,
-    required this.onSelected,
-    this.enabled = true,
-  });
+  List<String>? _maintenancePhotoUrls(List<String> photoPaths) {
+    final urls = [
+      ...?_existingPhotoUrls,
+      ...photoPaths,
+    ].where((url) => url.trim().isNotEmpty).toList(growable: false);
 
-  final HistoryEventType selectedType;
-  final ValueChanged<HistoryEventType> onSelected;
-  final bool enabled;
-
-  @override
-  Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context);
-    final options = [
-      (HistoryEventType.fuel, l10n.fuelEvent, 'assets/icons/events/gas.svg'),
-      (
-        HistoryEventType.maintenance,
-        l10n.maintenanceEvent,
-        'assets/icons/events/spanner.svg',
-      ),
-      (HistoryEventType.trip, l10n.tripEvent, 'assets/icons/events/trip.svg'),
-    ];
-
-    return Container(
-      height: 58,
-      padding: const EdgeInsets.all(AppSpacing.xs),
-      decoration: const BoxDecoration(
-        color: AppColors.surfaceHigh,
-        borderRadius: AppRadius.card,
-      ),
-      child: Stack(
-        fit: StackFit.expand,
-        children: [
-          IgnorePointer(
-            child: AnimatedAlign(
-              key: const ValueKey('event-type-selection'),
-              alignment: switch (selectedType) {
-                HistoryEventType.fuel => Alignment.centerLeft,
-                HistoryEventType.maintenance => Alignment.center,
-                HistoryEventType.trip => Alignment.centerRight,
-              },
-              duration: const Duration(milliseconds: 320),
-              curve: Curves.easeOutCubic,
-              child: FractionallySizedBox(
-                widthFactor: 1 / options.length,
-                heightFactor: 1,
-                child: DecoratedBox(
-                  decoration: BoxDecoration(
-                    color: AppColors.primaryPressed.withValues(alpha: 0.45),
-                    borderRadius: AppRadius.input,
-                  ),
-                ),
-              ),
-            ),
-          ),
-          Row(
-            children: [
-              for (final (type, label, asset) in options)
-                Expanded(
-                  child: Semantics(
-                    button: true,
-                    selected: type == selectedType,
-                    label: label,
-                    child: InkWell(
-                      key: ValueKey('event-type-${type.name}'),
-                      onTap: enabled ? () => onSelected(type) : null,
-                      borderRadius: AppRadius.input,
-                      child: Center(
-                        child: SvgPicture.asset(
-                          asset,
-                          width: 22,
-                          height: 22,
-                          colorFilter: ColorFilter.mode(
-                            type == selectedType
-                                ? AppColors.primaryLight
-                                : AppColors.textSecondary,
-                            BlendMode.srcIn,
-                          ),
-                        ),
-                      ),
-                    ),
-                  ),
-                ),
-            ],
-          ),
-        ],
-      ),
-    );
+    return urls.isEmpty ? null : List.unmodifiable(urls);
   }
-}
 
-final class _FormCard extends StatelessWidget {
-  const _FormCard({
-    required this.label,
-    required this.child,
-    this.optional = false,
-  });
-
-  final String label;
-  final Widget child;
-  final bool optional;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(AppSpacing.lg),
-      decoration: BoxDecoration(
-        color: AppColors.surfaceHigh,
-        border: Border.all(color: AppColors.border),
-        borderRadius: AppRadius.card,
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Expanded(child: _SectionLabel(label)),
-              if (optional)
-                Text(
-                  AppLocalizations.of(context).optional,
-                  style: Theme.of(context).textTheme.bodySmall,
-                ),
-            ],
-          ),
-          const SizedBox(height: AppSpacing.sm),
-          child,
-        ],
-      ),
-    );
+  String _photoCacheKey(HistoryEvent event) {
+    return [
+      event.carId,
+      event.type.name,
+      event.occurredAt.toUtc().toIso8601String(),
+      event.title.trim().toLowerCase(),
+      event.currentMileageKm,
+    ].join('|');
   }
-}
 
-final class _SectionLabel extends StatelessWidget {
-  const _SectionLabel(this.text);
-
-  final String text;
-
-  @override
-  Widget build(BuildContext context) {
-    return Text(
-      text,
-      style: Theme.of(
-        context,
-      ).textTheme.labelMedium?.copyWith(fontSize: 10, letterSpacing: 0.65),
-    );
-  }
-}
-
-final class _LabeledField extends StatelessWidget {
-  const _LabeledField({required this.label, required this.child});
-
-  final String label;
-  final Widget child;
-
-  @override
-  Widget build(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        _SectionLabel(label),
-        const SizedBox(height: AppSpacing.sm),
-        child,
-      ],
-    );
-  }
-}
-
-final class _NumberField extends StatelessWidget {
-  const _NumberField({
-    required this.controller,
-    required this.hintText,
-    this.suffixText,
-    this.icon,
-    this.validator,
-    this.allowDecimal = false,
-    super.key,
-  });
-
-  final TextEditingController controller;
-  final String hintText;
-  final String? suffixText;
-  final IconData? icon;
-  final FormFieldValidator<String>? validator;
-  final bool allowDecimal;
-
-  @override
-  Widget build(BuildContext context) {
-    return TextFormField(
-      controller: controller,
-      keyboardType: TextInputType.numberWithOptions(decimal: allowDecimal),
-      inputFormatters: [
-        allowDecimal
-            ? FilteringTextInputFormatter.allow(RegExp(r'[0-9\.,]'))
-            : FilteringTextInputFormatter.digitsOnly,
-      ],
-      decoration: InputDecoration(
-        hintText: hintText,
-        prefixIcon: icon == null ? null : Icon(icon),
-        suffixText: suffixText,
-      ),
-      validator: validator,
-    );
-  }
-}
-
-final class _ReadOnlyValue extends StatelessWidget {
-  const _ReadOnlyValue({
-    required this.icon,
-    required this.value,
-    required this.onTap,
-  });
-
-  final IconData icon;
-  final String value;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    return Material(
-      color: AppColors.backgroundDark,
-      borderRadius: AppRadius.input,
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: AppRadius.input,
-        child: Padding(
-          padding: const EdgeInsets.symmetric(
-            horizontal: AppSpacing.md,
-            vertical: AppSpacing.md,
-          ),
-          child: Row(
-            children: [
-              Icon(icon, size: 17, color: AppColors.primaryLight),
-              const SizedBox(width: AppSpacing.sm),
-              Text(value, style: Theme.of(context).textTheme.bodyMedium),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-final class _InformationCard extends StatelessWidget {
-  const _InformationCard({required this.message});
-
-  final String message;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(AppSpacing.lg),
-      decoration: BoxDecoration(
-        color: AppColors.primarySoft,
-        border: Border.all(
-          color: AppColors.primaryPressed.withValues(alpha: 0.4),
-        ),
-        borderRadius: AppRadius.card,
-      ),
-      child: Row(
-        children: [
-          const Icon(
-            Icons.info_outline,
-            color: AppColors.primaryLight,
-            size: 18,
-          ),
-          const SizedBox(width: AppSpacing.md),
-          Expanded(
-            child: Text(
-              message,
-              style: Theme.of(
-                context,
-              ).textTheme.bodyMedium?.copyWith(color: AppColors.primaryLight),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-final class _PhotoCard extends StatelessWidget {
-  const _PhotoCard({
-    required this.photo,
-    required this.isPicking,
-    required this.onPick,
-    required this.onRemove,
-  });
-
-  final XFile? photo;
-  final bool isPicking;
-  final VoidCallback onPick;
-  final VoidCallback? onRemove;
-
-  @override
-  Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context);
-
-    return _FormCard(
-      label: l10n.partPhoto,
-      optional: true,
-      child: photo == null
-          ? OutlinedButton.icon(
-              key: const ValueKey('maintenance-photo-add'),
-              onPressed: isPicking ? null : onPick,
-              icon: isPicking
-                  ? const SizedBox.square(
-                      dimension: 18,
-                      child: CircularProgressIndicator(strokeWidth: 2),
-                    )
-                  : const Icon(Icons.add_circle_outline, size: 18),
-              label: Text(isPicking ? l10n.openingGallery : l10n.addPhoto),
-            )
-          : Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                Stack(
-                  children: [
-                    ClipRRect(
-                      borderRadius: AppRadius.input,
-                      child: Image.file(
-                        File(photo!.path),
-                        key: const ValueKey('maintenance-photo-preview'),
-                        width: double.infinity,
-                        height: 220,
-                        fit: BoxFit.cover,
-                        errorBuilder: (context, error, stackTrace) => Container(
-                          height: 220,
-                          color: AppColors.surfaceHighest,
-                          alignment: Alignment.center,
-                          child: const Icon(
-                            Icons.broken_image_outlined,
-                            color: AppColors.textMuted,
-                          ),
-                        ),
-                      ),
-                    ),
-                    Positioned(
-                      top: AppSpacing.sm,
-                      right: AppSpacing.sm,
-                      child: IconButton.filled(
-                        key: const ValueKey('maintenance-photo-remove'),
-                        onPressed: onRemove,
-                        tooltip: l10n.removePhoto,
-                        style: IconButton.styleFrom(
-                          backgroundColor: AppColors.backgroundDark.withValues(
-                            alpha: 0.82,
-                          ),
-                          foregroundColor: AppColors.textPrimary,
-                        ),
-                        icon: const Icon(Icons.close),
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: AppSpacing.sm),
-                OutlinedButton.icon(
-                  key: const ValueKey('maintenance-photo-change'),
-                  onPressed: isPicking ? null : onPick,
-                  icon: const Icon(Icons.photo_library_outlined, size: 18),
-                  label: Text(l10n.chooseAnotherPhoto),
-                ),
-              ],
-            ),
-    );
+  bool _isRemoteUrl(String value) {
+    final uri = Uri.tryParse(value);
+    return uri != null && (uri.scheme == 'http' || uri.scheme == 'https');
   }
 }

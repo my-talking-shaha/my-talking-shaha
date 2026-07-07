@@ -35,10 +35,13 @@ services:
       SPRING_DATASOURCE_USERNAME: ${DB_USERNAME:?DB_USERNAME is required}
       SPRING_DATASOURCE_PASSWORD: ${DB_PASSWORD:?DB_PASSWORD is required}
       SPRING_JPA_HIBERNATE_DDL_AUTO: validate
+      PHOTO_STORAGE_DIR: /app/data/photos
       JWT_SECRET: ${JWT_SECRET:?JWT_SECRET is required}
       TIMEWEB_AI_BASE_URL: ${TIMEWEB_AI_BASE_URL:-}
       TIMEWEB_AI_TOKEN: ${TIMEWEB_AI_TOKEN:-}
       TIMEWEB_AI_MODEL: ${TIMEWEB_AI_MODEL:-timeweb-agent}
+    volumes:
+      - photo-data:/app/data/photos
     depends_on:
       postgres:
         condition: service_healthy
@@ -102,3 +105,4 @@ networks:
 
 volumes:
   postgres-data:
+  photo-data:

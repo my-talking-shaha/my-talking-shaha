@@ -114,8 +114,7 @@ abstract final class HistoryApiEventMapper {
         'name': event.title,
         'description': _maintenanceDescription(details),
         if (details.cost != null) 'cost': details.cost,
-        if (details.photoUrls != null && details.photoUrls!.isNotEmpty)
-          'photoUrls': details.photoUrls,
+        ..._remotePhotoUrlsPayload(details),
       },
       TripDetails() => {
         'title': event.title,
@@ -251,6 +250,24 @@ abstract final class HistoryApiEventMapper {
     }
 
     return '${details.description}\nReplaced parts: ${replacedParts.join(', ')}';
+  }
+
+  static List<String> _remotePhotoUrls(MaintenanceDetails details) {
+    return (details.photoUrls ?? const <String>[])
+        .where(_isRemoteUrl)
+        .toList(growable: false);
+  }
+
+  static Map<String, dynamic> _remotePhotoUrlsPayload(
+    MaintenanceDetails details,
+  ) {
+    final urls = _remotePhotoUrls(details);
+    return urls.isEmpty ? const {} : {'photoUrls': urls};
+  }
+
+  static bool _isRemoteUrl(String value) {
+    final uri = Uri.tryParse(value);
+    return uri != null && (uri.scheme == 'http' || uri.scheme == 'https');
   }
 
   static ({String description, List<String>? replacedParts})

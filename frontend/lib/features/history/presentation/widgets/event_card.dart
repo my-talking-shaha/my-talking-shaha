@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:io';
 
 import 'package:flutter/material.dart';
@@ -8,7 +9,9 @@ import 'package:frontend/features/history/domain/entities/history_event.dart';
 import 'package:frontend/features/history/domain/entities/history_event_type.dart';
 import 'package:frontend/l10n/generated/app_localizations.dart';
 
-class EventCard extends StatelessWidget {
+part 'event_card_widgets.dart';
+
+class EventCard extends StatefulWidget {
   final HistoryEvent event;
   final VoidCallback? onEdit;
   final VoidCallback? onDelete;
@@ -16,72 +19,115 @@ class EventCard extends StatelessWidget {
   const EventCard({required this.event, this.onEdit, this.onDelete, super.key});
 
   @override
+  State<EventCard> createState() => _EventCardState();
+}
+
+class _EventCardState extends State<EventCard> with TickerProviderStateMixin {
+  bool _isExpanded = false;
+
+  @override
+  void didUpdateWidget(covariant EventCard oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.event.id != widget.event.id) {
+      _isExpanded = false;
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
+    final event = widget.event;
     final details = event.details;
     final presentation = _EventPresentation.from(event);
+    final photoUrls = _photoUrls(details);
 
     return _HistorySwipeRevealActions(
       actions: [
-        if (onEdit != null)
+        if (widget.onEdit != null)
           _HistorySwipeActionButton(
             label: 'Edit',
             iconPath: 'assets/icons/garage/edit.svg',
             color: const Color(0xFFDCA249),
-            onPressed: onEdit!,
+            onPressed: widget.onEdit!,
           ),
-        if (onDelete != null)
+        if (widget.onDelete != null)
           _HistorySwipeActionButton(
             label: 'Delete',
             iconPath: 'assets/icons/garage/delete.svg',
             color: const Color(0xFFD4352F),
-            onPressed: onDelete!,
+            onPressed: widget.onDelete!,
           ),
       ],
-      child: Container(
-        width: double.infinity,
-        padding: const EdgeInsets.all(AppSpacing.lg),
-        decoration: BoxDecoration(
-          color: AppColors.surfaceHigh,
-          border: Border.all(color: AppColors.border),
-          borderRadius: AppRadius.card,
-        ),
-        child: Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            _EventIcon(presentation: presentation),
-            const SizedBox(width: AppSpacing.lg),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Expanded(
-                        child: Text(
-                          event.title,
-                          style: Theme.of(context).textTheme.titleMedium,
+      child: GestureDetector(
+        onTap: photoUrls.isEmpty
+            ? null
+            : () => setState(() => _isExpanded = !_isExpanded),
+        behavior: HitTestBehavior.opaque,
+        child: Container(
+          width: double.infinity,
+          padding: const EdgeInsets.all(AppSpacing.lg),
+          decoration: BoxDecoration(
+            color: AppColors.surfaceHigh,
+            border: Border.all(color: AppColors.border),
+            borderRadius: AppRadius.card,
+          ),
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              _EventIcon(presentation: presentation),
+              const SizedBox(width: AppSpacing.lg),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Expanded(
+                          child: Text(
+                            event.title,
+                            style: Theme.of(context).textTheme.titleMedium,
+                          ),
                         ),
-                      ),
-                      if (presentation.metric case final metric?) ...[
-                        const SizedBox(width: AppSpacing.sm),
-                        Text(
-                          metric,
-                          textAlign: TextAlign.end,
-                          style: Theme.of(context).textTheme.titleMedium
-                              ?.copyWith(color: AppColors.primaryLight),
-                        ),
+                        if (presentation.metric case final metric?) ...[
+                          const SizedBox(width: AppSpacing.sm),
+                          Text(
+                            metric,
+                            textAlign: TextAlign.end,
+                            style: Theme.of(context).textTheme.titleMedium
+                                ?.copyWith(color: AppColors.primaryLight),
+                          ),
+                        ],
                       ],
+                    ),
+                    const SizedBox(height: AppSpacing.xs),
+                    ..._detailWidgets(context, details),
+                    const SizedBox(height: AppSpacing.xs),
+                    _EventTimestamp(occurredAt: event.occurredAt),
+                    if (photoUrls.isNotEmpty) ...[
+                      const SizedBox(height: AppSpacing.md),
+                      _PhotoToggle(
+                        count: photoUrls.length,
+                        isExpanded: _isExpanded,
+                      ),
+                      AnimatedSize(
+                        duration: const Duration(milliseconds: 220),
+                        curve: Curves.easeOutCubic,
+                        alignment: Alignment.topCenter,
+                        child: _isExpanded
+                            ? Padding(
+                                padding: const EdgeInsets.only(
+                                  top: AppSpacing.sm,
+                                ),
+                                child: _EventPhotoList(urls: photoUrls),
+                              )
+                            : const SizedBox(width: double.infinity),
+                      ),
                     ],
-                  ),
-                  const SizedBox(height: AppSpacing.xs),
-                  ..._detailWidgets(context, details),
-                  const SizedBox(height: AppSpacing.xs),
-                  _EventTimestamp(occurredAt: event.occurredAt),
-                ],
+                  ],
+                ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );
@@ -108,15 +154,18 @@ class EventCard extends StatelessWidget {
             style: bodyStyle,
           ),
         ],
-        if (_firstPhotoUrl(details) case final photoUrl?) ...[
-          const SizedBox(height: AppSpacing.xs),
-          Text(l10n.partPhotoLabel, style: bodyStyle),
-          const SizedBox(height: AppSpacing.xs),
-          _EventPhoto(url: photoUrl),
-        ],
       ],
       TripDetails() => [Text(_tripDetails(context, details), style: bodyStyle)],
     };
+  }
+
+  static List<String> _photoUrls(EventDetails details) {
+    if (details is! MaintenanceDetails) return const [];
+
+    return (details.photoUrls ?? const <String>[])
+        .map((url) => url.trim())
+        .where((url) => url.isNotEmpty)
+        .toList(growable: false);
   }
 
   static List<String> _nonEmptyParts(MaintenanceDetails details) =>
@@ -126,339 +175,10 @@ class EventCard extends StatelessWidget {
           .toList(growable: false) ??
       const [];
 
-  static String? _firstPhotoUrl(MaintenanceDetails details) {
-    for (final url in details.photoUrls ?? const <String>[]) {
-      if (url.trim().isNotEmpty) return url.trim();
-    }
-
-    return null;
-  }
-
   static String _tripDetails(BuildContext context, TripDetails details) {
     final route = details.route?.trim();
     final duration = _formatDuration(context, details.duration);
 
     return route == null || route.isEmpty ? duration : '$route • $duration';
   }
-}
-
-final class _HistorySwipeRevealActions extends StatefulWidget {
-  const _HistorySwipeRevealActions({
-    required this.child,
-    required this.actions,
-  });
-
-  final Widget child;
-  final List<Widget> actions;
-
-  @override
-  State<_HistorySwipeRevealActions> createState() =>
-      _HistorySwipeRevealActionsState();
-}
-
-final class _HistorySwipeRevealActionsState
-    extends State<_HistorySwipeRevealActions> {
-  static const double _actionWidth = 120;
-  double _dragOffset = 0;
-
-  bool get _isOpen => _dragOffset < 0;
-
-  @override
-  Widget build(BuildContext context) {
-    if (widget.actions.isEmpty) {
-      return widget.child;
-    }
-
-    return GestureDetector(
-      behavior: HitTestBehavior.translucent,
-      onHorizontalDragUpdate: (details) {
-        setState(() {
-          _dragOffset = (_dragOffset + details.delta.dx).clamp(
-            -_actionWidth,
-            0,
-          );
-        });
-      },
-      onHorizontalDragEnd: (_) {
-        setState(() {
-          _dragOffset = _dragOffset.abs() > _actionWidth * 0.38
-              ? -_actionWidth
-              : 0;
-        });
-      },
-      child: Stack(
-        clipBehavior: Clip.none,
-        children: [
-          Positioned.fill(
-            child: Align(
-              alignment: Alignment.centerRight,
-              child: SizedBox(
-                width: _actionWidth,
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.end,
-                  children: [
-                    for (
-                      var index = 0;
-                      index < widget.actions.length;
-                      index++
-                    ) ...[
-                      widget.actions[index],
-                      if (index < widget.actions.length - 1)
-                        const SizedBox(width: AppSpacing.sm),
-                    ],
-                  ],
-                ),
-              ),
-            ),
-          ),
-          AnimatedContainer(
-            duration: const Duration(milliseconds: 180),
-            curve: Curves.easeOutCubic,
-            transform: Matrix4.translationValues(_dragOffset, 0, 0),
-            child: GestureDetector(
-              onTap: _isOpen
-                  ? () {
-                      setState(() {
-                        _dragOffset = 0;
-                      });
-                    }
-                  : null,
-              child: widget.child,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-final class _HistorySwipeActionButton extends StatelessWidget {
-  const _HistorySwipeActionButton({
-    required this.label,
-    required this.iconPath,
-    required this.color,
-    required this.onPressed,
-  });
-
-  final String label;
-  final String iconPath;
-  final Color color;
-  final VoidCallback onPressed;
-
-  String get _actionKey => 'history_swipe_action_${label.toLowerCase()}';
-
-  @override
-  Widget build(BuildContext context) {
-    return Semantics(
-      label: label,
-      button: true,
-      child: SizedBox.square(
-        dimension: 52,
-        child: IconButton.filled(
-          key: ValueKey(_actionKey),
-          onPressed: onPressed,
-          tooltip: label,
-          style: IconButton.styleFrom(
-            backgroundColor: color,
-            foregroundColor: AppColors.white,
-            shape: const CircleBorder(),
-          ),
-          icon: SvgPicture.asset(
-            iconPath,
-            width: 26,
-            height: 26,
-            colorFilter: const ColorFilter.mode(
-              AppColors.white,
-              BlendMode.srcIn,
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-class _EventIcon extends StatelessWidget {
-  final _EventPresentation presentation;
-
-  const _EventIcon({required this.presentation});
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      width: 48,
-      height: 48,
-      alignment: Alignment.center,
-      decoration: BoxDecoration(
-        color: presentation.iconBackground,
-        borderRadius: BorderRadius.circular(AppRadius.sm),
-      ),
-      child: SvgPicture.asset(
-        presentation.iconAsset,
-        width: 20,
-        height: 20,
-        colorFilter: ColorFilter.mode(presentation.iconColor, BlendMode.srcIn),
-      ),
-    );
-  }
-}
-
-class _EventTimestamp extends StatelessWidget {
-  final DateTime occurredAt;
-
-  const _EventTimestamp({required this.occurredAt});
-
-  @override
-  Widget build(BuildContext context) {
-    return Row(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        const Icon(Icons.access_time, size: 14, color: AppColors.textMuted),
-        const SizedBox(width: AppSpacing.xs),
-        Flexible(
-          child: Text(
-            _formatDateTime(context, occurredAt),
-            style: Theme.of(context).textTheme.bodySmall,
-          ),
-        ),
-      ],
-    );
-  }
-}
-
-class _EventPhoto extends StatelessWidget {
-  final String url;
-
-  const _EventPhoto({required this.url});
-
-  @override
-  Widget build(BuildContext context) {
-    final uri = Uri.tryParse(url);
-    final isRemote = uri?.scheme == 'http' || uri?.scheme == 'https';
-
-    return ClipRRect(
-      borderRadius: BorderRadius.circular(AppRadius.sm),
-      child: Image(
-        image: isRemote ? NetworkImage(url) : FileImage(File(url)),
-        width: 104,
-        height: 128,
-        fit: BoxFit.cover,
-        errorBuilder: (context, error, stackTrace) => Container(
-          width: 104,
-          height: 128,
-          color: AppColors.surfaceHighest,
-          alignment: Alignment.center,
-          child: const Icon(
-            Icons.broken_image_outlined,
-            color: AppColors.textMuted,
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-class _EventPresentation {
-  final String iconAsset;
-  final Color iconColor;
-  final Color iconBackground;
-  final String? metric;
-
-  const _EventPresentation({
-    required this.iconAsset,
-    required this.iconColor,
-    required this.iconBackground,
-    required this.metric,
-  });
-
-  factory _EventPresentation.from(HistoryEvent event) {
-    return switch (event.type) {
-      HistoryEventType.fuel => _EventPresentation(
-        iconAsset: 'assets/icons/events/gas.svg',
-        iconColor: AppColors.primaryLight,
-        iconBackground: AppColors.primarySoft,
-        metric: event.details is FuelDetails
-            ? '${_formatNumber((event.details as FuelDetails).cost)} ₽'
-            : null,
-      ),
-      HistoryEventType.maintenance => _EventPresentation(
-        iconAsset: 'assets/icons/events/spanner.svg',
-        iconColor: AppColors.error,
-        iconBackground: AppColors.error.withValues(alpha: 0.14),
-        metric: switch (event.details) {
-          MaintenanceDetails(cost: final cost?) => '${_formatNumber(cost)} ₽',
-          _ => null,
-        },
-      ),
-      HistoryEventType.trip => _EventPresentation(
-        iconAsset: 'assets/icons/events/trip.svg',
-        iconColor: AppColors.textSecondary,
-        iconBackground: AppColors.surfaceHighest,
-        metric: event.details is TripDetails
-            ? '${_formatNumber((event.details as TripDetails).distanceKm)} km'
-            : null,
-      ),
-    };
-  }
-}
-
-String _formatNumber(int value) {
-  final digits = value.abs().toString();
-  final buffer = StringBuffer();
-
-  for (var index = 0; index < digits.length; index++) {
-    if (index > 0 && (digits.length - index) % 3 == 0) {
-      buffer.write(' ');
-    }
-    buffer.write(digits[index]);
-  }
-
-  return value < 0 ? '-$buffer' : buffer.toString();
-}
-
-String _formatLiters(double value) {
-  if (value == value.roundToDouble()) {
-    return value.toInt().toString();
-  }
-  return value.toStringAsFixed(2).replaceFirst(RegExp(r'0+$'), '');
-}
-
-String _formatDuration(BuildContext context, Duration duration) {
-  final isRu = Localizations.localeOf(context).languageCode == 'ru';
-  final hours = duration.inHours;
-  final minutes = duration.inMinutes.remainder(60);
-
-  if (hours == 0) return isRu ? '$minutes мин' : '$minutes min';
-  if (minutes == 0) return isRu ? '$hours ч' : '$hours h';
-  return isRu ? '$hours ч $minutes мин' : '$hours h $minutes min';
-}
-
-String _formatDateTime(BuildContext context, DateTime value) {
-  final local = value.toLocal();
-  if (Localizations.localeOf(context).languageCode == 'en') {
-    const months = [
-      'January',
-      'February',
-      'March',
-      'April',
-      'May',
-      'June',
-      'July',
-      'August',
-      'September',
-      'October',
-      'November',
-      'December',
-    ];
-    final hour = local.hour.toString().padLeft(2, '0');
-    final minute = local.minute.toString().padLeft(2, '0');
-    return '${months[local.month - 1]} ${local.day}, $hour:$minute';
-  }
-
-  final date = MaterialLocalizations.of(context).formatMediumDate(local);
-  final time = MaterialLocalizations.of(
-    context,
-  ).formatTimeOfDay(TimeOfDay.fromDateTime(local), alwaysUse24HourFormat: true);
-
-  return '$date, $time';
 }

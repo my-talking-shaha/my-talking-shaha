@@ -15,6 +15,8 @@ import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
+import org.springframework.web.multipart.MaxUploadSizeExceededException;
+import org.springframework.web.multipart.support.MissingServletRequestPartException;
 
 @RestControllerAdvice
 public class GlobalExceptionHandler {
@@ -57,6 +59,23 @@ public class GlobalExceptionHandler {
                         "VALIDATION_ERROR",
                         "Request contains invalid fields",
                         Map.of(exception.getName(), "Invalid value")));
+    }
+
+    @ExceptionHandler(MissingServletRequestPartException.class)
+    public ResponseEntity<ApiError> handleMissingPart(MissingServletRequestPartException exception) {
+        log.warn("API error code=VALIDATION_ERROR part={}", exception.getRequestPartName());
+        return ResponseEntity.badRequest()
+                .body(new ApiError(
+                        "VALIDATION_ERROR",
+                        "Request contains invalid fields",
+                        Map.of(exception.getRequestPartName(), "must be provided")));
+    }
+
+    @ExceptionHandler(MaxUploadSizeExceededException.class)
+    public ResponseEntity<ApiError> handleMaxUploadSize(MaxUploadSizeExceededException exception) {
+        log.warn("API error code=VALIDATION_ERROR message=upload size exceeded");
+        return ResponseEntity.badRequest()
+                .body(ApiError.of("VALIDATION_ERROR", "File exceeds the maximum allowed upload size"));
     }
 
     @ExceptionHandler(HttpMessageNotReadableException.class)

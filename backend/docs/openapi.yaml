@@ -214,6 +214,101 @@ paths:
           $ref: '#/components/responses/Forbidden'
         '404':
           $ref: '#/components/responses/NotFound'
+  /vehicles/{vehicleId}/photos:
+    post:
+      summary: Upload a vehicle photo (JPG or PNG)
+      tags: [ Vehicles ]
+      parameters:
+        - $ref: '#/components/parameters/VehicleId'
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              required: [ file ]
+              properties:
+                file:
+                  type: string
+                  format: binary
+      responses:
+        '201':
+          description: Uploaded photo
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/VehiclePhoto'
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+    get:
+      summary: List vehicle photos
+      tags: [ Vehicles ]
+      parameters:
+        - $ref: '#/components/parameters/VehicleId'
+      responses:
+        '200':
+          description: Vehicle photos ordered by upload time
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/VehiclePhotoList'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /vehicles/{vehicleId}/photos/{photoId}:
+    delete:
+      summary: Delete a vehicle photo
+      tags: [ Vehicles ]
+      parameters:
+        - $ref: '#/components/parameters/VehicleId'
+        - name: photoId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '204':
+          description: Photo deleted
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /photos/{photoId}:
+    get:
+      summary: Get photo content
+      description: >
+        Serves the stored photo bytes. Publicly readable because image widgets
+        cannot attach the JWT header; access relies on the unguessable random
+        photo id in the URL.
+      tags: [ Vehicles ]
+      security: []
+      parameters:
+        - name: photoId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Photo bytes
+          content:
+            image/jpeg:
+              schema:
+                type: string
+                format: binary
+            image/png:
+              schema:
+                type: string
+                format: binary
+        '404':
+          $ref: '#/components/responses/NotFound'
   /vehicles/{vehicleId}/dashboard:
     get:
       summary: Get vehicle dashboard with parts forecast
@@ -850,9 +945,6 @@ components:
           type: string
           minLength: 17
           maxLength: 17
-        photoUrl:
-          type: string
-          maxLength: 500
     Vehicle:
       allOf:
         - $ref: '#/components/schemas/CreateVehicleRequest'
@@ -862,6 +954,11 @@ components:
             id:
               type: string
               format: uuid
+            photoUrl:
+              type: string
+              nullable: true
+              readOnly: true
+              description: Public URL of the first uploaded vehicle photo, if any.
     VehicleDashboard:
       type: object
       required: [ vehicle, maintenanceForecast, recentEvents ]
@@ -1045,9 +1142,24 @@ components:
           type: string
           minLength: 17
           maxLength: 17
-        photoUrl:
+    VehiclePhoto:
+      type: object
+      required: [ photoId, url ]
+      properties:
+        photoId:
           type: string
-          maxLength: 500
+          format: uuid
+        url:
+          type: string
+          description: Absolute public URL of the photo content.
+    VehiclePhotoList:
+      type: object
+      required: [ photos ]
+      properties:
+        photos:
+          type: array
+          items:
+            $ref: '#/components/schemas/VehiclePhoto'
     CreateRefuelEventRequest:
       type: object
       required: [ eventDateTime, title, mileageKm, liters, cost, fuelType ]

@@ -66,8 +66,4 @@ public class Vehicle extends BaseEntity {
     @Size(min = 17, max = 17)
     @Column(length = 17)
     private String vin;
-
-    @Size(max = 500)
-    @Column(length = 500)
-    private String photoUrl;
 }

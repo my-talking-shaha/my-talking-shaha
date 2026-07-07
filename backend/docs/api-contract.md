@@ -332,16 +332,71 @@ Request can contain any editable fields:
 ```json
 {
   "color": "blue",
-  "mileageKm": 10500,
-  "photoUrl": "https://example.com/new-car.jpg"
+  "mileageKm": 10500
 }
 ```
+
+`photoUrl` is read-only and managed through the photo endpoints below.
 
 ### Delete vehicle
 
 `DELETE /api/v1/vehicles/{vehicleId}`
 
-Response `204`.
+Response `204`. Also deletes the vehicle's parts, timeline events, chat history, and photos.
+
+### Upload vehicle photo
+
+`POST /api/v1/vehicles/{vehicleId}/photos`
+
+Content-Type: `multipart/form-data` with a single `file` field containing a JPG or PNG image.
+The declared content type must match the actual file content; maximum size is 10 MB.
+
+Response `201`:
+
+```json
+{
+  "photoId": "3f2a6c1e-8b4d-4c2a-9f1e-5d7b8a9c0d1f",
+  "url": "https://example.com/api/v1/photos/3f2a6c1e-8b4d-4c2a-9f1e-5d7b8a9c0d1f"
+}
+```
+
+Errors:
+
+- `400 VALIDATION_ERROR` if the file is empty, not a JPG/PNG image, or exceeds the size limit
+
+### List vehicle photos
+
+`GET /api/v1/vehicles/{vehicleId}/photos`
+
+Response `200` (ordered by upload time, oldest first):
+
+```json
+{
+  "photos": [
+    {
+      "photoId": "3f2a6c1e-8b4d-4c2a-9f1e-5d7b8a9c0d1f",
+      "url": "https://example.com/api/v1/photos/3f2a6c1e-8b4d-4c2a-9f1e-5d7b8a9c0d1f"
+    }
+  ]
+}
+```
+
+### Delete vehicle photo
+
+`DELETE /api/v1/vehicles/{vehicleId}/photos/{photoId}`
+
+Response `204`. Replacing a photo is a delete followed by an upload.
+
+### Get photo content
+
+`GET /api/v1/photos/{photoId}`
+
+Serves the photo bytes with the stored content type. This endpoint requires no
+authentication because client image widgets cannot attach the JWT header; access
+protection relies on the unguessable random photo id in the URL.
+
+The first uploaded photo is exposed as `photoUrl` in vehicle responses (garage list
+and dashboard); vehicles without photos have `photoUrl = null`.
 
 ## Timeline
 

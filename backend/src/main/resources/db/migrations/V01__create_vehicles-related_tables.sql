@@ -22,7 +22,6 @@ CREATE TABLE IF NOT EXISTS vehicles
     fuel_type          VARCHAR(32),
     engine_description VARCHAR(80),
     vin                VARCHAR(17),
-    photo_url          VARCHAR(500),
     CONSTRAINT fk_vehicle_owner
     FOREIGN KEY (owner_id)
     REFERENCES app_users (id)
