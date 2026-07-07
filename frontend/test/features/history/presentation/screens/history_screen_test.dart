@@ -8,6 +8,7 @@ import 'package:frontend/features/history/presentation/providers/history_provide
 import 'package:frontend/features/history/presentation/screens/history_screen.dart';
 import 'package:frontend/features/history/presentation/widgets/event_card.dart';
 import 'package:frontend/l10n/generated/app_localizations.dart';
+import 'package:go_router/go_router.dart';
 
 void main() {
   testWidgets('filters mock history by event type and search query', (
@@ -108,5 +109,76 @@ void main() {
     expect(cacheDeletedFor?.id, 'maintenance_1');
     expect(find.text('Oil and filter change'), findsNothing);
     await tester.pumpWidget(const SizedBox.shrink());
+  });
+
+  testWidgets('returning from edit resets opened swipe actions', (
+    tester,
+  ) async {
+    final datasource = MockHistoryDatasource(delay: Duration.zero);
+    final router = GoRouter(
+      initialLocation: '/history',
+      routes: [
+        GoRoute(
+          path: '/history',
+          builder: (context, state) =>
+              const HistoryScreen(vehicleId: 'vehicle_1'),
+        ),
+        GoRoute(
+          path: '/vehicle/:vehicleId/history/:eventId/edit',
+          builder: (context, state) =>
+              const Scaffold(body: Center(child: Text('Edit state'))),
+        ),
+      ],
+    );
+    addTearDown(router.dispose);
+
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [
+          historyDatasourceProvider.overrideWithValue(datasource),
+          historyPhotoReaderProvider.overrideWithValue(null),
+        ],
+        child: MaterialApp.router(
+          locale: const Locale('en'),
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
+          theme: AppTheme.dark,
+          routerConfig: router,
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    expect(
+      find.byKey(const ValueKey('history_event_maintenance_1_0')),
+      findsOneWidget,
+    );
+
+    await tester.drag(
+      find.text('Oil and filter change'),
+      const Offset(-160, 0),
+    );
+    await tester.pumpAndSettle();
+
+    final oilServiceCard = find.ancestor(
+      of: find.text('Oil and filter change'),
+      matching: find.byType(EventCard),
+    );
+    final editAction = find.descendant(
+      of: oilServiceCard,
+      matching: find.byKey(const ValueKey('history_swipe_action_edit')),
+    );
+    await tester.tap(editAction);
+    await tester.pumpAndSettle();
+
+    expect(find.text('Edit state'), findsOneWidget);
+
+    router.pop();
+    await tester.pumpAndSettle();
+
+    expect(
+      find.byKey(const ValueKey('history_event_maintenance_1_1')),
+      findsOneWidget,
+    );
   });
 }

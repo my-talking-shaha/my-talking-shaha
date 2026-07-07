@@ -64,6 +64,7 @@ final class _AddHistoryEventScreenState extends State<AddHistoryEventScreen> {
   bool _isSaving = false;
   bool _isPickingPhoto = false;
   final List<XFile> _selectedPhotos = [];
+  final List<String> _removedExistingPhotoUrls = [];
   List<String>? _existingPhotoUrls;
 
   final _imagePicker = ImagePicker();
@@ -378,6 +379,7 @@ final class _AddHistoryEventScreenState extends State<AddHistoryEventScreen> {
           isPicking: _isPickingPhoto,
           onPick: _pickPhotos,
           onRemove: _removePhoto,
+          onRemoveExisting: _removeExistingPhoto,
         ),
       ],
     ];
@@ -495,6 +497,7 @@ final class _AddHistoryEventScreenState extends State<AddHistoryEventScreen> {
 
       final event = _createEvent(id: eventId, photoPaths: persistedPhotoPaths);
       await widget.onSave(event);
+      await _deleteRemovedExistingPhotos();
       if (mounted) Navigator.of(context).pop(event);
     } catch (_) {
       for (final photoPath in persistedPhotoPaths) {
@@ -612,6 +615,27 @@ final class _AddHistoryEventScreenState extends State<AddHistoryEventScreen> {
     setState(() => _selectedPhotos.remove(photo));
   }
 
+  void _removeExistingPhoto(String url) {
+    setState(() {
+      _existingPhotoUrls = (_existingPhotoUrls ?? const <String>[])
+          .where((item) => item != url)
+          .toList(growable: false);
+      _removedExistingPhotoUrls.add(url);
+    });
+  }
+
+  Future<void> _deleteRemovedExistingPhotos() async {
+    for (final url in _removedExistingPhotoUrls) {
+      final path = url.trim();
+      if (path.isEmpty || _isRemoteUrl(path)) continue;
+      try {
+        await widget.deletePhoto(path);
+      } catch (_) {
+        // The event was saved; stale local files can be retried on event delete.
+      }
+    }
+  }
+
   Future<void> _selectOccurredAt() async {
     final date = await showDatePicker(
       context: context,
@@ -708,6 +732,11 @@ final class _AddHistoryEventScreenState extends State<AddHistoryEventScreen> {
       event.title.trim().toLowerCase(),
       event.currentMileageKm,
     ].join('|');
+  }
+
+  bool _isRemoteUrl(String value) {
+    final uri = Uri.tryParse(value);
+    return uri != null && (uri.scheme == 'http' || uri.scheme == 'https');
   }
 }
 
@@ -999,6 +1028,7 @@ final class _PhotoCard extends StatelessWidget {
     required this.isPicking,
     required this.onPick,
     required this.onRemove,
+    required this.onRemoveExisting,
   });
 
   final List<String> existingPhotoUrls;
@@ -1006,6 +1036,7 @@ final class _PhotoCard extends StatelessWidget {
   final bool isPicking;
   final VoidCallback onPick;
   final ValueChanged<XFile> onRemove;
+  final ValueChanged<String> onRemoveExisting;
 
   @override
   Widget build(BuildContext context) {
@@ -1029,75 +1060,62 @@ final class _PhotoCard extends StatelessWidget {
           : Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                GridView.builder(
-                  key: const ValueKey('maintenance-photo-grid'),
-                  shrinkWrap: true,
-                  physics: const NeverScrollableScrollPhysics(),
-                  itemCount: existingPhotoUrls.length + photos.length,
-                  gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                    crossAxisCount: 2,
-                    crossAxisSpacing: AppSpacing.sm,
-                    mainAxisSpacing: AppSpacing.sm,
-                    childAspectRatio: 1.12,
-                  ),
-                  itemBuilder: (context, index) {
-                    if (index < existingPhotoUrls.length) {
-                      return ClipRRect(
-                        borderRadius: AppRadius.input,
-                        child: _ExistingHistoryPhoto(
-                          url: existingPhotoUrls[index],
+                SizedBox(
+                  key: const ValueKey('maintenance-photo-list'),
+                  height: 112,
+                  child: ListView.separated(
+                    scrollDirection: Axis.horizontal,
+                    itemCount: existingPhotoUrls.length + photos.length,
+                    separatorBuilder: (context, index) =>
+                        const SizedBox(width: AppSpacing.sm),
+                    itemBuilder: (context, index) {
+                      if (index < existingPhotoUrls.length) {
+                        final url = existingPhotoUrls[index];
+                        return _PhotoPreviewTile(
                           key: ValueKey(
-                            'maintenance-existing-photo-preview-$index',
+                            'maintenance-existing-photo-tile-$index',
                           ),
+                          removeKey: ValueKey(
+                            'maintenance-existing-photo-remove-$index',
+                          ),
+                          onRemove: () => onRemoveExisting(url),
+                          child: _ExistingHistoryPhoto(
+                            url: url,
+                            key: ValueKey(
+                              'maintenance-existing-photo-preview-$index',
+                            ),
+                          ),
+                        );
+                      }
+
+                      final photoIndex = index - existingPhotoUrls.length;
+                      final photo = photos[photoIndex];
+
+                      return _PhotoPreviewTile(
+                        key: ValueKey('maintenance-photo-tile-$photoIndex'),
+                        removeKey: ValueKey(
+                          'maintenance-photo-remove-$photoIndex',
+                        ),
+                        onRemove: () => onRemove(photo),
+                        child: Image.file(
+                          File(photo.path),
+                          key: ValueKey(
+                            'maintenance-photo-preview-$photoIndex',
+                          ),
+                          fit: BoxFit.cover,
+                          errorBuilder: (context, error, stackTrace) =>
+                              Container(
+                                color: AppColors.surfaceHighest,
+                                alignment: Alignment.center,
+                                child: const Icon(
+                                  Icons.broken_image_outlined,
+                                  color: AppColors.textMuted,
+                                ),
+                              ),
                         ),
                       );
-                    }
-
-                    final photoIndex = index - existingPhotoUrls.length;
-                    final photo = photos[photoIndex];
-
-                    return Stack(
-                      fit: StackFit.expand,
-                      children: [
-                        ClipRRect(
-                          borderRadius: AppRadius.input,
-                          child: Image.file(
-                            File(photo.path),
-                            key: ValueKey(
-                              'maintenance-photo-preview-$photoIndex',
-                            ),
-                            fit: BoxFit.cover,
-                            errorBuilder: (context, error, stackTrace) =>
-                                Container(
-                                  color: AppColors.surfaceHighest,
-                                  alignment: Alignment.center,
-                                  child: const Icon(
-                                    Icons.broken_image_outlined,
-                                    color: AppColors.textMuted,
-                                  ),
-                                ),
-                          ),
-                        ),
-                        Positioned(
-                          top: AppSpacing.xs,
-                          right: AppSpacing.xs,
-                          child: IconButton.filled(
-                            key: ValueKey(
-                              'maintenance-photo-remove-$photoIndex',
-                            ),
-                            onPressed: () => onRemove(photo),
-                            tooltip: l10n.removePhoto,
-                            style: IconButton.styleFrom(
-                              backgroundColor: AppColors.backgroundDark
-                                  .withValues(alpha: 0.82),
-                              foregroundColor: AppColors.textPrimary,
-                            ),
-                            icon: const Icon(Icons.close, size: 18),
-                          ),
-                        ),
-                      ],
-                    );
-                  },
+                    },
+                  ),
                 ),
                 const SizedBox(height: AppSpacing.sm),
                 OutlinedButton.icon(
@@ -1116,6 +1134,54 @@ final class _PhotoCard extends StatelessWidget {
                 ),
               ],
             ),
+    );
+  }
+}
+
+final class _PhotoPreviewTile extends StatelessWidget {
+  const _PhotoPreviewTile({
+    required this.child,
+    required this.removeKey,
+    required this.onRemove,
+    super.key,
+  });
+
+  final Widget child;
+  final Key removeKey;
+  final VoidCallback onRemove;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+
+    return SizedBox(
+      width: 112,
+      child: Stack(
+        fit: StackFit.expand,
+        children: [
+          ClipRRect(borderRadius: AppRadius.input, child: child),
+          Positioned(
+            top: AppSpacing.xs,
+            right: AppSpacing.xs,
+            child: IconButton.filled(
+              key: removeKey,
+              onPressed: onRemove,
+              tooltip: l10n.removePhoto,
+              style: IconButton.styleFrom(
+                backgroundColor: AppColors.backgroundDark.withValues(
+                  alpha: 0.82,
+                ),
+                foregroundColor: AppColors.textPrimary,
+                minimumSize: const Size.square(32),
+                fixedSize: const Size.square(32),
+                padding: EdgeInsets.zero,
+                tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+              ),
+              icon: const Icon(Icons.close, size: 18),
+            ),
+          ),
+        ],
+      ),
     );
   }
 }

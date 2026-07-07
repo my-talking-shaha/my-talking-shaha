@@ -149,9 +149,9 @@ final class _HistoryScreenState extends ConsumerState<HistoryScreen> {
       extra: event,
     );
     if (!mounted) return;
+    setState(() => _cardStateRevision++);
     if (updatedEvent != null) {
       _invalidateAfterHistoryMutation(affectsMileage: true);
-      setState(() => _cardStateRevision++);
       _showSuccessMessage('Event updated.');
     }
   }
