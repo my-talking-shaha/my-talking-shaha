@@ -589,6 +589,7 @@ class ChatFlowTest {
                                 """
                                         {
                                           "eventDateTime": "2026-06-12T14:30:00Z",
+                                          "title": "Refuel at Lukoil",
                                           "mileageKm": 10000,
                                           "liters": 40,
                                           "cost": 2000,
@@ -604,6 +605,7 @@ class ChatFlowTest {
                                 """
                                         {
                                           "eventDateTime": "2026-06-13T09:15:00Z",
+                                          "title": "Trip to university",
                                           "startMileageKm": 10000,
                                           "endMileageKm": 10400,
                                           "route": "Home -> University",

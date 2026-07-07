@@ -114,6 +114,28 @@ Validation: `name` is required, `mileageKm >= previous mileage`, optional `cost 
 Validation: `name` is required, `mileageKm >= previous mileage`, optional `cost > 0`,
 `eventDateTime <= now`. Response has `type = PART_REPLACEMENT`.
 
+## Update Event
+
+`PATCH /api/v1/vehicles/{vehicleId}/timeline/{eventId}`
+
+Request body uses the same event-specific fields as add endpoints:
+
+- refuel: `eventDateTime`, `mileageKm`, `liters`, `cost`, `fuelType`, optional
+  `fuelName`, optional `stationName`;
+- trip: `eventDateTime`, `startMileageKm`, `endMileageKm`, optional `route`,
+  `durationMinutes`;
+- maintenance/part: `eventDateTime`, `mileageKm`, `name`, `description`,
+  optional `cost`, optional `photoUrls`.
+
+Validation is the same as the matching add event endpoint. Event type is not
+changed by this endpoint.
+
+## Delete Event
+
+`DELETE /api/v1/vehicles/{vehicleId}/timeline/{eventId}`
+
+Response: empty body or success envelope.
+
 ## Errors
 
 - `400 VALIDATION_ERROR`
