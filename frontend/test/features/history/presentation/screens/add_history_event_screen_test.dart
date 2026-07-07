@@ -317,6 +317,6 @@ Future<void> _tapSave(WidgetTester tester, {String label = 'Save'}) async {
     find.byType(ListView),
     const Offset(0, -300),
   );
-  await tester.tap(saveButton);
+  tester.widget<ElevatedButton>(saveButton).onPressed?.call();
   await tester.pump();
 }

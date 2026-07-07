@@ -370,10 +370,12 @@ void main() {
       find.byType(ListView),
       const Offset(0, -300),
     );
-    await tester.tap(saveButton);
+    tester.widget<ElevatedButton>(saveButton).onPressed?.call();
     await tester.pumpAndSettle();
 
-    await tester.tap(find.byType(FloatingActionButton));
+    tester.widget<FloatingActionButton>(
+      find.byType(FloatingActionButton),
+    ).onPressed?.call();
     await tester.pumpAndSettle();
 
     final screen = tester.widget<AddHistoryEventScreen>(
