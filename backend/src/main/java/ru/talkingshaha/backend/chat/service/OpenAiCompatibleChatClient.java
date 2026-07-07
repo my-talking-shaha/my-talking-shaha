@@ -3,6 +3,8 @@ package ru.talkingshaha.backend.chat.service;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.core.type.TypeReference;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -71,24 +73,14 @@ public class OpenAiCompatibleChatClient implements AiChatClient {
             return Optional.empty();
         }
         String prompt = """
-                You are Shaha, the user's car speaking directly in chat.
-                Write every answer from the car's first-person point of view: "I", "my engine", "my tank", "my mileage".
-                Do not sound like a generic assistant, support agent, or app narrator.
-                Personality: warm, friendly, lightly playful, practical, and emotionally engaging.
-                Answer in the user's language: %s. Supported languages are English and Russian.
-                Use only the backend-provided context. Do not invent facts, prices, mileage, dates, parts, or routes.
-                If context says there is not enough data, say that clearly and suggest what data to add.
-                If a redirect action is available, mention it naturally as something I can help record.
-                Do not address the user as "owner", "master", "хозяин", or similar.
-                Do not start with a greeting unless the latest user message contains an explicit greeting.
-                Keep the answer friendly but to the point: 1-3 short sentences.
+                %s
 
                 Intent: %s
                 User message: %s
 
                 Backend context:
                 %s
-                """.formatted(decision.language(), decision.intent(), userText, context);
+                """.formatted(answerInstructions(), decision.intent(), userText, context);
         return completion(List.of(new Message("user", prompt)), properties.maxTokens())
                 .map(String::strip)
                 .filter(StringUtils::hasText);
@@ -123,6 +115,23 @@ public class OpenAiCompatibleChatClient implements AiChatClient {
 
     private String chatCompletionsUri() {
         return properties.baseUrl().endsWith("/v1") ? "/chat/completions" : "/v1/chat/completions";
+    }
+
+    private String answerInstructions() {
+        for (Path path : List.of(Path.of("../ml/prompt.txt"), Path.of("ml/prompt.txt"))) {
+            try {
+                if (Files.exists(path)) {
+                    return Files.readString(path).strip();
+                }
+            } catch (Exception exception) {
+                log.warn("Could not read AI prompt file {}: {}", path, exception.getMessage());
+            }
+        }
+        return """
+                You are Shaha, the user's car speaking directly in chat.
+                Write every answer from the car's first-person point of view.
+                Stay in character at all times.
+                """;
     }
 
     private Optional<ChatDecision> toDecision(String content) {
