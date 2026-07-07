@@ -373,6 +373,7 @@ final class _AddHistoryEventScreenState extends State<AddHistoryEventScreen> {
       if (!kIsWeb) ...[
         const SizedBox(height: AppSpacing.md),
         _PhotoCard(
+          existingPhotoUrls: _existingPhotoUrls ?? const [],
           photos: _selectedPhotos,
           isPicking: _isPickingPhoto,
           onPick: _pickPhotos,
@@ -531,7 +532,9 @@ final class _AddHistoryEventScreenState extends State<AddHistoryEventScreen> {
         _maintenanceDescriptionController.text = description;
         _maintenanceCostController.text = cost?.toString() ?? '';
         _replacedPartsController.text = replacedParts?.join(', ') ?? '';
-        _existingPhotoUrls = photoUrls;
+        _existingPhotoUrls = photoUrls
+            ?.where((url) => url.trim().isNotEmpty)
+            .toList(growable: false);
       case TripDetails(
         :final startKm,
         :final endKm,
@@ -991,12 +994,14 @@ final class _InformationCard extends StatelessWidget {
 
 final class _PhotoCard extends StatelessWidget {
   const _PhotoCard({
+    required this.existingPhotoUrls,
     required this.photos,
     required this.isPicking,
     required this.onPick,
     required this.onRemove,
   });
 
+  final List<String> existingPhotoUrls;
   final List<XFile> photos;
   final bool isPicking;
   final VoidCallback onPick;
@@ -1009,7 +1014,7 @@ final class _PhotoCard extends StatelessWidget {
     return _FormCard(
       label: l10n.partPhoto,
       optional: true,
-      child: photos.isEmpty
+      child: existingPhotoUrls.isEmpty && photos.isEmpty
           ? OutlinedButton.icon(
               key: const ValueKey('maintenance-photo-add'),
               onPressed: isPicking ? null : onPick,
@@ -1028,7 +1033,7 @@ final class _PhotoCard extends StatelessWidget {
                   key: const ValueKey('maintenance-photo-grid'),
                   shrinkWrap: true,
                   physics: const NeverScrollableScrollPhysics(),
-                  itemCount: photos.length,
+                  itemCount: existingPhotoUrls.length + photos.length,
                   gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
                     crossAxisCount: 2,
                     crossAxisSpacing: AppSpacing.sm,
@@ -1036,7 +1041,20 @@ final class _PhotoCard extends StatelessWidget {
                     childAspectRatio: 1.12,
                   ),
                   itemBuilder: (context, index) {
-                    final photo = photos[index];
+                    if (index < existingPhotoUrls.length) {
+                      return ClipRRect(
+                        borderRadius: AppRadius.input,
+                        child: _ExistingHistoryPhoto(
+                          url: existingPhotoUrls[index],
+                          key: ValueKey(
+                            'maintenance-existing-photo-preview-$index',
+                          ),
+                        ),
+                      );
+                    }
+
+                    final photoIndex = index - existingPhotoUrls.length;
+                    final photo = photos[photoIndex];
 
                     return Stack(
                       fit: StackFit.expand,
@@ -1045,7 +1063,9 @@ final class _PhotoCard extends StatelessWidget {
                           borderRadius: AppRadius.input,
                           child: Image.file(
                             File(photo.path),
-                            key: ValueKey('maintenance-photo-preview-$index'),
+                            key: ValueKey(
+                              'maintenance-photo-preview-$photoIndex',
+                            ),
                             fit: BoxFit.cover,
                             errorBuilder: (context, error, stackTrace) =>
                                 Container(
@@ -1062,7 +1082,9 @@ final class _PhotoCard extends StatelessWidget {
                           top: AppSpacing.xs,
                           right: AppSpacing.xs,
                           child: IconButton.filled(
-                            key: ValueKey('maintenance-photo-remove-$index'),
+                            key: ValueKey(
+                              'maintenance-photo-remove-$photoIndex',
+                            ),
                             onPressed: () => onRemove(photo),
                             tooltip: l10n.removePhoto,
                             style: IconButton.styleFrom(
@@ -1094,6 +1116,34 @@ final class _PhotoCard extends StatelessWidget {
                 ),
               ],
             ),
+    );
+  }
+}
+
+final class _ExistingHistoryPhoto extends StatelessWidget {
+  const _ExistingHistoryPhoto({required this.url, super.key});
+
+  final String url;
+
+  @override
+  Widget build(BuildContext context) {
+    final uri = Uri.tryParse(url);
+    final isRemote = uri?.scheme == 'http' || uri?.scheme == 'https';
+    final imageProvider = isRemote
+        ? NetworkImage(url) as ImageProvider
+        : FileImage(File(url));
+
+    return Image(
+      image: imageProvider,
+      fit: BoxFit.cover,
+      errorBuilder: (context, error, stackTrace) => Container(
+        color: AppColors.surfaceHighest,
+        alignment: Alignment.center,
+        child: const Icon(
+          Icons.broken_image_outlined,
+          color: AppColors.textMuted,
+        ),
+      ),
     );
   }
 }

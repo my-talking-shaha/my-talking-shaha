@@ -284,6 +284,47 @@ void main() {
     expect(details.startKm, 123180);
     expect(details.endKm, 123600);
   });
+
+  testWidgets('shows existing maintenance photos when editing a draft', (
+    tester,
+  ) async {
+    HistoryEvent? savedEvent;
+    final initialEvent = HistoryEvent(
+      id: 'maintenance_1',
+      carId: 'vehicle_1',
+      type: HistoryEventType.maintenance,
+      occurredAt: DateTime(2026, 6, 8, 11),
+      title: 'Oil service',
+      currentMileageKm: 124000,
+      details: MaintenanceDetails(
+        description: 'Oil and filter replacement',
+        cost: 8900,
+        photoUrls: const ['/tmp/existing-maintenance-photo.jpg'],
+      ),
+    );
+
+    await _pumpScreen(
+      tester,
+      initialEvent: initialEvent,
+      onSave: (event) async => savedEvent = event,
+    );
+
+    final existingPhoto = find.byKey(
+      const ValueKey('maintenance-existing-photo-preview-0'),
+    );
+    await tester.dragUntilVisible(
+      existingPhoto,
+      find.byType(ListView),
+      const Offset(0, -300),
+    );
+
+    expect(existingPhoto, findsOneWidget);
+
+    await _tapSave(tester, label: 'Save changes');
+
+    final details = savedEvent?.details as MaintenanceDetails;
+    expect(details.photoUrls, const ['/tmp/existing-maintenance-photo.jpg']);
+  });
 }
 
 Future<void> _pumpScreen(

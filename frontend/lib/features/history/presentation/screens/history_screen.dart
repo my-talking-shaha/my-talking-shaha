@@ -185,6 +185,7 @@ final class _HistoryScreenState extends ConsumerState<HistoryScreen> {
       await ref
           .read(deleteHistoryEventProvider)
           .call(widget.vehicleId, event.id);
+      await ref.read(deleteHistoryPhotoCacheProvider)(event);
       if (!mounted) return;
       _invalidateAfterHistoryMutation(affectsMileage: false);
       setState(() => _cardStateRevision++);

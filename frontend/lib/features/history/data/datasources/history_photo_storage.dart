@@ -1,5 +1,7 @@
 import 'dart:io';
 
+import 'package:frontend/features/history/domain/entities/event_details.dart';
+import 'package:frontend/features/history/domain/entities/history_event.dart';
 import 'package:path_provider/path_provider.dart';
 
 abstract interface class HistoryPhotoReader {
@@ -65,6 +67,20 @@ final class HistoryPhotoStorage implements HistoryPhotoReader {
     }
   }
 
+  Future<void> deleteCachedPhotosForEvent(HistoryEvent event) async {
+    await _deletePhotosForEventId(event.id);
+    await _deletePhotosForEventId(_photoCacheKey(event));
+
+    final details = event.details;
+    if (details is! MaintenanceDetails) return;
+
+    for (final url in details.photoUrls ?? const <String>[]) {
+      final path = url.trim();
+      if (path.isEmpty || _isRemoteUrl(path)) continue;
+      await deletePhoto(path);
+    }
+  }
+
   Future<Directory> _photosDirectory() async {
     final documentsDirectory = await getApplicationDocumentsDirectory();
     final photosDirectory = Directory(
@@ -91,5 +107,38 @@ final class HistoryPhotoStorage implements HistoryPhotoReader {
     final sanitized = value.replaceAll(RegExp(r'[^A-Za-z0-9._-]+'), '_');
     final trimmed = sanitized.replaceAll(RegExp(r'^_+|_+$'), '');
     return trimmed.isEmpty ? 'event' : trimmed;
+  }
+
+  Future<void> _deletePhotosForEventId(String eventId) async {
+    final photosDirectory = await _photosDirectory();
+    final safeEventId = _safePathSegment(eventId);
+    final eventDirectory = Directory('${photosDirectory.path}/$safeEventId');
+
+    if (await eventDirectory.exists()) {
+      await eventDirectory.delete(recursive: true);
+    }
+
+    await for (final entity in photosDirectory.list()) {
+      if (entity is! File) continue;
+      final fileName = entity.uri.pathSegments.last;
+      if (fileName.startsWith('$eventId.')) {
+        await entity.delete();
+      }
+    }
+  }
+
+  String _photoCacheKey(HistoryEvent event) {
+    return [
+      event.carId,
+      event.type.name,
+      event.occurredAt.toUtc().toIso8601String(),
+      event.title.trim().toLowerCase(),
+      event.currentMileageKm,
+    ].join('|');
+  }
+
+  bool _isRemoteUrl(String value) {
+    final uri = Uri.tryParse(value);
+    return uri != null && (uri.scheme == 'http' || uri.scheme == 'https');
   }
 }

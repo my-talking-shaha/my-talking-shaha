@@ -3,8 +3,10 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:frontend/app/theme/app_theme.dart';
 import 'package:frontend/features/history/data/datasources/mock_history_datasource.dart';
+import 'package:frontend/features/history/domain/entities/history_event.dart';
 import 'package:frontend/features/history/presentation/providers/history_providers.dart';
 import 'package:frontend/features/history/presentation/screens/history_screen.dart';
+import 'package:frontend/features/history/presentation/widgets/event_card.dart';
 import 'package:frontend/l10n/generated/app_localizations.dart';
 
 void main() {
@@ -58,5 +60,53 @@ void main() {
 
     expect(find.text('Long-distance trip'), findsOneWidget);
     expect(find.text('Oil and filter change'), findsNothing);
+  });
+
+  testWidgets('deleting an event clears its cached photos', (tester) async {
+    final datasource = MockHistoryDatasource(delay: Duration.zero);
+    HistoryEvent? cacheDeletedFor;
+
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [
+          historyDatasourceProvider.overrideWithValue(datasource),
+          historyPhotoReaderProvider.overrideWithValue(null),
+          deleteHistoryPhotoCacheProvider.overrideWithValue((event) async {
+            cacheDeletedFor = event;
+          }),
+        ],
+        child: MaterialApp(
+          locale: const Locale('en'),
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
+          theme: AppTheme.dark,
+          home: const HistoryScreen(vehicleId: 'vehicle_1'),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    await tester.drag(
+      find.text('Oil and filter change'),
+      const Offset(-160, 0),
+    );
+    await tester.pumpAndSettle();
+    final oilServiceCard = find.ancestor(
+      of: find.text('Oil and filter change'),
+      matching: find.byType(EventCard),
+    );
+    final deleteAction = find.descendant(
+      of: oilServiceCard,
+      matching: find.byKey(const ValueKey('history_swipe_action_delete')),
+    );
+    await tester.tap(deleteAction);
+    await tester.pumpAndSettle();
+    await tester.tap(find.widgetWithText(TextButton, 'Delete'));
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 250));
+
+    expect(cacheDeletedFor?.id, 'maintenance_1');
+    expect(find.text('Oil and filter change'), findsNothing);
+    await tester.pumpWidget(const SizedBox.shrink());
   });
 }
