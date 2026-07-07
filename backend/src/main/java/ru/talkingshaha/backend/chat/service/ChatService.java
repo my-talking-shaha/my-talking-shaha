@@ -65,6 +65,7 @@ public class ChatService {
             Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE);
     private static final Pattern NUMERIC_DATE_PATTERN = Pattern.compile("\\b(\\d{1,2})[./-](\\d{1,2})(?:[./-](\\d{2,4}))?\\b");
     private static final Pattern FUEL_GRADE_PATTERN = Pattern.compile("(?:ai[-\\s]?)?(\\d{2,3})\\s*(?:[-\\s]?(?:й|м))?\\s*(?:gas|fuel|petrol|бенз|бензин)", Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE);
+    private static final Pattern ENGINE_CONFIGURATION_CLAIM_PATTERN = Pattern.compile("(?iu)(?<![\\p{L}\\p{N}])(?:my|мой|моя)\\s+(?:v|в)\\s?\\d{1,2}(?![\\p{L}\\p{N}])");
     private static final List<String> SUPPORTED_FUEL_NAMES = List.of("92 octane", "95 octane", "98 octane", "100 octane", "Diesel");
 
     private final VehicleService vehicles;
@@ -1119,16 +1120,46 @@ public class ChatService {
                 .formatted(dashboard.vehicle().mileageKm(), dashboard.maintenanceForecast().overallStatus());
     }
 
-    private String polishAssistantText(String text, String userText, ChatLanguage language) {
+    String polishAssistantText(String text, String userText, ChatLanguage language) {
         String polished = text
                 .replaceAll("(?iu),?\\s*\\bхозяин\\b,?", "")
                 .replaceAll("(?iu),?\\s*\\b(owner|master)\\b,?", "")
                 .replaceAll("\\s{2,}", " ")
                 .strip();
+        polished = sanitizeUnsupportedTechnicalClaims(polished, language);
         if (!userGreeted(userText)) {
             polished = stripLeadingGreeting(polished, language);
         }
-        return polished;
+        return capitalizeFirstLetter(polished);
+    }
+
+    private String sanitizeUnsupportedTechnicalClaims(String text, ChatLanguage language) {
+        String replacement = language == ChatLanguage.RU ? "мой двигатель" : "my engine";
+        return ENGINE_CONFIGURATION_CLAIM_PATTERN.matcher(text).replaceAll(replacement);
+    }
+
+    private String capitalizeFirstLetter(String text) {
+        if (text.isEmpty()) {
+            return text;
+        }
+        int firstLetterIndex = -1;
+        for (int index = 0; index < text.length(); index++) {
+            if (Character.isLetter(text.charAt(index))) {
+                firstLetterIndex = index;
+                break;
+            }
+        }
+        if (firstLetterIndex < 0) {
+            return text;
+        }
+        char firstLetter = text.charAt(firstLetterIndex);
+        char upperCaseFirstLetter = Character.toUpperCase(firstLetter);
+        if (firstLetter == upperCaseFirstLetter) {
+            return text;
+        }
+        return text.substring(0, firstLetterIndex)
+                + upperCaseFirstLetter
+                + text.substring(firstLetterIndex + 1);
     }
 
     private String stripLeadingGreeting(String text, ChatLanguage language) {
