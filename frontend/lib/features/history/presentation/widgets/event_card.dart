@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:io';
 
 import 'package:flutter/material.dart';
@@ -35,79 +36,76 @@ class _EventCardState extends State<EventCard> with TickerProviderStateMixin {
     final presentation = _EventPresentation.from(event);
     final photoUrls = _photoUrls(details);
 
-    return Material(
-      color: Colors.transparent,
-      child: InkWell(
-        onTap: photoUrls.isEmpty
-            ? null
-            : () => setState(() => _isExpanded = !_isExpanded),
-        borderRadius: AppRadius.card,
-        child: Ink(
-          width: double.infinity,
-          padding: const EdgeInsets.all(AppSpacing.lg),
-          decoration: BoxDecoration(
-            color: AppColors.surfaceHigh,
-            border: Border.all(color: AppColors.border),
-            borderRadius: AppRadius.card,
-          ),
-          child: Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              _EventIcon(presentation: presentation),
-              const SizedBox(width: AppSpacing.lg),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Expanded(
-                          child: Text(
-                            event.title,
-                            style: Theme.of(context).textTheme.titleMedium,
-                          ),
+    return GestureDetector(
+      onTap: photoUrls.isEmpty
+          ? null
+          : () => setState(() => _isExpanded = !_isExpanded),
+      behavior: HitTestBehavior.opaque,
+      child: Container(
+        width: double.infinity,
+        padding: const EdgeInsets.all(AppSpacing.lg),
+        decoration: BoxDecoration(
+          color: AppColors.surfaceHigh,
+          border: Border.all(color: AppColors.border),
+          borderRadius: AppRadius.card,
+        ),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            _EventIcon(presentation: presentation),
+            const SizedBox(width: AppSpacing.lg),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Expanded(
+                        child: Text(
+                          event.title,
+                          style: Theme.of(context).textTheme.titleMedium,
                         ),
-                        if (presentation.metric case final metric?) ...[
-                          const SizedBox(width: AppSpacing.sm),
-                          Text(
-                            metric,
-                            textAlign: TextAlign.end,
-                            style: Theme.of(context).textTheme.titleMedium
-                                ?.copyWith(color: AppColors.primaryLight),
-                          ),
-                        ],
+                      ),
+                      if (presentation.metric case final metric?) ...[
+                        const SizedBox(width: AppSpacing.sm),
+                        Text(
+                          metric,
+                          textAlign: TextAlign.end,
+                          style: Theme.of(context).textTheme.titleMedium
+                              ?.copyWith(color: AppColors.primaryLight),
+                        ),
                       ],
-                    ),
-                    const SizedBox(height: AppSpacing.xs),
-                    ..._detailWidgets(context, details),
-                    const SizedBox(height: AppSpacing.xs),
-                    _EventTimestamp(occurredAt: event.occurredAt),
-                    if (photoUrls.isNotEmpty) ...[
-                      const SizedBox(height: AppSpacing.md),
-                      _PhotoToggle(
-                        count: photoUrls.length,
-                        isExpanded: _isExpanded,
-                      ),
-                      AnimatedSize(
-                        duration: const Duration(milliseconds: 220),
-                        curve: Curves.easeOutCubic,
-                        alignment: Alignment.topCenter,
-                        child: _isExpanded
-                            ? Padding(
-                                padding: const EdgeInsets.only(
-                                  top: AppSpacing.sm,
-                                ),
-                                child: _EventPhotoGrid(urls: photoUrls),
-                              )
-                            : const SizedBox(width: double.infinity),
-                      ),
                     ],
+                  ),
+                  const SizedBox(height: AppSpacing.xs),
+                  ..._detailWidgets(context, details),
+                  const SizedBox(height: AppSpacing.xs),
+                  _EventTimestamp(occurredAt: event.occurredAt),
+                  if (photoUrls.isNotEmpty) ...[
+                    const SizedBox(height: AppSpacing.md),
+                    _PhotoToggle(
+                      count: photoUrls.length,
+                      isExpanded: _isExpanded,
+                    ),
+                    AnimatedSize(
+                      duration: const Duration(milliseconds: 220),
+                      curve: Curves.easeOutCubic,
+                      alignment: Alignment.topCenter,
+                      child: _isExpanded
+                          ? Padding(
+                              padding: const EdgeInsets.only(
+                                top: AppSpacing.sm,
+                              ),
+                              child: _EventPhotoList(urls: photoUrls),
+                            )
+                          : const SizedBox(width: double.infinity),
+                    ),
                   ],
-                ),
+                ],
               ),
-            ],
-          ),
+            ),
+          ],
         ),
       ),
     );
@@ -212,25 +210,158 @@ class _PhotoToggle extends StatelessWidget {
   }
 }
 
-class _EventPhotoGrid extends StatelessWidget {
+class _EventPhotoList extends StatelessWidget {
   final List<String> urls;
 
-  const _EventPhotoGrid({required this.urls});
+  const _EventPhotoList({required this.urls});
 
   @override
   Widget build(BuildContext context) {
-    return GridView.builder(
-      key: const ValueKey('event-photo-grid'),
-      shrinkWrap: true,
-      physics: const NeverScrollableScrollPhysics(),
-      itemCount: urls.length,
-      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-        crossAxisCount: 2,
-        crossAxisSpacing: AppSpacing.sm,
-        mainAxisSpacing: AppSpacing.sm,
-        childAspectRatio: 1,
+    return SizedBox(
+      key: const ValueKey('event-photo-list'),
+      height: 104,
+      child: ListView.separated(
+        scrollDirection: Axis.horizontal,
+        itemCount: urls.length,
+        separatorBuilder: (context, index) =>
+            const SizedBox(width: AppSpacing.sm),
+        itemBuilder: (context, index) {
+          return SizedBox.square(
+            dimension: 104,
+            child: GestureDetector(
+              key: ValueKey('event-photo-open-$index'),
+              behavior: HitTestBehavior.opaque,
+              onTap: () => _openPhotoPreview(context, urls, index),
+              child: _EventPhoto(url: urls[index]),
+            ),
+          );
+        },
       ),
-      itemBuilder: (context, index) => _EventPhoto(url: urls[index]),
+    );
+  }
+
+  void _openPhotoPreview(
+    BuildContext context,
+    List<String> urls,
+    int initialIndex,
+  ) {
+    unawaited(
+      showDialog<void>(
+        context: context,
+        barrierColor: AppColors.backgroundDark.withValues(alpha: 0.96),
+        builder: (context) {
+          return _EventPhotoPreview(urls: urls, initialIndex: initialIndex);
+        },
+      ),
+    );
+  }
+}
+
+class _EventPhotoPreview extends StatefulWidget {
+  final List<String> urls;
+  final int initialIndex;
+
+  const _EventPhotoPreview({required this.urls, required this.initialIndex});
+
+  @override
+  State<_EventPhotoPreview> createState() => _EventPhotoPreviewState();
+}
+
+class _EventPhotoPreviewState extends State<_EventPhotoPreview> {
+  late final PageController _pageController;
+  late int _currentIndex;
+
+  @override
+  void initState() {
+    super.initState();
+    _currentIndex = widget.initialIndex;
+    _pageController = PageController(initialPage: widget.initialIndex);
+  }
+
+  @override
+  void dispose() {
+    _pageController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Dialog.fullscreen(
+      key: const ValueKey('event-photo-preview'),
+      backgroundColor: AppColors.backgroundDark,
+      child: SafeArea(
+        child: Stack(
+          children: [
+            PageView.builder(
+              controller: _pageController,
+              itemCount: widget.urls.length,
+              onPageChanged: (index) {
+                setState(() => _currentIndex = index);
+              },
+              itemBuilder: (context, index) {
+                return Center(
+                  child: InteractiveViewer(
+                    minScale: 1,
+                    maxScale: 4,
+                    child: Image(
+                      image: _eventPhotoImageProvider(widget.urls[index]),
+                      fit: BoxFit.contain,
+                      errorBuilder: (context, error, stackTrace) => const Icon(
+                        Icons.broken_image_outlined,
+                        color: AppColors.textMuted,
+                        size: 48,
+                      ),
+                    ),
+                  ),
+                );
+              },
+            ),
+            Positioned(
+              top: AppSpacing.sm,
+              right: AppSpacing.sm,
+              child: IconButton.filled(
+                key: const ValueKey('event-photo-preview-close'),
+                onPressed: () => Navigator.of(context).pop(),
+                style: IconButton.styleFrom(
+                  backgroundColor: AppColors.surfaceHigh.withValues(
+                    alpha: 0.88,
+                  ),
+                  foregroundColor: AppColors.textPrimary,
+                ),
+                icon: const Icon(Icons.close),
+              ),
+            ),
+            if (widget.urls.length > 1)
+              Positioned(
+                left: AppSpacing.lg,
+                right: AppSpacing.lg,
+                bottom: AppSpacing.lg,
+                child: Center(
+                  child: DecoratedBox(
+                    decoration: BoxDecoration(
+                      color: AppColors.surfaceHigh.withValues(alpha: 0.88),
+                      borderRadius: const BorderRadius.all(
+                        Radius.circular(AppRadius.sm),
+                      ),
+                    ),
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: AppSpacing.md,
+                        vertical: AppSpacing.xs,
+                      ),
+                      child: Text(
+                        '${_currentIndex + 1}/${widget.urls.length}',
+                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                          color: AppColors.textPrimary,
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+          ],
+        ),
+      ),
     );
   }
 }
@@ -290,13 +421,10 @@ class _EventPhoto extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final uri = Uri.tryParse(url);
-    final isRemote = uri?.scheme == 'http' || uri?.scheme == 'https';
-
     return ClipRRect(
       borderRadius: BorderRadius.circular(AppRadius.sm),
       child: Image(
-        image: isRemote ? NetworkImage(url) : FileImage(File(url)),
+        image: _eventPhotoImageProvider(url),
         width: double.infinity,
         height: double.infinity,
         fit: BoxFit.cover,
@@ -311,6 +439,12 @@ class _EventPhoto extends StatelessWidget {
       ),
     );
   }
+}
+
+ImageProvider _eventPhotoImageProvider(String url) {
+  final uri = Uri.tryParse(url);
+  final isRemote = uri?.scheme == 'http' || uri?.scheme == 'https';
+  return isRemote ? NetworkImage(url) : FileImage(File(url));
 }
 
 class _EventPresentation {
