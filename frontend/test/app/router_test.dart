@@ -502,6 +502,11 @@ final class _MileageGarageDatasource implements GarageDatasource {
   int mileageKm;
 
   @override
+  Future<List<String>> getVehicleBrands() async {
+    return const ['Lada'];
+  }
+
+  @override
   Future<List<Vehicle>> getVehicles() async {
     return [_vehicle(vehicleId).copyWith(currentMileageKm: mileageKm)];
   }

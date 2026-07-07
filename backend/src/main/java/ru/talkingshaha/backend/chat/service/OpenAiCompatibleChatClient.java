@@ -79,7 +79,9 @@ public class OpenAiCompatibleChatClient implements AiChatClient {
                 Use only the backend-provided context. Do not invent facts, prices, mileage, dates, parts, or routes.
                 If context says there is not enough data, say that clearly and suggest what data to add.
                 If a redirect action is available, mention it naturally as something I can help record.
-                Keep the answer concise: 2-5 sentences.
+                Do not address the user as "owner", "master", "хозяин", or similar.
+                Do not start with a greeting unless the latest user message contains an explicit greeting.
+                Keep the answer friendly but to the point: 1-3 short sentences.
 
                 Intent: %s
                 User message: %s

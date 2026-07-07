@@ -692,11 +692,23 @@ abstract class AppLocalizations {
   /// **'Hybrid'**
   String get hybrid;
 
+  /// No description provided for @phev.
+  ///
+  /// In en, this message translates to:
+  /// **'PHEV'**
+  String get phev;
+
   /// No description provided for @electric.
   ///
   /// In en, this message translates to:
   /// **'Electric'**
   String get electric;
+
+  /// No description provided for @powerOutput.
+  ///
+  /// In en, this message translates to:
+  /// **'Power output'**
+  String get powerOutput;
 
   /// No description provided for @powerOutputHp.
   ///
@@ -1400,6 +1412,24 @@ abstract class AppLocalizations {
   /// **'SEASONAL EXPENSES'**
   String get seasonalExpenses;
 
+  /// No description provided for @mileageTrend.
+  ///
+  /// In en, this message translates to:
+  /// **'MILEAGE TREND'**
+  String get mileageTrend;
+
+  /// No description provided for @customRange.
+  ///
+  /// In en, this message translates to:
+  /// **'Custom range'**
+  String get customRange;
+
+  /// No description provided for @clearCustomRange.
+  ///
+  /// In en, this message translates to:
+  /// **'Clear custom range'**
+  String get clearCustomRange;
+
   /// No description provided for @totalAmount.
   ///
   /// In en, this message translates to:
@@ -1411,6 +1441,132 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Monthly expense trend'**
   String get monthlyExpenseTrend;
+
+  /// No description provided for @allMonths.
+  ///
+  /// In en, this message translates to:
+  /// **'All months'**
+  String get allMonths;
+
+  /// No description provided for @january.
+  ///
+  /// In en, this message translates to:
+  /// **'January'**
+  String get january;
+
+  /// No description provided for @february.
+  ///
+  /// In en, this message translates to:
+  /// **'February'**
+  String get february;
+
+  /// No description provided for @march.
+  ///
+  /// In en, this message translates to:
+  /// **'March'**
+  String get march;
+
+  /// No description provided for @april.
+  ///
+  /// In en, this message translates to:
+  /// **'April'**
+  String get april;
+
+  /// No description provided for @may.
+  ///
+  /// In en, this message translates to:
+  /// **'May'**
+  String get may;
+
+  /// No description provided for @june.
+  ///
+  /// In en, this message translates to:
+  /// **'June'**
+  String get june;
+
+  /// No description provided for @july.
+  ///
+  /// In en, this message translates to:
+  /// **'July'**
+  String get july;
+
+  /// No description provided for @august.
+  ///
+  /// In en, this message translates to:
+  /// **'August'**
+  String get august;
+
+  /// No description provided for @september.
+  ///
+  /// In en, this message translates to:
+  /// **'September'**
+  String get september;
+
+  /// No description provided for @october.
+  ///
+  /// In en, this message translates to:
+  /// **'October'**
+  String get october;
+
+  /// No description provided for @november.
+  ///
+  /// In en, this message translates to:
+  /// **'November'**
+  String get november;
+
+  /// No description provided for @december.
+  ///
+  /// In en, this message translates to:
+  /// **'December'**
+  String get december;
+
+  /// No description provided for @winter.
+  ///
+  /// In en, this message translates to:
+  /// **'Winter'**
+  String get winter;
+
+  /// No description provided for @spring.
+  ///
+  /// In en, this message translates to:
+  /// **'Spring'**
+  String get spring;
+
+  /// No description provided for @summer.
+  ///
+  /// In en, this message translates to:
+  /// **'Summer'**
+  String get summer;
+
+  /// No description provided for @autumn.
+  ///
+  /// In en, this message translates to:
+  /// **'Autumn'**
+  String get autumn;
+
+  /// No description provided for @mileageDataUnavailableForFilter.
+  ///
+  /// In en, this message translates to:
+  /// **'Mileage data is not available for this filter'**
+  String get mileageDataUnavailableForFilter;
+
+  /// No description provided for @accumulatedMileageByMonth.
+  ///
+  /// In en, this message translates to:
+  /// **'Accumulated mileage by month'**
+  String get accumulatedMileageByMonth;
+
+  /// No description provided for @accumulatedMileageByDay.
+  ///
+  /// In en, this message translates to:
+  /// **'Accumulated mileage by day'**
+  String get accumulatedMileageByDay;
+
+  /// No description provided for @couldNotLoadMileageTrend.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not load mileage trend'**
+  String get couldNotLoadMileageTrend;
 
   /// No description provided for @historyAnalysis.
   ///
@@ -1477,6 +1633,24 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Trip km'**
   String get tripKmMetric;
+
+  /// No description provided for @reliabilityMetric.
+  ///
+  /// In en, this message translates to:
+  /// **'Reliability'**
+  String get reliabilityMetric;
+
+  /// No description provided for @efficiencyMetric.
+  ///
+  /// In en, this message translates to:
+  /// **'Efficiency'**
+  String get efficiencyMetric;
+
+  /// No description provided for @maintenanceLoadMetric.
+  ///
+  /// In en, this message translates to:
+  /// **'Maintenance load'**
+  String get maintenanceLoadMetric;
 
   /// No description provided for @subscription.
   ///

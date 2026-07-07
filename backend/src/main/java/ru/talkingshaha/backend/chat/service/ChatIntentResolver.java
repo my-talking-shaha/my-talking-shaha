@@ -30,6 +30,9 @@ public class ChatIntentResolver {
 
     private ChatDecision localResolve(String userText, ChatLanguage language) {
         String text = normalize(userText);
+        if (isAnalyticsQuestion(text)) {
+            return decision(ChatIntent.ASK_ANALYTICS, language);
+        }
         if (matches(text, "fuel", "refuel", "gas", "petrol", "заправ", "бенз", "топлив", "залил", "залила")) {
             return decision(ChatIntent.OPEN_REFUEL_FORM, language);
         }
@@ -70,9 +73,34 @@ public class ChatIntentResolver {
         return ChatDecision.unclear(language);
     }
 
+    private boolean isAnalyticsQuestion(String text) {
+        boolean asksQuestion = text.startsWith("what ")
+                || text.startsWith("how much ")
+                || text.startsWith("show ")
+                || text.startsWith("tell ")
+                || text.startsWith("какие ")
+                || text.startsWith("какой ")
+                || text.startsWith("сколько ")
+                || text.startsWith("покажи ")
+                || text.startsWith("расскажи ");
+        boolean asksAnalytics = text.contains("expense")
+                || text.contains("cost")
+                || text.contains("spent")
+                || text.contains("analytics")
+                || text.contains("statistics")
+                || text.contains("mileage")
+                || text.contains("расход")
+                || text.contains("потрат")
+                || text.contains("статист")
+                || text.contains("аналит")
+                || text.contains("пробег");
+        return asksQuestion && asksAnalytics;
+    }
+
     private boolean isHighPriorityLocalIntent(ChatIntent intent) {
         return switch (intent) {
-            case OPEN_REFUEL_FORM, OPEN_TRIP_FORM, OPEN_PART_FORM, OPEN_REPAIR_FORM, ASK_REPAIR_NEED -> true;
+            case OPEN_REFUEL_FORM, OPEN_TRIP_FORM, OPEN_PART_FORM, OPEN_REPAIR_FORM, ASK_REPAIR_NEED,
+                    ASK_ANALYTICS, ASK_FUEL, ASK_STATUS, CASUAL -> true;
             default -> false;
         };
     }

@@ -2,6 +2,7 @@ import 'package:dio/dio.dart';
 import 'package:frontend/features/analytics/data/datasources/analytics_datasource.dart';
 import 'package:frontend/features/analytics/domain/entities/analytics_period.dart';
 import 'package:frontend/features/analytics/domain/entities/analytics_summary.dart';
+import 'package:frontend/features/analytics/domain/entities/mileage_trend.dart';
 
 final class AnalyticsApiDatasource implements AnalyticsDatasource {
   const AnalyticsApiDatasource(this._dio);
@@ -12,18 +13,106 @@ final class AnalyticsApiDatasource implements AnalyticsDatasource {
   Future<AnalyticsSummary> getSummary({
     required String vehicleId,
     required AnalyticsPeriod period,
+    AnalyticsDateRange? dateRange,
   }) async {
     final response = await _dio.get<Map<String, dynamic>>(
       '/vehicles/$vehicleId/analytics',
-      queryParameters: {
-        'period': AnalyticsApiSummaryMapper.periodQuery(period),
-      },
+      queryParameters: AnalyticsApiSummaryMapper.queryParameters(
+        period: period,
+        dateRange: dateRange,
+      ),
     );
 
     return AnalyticsApiSummaryMapper.fromJson(
       response.data ?? const {},
       fallbackPeriod: period,
     );
+  }
+
+  @override
+  Future<MileageTrend> getMileageTrend({
+    required String vehicleId,
+    required MileageTrendFilter filter,
+  }) async {
+    final response = await _dio.get<Map<String, dynamic>>(
+      '/vehicles/$vehicleId/analytics/mileage-trend',
+      queryParameters: AnalyticsApiMileageTrendMapper.queryParameters(filter),
+    );
+
+    return AnalyticsApiMileageTrendMapper.fromJson(
+      response.data ?? const {},
+      fallbackFilter: filter,
+    );
+  }
+}
+
+abstract final class AnalyticsApiMileageTrendMapper {
+  static MileageTrend fromJson(
+    Map<String, dynamic> json, {
+    required MileageTrendFilter fallbackFilter,
+  }) {
+    final points = _mapListValue(json['points'])
+        .map(
+          (point) => MileageTrendPoint(
+            label: _stringValue(point['label'], fallback: ''),
+            mileageKm: _intValue(point['mileageKm'], fallback: 0),
+          ),
+        )
+        .where((point) => point.label.isNotEmpty)
+        .toList(growable: false);
+
+    return MileageTrend(
+      year: _intValue(json['year'], fallback: fallbackFilter.year),
+      month: _nullableIntValue(json['month']) ?? fallbackFilter.month,
+      points: points,
+      hasData: _boolValue(json['hasData'], fallback: points.isNotEmpty),
+    );
+  }
+
+  static Map<String, int> queryParameters(MileageTrendFilter filter) {
+    final query = {'year': filter.year};
+    final month = filter.month;
+    if (month != null) {
+      query['month'] = month;
+    }
+    return query;
+  }
+
+  static List<Map<String, dynamic>> _mapListValue(Object? value) {
+    if (value is! List) return const [];
+
+    return value.whereType<Map<String, dynamic>>().toList(growable: false);
+  }
+
+  static bool _boolValue(Object? value, {required bool fallback}) {
+    return switch (value) {
+      bool boolValue => boolValue,
+      String stringValue => stringValue.toLowerCase() == 'true',
+      _ => fallback,
+    };
+  }
+
+  static String _stringValue(Object? value, {required String fallback}) {
+    final stringValue = value?.toString();
+    return stringValue == null || stringValue.isEmpty ? fallback : stringValue;
+  }
+
+  static int _intValue(Object? value, {required int fallback}) {
+    return switch (value) {
+      int intValue => intValue,
+      num numValue => numValue.round(),
+      String stringValue => num.tryParse(stringValue)?.round() ?? fallback,
+      _ => fallback,
+    };
+  }
+
+  static int? _nullableIntValue(Object? value) {
+    return switch (value) {
+      int intValue => intValue,
+      num numValue => numValue.round(),
+      String stringValue => num.tryParse(stringValue)?.round(),
+      _ => null,
+    };
   }
 }
 
@@ -124,6 +213,24 @@ abstract final class AnalyticsApiSummaryMapper {
       AnalyticsPeriod.year => 'YEAR',
       AnalyticsPeriod.all => 'ALL_TIME',
     };
+  }
+
+  static Map<String, String> queryParameters({
+    required AnalyticsPeriod period,
+    AnalyticsDateRange? dateRange,
+  }) {
+    return {
+      'period': periodQuery(period),
+      if (dateRange != null) ...{
+        'startDate': _dateQuery(dateRange.startDate),
+        'endDate': _dateQuery(dateRange.endDate),
+      },
+    };
+  }
+
+  static String _dateQuery(DateTime date) {
+    final normalized = DateTime(date.year, date.month, date.day);
+    return normalized.toIso8601String().split('T').first;
   }
 
   static List<ExpenseCategoryAmount> _expenseCategories(Object? value) {

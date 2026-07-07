@@ -7,6 +7,7 @@ final class AddVehicleState {
     this.currentMileage = '',
     this.engineType = '',
     this.engineSpecification = '',
+    this.powerOutputUnit = 'hp',
     this.vin = '',
     this.fieldErrors = const {},
     this.isSubmitting = false,
@@ -20,6 +21,7 @@ final class AddVehicleState {
   final String currentMileage;
   final String engineType;
   final String engineSpecification;
+  final String powerOutputUnit;
   final String vin;
   final Map<String, String> fieldErrors;
   final bool isSubmitting;
@@ -33,6 +35,7 @@ final class AddVehicleState {
     String? currentMileage,
     String? engineType,
     String? engineSpecification,
+    String? powerOutputUnit,
     String? vin,
     Map<String, String>? fieldErrors,
     bool? isSubmitting,
@@ -47,6 +50,7 @@ final class AddVehicleState {
       currentMileage: currentMileage ?? this.currentMileage,
       engineType: engineType ?? this.engineType,
       engineSpecification: engineSpecification ?? this.engineSpecification,
+      powerOutputUnit: powerOutputUnit ?? this.powerOutputUnit,
       vin: vin ?? this.vin,
       fieldErrors: fieldErrors ?? this.fieldErrors,
       isSubmitting: isSubmitting ?? this.isSubmitting,

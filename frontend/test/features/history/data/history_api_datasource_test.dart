@@ -77,6 +77,22 @@ void main() {
       });
     });
 
+    test('maps backend maintenance replaced parts marker to details', () {
+      final event = HistoryApiEventMapper.fromJson(const {
+        'id': 'maintenance_1',
+        'type': 'MAINTENANCE',
+        'title': 'Engine replacement',
+        'eventDateTime': '2026-06-12T16:30:00Z',
+        'mileageKm': 10000,
+        'description': 'Changed engine\nReplaced parts: engine',
+        'cost': 10000,
+      }, 'vehicle_1');
+
+      final details = event.details as MaintenanceDetails;
+      expect(details.description, 'Changed engine');
+      expect(details.replacedParts, const ['engine']);
+    });
+
     test('builds backend trip payload from history event', () {
       final payload = HistoryApiEventMapper.createPayload(
         HistoryEvent(

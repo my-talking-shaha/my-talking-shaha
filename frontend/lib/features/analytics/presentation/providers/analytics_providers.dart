@@ -6,9 +6,18 @@ import 'package:frontend/features/analytics/data/datasources/mock_analytics_data
 import 'package:frontend/features/analytics/data/repositories/analytics_repository_impl.dart';
 import 'package:frontend/features/analytics/domain/entities/analytics_period.dart';
 import 'package:frontend/features/analytics/domain/entities/analytics_summary.dart';
+import 'package:frontend/features/analytics/domain/entities/mileage_trend.dart';
 import 'package:frontend/features/analytics/domain/repositories/analytics_repository.dart';
 
-typedef AnalyticsSummaryRequest = ({String vehicleId, AnalyticsPeriod period});
+typedef AnalyticsSummaryRequest = ({
+  String vehicleId,
+  AnalyticsPeriod period,
+  AnalyticsDateRange? dateRange,
+});
+
+typedef MileageTrendRequest = ({String vehicleId, MileageTrendFilter filter});
+
+const useMockAnalyticsDatasource = bool.fromEnvironment('USE_MOCK_ANALYTICS');
 
 final mockAnalyticsDatasourceProvider = Provider<MockAnalyticsDatasource>((
   ref,
@@ -21,6 +30,10 @@ final analyticsApiDatasourceProvider = Provider<AnalyticsApiDatasource>((ref) {
 });
 
 final analyticsDatasourceProvider = Provider<AnalyticsDatasource>((ref) {
+  if (useMockAnalyticsDatasource) {
+    return ref.watch(mockAnalyticsDatasourceProvider);
+  }
+
   return ref.watch(analyticsApiDatasourceProvider);
 });
 
@@ -32,5 +45,19 @@ final analyticsSummaryProvider = FutureProvider.autoDispose
     .family<AnalyticsSummary, AnalyticsSummaryRequest>((ref, request) {
       return ref
           .watch(analyticsRepositoryProvider)
-          .getSummary(vehicleId: request.vehicleId, period: request.period);
+          .getSummary(
+            vehicleId: request.vehicleId,
+            period: request.period,
+            dateRange: request.dateRange,
+          );
+    });
+
+final mileageTrendProvider = FutureProvider.autoDispose
+    .family<MileageTrend, MileageTrendRequest>((ref, request) {
+      return ref
+          .watch(analyticsRepositoryProvider)
+          .getMileageTrend(
+            vehicleId: request.vehicleId,
+            filter: request.filter,
+          );
     });

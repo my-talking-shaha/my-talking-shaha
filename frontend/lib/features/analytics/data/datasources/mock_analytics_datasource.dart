@@ -1,6 +1,7 @@
 import 'package:frontend/features/analytics/data/datasources/analytics_datasource.dart';
 import 'package:frontend/features/analytics/domain/entities/analytics_period.dart';
 import 'package:frontend/features/analytics/domain/entities/analytics_summary.dart';
+import 'package:frontend/features/analytics/domain/entities/mileage_trend.dart';
 
 final class MockAnalyticsDatasource implements AnalyticsDatasource {
   MockAnalyticsDatasource({this.delay = const Duration(milliseconds: 500)});
@@ -11,11 +12,16 @@ final class MockAnalyticsDatasource implements AnalyticsDatasource {
   Future<AnalyticsSummary> getSummary({
     required String vehicleId,
     required AnalyticsPeriod period,
+    AnalyticsDateRange? dateRange,
   }) async {
     await Future<void>.delayed(delay);
 
     if (vehicleId == 'vehicle_empty') {
       return _emptySummary(period);
+    }
+
+    if (dateRange != null) {
+      return _customRangeSummary(period, dateRange);
     }
 
     return switch (period) {
@@ -25,64 +31,271 @@ final class MockAnalyticsDatasource implements AnalyticsDatasource {
     };
   }
 
+  @override
+  Future<MileageTrend> getMileageTrend({
+    required String vehicleId,
+    required MileageTrendFilter filter,
+  }) async {
+    await Future<void>.delayed(delay);
+
+    if (vehicleId == 'vehicle_empty') {
+      return MileageTrend(
+        year: filter.year,
+        month: filter.month,
+        points: const [],
+        hasData: false,
+      );
+    }
+
+    final points = filter.month == null
+        ? _yearMileageTrend(filter.year)
+        : _monthMileageTrend(filter.year, filter.month!);
+
+    return MileageTrend(
+      year: filter.year,
+      month: filter.month,
+      points: points,
+      hasData: points.isNotEmpty,
+    );
+  }
+
+  List<MileageTrendPoint> _yearMileageTrend(int year) {
+    const monthlyDeltas = [
+      1640,
+      2320,
+      1740,
+      2860,
+      2180,
+      2510,
+      2060,
+      2780,
+      1950,
+      3220,
+      3060,
+      4320,
+    ];
+    var accumulated = 118000 + ((year - 2024) * 28000);
+
+    return [
+      for (var index = 0; index < monthlyDeltas.length; index++)
+        MileageTrendPoint(
+          label: _monthShortLabel(index + 1),
+          mileageKm: accumulated += monthlyDeltas[index],
+        ),
+    ];
+  }
+
+  List<MileageTrendPoint> _monthMileageTrend(int year, int month) {
+    final monthOffset = (year - 2024) * 28000 + (month - 1) * 2300;
+    var accumulated = 118000 + monthOffset;
+    final daysInMonth = DateTime(year, month + 1, 0).day;
+    final step = (daysInMonth / 6).ceil();
+
+    return [
+      for (var day = 1; day <= daysInMonth; day += step)
+        MileageTrendPoint(
+          label: '$day',
+          mileageKm: accumulated += 260 + ((day % 3) * 45),
+        ),
+      if ((daysInMonth - 1) % step != 0)
+        MileageTrendPoint(label: '$daysInMonth', mileageKm: accumulated + 320),
+    ];
+  }
+
+  String _monthShortLabel(int month) {
+    const labels = [
+      'Jan',
+      'Feb',
+      'Mar',
+      'Apr',
+      'May',
+      'Jun',
+      'Jul',
+      'Aug',
+      'Sep',
+      'Oct',
+      'Nov',
+      'Dec',
+    ];
+    return labels[month - 1];
+  }
+
+  AnalyticsSummary _customRangeSummary(
+    AnalyticsPeriod period,
+    AnalyticsDateRange dateRange,
+  ) {
+    final days = dateRange.endDate.difference(dateRange.startDate).inDays + 1;
+    final safeDays = days < 1 ? 1 : days;
+    final totalExpenses = 8200 * safeDays;
+    final totalKm = 96 * safeDays;
+
+    return AnalyticsSummary(
+      period: period,
+      hasEnoughData: true,
+      totalExpenses: MoneyAmount(amount: totalExpenses, currency: 'RUB'),
+      trendPercent: 12.8,
+      expensesByCategory: [
+        ExpenseCategoryAmount(
+          category: ExpenseCategory.parts,
+          amount: (totalExpenses * 0.42).round(),
+        ),
+        ExpenseCategoryAmount(
+          category: ExpenseCategory.maintenance,
+          amount: (totalExpenses * 0.26).round(),
+        ),
+        ExpenseCategoryAmount(
+          category: ExpenseCategory.fuel,
+          amount: (totalExpenses * 0.24).round(),
+        ),
+        ExpenseCategoryAmount(
+          category: ExpenseCategory.other,
+          amount: (totalExpenses * 0.08).round(),
+        ),
+      ],
+      mileage: MileageAnalytics(
+        totalKm: totalKm,
+        costPerKm: totalExpenses / totalKm,
+        monthlyDeltaKm: totalKm,
+        growthPercent: 14,
+      ),
+      fuel: FuelAnalytics(
+        averageConsumptionPer100Km: 8.6,
+        totalLiters: totalKm * 0.086,
+      ),
+      repairs: RepairAnalytics(
+        count: (safeDays / 6).ceil(),
+        mostFrequentTypes: const [
+          RepairTypeMetric(label: 'Suspension', count: 4),
+          RepairTypeMetric(label: 'Brakes', count: 3),
+          RepairTypeMetric(label: 'Consumables', count: 2),
+        ],
+      ),
+      maintenanceForecast: _maintenanceForecast(),
+      history: _historyAnalytics(
+        reliability: 82,
+        efficiency: 76,
+        maintenanceLoad: 88,
+        refuels: (safeDays / 4).ceil(),
+        parts: (safeDays / 10).ceil(),
+      ),
+      charts: AnalyticsCharts(
+        expensesByMonth: _customRangePoints(dateRange, 8200),
+        mileageByMonth: _customRangePoints(dateRange, 96),
+        repairsByMonth: _customRangePoints(dateRange, 0.28),
+      ),
+    );
+  }
+
+  List<AnalyticsChartPoint> _customRangePoints(
+    AnalyticsDateRange dateRange,
+    double dailyValue,
+  ) {
+    final totalDays = dateRange.endDate.difference(dateRange.startDate).inDays;
+    final step = (totalDays / 5).ceil().clamp(1, 30);
+    final points = <AnalyticsChartPoint>[];
+
+    for (
+      var date = dateRange.startDate, index = 0;
+      !date.isAfter(dateRange.endDate);
+      date = date.add(Duration(days: step)), index++
+    ) {
+      final wave = index.isEven ? 1.18 : 0.82;
+      points.add(
+        AnalyticsChartPoint(
+          label: _shortDateLabel(date),
+          value: dailyValue * step * wave,
+        ),
+      );
+    }
+
+    if (points.isEmpty ||
+        points.last.label != _shortDateLabel(dateRange.endDate)) {
+      points.add(
+        AnalyticsChartPoint(
+          label: _shortDateLabel(dateRange.endDate),
+          value: dailyValue,
+        ),
+      );
+    }
+
+    return points;
+  }
+
+  String _shortDateLabel(DateTime date) {
+    return '${date.day}.${date.month.toString().padLeft(2, '0')}';
+  }
+
   AnalyticsSummary _monthSummary(AnalyticsPeriod period) {
     return AnalyticsSummary(
       period: period,
       hasEnoughData: true,
-      totalExpenses: const MoneyAmount(amount: 15650, currency: 'RUB'),
-      trendPercent: 4.2,
+      totalExpenses: const MoneyAmount(amount: 184950, currency: 'RUB'),
+      trendPercent: 18.4,
       expensesByCategory: const [
-        ExpenseCategoryAmount(category: ExpenseCategory.parts, amount: 6200),
+        ExpenseCategoryAmount(category: ExpenseCategory.parts, amount: 84500),
         ExpenseCategoryAmount(
           category: ExpenseCategory.maintenance,
-          amount: 3100,
+          amount: 41250,
         ),
-        ExpenseCategoryAmount(category: ExpenseCategory.fuel, amount: 2450),
-        ExpenseCategoryAmount(category: ExpenseCategory.other, amount: 3900),
+        ExpenseCategoryAmount(category: ExpenseCategory.fuel, amount: 36700),
+        ExpenseCategoryAmount(category: ExpenseCategory.other, amount: 22500),
       ],
       mileage: const MileageAnalytics(
-        totalKm: 1240,
-        costPerKm: 12.62,
-        monthlyDeltaKm: 1240,
-        growthPercent: 12,
+        totalKm: 4320,
+        costPerKm: 42.81,
+        monthlyDeltaKm: 4320,
+        growthPercent: 18,
       ),
       fuel: const FuelAnalytics(
-        averageConsumptionPer100Km: 7.2,
-        totalLiters: 120.4,
+        averageConsumptionPer100Km: 9.1,
+        totalLiters: 393.2,
       ),
       repairs: const RepairAnalytics(
-        count: 3,
+        count: 11,
         mostFrequentTypes: [
-          RepairTypeMetric(label: 'Suspension', count: 4),
-          RepairTypeMetric(label: 'Electrical', count: 2),
+          RepairTypeMetric(label: 'Suspension', count: 5),
+          RepairTypeMetric(label: 'Electrical', count: 3),
+          RepairTypeMetric(label: 'Consumables', count: 3),
         ],
       ),
       maintenanceForecast: _maintenanceForecast(),
-      history: _historyAnalytics(),
+      history: _historyAnalytics(
+        reliability: 78,
+        efficiency: 69,
+        maintenanceLoad: 86,
+        refuels: 9,
+        parts: 4,
+      ),
       charts: const AnalyticsCharts(
         expensesByMonth: [
-          AnalyticsChartPoint(label: 'Jan', value: 24000),
-          AnalyticsChartPoint(label: 'Feb', value: 30500),
-          AnalyticsChartPoint(label: 'Mar', value: 18600),
-          AnalyticsChartPoint(label: 'Apr', value: 41500),
-          AnalyticsChartPoint(label: 'May', value: 36500),
-          AnalyticsChartPoint(label: 'Jun', value: 15650),
+          AnalyticsChartPoint(label: 'Jun 1', value: 12600),
+          AnalyticsChartPoint(label: 'Jun 4', value: 34200),
+          AnalyticsChartPoint(label: 'Jun 8', value: 18400),
+          AnalyticsChartPoint(label: 'Jun 12', value: 42100),
+          AnalyticsChartPoint(label: 'Jun 16', value: 27800),
+          AnalyticsChartPoint(label: 'Jun 20', value: 51600),
+          AnalyticsChartPoint(label: 'Jun 24', value: 22900),
+          AnalyticsChartPoint(label: 'Jun 28', value: 74650),
         ],
         mileageByMonth: [
-          AnalyticsChartPoint(label: 'Jan', value: 720),
-          AnalyticsChartPoint(label: 'Feb', value: 880),
-          AnalyticsChartPoint(label: 'Mar', value: 540),
-          AnalyticsChartPoint(label: 'Apr', value: 1120),
-          AnalyticsChartPoint(label: 'May', value: 940),
-          AnalyticsChartPoint(label: 'Jun', value: 1240),
+          AnalyticsChartPoint(label: 'Jun 1', value: 380),
+          AnalyticsChartPoint(label: 'Jun 4', value: 760),
+          AnalyticsChartPoint(label: 'Jun 8', value: 520),
+          AnalyticsChartPoint(label: 'Jun 12', value: 940),
+          AnalyticsChartPoint(label: 'Jun 16', value: 430),
+          AnalyticsChartPoint(label: 'Jun 20', value: 1120),
+          AnalyticsChartPoint(label: 'Jun 24', value: 680),
+          AnalyticsChartPoint(label: 'Jun 28', value: 1210),
         ],
         repairsByMonth: [
-          AnalyticsChartPoint(label: 'Jan', value: 1),
-          AnalyticsChartPoint(label: 'Feb', value: 2),
-          AnalyticsChartPoint(label: 'Mar', value: 1),
-          AnalyticsChartPoint(label: 'Apr', value: 4),
-          AnalyticsChartPoint(label: 'May', value: 3),
-          AnalyticsChartPoint(label: 'Jun', value: 1),
+          AnalyticsChartPoint(label: 'Jun 1', value: 1),
+          AnalyticsChartPoint(label: 'Jun 4', value: 2),
+          AnalyticsChartPoint(label: 'Jun 8', value: 1),
+          AnalyticsChartPoint(label: 'Jun 12', value: 3),
+          AnalyticsChartPoint(label: 'Jun 16', value: 1),
+          AnalyticsChartPoint(label: 'Jun 20', value: 4),
+          AnalyticsChartPoint(label: 'Jun 24', value: 2),
+          AnalyticsChartPoint(label: 'Jun 28', value: 5),
         ],
       ),
     );
@@ -92,60 +305,85 @@ final class MockAnalyticsDatasource implements AnalyticsDatasource {
     return AnalyticsSummary(
       period: period,
       hasEnoughData: true,
-      totalExpenses: const MoneyAmount(amount: 342500, currency: 'RUB'),
-      trendPercent: 4.2,
+      totalExpenses: const MoneyAmount(amount: 1258700, currency: 'RUB'),
+      trendPercent: 31.6,
       expensesByCategory: const [
-        ExpenseCategoryAmount(category: ExpenseCategory.parts, amount: 145000),
-        ExpenseCategoryAmount(category: ExpenseCategory.fuel, amount: 112500),
+        ExpenseCategoryAmount(category: ExpenseCategory.parts, amount: 531800),
+        ExpenseCategoryAmount(category: ExpenseCategory.fuel, amount: 352400),
         ExpenseCategoryAmount(
           category: ExpenseCategory.maintenance,
-          amount: 56000,
+          amount: 269700,
         ),
-        ExpenseCategoryAmount(category: ExpenseCategory.other, amount: 29000),
+        ExpenseCategoryAmount(category: ExpenseCategory.other, amount: 104800),
       ],
       mileage: const MileageAnalytics(
-        totalKm: 23840,
-        costPerKm: 14.8,
-        monthlyDeltaKm: 1240,
-        growthPercent: 12,
+        totalKm: 28640,
+        costPerKm: 43.95,
+        monthlyDeltaKm: 4320,
+        growthPercent: 24,
       ),
       fuel: const FuelAnalytics(
-        averageConsumptionPer100Km: 7.6,
-        totalLiters: 1811.8,
+        averageConsumptionPer100Km: 8.8,
+        totalLiters: 2520.3,
       ),
       repairs: const RepairAnalytics(
-        count: 18,
+        count: 43,
         mostFrequentTypes: [
-          RepairTypeMetric(label: 'Suspension', count: 4),
-          RepairTypeMetric(label: 'Electrical', count: 2),
+          RepairTypeMetric(label: 'Suspension', count: 13),
+          RepairTypeMetric(label: 'Electrical', count: 9),
+          RepairTypeMetric(label: 'Brakes', count: 7),
         ],
       ),
       maintenanceForecast: _maintenanceForecast(),
-      history: _historyAnalytics(),
+      history: _historyAnalytics(
+        reliability: 84,
+        efficiency: 73,
+        maintenanceLoad: 91,
+        refuels: 52,
+        parts: 17,
+      ),
       charts: const AnalyticsCharts(
         expensesByMonth: [
-          AnalyticsChartPoint(label: 'Jul', value: 28500),
-          AnalyticsChartPoint(label: 'Aug', value: 32400),
-          AnalyticsChartPoint(label: 'Sep', value: 25500),
-          AnalyticsChartPoint(label: 'Oct', value: 50600),
-          AnalyticsChartPoint(label: 'Nov', value: 36500),
-          AnalyticsChartPoint(label: 'Dec', value: 38900),
+          AnalyticsChartPoint(label: 'Jul', value: 74200),
+          AnalyticsChartPoint(label: 'Aug', value: 93600),
+          AnalyticsChartPoint(label: 'Sep', value: 68400),
+          AnalyticsChartPoint(label: 'Oct', value: 155900),
+          AnalyticsChartPoint(label: 'Nov', value: 88200),
+          AnalyticsChartPoint(label: 'Dec', value: 119300),
+          AnalyticsChartPoint(label: 'Jan', value: 104600),
+          AnalyticsChartPoint(label: 'Feb', value: 137800),
+          AnalyticsChartPoint(label: 'Mar', value: 96500),
+          AnalyticsChartPoint(label: 'Apr', value: 173400),
+          AnalyticsChartPoint(label: 'May', value: 161900),
+          AnalyticsChartPoint(label: 'Jun', value: 184950),
         ],
         mileageByMonth: [
-          AnalyticsChartPoint(label: 'Jul', value: 960),
-          AnalyticsChartPoint(label: 'Aug', value: 1280),
-          AnalyticsChartPoint(label: 'Sep', value: 810),
-          AnalyticsChartPoint(label: 'Oct', value: 1360),
-          AnalyticsChartPoint(label: 'Nov', value: 1020),
-          AnalyticsChartPoint(label: 'Dec', value: 1180),
+          AnalyticsChartPoint(label: 'Jul', value: 1640),
+          AnalyticsChartPoint(label: 'Aug', value: 2320),
+          AnalyticsChartPoint(label: 'Sep', value: 1740),
+          AnalyticsChartPoint(label: 'Oct', value: 2860),
+          AnalyticsChartPoint(label: 'Nov', value: 2180),
+          AnalyticsChartPoint(label: 'Dec', value: 2510),
+          AnalyticsChartPoint(label: 'Jan', value: 2060),
+          AnalyticsChartPoint(label: 'Feb', value: 2780),
+          AnalyticsChartPoint(label: 'Mar', value: 1950),
+          AnalyticsChartPoint(label: 'Apr', value: 3220),
+          AnalyticsChartPoint(label: 'May', value: 3060),
+          AnalyticsChartPoint(label: 'Jun', value: 4320),
         ],
         repairsByMonth: [
-          AnalyticsChartPoint(label: 'Jul', value: 1),
-          AnalyticsChartPoint(label: 'Aug', value: 2),
-          AnalyticsChartPoint(label: 'Sep', value: 1),
-          AnalyticsChartPoint(label: 'Oct', value: 4),
-          AnalyticsChartPoint(label: 'Nov', value: 3),
-          AnalyticsChartPoint(label: 'Dec', value: 1),
+          AnalyticsChartPoint(label: 'Jul', value: 2),
+          AnalyticsChartPoint(label: 'Aug', value: 3),
+          AnalyticsChartPoint(label: 'Sep', value: 2),
+          AnalyticsChartPoint(label: 'Oct', value: 6),
+          AnalyticsChartPoint(label: 'Nov', value: 4),
+          AnalyticsChartPoint(label: 'Dec', value: 5),
+          AnalyticsChartPoint(label: 'Jan', value: 3),
+          AnalyticsChartPoint(label: 'Feb', value: 5),
+          AnalyticsChartPoint(label: 'Mar', value: 3),
+          AnalyticsChartPoint(label: 'Apr', value: 6),
+          AnalyticsChartPoint(label: 'May', value: 4),
+          AnalyticsChartPoint(label: 'Jun', value: 7),
         ],
       ),
     );
@@ -155,57 +393,70 @@ final class MockAnalyticsDatasource implements AnalyticsDatasource {
     return AnalyticsSummary(
       period: period,
       hasEnoughData: true,
-      totalExpenses: const MoneyAmount(amount: 916800, currency: 'RUB'),
-      trendPercent: 8.7,
+      totalExpenses: const MoneyAmount(amount: 4862200, currency: 'RUB'),
+      trendPercent: 42.9,
       expensesByCategory: const [
-        ExpenseCategoryAmount(category: ExpenseCategory.parts, amount: 384000),
-        ExpenseCategoryAmount(category: ExpenseCategory.fuel, amount: 292300),
+        ExpenseCategoryAmount(category: ExpenseCategory.parts, amount: 1974800),
+        ExpenseCategoryAmount(category: ExpenseCategory.fuel, amount: 1432200),
         ExpenseCategoryAmount(
           category: ExpenseCategory.maintenance,
-          amount: 151500,
+          amount: 1015600,
         ),
-        ExpenseCategoryAmount(category: ExpenseCategory.other, amount: 89000),
+        ExpenseCategoryAmount(category: ExpenseCategory.other, amount: 439600),
       ],
       mileage: const MileageAnalytics(
-        totalKm: 67420,
-        costPerKm: 13.6,
-        monthlyDeltaKm: 1180,
-        growthPercent: 9,
+        totalKm: 146870,
+        costPerKm: 33.11,
+        monthlyDeltaKm: 4320,
+        growthPercent: 21,
       ),
       fuel: const FuelAnalytics(
-        averageConsumptionPer100Km: 7.4,
-        totalLiters: 4989.1,
+        averageConsumptionPer100Km: 8.3,
+        totalLiters: 12191.4,
       ),
       repairs: const RepairAnalytics(
-        count: 49,
+        count: 164,
         mostFrequentTypes: [
-          RepairTypeMetric(label: 'Suspension', count: 12),
-          RepairTypeMetric(label: 'Electrical', count: 8),
+          RepairTypeMetric(label: 'Suspension', count: 38),
+          RepairTypeMetric(label: 'Electrical', count: 26),
+          RepairTypeMetric(label: 'Engine', count: 19),
         ],
       ),
       maintenanceForecast: _maintenanceForecast(),
-      history: _historyAnalytics(),
+      history: _historyAnalytics(
+        reliability: 88,
+        efficiency: 81,
+        maintenanceLoad: 94,
+        refuels: 286,
+        parts: 68,
+      ),
       charts: const AnalyticsCharts(
         expensesByMonth: [
-          AnalyticsChartPoint(label: '2021', value: 168000),
-          AnalyticsChartPoint(label: '2022', value: 201300),
-          AnalyticsChartPoint(label: '2023', value: 219000),
-          AnalyticsChartPoint(label: '2024', value: 186000),
-          AnalyticsChartPoint(label: '2025', value: 142500),
+          AnalyticsChartPoint(label: '2020', value: 482000),
+          AnalyticsChartPoint(label: '2021', value: 624500),
+          AnalyticsChartPoint(label: '2022', value: 711300),
+          AnalyticsChartPoint(label: '2023', value: 839400),
+          AnalyticsChartPoint(label: '2024', value: 945600),
+          AnalyticsChartPoint(label: '2025', value: 1000700),
+          AnalyticsChartPoint(label: '2026', value: 1258700),
         ],
         mileageByMonth: [
-          AnalyticsChartPoint(label: '2021', value: 11200),
-          AnalyticsChartPoint(label: '2022', value: 13980),
-          AnalyticsChartPoint(label: '2023', value: 15140),
-          AnalyticsChartPoint(label: '2024', value: 12820),
-          AnalyticsChartPoint(label: '2025', value: 14280),
+          AnalyticsChartPoint(label: '2020', value: 16400),
+          AnalyticsChartPoint(label: '2021', value: 19780),
+          AnalyticsChartPoint(label: '2022', value: 21860),
+          AnalyticsChartPoint(label: '2023', value: 24670),
+          AnalyticsChartPoint(label: '2024', value: 26880),
+          AnalyticsChartPoint(label: '2025', value: 28640),
+          AnalyticsChartPoint(label: '2026', value: 28640),
         ],
         repairsByMonth: [
-          AnalyticsChartPoint(label: '2021', value: 8),
-          AnalyticsChartPoint(label: '2022', value: 11),
-          AnalyticsChartPoint(label: '2023', value: 12),
-          AnalyticsChartPoint(label: '2024', value: 10),
-          AnalyticsChartPoint(label: '2025', value: 8),
+          AnalyticsChartPoint(label: '2020', value: 14),
+          AnalyticsChartPoint(label: '2021', value: 18),
+          AnalyticsChartPoint(label: '2022', value: 22),
+          AnalyticsChartPoint(label: '2023', value: 27),
+          AnalyticsChartPoint(label: '2024', value: 33),
+          AnalyticsChartPoint(label: '2025', value: 39),
+          AnalyticsChartPoint(label: '2026', value: 43),
         ],
       ),
     );
@@ -230,21 +481,21 @@ final class MockAnalyticsDatasource implements AnalyticsDatasource {
 
   AnalyticsMaintenanceForecast _maintenanceForecast() {
     return const AnalyticsMaintenanceForecast(
-      remainingDistanceKm: 2400,
-      approximateDateLabel: 'Jan 24, 2024 (45 days)',
-      updatedLabel: 'Updated 2 hours ago',
-      resourcePercent: 84,
+      remainingDistanceKm: 620,
+      approximateDateLabel: 'Jul 28, 2026 (24 days)',
+      updatedLabel: 'Updated 14 minutes ago',
+      resourcePercent: 22,
       items: [
         AnalyticsMaintenanceItem(
           label: 'Brake pads',
-          remainingPercent: 15,
-          remainingDistanceKm: 3200,
+          remainingPercent: 12,
+          remainingDistanceKm: 980,
           urgency: AnalyticsMaintenanceUrgency.warning,
         ),
         AnalyticsMaintenanceItem(
           label: 'Engine oil',
-          remainingPercent: 5,
-          remainingDistanceKm: 450,
+          remainingPercent: 4,
+          remainingDistanceKm: 220,
           urgency: AnalyticsMaintenanceUrgency.critical,
         ),
         AnalyticsMaintenanceItem(
@@ -253,18 +504,41 @@ final class MockAnalyticsDatasource implements AnalyticsDatasource {
           remainingDistanceKm: 0,
           urgency: AnalyticsMaintenanceUrgency.critical,
         ),
+        AnalyticsMaintenanceItem(
+          label: 'Battery',
+          remainingPercent: 28,
+          remainingDistanceKm: 4200,
+          urgency: AnalyticsMaintenanceUrgency.warning,
+        ),
+        AnalyticsMaintenanceItem(
+          label: 'Cabin filter',
+          remainingPercent: 66,
+          remainingDistanceKm: 9200,
+          urgency: AnalyticsMaintenanceUrgency.stable,
+        ),
       ],
     );
   }
 
-  HistoryAnalytics _historyAnalytics() {
-    return const HistoryAnalytics(
+  HistoryAnalytics _historyAnalytics({
+    required int reliability,
+    required int efficiency,
+    required int maintenanceLoad,
+    required int refuels,
+    required int parts,
+  }) {
+    return HistoryAnalytics(
       companyMetrics: [
-        CompanyMetric(label: 'Reliability', value: 92, maxValue: 100),
-        CompanyMetric(label: 'Efficiency', value: 78, maxValue: 100),
+        CompanyMetric(label: 'Reliability', value: reliability, maxValue: 100),
+        CompanyMetric(label: 'Efficiency', value: efficiency, maxValue: 100),
+        CompanyMetric(
+          label: 'Maintenance load',
+          value: maintenanceLoad,
+          maxValue: 100,
+        ),
       ],
-      subscriptionCount: 4,
-      electronicsCount: 2,
+      subscriptionCount: refuels,
+      electronicsCount: parts,
     );
   }
 }
