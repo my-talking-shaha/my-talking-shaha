@@ -180,6 +180,7 @@ jobs:
             -H 'Content-Type: application/json' \
             --data '{
               "eventDateTime": "2026-06-12T14:30:00Z",
+              "title": "CI Smoke Refuel",
               "mileageKm": 10000,
               "liters": 40,
               "cost": 3200,
