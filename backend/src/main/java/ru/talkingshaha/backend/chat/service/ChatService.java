@@ -247,7 +247,7 @@ public class ChatService {
                 vehicle.getId(),
                 new CreateRefuelEventRequest(
                         eventDateTime(userText),
-                        "Refuel",
+                        "Заправка",
                         mileageKm,
                         liters,
                         cost,

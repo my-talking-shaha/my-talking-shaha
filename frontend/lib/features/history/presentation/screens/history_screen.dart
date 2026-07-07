@@ -209,7 +209,11 @@ final class _HistoryScreenState extends ConsumerState<HistoryScreen> {
     ref.invalidate(vehicleDashboardProvider(vehicleId));
     for (final period in AnalyticsPeriod.values) {
       ref.invalidate(
-        analyticsSummaryProvider((vehicleId: vehicleId, period: period)),
+        analyticsSummaryProvider((
+          vehicleId: vehicleId,
+          period: period,
+          dateRange: null,
+        )),
       );
     }
 

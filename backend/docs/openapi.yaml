@@ -1024,11 +1024,14 @@ components:
           maxLength: 500
     CreateRefuelEventRequest:
       type: object
-      required: [ eventDateTime, mileageKm, liters, cost, fuelType ]
+      required: [ eventDateTime, title, mileageKm, liters, cost, fuelType ]
       properties:
         eventDateTime:
           type: string
           format: date-time
+        title:
+          type: string
+          maxLength: 255
         mileageKm:
           type: integer
           minimum: 0
@@ -1050,11 +1053,14 @@ components:
           nullable: true
     CreateTripEventRequest:
       type: object
-      required: [ eventDateTime, endMileageKm, durationMinutes ]
+      required: [ eventDateTime, title, endMileageKm, durationMinutes ]
       properties:
         eventDateTime:
           type: string
           format: date-time
+        title:
+          type: string
+          maxLength: 255
         startMileageKm:
           type: integer
           minimum: 0

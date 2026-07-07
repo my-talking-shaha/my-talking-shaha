@@ -128,6 +128,7 @@ public class TimelineEventService {
         TripEvent event = new TripEvent();
         event.setVehicle(vehicle);
         event.setType(TimelineEventType.TRIP);
+        event.setTitle("Поездка");
         event.setEventDateTime(startedAt == null ? OffsetDateTime.now() : startedAt);
         event.setStartMileageKm(vehicle.getMileageKm());
         event.setNotes(notes);
