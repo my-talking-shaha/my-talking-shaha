@@ -373,9 +373,8 @@ void main() {
     tester.widget<ElevatedButton>(saveButton).onPressed?.call();
     await tester.pumpAndSettle();
 
-    tester.widget<FloatingActionButton>(
-      find.byType(FloatingActionButton),
-    ).onPressed?.call();
+    final fabFinder = find.byType(FloatingActionButton);
+    tester.widget<FloatingActionButton>(fabFinder).onPressed?.call();
     await tester.pumpAndSettle();
 
     final screen = tester.widget<AddHistoryEventScreen>(
