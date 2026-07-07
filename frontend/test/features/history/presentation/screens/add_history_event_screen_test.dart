@@ -227,7 +227,7 @@ void main() {
       find.byKey(const ValueKey('event-title')),
       'Updated fuel stop',
     );
-    await _tapSave(tester);
+    await _tapSave(tester, label: 'Save changes');
 
     expect(savedEvent?.id, 'fuel_1');
     expect(savedEvent?.title, 'Updated fuel stop');
@@ -264,7 +264,7 @@ void main() {
       find.byKey(const ValueKey('event-title')),
       'Updated trip',
     );
-    await _tapSave(tester);
+    await _tapSave(tester, label: 'Save changes');
 
     expect(savedEvent?.id, 'trip_1');
     expect(savedEvent?.title, 'Updated trip');
