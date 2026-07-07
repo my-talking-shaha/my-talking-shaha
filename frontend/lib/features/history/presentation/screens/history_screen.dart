@@ -13,8 +13,8 @@ import 'package:frontend/features/history/domain/entities/history_event.dart';
 import 'package:frontend/features/history/domain/entities/history_event_type.dart';
 import 'package:frontend/features/history/presentation/providers/history_providers.dart';
 import 'package:frontend/features/history/presentation/widgets/event_card.dart';
-import 'package:frontend/l10n/generated/app_localizations.dart';
 import 'package:frontend/features/parts/presentation/providers/parts_providers.dart';
+import 'package:frontend/l10n/generated/app_localizations.dart';
 import 'package:go_router/go_router.dart';
 
 final class HistoryScreen extends ConsumerStatefulWidget {

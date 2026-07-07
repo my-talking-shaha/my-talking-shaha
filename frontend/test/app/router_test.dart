@@ -543,6 +543,19 @@ final class _MileageUpdatingHistoryDatasource implements HistoryDatasource {
     _events.add(event);
     garageDatasource.mileageKm = event.currentMileageKm;
   }
+
+  @override
+  Future<void> updateEvent(HistoryEvent event) async {
+    final index = _events.indexWhere((existing) => existing.id == event.id);
+    if (index != -1) {
+      _events[index] = event;
+    }
+  }
+
+  @override
+  Future<void> deleteEvent(String vehicleId, String eventId) async {
+    _events.removeWhere((event) => event.id == eventId);
+  }
 }
 
 DashboardData _dashboardData(String vehicleId) {
