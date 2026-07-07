@@ -46,6 +46,7 @@ RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
 
 COPY --from=builder /app/target/*.jar app.jar
 COPY cars/csv/marks.csv cars/csv/marks.csv
+COPY ml/prompt.txt ml/prompt.txt
 
 EXPOSE 8080
 

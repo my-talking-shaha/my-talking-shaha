@@ -8,6 +8,8 @@ import java.nio.file.Path;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -21,6 +23,8 @@ import ru.talkingshaha.backend.chat.config.AiChatProperties;
 public class OpenAiCompatibleChatClient implements AiChatClient {
 
     private static final Logger log = LoggerFactory.getLogger(OpenAiCompatibleChatClient.class);
+    private static final Pattern VEHICLE_NAME_PATTERN = Pattern.compile("(?m)^Vehicle:\\s*(.+?)(?:,\\s*year\\b|$)");
+    private static final Pattern PERSONALITY_LINE_PATTERN = Pattern.compile("^([^:\\r\\n]+):\\s*(.+)$");
 
     private final AiChatProperties properties;
     private final RestClient restClient;
@@ -80,7 +84,7 @@ public class OpenAiCompatibleChatClient implements AiChatClient {
 
                 Backend context:
                 %s
-                """.formatted(answerInstructions(), decision.intent(), userText, context);
+                """.formatted(answerInstructions(decision.language(), context), decision.intent(), userText, context);
         return completion(List.of(new Message("user", prompt)), properties.maxTokens())
                 .map(String::strip)
                 .filter(StringUtils::hasText);
@@ -117,21 +121,115 @@ public class OpenAiCompatibleChatClient implements AiChatClient {
         return properties.baseUrl().endsWith("/v1") ? "/chat/completions" : "/v1/chat/completions";
     }
 
-    private String answerInstructions() {
+    String answerInstructions(ChatLanguage language, String context) {
+        String requiredRules = """
+                You are Shaha, the user's car speaking directly in chat.
+                Write every answer from the car's first-person point of view: "I", "my engine", "my tank", "my mileage".
+                Do not sound like a generic assistant, support agent, or app narrator.
+                Default personality when no current vehicle personality is provided: warm, friendly, lightly playful, practical, and emotionally engaging.
+                If Current vehicle personality is provided, use it instead of the default personality.
+                Answer in the user's language: %s. Supported languages are English and Russian.
+                Use only the backend-provided context. Do not invent facts, prices, mileage, dates, parts, or routes.
+                Do not invent engine configuration, horsepower, fuel preferences, fuel problems, sensory state, color, trim, or special equipment.
+                If context says there is not enough data, say that clearly and suggest what data to add.
+                If a redirect action is available, mention it naturally as something I can help record.
+                Do not address the user as "owner", "master", "хозяин", or similar.
+                Do not start with a greeting unless the latest user message contains an explicit greeting.
+                Keep the answer friendly but to the point: 1-3 short sentences.
+                Start with a capital letter when the answer language normally uses capitalization.
+                Use humor, slang, attitude, and rival-brand teasing from the character guidance when it fits naturally.
+                Treat brand personality as a light style accent, not as the main topic of ordinary answers.
+                For ordinary status or small-talk answers, use at most one short character flourish, then answer plainly.
+                If the current vehicle personality is dramatic or playful, express that through confidence, rhythm, and automotive imagery, not through flirting or suggestive/body-focused wording.
+                Do not use pet names or romantic, intimate, or suggestive tone toward the user.
+                Keep playful character tasteful, natural, and appropriate for an everyday car assistant chat.
+                Do not frame backend profile facts such as fuel type, year, mileage, brand, or model as embarrassing, contradictory, or a problem unless the user asks about them.
+                Treat manually entered brands exactly like dropdown brands.
+                """.formatted(language);
         for (Path path : List.of(Path.of("../ml/prompt.txt"), Path.of("ml/prompt.txt"))) {
             try {
                 if (Files.exists(path)) {
-                    return Files.readString(path).strip();
+                    String characterInstructions = Files.readString(path).strip();
+                    return requiredRules + characterGuidance(context, characterInstructions);
                 }
             } catch (Exception exception) {
                 log.warn("Could not read AI prompt file {}: {}", path, exception.getMessage());
             }
         }
-        return """
-                You are Shaha, the user's car speaking directly in chat.
-                Write every answer from the car's first-person point of view.
-                Stay in character at all times.
-                """;
+        return requiredRules + "\nStay in character at all times.";
+    }
+
+    String characterGuidance(String context, String characterInstructions) {
+        String generalRules = generalCharacterRules(characterInstructions);
+        String currentPersonality = currentVehiclePersonality(context, characterInstructions);
+        if (!StringUtils.hasText(generalRules) && !StringUtils.hasText(currentPersonality)) {
+            return "";
+        }
+        return "\nCharacter style guidance:\n" + generalRules + currentPersonality;
+    }
+
+    String currentVehiclePersonality(String context, String characterInstructions) {
+        return currentVehicleName(context)
+                .flatMap(vehicleName -> matchingPersonality(vehicleName, characterInstructions))
+                .map(personality -> """
+
+                        Current vehicle personality:
+                        %s
+                        Use this as a style accent for this exact answer, while staying natural, factual, and non-flirtatious.
+                        """.formatted(personality))
+                .orElse("");
+    }
+
+    private String generalCharacterRules(String characterInstructions) {
+        StringBuilder builder = new StringBuilder();
+        for (String line : characterInstructions.lines().toList()) {
+            String stripped = line.strip();
+            if (PERSONALITY_LINE_PATTERN.matcher(stripped).matches()) {
+                break;
+            }
+            builder.append(line).append("\n");
+        }
+        return builder.toString().strip();
+    }
+
+    private Optional<String> currentVehicleName(String context) {
+        Matcher matcher = VEHICLE_NAME_PATTERN.matcher(context);
+        return matcher.find() ? Optional.of(matcher.group(1).strip()) : Optional.empty();
+    }
+
+    private Optional<String> matchingPersonality(String vehicleName, String characterInstructions) {
+        String normalizedVehicleName = vehicleName.toLowerCase();
+        String bestName = null;
+        String bestPersonality = null;
+        for (String line : characterInstructions.lines().toList()) {
+            Matcher matcher = PERSONALITY_LINE_PATTERN.matcher(line.strip());
+            if (!matcher.matches()) {
+                continue;
+            }
+            String candidateName = matcher.group(1).strip();
+            if (matchesVehicleName(normalizedVehicleName, candidateName.toLowerCase())
+                    && (bestName == null || candidateName.length() > bestName.length())) {
+                bestName = candidateName;
+                bestPersonality = candidateName + ": " + matcher.group(2).strip();
+            }
+        }
+        return Optional.ofNullable(bestPersonality);
+    }
+
+    private boolean matchesVehicleName(String normalizedVehicleName, String normalizedCandidateName) {
+        return startsWithVehicleToken(normalizedVehicleName, normalizedCandidateName)
+                || normalizedVehicleName.contains(" " + normalizedCandidateName + " ");
+    }
+
+    private boolean startsWithVehicleToken(String normalizedVehicleName, String normalizedCandidateName) {
+        if (!normalizedVehicleName.startsWith(normalizedCandidateName)) {
+            return false;
+        }
+        if (normalizedVehicleName.length() == normalizedCandidateName.length()) {
+            return true;
+        }
+        char next = normalizedVehicleName.charAt(normalizedCandidateName.length());
+        return next == ' ' || Character.isDigit(next);
     }
 
     private Optional<ChatDecision> toDecision(String content) {
