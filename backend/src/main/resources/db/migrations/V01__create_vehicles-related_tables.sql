@@ -42,7 +42,6 @@ CREATE TABLE IF NOT EXISTS timeline_events
 CREATE TABLE IF NOT EXISTS trips
 (
     id               UUID PRIMARY KEY,
-    title            VARCHAR(255) NOT NULL,
     start_mileage_km INT CHECK (start_mileage_km >= 0),
     end_mileage_km   INT NOT NULL CHECK (end_mileage_km >= 0 and end_mileage_km >= start_mileage_km),
     route            TEXT,
@@ -67,7 +66,6 @@ CREATE TABLE IF NOT EXISTS maintenance
 CREATE TABLE IF NOT EXISTS refuel
 (
     id           UUID PRIMARY KEY,
-    title        VARCHAR(255)   NOT NULL,
     liters       NUMERIC(10, 2) NOT NULL CHECK ( liters > 0 ),
     cost         NUMERIC(10, 2) NOT NULL CHECK (cost > 0),
     mileage_km   INTEGER        NOT NULL CHECK (mileage_km >= 0),
