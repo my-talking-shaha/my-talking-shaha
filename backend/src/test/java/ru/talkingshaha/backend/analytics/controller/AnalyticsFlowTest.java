@@ -75,6 +75,7 @@ class AnalyticsFlowTest {
                                 """
                                         {
                                           "eventDateTime": "2026-01-10T10:00:00Z",
+                                          "title": "Refuel",
                                           "mileageKm": 10000,
                                           "liters": 40,
                                           "cost": 2000,
@@ -90,6 +91,7 @@ class AnalyticsFlowTest {
                                 """
                                         {
                                           "eventDateTime": "2026-03-05T09:00:00Z",
+                                          "title": "Trip to dacha",
                                           "startMileageKm": 10000,
                                           "endMileageKm": 10200,
                                           "route": "Home -> Dacha",
@@ -104,6 +106,7 @@ class AnalyticsFlowTest {
                                 """
                                         {
                                           "eventDateTime": "2026-06-13T09:15:00Z",
+                                          "title": "Trip to university",
                                           "startMileageKm": 10200,
                                           "endMileageKm": 10400,
                                           "route": "Home -> University",

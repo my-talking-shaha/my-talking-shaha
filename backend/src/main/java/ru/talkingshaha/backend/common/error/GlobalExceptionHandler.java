@@ -3,15 +3,20 @@ package ru.talkingshaha.backend.common.error;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+import com.fasterxml.jackson.databind.exc.InvalidFormatException;
+import jakarta.validation.ConstraintViolationException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
+import org.springframework.web.multipart.MaxUploadSizeExceededException;
+import org.springframework.web.multipart.support.MissingServletRequestPartException;
 
 @RestControllerAdvice
 public class GlobalExceptionHandler {
@@ -23,6 +28,18 @@ public class GlobalExceptionHandler {
         Map<String, String> fields =
                 exception.getBindingResult().getFieldErrors().stream()
                         .collect(Collectors.toMap(FieldError::getField, this::fieldMessage, (left, right) -> left));
+        log.warn("API error code=VALIDATION_ERROR fields={}", fields.keySet());
+        return ResponseEntity.badRequest()
+                .body(new ApiError("VALIDATION_ERROR", "Request contains invalid fields", fields));
+    }
+
+    @ExceptionHandler(ConstraintViolationException.class)
+    public ResponseEntity<ApiError> handleConstraintViolation(ConstraintViolationException exception) {
+        Map<String, String> fields = exception.getConstraintViolations().stream()
+                .collect(Collectors.toMap(
+                        violation -> violation.getPropertyPath().toString(),
+                        violation -> violation.getMessage() == null ? "Invalid value" : violation.getMessage(),
+                        (left, right) -> left));
         log.warn("API error code=VALIDATION_ERROR fields={}", fields.keySet());
         return ResponseEntity.badRequest()
                 .body(new ApiError("VALIDATION_ERROR", "Request contains invalid fields", fields));
@@ -42,6 +59,39 @@ public class GlobalExceptionHandler {
                         "VALIDATION_ERROR",
                         "Request contains invalid fields",
                         Map.of(exception.getName(), "Invalid value")));
+    }
+
+    @ExceptionHandler(MissingServletRequestPartException.class)
+    public ResponseEntity<ApiError> handleMissingPart(MissingServletRequestPartException exception) {
+        log.warn("API error code=VALIDATION_ERROR part={}", exception.getRequestPartName());
+        return ResponseEntity.badRequest()
+                .body(new ApiError(
+                        "VALIDATION_ERROR",
+                        "Request contains invalid fields",
+                        Map.of(exception.getRequestPartName(), "must be provided")));
+    }
+
+    @ExceptionHandler(MaxUploadSizeExceededException.class)
+    public ResponseEntity<ApiError> handleMaxUploadSize(MaxUploadSizeExceededException exception) {
+        log.warn("API error code=VALIDATION_ERROR message=upload size exceeded");
+        return ResponseEntity.badRequest()
+                .body(ApiError.of("VALIDATION_ERROR", "File exceeds the maximum allowed upload size"));
+    }
+
+    @ExceptionHandler(HttpMessageNotReadableException.class)
+    public ResponseEntity<ApiError> handleUnreadableBody(HttpMessageNotReadableException exception) {
+        if (exception.getCause() instanceof InvalidFormatException invalidFormat
+                && !invalidFormat.getPath().isEmpty()) {
+            String field = invalidFormat.getPath().getLast().getFieldName();
+            log.warn("API error code=VALIDATION_ERROR field={}", field);
+            return ResponseEntity.badRequest()
+                    .body(new ApiError(
+                            "VALIDATION_ERROR",
+                            "Request contains invalid fields",
+                            Map.of(field == null ? "body" : field, "Invalid value")));
+        }
+        log.warn("API error code=VALIDATION_ERROR message=Malformed request body");
+        return ResponseEntity.badRequest().body(ApiError.of("VALIDATION_ERROR", "Malformed request body"));
     }
 
     @ExceptionHandler(ResourceNotFoundException.class)

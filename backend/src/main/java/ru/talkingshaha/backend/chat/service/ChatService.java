@@ -66,7 +66,7 @@ public class ChatService {
     private static final Pattern NUMERIC_DATE_PATTERN = Pattern.compile("\\b(\\d{1,2})[./-](\\d{1,2})(?:[./-](\\d{2,4}))?\\b");
     private static final Pattern FUEL_GRADE_PATTERN = Pattern.compile("(?:ai[-\\s]?)?(\\d{2,3})\\s*(?:[-\\s]?(?:й|м))?\\s*(?:gas|fuel|petrol|бенз|бензин)", Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE);
     private static final Pattern ENGINE_CONFIGURATION_CLAIM_PATTERN = Pattern.compile("(?iu)(?<![\\p{L}\\p{N}])(?:my|мой|моя)\\s+(?:v|в)\\s?\\d{1,2}(?![\\p{L}\\p{N}])");
-    private static final List<String> SUPPORTED_FUEL_NAMES = List.of("92 octane", "95 octane", "98 octane", "Diesel");
+    private static final List<String> SUPPORTED_FUEL_NAMES = List.of("92 octane", "95 octane", "98 octane", "100 octane", "Diesel");
 
     private final VehicleService vehicles;
     private final AnalyticsService analytics;
@@ -248,6 +248,7 @@ public class ChatService {
                 vehicle.getId(),
                 new CreateRefuelEventRequest(
                         eventDateTime(userText),
+                        "Заправка",
                         mileageKm,
                         liters,
                         cost,
@@ -276,6 +277,7 @@ public class ChatService {
                 vehicle.getId(),
                 new CreateTripEventRequest(
                         eventDateTime(userText),
+                        stringField(fields, "route").orElse("Поездка"),
                         integerField(fields, "startMileageKm").orElse(null),
                         integerField(fields, "endMileageKm").orElseThrow(),
                         stringField(fields, "route").orElse(null),
@@ -663,6 +665,7 @@ public class ChatService {
             case "92" -> Optional.of("92 octane");
             case "95" -> Optional.of("95 octane");
             case "98" -> Optional.of("98 octane");
+            case "100" -> Optional.of("100 octane");
             default -> Optional.empty();
         };
     }

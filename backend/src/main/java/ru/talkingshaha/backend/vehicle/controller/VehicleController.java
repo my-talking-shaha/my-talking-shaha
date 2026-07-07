@@ -20,11 +20,13 @@ import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 import ru.talkingshaha.backend.common.error.ApiError;
 import ru.talkingshaha.backend.vehicle.dto.CreateVehicleRequest;
+import ru.talkingshaha.backend.vehicle.dto.FuelTypeOption;
 import ru.talkingshaha.backend.vehicle.dto.UpdateVehicleRequest;
 import ru.talkingshaha.backend.vehicle.dto.VehicleDashboardResponse;
 import ru.talkingshaha.backend.vehicle.dto.VehicleResponse;
 import ru.talkingshaha.backend.vehicle.service.VehicleBrandService;
 import ru.talkingshaha.backend.vehicle.service.VehicleService;
+import ru.talkingshaha.backend.vehicle.service.VehicleTypeService;
 
 @RestController
 @RequestMapping("/api/v1/vehicles")
@@ -46,15 +48,27 @@ public class VehicleController {
 
     private final VehicleService vehicles;
     private final VehicleBrandService brands;
+    private final VehicleTypeService types;
 
-    public VehicleController(VehicleService vehicles, VehicleBrandService brands) {
+    public VehicleController(VehicleService vehicles, VehicleBrandService brands, VehicleTypeService types) {
         this.vehicles = vehicles;
         this.brands = brands;
+        this.types = types;
     }
 
     @GetMapping("/brands")
     public List<String> listBrands() {
         return brands.brands();
+    }
+
+    @GetMapping("/fuel-types")
+    public List<FuelTypeOption> listFuelTypes() {
+        return types.fuelTypes();
+    }
+
+    @GetMapping("/engine-types")
+    public List<FuelTypeOption> listEngineTypes() {
+        return types.engineTypes();
     }
 
     @GetMapping

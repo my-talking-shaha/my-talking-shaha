@@ -19,8 +19,15 @@ final historyPhotoStorageProvider = Provider<HistoryPhotoStorage>((ref) {
   return const HistoryPhotoStorage();
 });
 
+final historyPhotoReaderProvider = Provider<HistoryPhotoReader?>((ref) {
+  return ref.watch(historyPhotoStorageProvider);
+});
+
 final historyRepositoryProvider = Provider<HistoryRepository>((ref) {
-  return HistoryRepositoryImpl(ref.watch(historyDatasourceProvider));
+  return HistoryRepositoryImpl(
+    ref.watch(historyDatasourceProvider),
+    photos: ref.watch(historyPhotoReaderProvider),
+  );
 });
 
 final historyEventsProvider = FutureProvider.autoDispose
@@ -32,4 +39,25 @@ typedef AddHistoryEvent = Future<void> Function(HistoryEvent event);
 
 final addHistoryEventProvider = Provider<AddHistoryEvent>((ref) {
   return ref.watch(historyRepositoryProvider).addEvent;
+});
+
+typedef UpdateHistoryEvent = Future<void> Function(HistoryEvent event);
+
+final updateHistoryEventProvider = Provider<UpdateHistoryEvent>((ref) {
+  return ref.watch(historyRepositoryProvider).updateEvent;
+});
+
+typedef DeleteHistoryEvent =
+    Future<void> Function(String vehicleId, String eventId);
+
+final deleteHistoryEventProvider = Provider<DeleteHistoryEvent>((ref) {
+  return ref.watch(historyRepositoryProvider).deleteEvent;
+});
+
+typedef DeleteHistoryPhotoCache = Future<void> Function(HistoryEvent event);
+
+final deleteHistoryPhotoCacheProvider = Provider<DeleteHistoryPhotoCache>((
+  ref,
+) {
+  return ref.watch(historyPhotoStorageProvider).deleteCachedPhotosForEvent;
 });

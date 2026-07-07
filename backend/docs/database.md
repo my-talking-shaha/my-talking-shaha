@@ -2,8 +2,10 @@
 
 The schema is centred on **`vehicles`**: a `user` owns many vehicles, and everything else
 hangs off a vehicle  its installed `parts`, its service-history `timeline_events`, and its
-`chat_sessions`. Photos (`part_photos`, `event_photos`) and `chat_messages` are child
-collections of their owner.
+`chat_sessions`. Photos (`vehicle_photos`, `part_photos`, `event_photos`) and `chat_messages`
+are child collections of their owner. `vehicle_photos` stores uploaded photo metadata
+(server-generated file name and content type); the bytes live on the file system under the
+directory configured by `app.storage.photos-dir`.
 
 Service-history events use **JOINED inheritance**: the shared fields (`vehicle_id`, `type`,
 `event_date_time`) live in `timeline_events`, while each concrete kind - `trips`, `refuel`,

@@ -11,6 +11,7 @@ import org.springframework.transaction.annotation.Transactional;
 import ru.talkingshaha.backend.common.error.ForbiddenException;
 import ru.talkingshaha.backend.common.error.ResourceNotFoundException;
 import ru.talkingshaha.backend.common.model.BaseEvent;
+import ru.talkingshaha.backend.common.storage.PhotoStorageService;
 import ru.talkingshaha.backend.chat.repository.ChatMessageRepository;
 import ru.talkingshaha.backend.chat.repository.ChatSessionRepository;
 import ru.talkingshaha.backend.part.dto.PartResponse;
@@ -29,6 +30,8 @@ import ru.talkingshaha.backend.vehicle.dto.VehicleDashboardResponse;
 import ru.talkingshaha.backend.vehicle.dto.VehicleDashboardResponse.RecentEventResponse;
 import ru.talkingshaha.backend.vehicle.dto.VehicleResponse;
 import ru.talkingshaha.backend.vehicle.model.Vehicle;
+import ru.talkingshaha.backend.vehicle.model.VehiclePhoto;
+import ru.talkingshaha.backend.vehicle.repository.VehiclePhotoRepository;
 import ru.talkingshaha.backend.vehicle.repository.VehicleRepository;
 
 @Service
@@ -37,6 +40,8 @@ public class VehicleService {
     private static final int RECENT_EVENTS_LIMIT = 5;
 
     private final VehicleRepository vehicles;
+    private final VehiclePhotoRepository photos;
+    private final PhotoStorageService photoStorage;
     private final PartRepository parts;
     private final TimelineEventRepository events;
     private final ChatSessionRepository chatSessions;
@@ -45,12 +50,16 @@ public class VehicleService {
 
     public VehicleService(
             VehicleRepository vehicles,
+            VehiclePhotoRepository photos,
+            PhotoStorageService photoStorage,
             PartRepository parts,
             TimelineEventRepository events,
             ChatSessionRepository chatSessions,
             ChatMessageRepository chatMessages,
             CurrentUserService currentUserService) {
         this.vehicles = vehicles;
+        this.photos = photos;
+        this.photoStorage = photoStorage;
         this.parts = parts;
         this.events = events;
         this.chatSessions = chatSessions;
@@ -77,7 +86,6 @@ public class VehicleService {
         vehicle.setFuelType(request.fuelType());
         vehicle.setEngineDescription(request.engineDescription());
         vehicle.setVin(request.vin());
-        vehicle.setPhotoUrl(request.photoUrl());
         return toResponse(vehicles.save(vehicle));
     }
 
@@ -95,7 +103,6 @@ public class VehicleService {
         if (request.fuelType() != null) vehicle.setFuelType(request.fuelType());
         if (request.engineDescription() != null) vehicle.setEngineDescription(request.engineDescription());
         if (request.vin() != null) vehicle.setVin(request.vin());
-        if (request.photoUrl() != null) vehicle.setPhotoUrl(request.photoUrl());
         return toResponse(vehicle);
     }
 
@@ -108,6 +115,9 @@ public class VehicleService {
             chatSessions.delete(session);
         });
         parts.deleteAll(parts.findAllByVehicleOrderByInstalledAtDescNameAsc(vehicle));
+        List<VehiclePhoto> vehiclePhotos = photos.findAllByVehicleOrderByCreatedAtAscIdAsc(vehicle);
+        photos.deleteAll(vehiclePhotos);
+        vehiclePhotos.forEach(photo -> photoStorage.delete(photo.getFileName()));
         vehicles.delete(vehicle);
     }
 
@@ -188,7 +198,13 @@ public class VehicleService {
                 vehicle.getFuelType(),
                 vehicle.getEngineDescription(),
                 vehicle.getVin(),
-                vehicle.getPhotoUrl());
+                primaryPhotoUrl(vehicle));
+    }
+
+    private String primaryPhotoUrl(Vehicle vehicle) {
+        return photos.findFirstByVehicleOrderByCreatedAtAscIdAsc(vehicle)
+                .map(photo -> PhotoUrls.publicUrl(photo.getId()))
+                .orElse(null);
     }
 
     private PartResponse toPartResponse(ru.talkingshaha.backend.part.model.Part part) {

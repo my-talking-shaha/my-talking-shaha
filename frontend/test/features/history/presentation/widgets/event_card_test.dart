@@ -68,6 +68,7 @@ void main() {
           photoUrls: const [
             '',
             'https://example.invalid/maintenance-photo.jpg',
+            'https://example.invalid/second-photo.jpg',
           ],
         ),
       );
@@ -75,15 +76,36 @@ void main() {
       await _pumpCard(tester, withPhoto);
 
       expect(find.text('8 900 ₽'), findsOneWidget);
-      expect(find.text('Part photo:'), findsOneWidget);
-      final image = tester.widget<Image>(find.byType(Image));
-      expect(image.image, isA<NetworkImage>());
+      expect(find.text('Part photo: 2'), findsOneWidget);
+      expect(find.byType(InkWell), findsNothing);
+      expect(find.byType(Image), findsNothing);
+
+      await tester.tap(find.byType(EventCard));
+      await tester.pumpAndSettle();
+
+      expect(find.byKey(const ValueKey('event-photo-list')), findsOneWidget);
+      final listView = tester.widget<ListView>(find.byType(ListView));
+      expect(listView.scrollDirection, Axis.horizontal);
+      final images = tester.widgetList<Image>(find.byType(Image)).toList();
+      expect(images, hasLength(2));
+      expect(images.first.image, isA<NetworkImage>());
       expect(
-        (image.image as NetworkImage).url,
+        (images.first.image as NetworkImage).url,
         'https://example.invalid/maintenance-photo.jpg',
       );
-      expect(image.fit, BoxFit.cover);
-      expect(image.errorBuilder, isNotNull);
+      expect(images.first.fit, BoxFit.cover);
+      expect(images.first.errorBuilder, isNotNull);
+
+      await tester.tap(find.byKey(const ValueKey('event-photo-open-0')));
+      await tester.pumpAndSettle();
+
+      expect(find.byKey(const ValueKey('event-photo-preview')), findsOneWidget);
+      expect(find.text('1/2'), findsOneWidget);
+
+      await tester.tap(find.byKey(const ValueKey('event-photo-preview-close')));
+      await tester.pumpAndSettle();
+
+      expect(find.byKey(const ValueKey('event-photo-preview')), findsNothing);
 
       final withLocalPhoto = HistoryEvent(
         id: 'maintenance_3',
@@ -99,6 +121,8 @@ void main() {
       );
 
       await _pumpCard(tester, withLocalPhoto);
+      await tester.tap(find.byType(EventCard));
+      await tester.pumpAndSettle();
 
       final localImage = tester.widget<Image>(find.byType(Image));
       expect(localImage.image, isA<FileImage>());
@@ -136,9 +160,59 @@ void main() {
     expect(_svgAssetName(tester), 'assets/icons/events/trip.svg');
     expect(tester.takeException(), isNull);
   });
+
+  testWidgets('swipe actions reveal edit then delete icon buttons', (
+    tester,
+  ) async {
+    var edited = false;
+    var deleted = false;
+    final event = HistoryEvent(
+      id: 'fuel_1',
+      carId: 'vehicle_1',
+      type: HistoryEventType.fuel,
+      occurredAt: DateTime(2026, 6, 15, 14, 30),
+      title: 'Refueling AI-95',
+      currentMileageKm: 124580,
+      details: FuelDetails(cost: 2450, liters: 45, fuelType: 'AI-95'),
+    );
+
+    await _pumpCard(
+      tester,
+      event,
+      onEdit: () => edited = true,
+      onDelete: () => deleted = true,
+    );
+
+    await tester.drag(find.text('Refueling AI-95'), const Offset(-160, 0));
+    await tester.pumpAndSettle();
+
+    final editButton = find.byKey(const ValueKey('history_swipe_action_edit'));
+    final deleteButton = find.byKey(
+      const ValueKey('history_swipe_action_delete'),
+    );
+    expect(editButton, findsOneWidget);
+    expect(deleteButton, findsOneWidget);
+    expect(find.text('Edit'), findsNothing);
+    expect(find.text('Delete'), findsNothing);
+
+    final editCenter = tester.getCenter(editButton);
+    final deleteCenter = tester.getCenter(deleteButton);
+    expect(editCenter.dx, lessThan(deleteCenter.dx));
+
+    await tester.tap(editButton);
+    await tester.tap(deleteButton);
+
+    expect(edited, isTrue);
+    expect(deleted, isTrue);
+  });
 }
 
-Future<void> _pumpCard(WidgetTester tester, HistoryEvent event) async {
+Future<void> _pumpCard(
+  WidgetTester tester,
+  HistoryEvent event, {
+  VoidCallback? onEdit,
+  VoidCallback? onDelete,
+}) async {
   await tester.pumpWidget(
     MaterialApp(
       locale: const Locale('en'),
@@ -148,7 +222,7 @@ Future<void> _pumpCard(WidgetTester tester, HistoryEvent event) async {
       home: Scaffold(
         body: SingleChildScrollView(
           padding: const EdgeInsets.all(8),
-          child: EventCard(event: event),
+          child: EventCard(event: event, onEdit: onEdit, onDelete: onDelete),
         ),
       ),
     ),

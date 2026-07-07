@@ -174,6 +174,44 @@ Response `200`:
 ]
 ```
 
+### List fuel types
+
+`GET /api/v1/vehicles/fuel-types`
+
+Returns the fuel type options for selection lists. Requires authentication. `code` is the
+value submitted back as `fuelType`; `label` is the text shown to the user.
+
+Response `200`:
+
+```json
+[
+  { "code": "PETROL_92", "label": "Petrol (92)" },
+  { "code": "PETROL_95", "label": "Petrol (95)" },
+  { "code": "PETROL_98", "label": "Petrol (98)" },
+  { "code": "PETROL_100", "label": "Petrol (100)" },
+  { "code": "DIESEL", "label": "Diesel" }
+]
+```
+
+### List engine types
+
+`GET /api/v1/vehicles/engine-types`
+
+Returns the engine type options for selection lists. Requires authentication. `code` is the
+value submitted back as `fuelType`; `label` is the text shown to the user.
+
+Response `200`:
+
+```json
+[
+  { "code": "GASOLINE", "label": "Gasoline" },
+  { "code": "DIESEL", "label": "Diesel" },
+  { "code": "HYBRID", "label": "Hybrid" },
+  { "code": "PHEV", "label": "PHEV" },
+  { "code": "ELECTRIC", "label": "Electric" }
+]
+```
+
 ### List garage vehicles
 
 `GET /api/v1/vehicles`
@@ -226,6 +264,12 @@ Validation:
 - `mileageKm >= 0`;
 - `vin` is optional, but must contain exactly 17 symbols when provided.
 
+Supported `fuelType` values (also used by refuel timeline events):
+
+```text
+PETROL_92, PETROL_95, PETROL_98, PETROL_100, DIESEL, ELECTRIC, HYBRID, PHEV,
+GASOLINE, OTHER
+```
 ### Get vehicle dashboard
 
 `GET /api/v1/vehicles/{vehicleId}/dashboard`
@@ -288,16 +332,71 @@ Request can contain any editable fields:
 ```json
 {
   "color": "blue",
-  "mileageKm": 10500,
-  "photoUrl": "https://example.com/new-car.jpg"
+  "mileageKm": 10500
 }
 ```
+
+`photoUrl` is read-only and managed through the photo endpoints below.
 
 ### Delete vehicle
 
 `DELETE /api/v1/vehicles/{vehicleId}`
 
-Response `204`.
+Response `204`. Also deletes the vehicle's parts, timeline events, chat history, and photos.
+
+### Upload vehicle photo
+
+`POST /api/v1/vehicles/{vehicleId}/photos`
+
+Content-Type: `multipart/form-data` with a single `file` field containing a JPG or PNG image.
+The declared content type must match the actual file content; maximum size is 10 MB.
+
+Response `201`:
+
+```json
+{
+  "photoId": "3f2a6c1e-8b4d-4c2a-9f1e-5d7b8a9c0d1f",
+  "url": "https://example.com/api/v1/photos/3f2a6c1e-8b4d-4c2a-9f1e-5d7b8a9c0d1f"
+}
+```
+
+Errors:
+
+- `400 VALIDATION_ERROR` if the file is empty, not a JPG/PNG image, or exceeds the size limit
+
+### List vehicle photos
+
+`GET /api/v1/vehicles/{vehicleId}/photos`
+
+Response `200` (ordered by upload time, oldest first):
+
+```json
+{
+  "photos": [
+    {
+      "photoId": "3f2a6c1e-8b4d-4c2a-9f1e-5d7b8a9c0d1f",
+      "url": "https://example.com/api/v1/photos/3f2a6c1e-8b4d-4c2a-9f1e-5d7b8a9c0d1f"
+    }
+  ]
+}
+```
+
+### Delete vehicle photo
+
+`DELETE /api/v1/vehicles/{vehicleId}/photos/{photoId}`
+
+Response `204`. Replacing a photo is a delete followed by an upload.
+
+### Get photo content
+
+`GET /api/v1/photos/{photoId}`
+
+Serves the photo bytes with the stored content type. This endpoint requires no
+authentication because client image widgets cannot attach the JWT header; access
+protection relies on the unguessable random photo id in the URL.
+
+The first uploaded photo is exposed as `photoUrl` in vehicle responses (garage list
+and dashboard); vehicles without photos have `photoUrl = null`.
 
 ## Timeline
 
@@ -418,6 +517,40 @@ Response `201`: timeline event with `type = PART_REPLACEMENT`.
 
 Creating any event with a `mileageKm`/`endMileageKm` higher than the vehicle's current
 mileage advances the vehicle mileage and recalculates its parts.
+
+### Update event
+
+`PATCH /api/v1/vehicles/{vehicleId}/timeline/{eventId}`
+
+Request body uses the same event-specific fields as the matching add endpoint:
+
+- refuel: `eventDateTime`, `mileageKm`, `liters`, `cost`, `fuelType`, optional
+  `fuelName`, optional `stationName`;
+- trip: `eventDateTime`, `endMileageKm`, `durationMinutes`, optional
+  `startMileageKm`, optional `route`;
+- maintenance/part: `eventDateTime`, `mileageKm`, `name`, optional `description`,
+  optional `cost`, optional `photoUrls`.
+
+Field validation is the same as the matching add endpoint. The event type is
+determined by the stored event and is not changed by this endpoint.
+
+Response `200`: the updated timeline event in the same shape as list/create
+responses.
+
+Updating an event with a `mileageKm`/`endMileageKm` higher than the vehicle's
+current mileage advances the vehicle mileage and recalculates its parts. The
+vehicle mileage is never lowered automatically.
+
+### Delete event
+
+`DELETE /api/v1/vehicles/{vehicleId}/timeline/{eventId}`
+
+Response `204` with empty body. Deleting an event does not change the vehicle's
+current mileage.
+
+Both endpoints return `404 NOT_FOUND` when the event does not exist or belongs
+to another vehicle, and `403 FORBIDDEN` when the vehicle belongs to another
+user.
 
 ## Parts
 
@@ -736,7 +869,7 @@ draft and asks for the cost; a follow-up like `for 1000 rubles` completes valida
 creates the `REFUEL` timeline event.
 
 For chat-created refuel records, `fuelName` must match one of the currently supported
-frontend values: `92 octane`, `95 octane`, `98 octane`, or `Diesel`.
+frontend values: `92 octane`, `95 octane`, `98 octane`, `100 octane`, or `Diesel`.
 
 Generic repair intent such as `I want to record the repair` must not create a maintenance
 event by itself. The backend asks for the repair/work description and validates mileage

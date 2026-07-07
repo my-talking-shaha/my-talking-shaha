@@ -37,16 +37,25 @@ final class HistoryApiDatasource implements HistoryDatasource {
       data: HistoryApiEventMapper.createPayload(event),
     );
   }
+
+  @override
+  Future<void> updateEvent(HistoryEvent event) async {
+    await _dio.patch<Map<String, dynamic>>(
+      '/vehicles/${event.carId}/timeline/${event.id}',
+      data: HistoryApiEventMapper.createPayload(event),
+    );
+  }
+
+  @override
+  Future<void> deleteEvent(String vehicleId, String eventId) async {
+    await _dio.delete<void>('/vehicles/$vehicleId/timeline/$eventId');
+  }
 }
 
 abstract final class HistoryApiEventMapper {
   static HistoryEvent fromJson(Map<String, dynamic> json, String vehicleId) {
     final backendType = _stringValue(json['type']);
     final type = _eventType(backendType);
-    final title =
-        _nullableStringValue(json['title']) ??
-        _nullableStringValue(json['name']) ??
-        _fallbackTitle(type);
     final mileageKm =
         _intValue(json['mileageKm']) ??
         _intValue(json['endMileageKm']) ??
@@ -61,7 +70,7 @@ abstract final class HistoryApiEventMapper {
       carId: vehicleId,
       type: type,
       occurredAt: _dateTimeValue(json['eventDateTime']),
-      title: title,
+      title: _title(json, type),
       currentMileageKm: mileageKm,
       details: switch (type) {
         HistoryEventType.fuel => FuelDetails(
@@ -90,12 +99,14 @@ abstract final class HistoryApiEventMapper {
 
     return switch (details) {
       FuelDetails() => {
+        'title': event.title,
         'eventDateTime': _dateTimePayload(event.occurredAt),
         'mileageKm': event.currentMileageKm,
         'liters': details.liters,
         'cost': details.cost,
         'fuelType': _backendFuelType(details.fuelType),
-        'fuelName': details.fuelType,
+        'fuelName': _fuelNamePayload(details.fuelType),
+        'stationName': ?_stationNamePayload(details.fuelType),
       },
       MaintenanceDetails() => {
         'eventDateTime': _dateTimePayload(event.occurredAt),
@@ -103,10 +114,10 @@ abstract final class HistoryApiEventMapper {
         'name': event.title,
         'description': _maintenanceDescription(details),
         if (details.cost != null) 'cost': details.cost,
-        if (details.photoUrls != null && details.photoUrls!.isNotEmpty)
-          'photoUrls': details.photoUrls,
+        ..._remotePhotoUrlsPayload(details),
       },
       TripDetails() => {
+        'title': event.title,
         'eventDateTime': _dateTimePayload(event.occurredAt),
         'startMileageKm': details.startKm,
         'endMileageKm': details.endKm,
@@ -135,6 +146,55 @@ abstract final class HistoryApiEventMapper {
     };
   }
 
+  static String _title(Map<String, dynamic> json, HistoryEventType type) {
+    return switch (type) {
+      HistoryEventType.fuel => _refuelTitle(json),
+      HistoryEventType.trip => _tripTitle(json),
+      HistoryEventType.maintenance =>
+        _nullableStringValue(json['name']) ??
+            _nullableStringValue(json['title']) ??
+            _fallbackTitle(type),
+    };
+  }
+
+  static String _refuelTitle(Map<String, dynamic> json) {
+    final title = _nullableStringValue(json['title']);
+    if (title != null && !_isGenericRefuelTitle(title)) {
+      return title;
+    }
+
+    final fuelName = _nullableStringValue(json['fuelName']);
+    return fuelName == null ? 'Refueling' : 'Refueling $fuelName';
+  }
+
+  static String _tripTitle(Map<String, dynamic> json) {
+    final title = _nullableStringValue(json['title']);
+    if (title != null && !_isGenericTripTitle(title)) {
+      return title;
+    }
+
+    final route = _nullableStringValue(json['route']);
+    if (route != null) {
+      return route;
+    }
+
+    final distanceKm = _intValue(json['distanceKm']);
+    return distanceKm == null ? 'Trip' : 'Trip $distanceKm km';
+  }
+
+  static bool _isGenericRefuelTitle(String title) {
+    final normalizedTitle = title.trim().toLowerCase();
+    return normalizedTitle == 'заправка' ||
+        normalizedTitle == 'refueling' ||
+        normalizedTitle == 'fueling' ||
+        normalizedTitle == 'fuel';
+  }
+
+  static bool _isGenericTripTitle(String title) {
+    final normalizedTitle = title.trim().toLowerCase();
+    return normalizedTitle == 'trip' || normalizedTitle == 'поездка';
+  }
+
   static String _fuelLabel(Map<String, dynamic> json) {
     final fuelName = _nullableStringValue(json['fuelName']);
     final stationName = _nullableStringValue(json['stationName']);
@@ -146,15 +206,41 @@ abstract final class HistoryApiEventMapper {
   }
 
   static String _backendFuelType(String value) {
-    final lowerValue = value.toLowerCase();
-    if (lowerValue.contains('diesel')) return 'DIESEL';
+    final lowerValue = _fuelNamePayload(value).toLowerCase();
+    if (lowerValue.contains('diesel') || lowerValue.contains('диз')) {
+      return 'DIESEL';
+    }
     if (lowerValue.contains('electric')) return 'ELECTRIC';
     if (lowerValue.contains('hybrid')) return 'HYBRID';
-    if (lowerValue.contains('gas') || lowerValue.contains('octane')) {
+    if (lowerValue.contains('gas') ||
+        lowerValue.contains('petrol') ||
+        lowerValue.contains('benz') ||
+        lowerValue.contains('бенз') ||
+        lowerValue.contains('octane') ||
+        RegExp(r'(ai|аи|a)[\s-]?(92|95|98|100)').hasMatch(lowerValue)) {
       return 'GASOLINE';
     }
 
     return 'OTHER';
+  }
+
+  static String _fuelNamePayload(String value) {
+    return _splitFuelLabel(value).$1;
+  }
+
+  static String? _stationNamePayload(String value) {
+    return _splitFuelLabel(value).$2;
+  }
+
+  static (String, String?) _splitFuelLabel(String value) {
+    final parts = value.split('•');
+    final fuelName = parts.first.trim();
+    if (parts.length == 1) {
+      return (fuelName, null);
+    }
+
+    final stationName = parts.skip(1).join('•').trim();
+    return (fuelName, stationName.isEmpty ? null : stationName);
   }
 
   static String _maintenanceDescription(MaintenanceDetails details) {
@@ -164,6 +250,24 @@ abstract final class HistoryApiEventMapper {
     }
 
     return '${details.description}\nReplaced parts: ${replacedParts.join(', ')}';
+  }
+
+  static List<String> _remotePhotoUrls(MaintenanceDetails details) {
+    return (details.photoUrls ?? const <String>[])
+        .where(_isRemoteUrl)
+        .toList(growable: false);
+  }
+
+  static Map<String, dynamic> _remotePhotoUrlsPayload(
+    MaintenanceDetails details,
+  ) {
+    final urls = _remotePhotoUrls(details);
+    return urls.isEmpty ? const {} : {'photoUrls': urls};
+  }
+
+  static bool _isRemoteUrl(String value) {
+    final uri = Uri.tryParse(value);
+    return uri != null && (uri.scheme == 'http' || uri.scheme == 'https');
   }
 
   static ({String description, List<String>? replacedParts})
