@@ -174,6 +174,44 @@ Response `200`:
 ]
 ```
 
+### List fuel types
+
+`GET /api/v1/vehicles/fuel-types`
+
+Returns the fuel type options for selection lists. Requires authentication. `code` is the
+value submitted back as `fuelType`; `label` is the text shown to the user.
+
+Response `200`:
+
+```json
+[
+  { "code": "PETROL_92", "label": "Petrol (92)" },
+  { "code": "PETROL_95", "label": "Petrol (95)" },
+  { "code": "PETROL_98", "label": "Petrol (98)" },
+  { "code": "PETROL_100", "label": "Petrol (100)" },
+  { "code": "DIESEL", "label": "Diesel" }
+]
+```
+
+### List engine types
+
+`GET /api/v1/vehicles/engine-types`
+
+Returns the engine type options for selection lists. Requires authentication. `code` is the
+value submitted back as `fuelType`; `label` is the text shown to the user.
+
+Response `200`:
+
+```json
+[
+  { "code": "GASOLINE", "label": "Gasoline" },
+  { "code": "DIESEL", "label": "Diesel" },
+  { "code": "HYBRID", "label": "Hybrid" },
+  { "code": "PHEV", "label": "PHEV" },
+  { "code": "ELECTRIC", "label": "Electric" }
+]
+```
+
 ### List garage vehicles
 
 `GET /api/v1/vehicles`
@@ -226,6 +264,12 @@ Validation:
 - `mileageKm >= 0`;
 - `vin` is optional, but must contain exactly 17 symbols when provided.
 
+Supported `fuelType` values (also used by refuel timeline events):
+
+```text
+PETROL_92, PETROL_95, PETROL_98, PETROL_100, DIESEL, ELECTRIC, HYBRID, PHEV,
+GASOLINE, OTHER
+```
 ### Get vehicle dashboard
 
 `GET /api/v1/vehicles/{vehicleId}/dashboard`
@@ -770,7 +814,7 @@ draft and asks for the cost; a follow-up like `for 1000 rubles` completes valida
 creates the `REFUEL` timeline event.
 
 For chat-created refuel records, `fuelName` must match one of the currently supported
-frontend values: `92 octane`, `95 octane`, `98 octane`, or `Diesel`.
+frontend values: `92 octane`, `95 octane`, `98 octane`, `100 octane`, or `Diesel`.
 
 Generic repair intent such as `I want to record the repair` must not create a maintenance
 event by itself. The backend asks for the repair/work description and validates mileage

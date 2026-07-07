@@ -2,6 +2,7 @@ package ru.talkingshaha.backend.vehicle.controller;
 
 import static org.hamcrest.Matchers.hasSize;
 import static org.hamcrest.Matchers.hasItem;
+import static org.hamcrest.Matchers.hasItems;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
@@ -54,6 +55,31 @@ class VehicleGarageFlowTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$", hasItem("Abarth")))
                 .andExpect(jsonPath("$", hasItem("BMW")));
+    }
+
+    @Test
+    void returnsFuelTypeSelectionList() throws Exception {
+        mockMvc.perform(get("/api/v1/vehicles/fuel-types")
+                        .header("Authorization", bearer()))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$", hasSize(5)))
+                .andExpect(jsonPath("$[0].code").value("PETROL_92"))
+                .andExpect(jsonPath("$[0].label").value("Petrol (92)"))
+                .andExpect(jsonPath("$[3].code").value("PETROL_100"))
+                .andExpect(jsonPath("$[3].label").value("Petrol (100)"))
+                .andExpect(jsonPath("$[4].code").value("DIESEL"));
+    }
+
+    @Test
+    void returnsEngineTypeSelectionList() throws Exception {
+        mockMvc.perform(get("/api/v1/vehicles/engine-types")
+                        .header("Authorization", bearer()))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$", hasSize(5)))
+                .andExpect(jsonPath("$[*].code",
+                        hasItems("GASOLINE", "DIESEL", "HYBRID", "PHEV", "ELECTRIC")))
+                .andExpect(jsonPath("$[3].code").value("PHEV"))
+                .andExpect(jsonPath("$[3].label").value("PHEV"));
     }
 
     @Test

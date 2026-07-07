@@ -3,11 +3,13 @@ package ru.talkingshaha.backend.common.error;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+import com.fasterxml.jackson.databind.exc.InvalidFormatException;
 import jakarta.validation.ConstraintViolationException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -55,6 +57,22 @@ public class GlobalExceptionHandler {
                         "VALIDATION_ERROR",
                         "Request contains invalid fields",
                         Map.of(exception.getName(), "Invalid value")));
+    }
+
+    @ExceptionHandler(HttpMessageNotReadableException.class)
+    public ResponseEntity<ApiError> handleUnreadableBody(HttpMessageNotReadableException exception) {
+        if (exception.getCause() instanceof InvalidFormatException invalidFormat
+                && !invalidFormat.getPath().isEmpty()) {
+            String field = invalidFormat.getPath().getLast().getFieldName();
+            log.warn("API error code=VALIDATION_ERROR field={}", field);
+            return ResponseEntity.badRequest()
+                    .body(new ApiError(
+                            "VALIDATION_ERROR",
+                            "Request contains invalid fields",
+                            Map.of(field == null ? "body" : field, "Invalid value")));
+        }
+        log.warn("API error code=VALIDATION_ERROR message=Malformed request body");
+        return ResponseEntity.badRequest().body(ApiError.of("VALIDATION_ERROR", "Malformed request body"));
     }
 
     @ExceptionHandler(ResourceNotFoundException.class)
