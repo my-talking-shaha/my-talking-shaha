@@ -103,8 +103,7 @@ abstract final class HistoryApiEventMapper {
         'name': event.title,
         'description': _maintenanceDescription(details),
         if (details.cost != null) 'cost': details.cost,
-        if (details.photoUrls != null && details.photoUrls!.isNotEmpty)
-          'photoUrls': details.photoUrls,
+        ..._remotePhotoUrlsPayload(details),
       },
       TripDetails() => {
         'eventDateTime': _dateTimePayload(event.occurredAt),
