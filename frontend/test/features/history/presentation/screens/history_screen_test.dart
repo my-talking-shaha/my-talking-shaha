@@ -17,6 +17,7 @@ void main() {
           historyDatasourceProvider.overrideWithValue(
             MockHistoryDatasource(delay: Duration.zero),
           ),
+          historyPhotoReaderProvider.overrideWithValue(null),
         ],
         child: MaterialApp(
           locale: const Locale('en'),

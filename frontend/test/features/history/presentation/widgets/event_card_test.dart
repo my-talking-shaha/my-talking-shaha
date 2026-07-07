@@ -68,6 +68,7 @@ void main() {
           photoUrls: const [
             '',
             'https://example.invalid/maintenance-photo.jpg',
+            'https://example.invalid/second-photo.jpg',
           ],
         ),
       );
@@ -75,15 +76,22 @@ void main() {
       await _pumpCard(tester, withPhoto);
 
       expect(find.text('8 900 ₽'), findsOneWidget);
-      expect(find.text('Part photo:'), findsOneWidget);
-      final image = tester.widget<Image>(find.byType(Image));
-      expect(image.image, isA<NetworkImage>());
+      expect(find.text('Part photo: 2'), findsOneWidget);
+      expect(find.byType(Image), findsNothing);
+
+      await tester.tap(find.byType(EventCard));
+      await tester.pumpAndSettle();
+
+      expect(find.byKey(const ValueKey('event-photo-grid')), findsOneWidget);
+      final images = tester.widgetList<Image>(find.byType(Image)).toList();
+      expect(images, hasLength(2));
+      expect(images.first.image, isA<NetworkImage>());
       expect(
-        (image.image as NetworkImage).url,
+        (images.first.image as NetworkImage).url,
         'https://example.invalid/maintenance-photo.jpg',
       );
-      expect(image.fit, BoxFit.cover);
-      expect(image.errorBuilder, isNotNull);
+      expect(images.first.fit, BoxFit.cover);
+      expect(images.first.errorBuilder, isNotNull);
 
       final withLocalPhoto = HistoryEvent(
         id: 'maintenance_3',
@@ -99,6 +107,8 @@ void main() {
       );
 
       await _pumpCard(tester, withLocalPhoto);
+      await tester.tap(find.byType(EventCard));
+      await tester.pumpAndSettle();
 
       final localImage = tester.widget<Image>(find.byType(Image));
       expect(localImage.image, isA<FileImage>());

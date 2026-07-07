@@ -125,21 +125,26 @@ void main() {
     expect(find.byKey(const ValueKey('trip-end')), findsOneWidget);
   });
 
-  testWidgets('selects and persists a maintenance photo', (tester) async {
+  testWidgets('selects and persists multiple maintenance photos', (
+    tester,
+  ) async {
     HistoryEvent? savedEvent;
-    String? persistedSourcePath;
+    final persistedSourcePaths = <String>[];
     await _pumpScreen(
       tester,
       onSave: (event) async => savedEvent = event,
-      pickPhoto: () async => XFile('/tmp/selected-photo.jpg'),
+      pickPhotos: () async => [
+        XFile('/tmp/selected-photo-1.jpg'),
+        XFile('/tmp/selected-photo-2.jpg'),
+      ],
       persistPhoto:
           ({
             required sourcePath,
             required originalName,
             required eventId,
           }) async {
-            persistedSourcePath = sourcePath;
-            return '/documents/history_photos/$eventId.jpg';
+            persistedSourcePaths.add(sourcePath);
+            return '/documents/history_photos/$eventId/${sourcePath.split('/').last}';
           },
     );
 
@@ -164,20 +169,27 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(
-      find.byKey(const ValueKey('maintenance-photo-preview')),
+      find.byKey(const ValueKey('maintenance-photo-preview-0')),
       findsOneWidget,
     );
     expect(
-      find.byKey(const ValueKey('maintenance-photo-remove')),
+      find.byKey(const ValueKey('maintenance-photo-preview-1')),
+      findsOneWidget,
+    );
+    expect(
+      find.byKey(const ValueKey('maintenance-photo-remove-0')),
       findsOneWidget,
     );
 
     await _tapSave(tester);
 
-    expect(persistedSourcePath, '/tmp/selected-photo.jpg');
+    expect(persistedSourcePaths, [
+      '/tmp/selected-photo-1.jpg',
+      '/tmp/selected-photo-2.jpg',
+    ]);
     final details = savedEvent?.details as MaintenanceDetails;
-    expect(details.photoUrls, hasLength(1));
-    expect(details.photoUrls?.single, startsWith('/documents/history_photos/'));
+    expect(details.photoUrls, hasLength(2));
+    expect(details.photoUrls?.first, startsWith('/documents/history_photos/'));
   });
 }
 
@@ -185,6 +197,7 @@ Future<void> _pumpScreen(
   WidgetTester tester, {
   required SaveHistoryEvent onSave,
   PickHistoryPhoto? pickPhoto,
+  PickHistoryPhotos? pickPhotos,
   PersistHistoryPhoto? persistPhoto,
   DeleteHistoryPhoto? deletePhoto,
   Locale locale = const Locale('en'),
@@ -201,6 +214,7 @@ Future<void> _pumpScreen(
         initialOccurredAt: DateTime(2026, 6, 20, 12),
         onSave: onSave,
         pickPhoto: pickPhoto,
+        pickPhotos: pickPhotos,
         persistPhoto:
             persistPhoto ??
             ({
@@ -220,8 +234,10 @@ Future<void> _tapSave(WidgetTester tester, {String label = 'Save'}) async {
   await tester.dragUntilVisible(
     saveButton,
     find.byType(ListView),
-    const Offset(0, -300),
+    const Offset(0, -520),
+    maxIteration: 20,
   );
+  await tester.pumpAndSettle();
   await tester.tap(saveButton);
   await tester.pump();
 }

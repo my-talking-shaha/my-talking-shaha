@@ -8,61 +8,107 @@ import 'package:frontend/features/history/domain/entities/history_event.dart';
 import 'package:frontend/features/history/domain/entities/history_event_type.dart';
 import 'package:frontend/l10n/generated/app_localizations.dart';
 
-class EventCard extends StatelessWidget {
+class EventCard extends StatefulWidget {
   final HistoryEvent event;
 
   const EventCard({required this.event, super.key});
 
   @override
+  State<EventCard> createState() => _EventCardState();
+}
+
+class _EventCardState extends State<EventCard> with TickerProviderStateMixin {
+  bool _isExpanded = false;
+
+  @override
+  void didUpdateWidget(covariant EventCard oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.event.id != widget.event.id) {
+      _isExpanded = false;
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
+    final event = widget.event;
     final details = event.details;
     final presentation = _EventPresentation.from(event);
+    final photoUrls = _photoUrls(details);
 
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(AppSpacing.lg),
-      decoration: BoxDecoration(
-        color: AppColors.surfaceHigh,
-        border: Border.all(color: AppColors.border),
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: photoUrls.isEmpty
+            ? null
+            : () => setState(() => _isExpanded = !_isExpanded),
         borderRadius: AppRadius.card,
-      ),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          _EventIcon(presentation: presentation),
-          const SizedBox(width: AppSpacing.lg),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
+        child: Ink(
+          width: double.infinity,
+          padding: const EdgeInsets.all(AppSpacing.lg),
+          decoration: BoxDecoration(
+            color: AppColors.surfaceHigh,
+            border: Border.all(color: AppColors.border),
+            borderRadius: AppRadius.card,
+          ),
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              _EventIcon(presentation: presentation),
+              const SizedBox(width: AppSpacing.lg),
+              Expanded(
+                child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Expanded(
-                      child: Text(
-                        event.title,
-                        style: Theme.of(context).textTheme.titleMedium,
-                      ),
+                    Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Expanded(
+                          child: Text(
+                            event.title,
+                            style: Theme.of(context).textTheme.titleMedium,
+                          ),
+                        ),
+                        if (presentation.metric case final metric?) ...[
+                          const SizedBox(width: AppSpacing.sm),
+                          Text(
+                            metric,
+                            textAlign: TextAlign.end,
+                            style: Theme.of(context).textTheme.titleMedium
+                                ?.copyWith(color: AppColors.primaryLight),
+                          ),
+                        ],
+                      ],
                     ),
-                    if (presentation.metric case final metric?) ...[
-                      const SizedBox(width: AppSpacing.sm),
-                      Text(
-                        metric,
-                        textAlign: TextAlign.end,
-                        style: Theme.of(context).textTheme.titleMedium
-                            ?.copyWith(color: AppColors.primaryLight),
+                    const SizedBox(height: AppSpacing.xs),
+                    ..._detailWidgets(context, details),
+                    const SizedBox(height: AppSpacing.xs),
+                    _EventTimestamp(occurredAt: event.occurredAt),
+                    if (photoUrls.isNotEmpty) ...[
+                      const SizedBox(height: AppSpacing.md),
+                      _PhotoToggle(
+                        count: photoUrls.length,
+                        isExpanded: _isExpanded,
+                      ),
+                      AnimatedSize(
+                        duration: const Duration(milliseconds: 220),
+                        curve: Curves.easeOutCubic,
+                        alignment: Alignment.topCenter,
+                        child: _isExpanded
+                            ? Padding(
+                                padding: const EdgeInsets.only(
+                                  top: AppSpacing.sm,
+                                ),
+                                child: _EventPhotoGrid(urls: photoUrls),
+                              )
+                            : const SizedBox(width: double.infinity),
                       ),
                     ],
                   ],
                 ),
-                const SizedBox(height: AppSpacing.xs),
-                ..._detailWidgets(context, details),
-                const SizedBox(height: AppSpacing.xs),
-                _EventTimestamp(occurredAt: event.occurredAt),
-              ],
-            ),
+              ),
+            ],
           ),
-        ],
+        ),
       ),
     );
   }
@@ -88,15 +134,18 @@ class EventCard extends StatelessWidget {
             style: bodyStyle,
           ),
         ],
-        if (_firstPhotoUrl(details) case final photoUrl?) ...[
-          const SizedBox(height: AppSpacing.xs),
-          Text(l10n.partPhotoLabel, style: bodyStyle),
-          const SizedBox(height: AppSpacing.xs),
-          _EventPhoto(url: photoUrl),
-        ],
       ],
       TripDetails() => [Text(_tripDetails(context, details), style: bodyStyle)],
     };
+  }
+
+  static List<String> _photoUrls(EventDetails details) {
+    if (details is! MaintenanceDetails) return const [];
+
+    return (details.photoUrls ?? const <String>[])
+        .map((url) => url.trim())
+        .where((url) => url.isNotEmpty)
+        .toList(growable: false);
   }
 
   static List<String> _nonEmptyParts(MaintenanceDetails details) =>
@@ -106,19 +155,83 @@ class EventCard extends StatelessWidget {
           .toList(growable: false) ??
       const [];
 
-  static String? _firstPhotoUrl(MaintenanceDetails details) {
-    for (final url in details.photoUrls ?? const <String>[]) {
-      if (url.trim().isNotEmpty) return url.trim();
-    }
-
-    return null;
-  }
-
   static String _tripDetails(BuildContext context, TripDetails details) {
     final route = details.route?.trim();
     final duration = _formatDuration(context, details.duration);
 
     return route == null || route.isEmpty ? duration : '$route • $duration';
+  }
+}
+
+class _PhotoToggle extends StatelessWidget {
+  final int count;
+  final bool isExpanded;
+
+  const _PhotoToggle({required this.count, required this.isExpanded});
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+
+    return Container(
+      padding: const EdgeInsets.symmetric(
+        horizontal: AppSpacing.sm,
+        vertical: AppSpacing.xs,
+      ),
+      decoration: const BoxDecoration(
+        color: AppColors.surfaceHighest,
+        borderRadius: AppRadius.input,
+      ),
+      child: Row(
+        children: [
+          const Icon(
+            Icons.photo_library_outlined,
+            size: 16,
+            color: AppColors.primaryLight,
+          ),
+          const SizedBox(width: AppSpacing.xs),
+          Expanded(
+            child: Text(
+              '${l10n.partPhotoLabel} $count',
+              style: Theme.of(
+                context,
+              ).textTheme.bodySmall?.copyWith(color: AppColors.textSecondary),
+            ),
+          ),
+          AnimatedRotation(
+            turns: isExpanded ? 0.5 : 0,
+            duration: const Duration(milliseconds: 180),
+            child: const Icon(
+              Icons.keyboard_arrow_down_rounded,
+              color: AppColors.textMuted,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _EventPhotoGrid extends StatelessWidget {
+  final List<String> urls;
+
+  const _EventPhotoGrid({required this.urls});
+
+  @override
+  Widget build(BuildContext context) {
+    return GridView.builder(
+      key: const ValueKey('event-photo-grid'),
+      shrinkWrap: true,
+      physics: const NeverScrollableScrollPhysics(),
+      itemCount: urls.length,
+      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+        crossAxisCount: 2,
+        crossAxisSpacing: AppSpacing.sm,
+        mainAxisSpacing: AppSpacing.sm,
+        childAspectRatio: 1,
+      ),
+      itemBuilder: (context, index) => _EventPhoto(url: urls[index]),
+    );
   }
 }
 
@@ -184,12 +297,10 @@ class _EventPhoto extends StatelessWidget {
       borderRadius: BorderRadius.circular(AppRadius.sm),
       child: Image(
         image: isRemote ? NetworkImage(url) : FileImage(File(url)),
-        width: 104,
-        height: 128,
+        width: double.infinity,
+        height: double.infinity,
         fit: BoxFit.cover,
         errorBuilder: (context, error, stackTrace) => Container(
-          width: 104,
-          height: 128,
           color: AppColors.surfaceHighest,
           alignment: Alignment.center,
           child: const Icon(

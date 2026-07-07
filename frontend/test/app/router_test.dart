@@ -410,6 +410,7 @@ Future<_TestApp> _pumpApp(
         chatRepositoryProvider.overrideWithValue(chatRepository),
       garageDatasourceProvider.overrideWithValue(resolvedGarageDatasource),
       historyDatasourceProvider.overrideWithValue(resolvedHistoryDatasource),
+      historyPhotoReaderProvider.overrideWithValue(null),
       vehicleDashboardProvider.overrideWith((ref, vehicleId) {
         return _dashboardData(vehicleId);
       }),

@@ -15,6 +15,7 @@ import 'package:image_picker/image_picker.dart';
 
 typedef SaveHistoryEvent = Future<void> Function(HistoryEvent event);
 typedef PickHistoryPhoto = Future<XFile?> Function();
+typedef PickHistoryPhotos = Future<List<XFile>> Function();
 typedef PersistHistoryPhoto =
     Future<String> Function({
       required String sourcePath,
@@ -30,6 +31,7 @@ final class AddHistoryEventScreen extends StatefulWidget {
     required this.persistPhoto,
     required this.deletePhoto,
     this.pickPhoto,
+    this.pickPhotos,
     this.initialMileageKm = 0,
     this.initialType = HistoryEventType.fuel,
     this.initialOccurredAt,
@@ -41,6 +43,7 @@ final class AddHistoryEventScreen extends StatefulWidget {
   final PersistHistoryPhoto persistPhoto;
   final DeleteHistoryPhoto deletePhoto;
   final PickHistoryPhoto? pickPhoto;
+  final PickHistoryPhotos? pickPhotos;
   final int initialMileageKm;
   final HistoryEventType initialType;
   final DateTime? initialOccurredAt;
@@ -56,7 +59,7 @@ final class _AddHistoryEventScreenState extends State<AddHistoryEventScreen> {
   late DateTime _occurredAt;
   bool _isSaving = false;
   bool _isPickingPhoto = false;
-  XFile? _selectedPhoto;
+  final List<XFile> _selectedPhotos = [];
 
   final _imagePicker = ImagePicker();
 
@@ -83,7 +86,10 @@ final class _AddHistoryEventScreenState extends State<AddHistoryEventScreen> {
       _mileageController.text = widget.initialMileageKm.toString();
       _tripStartController.text = widget.initialMileageKm.toString();
     }
-    if (!kIsWeb && widget.pickPhoto == null && Platform.isAndroid) {
+    if (!kIsWeb &&
+        widget.pickPhoto == null &&
+        widget.pickPhotos == null &&
+        Platform.isAndroid) {
       unawaited(_restoreLostPhoto());
     }
   }
@@ -343,12 +349,10 @@ final class _AddHistoryEventScreenState extends State<AddHistoryEventScreen> {
       if (!kIsWeb) ...[
         const SizedBox(height: AppSpacing.md),
         _PhotoCard(
-          photo: _selectedPhoto,
+          photos: _selectedPhotos,
           isPicking: _isPickingPhoto,
-          onPick: _pickPhoto,
-          onRemove: _selectedPhoto == null
-              ? null
-              : () => setState(() => _selectedPhoto = null),
+          onPick: _pickPhotos,
+          onRemove: _removePhoto,
         ),
       ],
     ];
@@ -441,27 +445,34 @@ final class _AddHistoryEventScreenState extends State<AddHistoryEventScreen> {
     if (!(_formKey.currentState?.validate() ?? false)) return;
 
     setState(() => _isSaving = true);
-    String? persistedPhotoPath;
+    final persistedPhotoPaths = <String>[];
     try {
       final eventId = 'local-${DateTime.now().microsecondsSinceEpoch}';
-      final photo = _type == HistoryEventType.maintenance
-          ? _selectedPhoto
-          : null;
-      if (photo != null) {
-        persistedPhotoPath = await widget.persistPhoto(
-          sourcePath: photo.path,
-          originalName: photo.name,
-          eventId: eventId,
+      final eventWithoutPhotos = _createEvent(
+        id: eventId,
+        photoPaths: const [],
+      );
+      final photoCacheKey = _photoCacheKey(eventWithoutPhotos);
+      final photos = _type == HistoryEventType.maintenance
+          ? List<XFile>.of(_selectedPhotos)
+          : const <XFile>[];
+      for (final photo in photos) {
+        persistedPhotoPaths.add(
+          await widget.persistPhoto(
+            sourcePath: photo.path,
+            originalName: photo.name,
+            eventId: photoCacheKey,
+          ),
         );
       }
 
-      final event = _createEvent(id: eventId, photoPath: persistedPhotoPath);
+      final event = _createEvent(id: eventId, photoPaths: persistedPhotoPaths);
       await widget.onSave(event);
       if (mounted) Navigator.of(context).pop(event);
     } catch (_) {
-      if (persistedPhotoPath != null) {
+      for (final photoPath in persistedPhotoPaths) {
         try {
-          await widget.deletePhoto(persistedPhotoPath);
+          await widget.deletePhoto(photoPath);
         } catch (_) {
           // The original save error is more useful to the user.
         }
@@ -475,7 +486,7 @@ final class _AddHistoryEventScreenState extends State<AddHistoryEventScreen> {
     }
   }
 
-  Future<void> _pickPhoto() async {
+  Future<void> _pickPhotos() async {
     if (_isPickingPhoto) return;
     final l10n = AppLocalizations.of(context);
     final accessError = l10n.couldNotAccessPhotoLibrary;
@@ -483,16 +494,9 @@ final class _AddHistoryEventScreenState extends State<AddHistoryEventScreen> {
     setState(() => _isPickingPhoto = true);
 
     try {
-      final photo = widget.pickPhoto != null
-          ? await widget.pickPhoto!()
-          : await _imagePicker.pickImage(
-              source: ImageSource.gallery,
-              imageQuality: 85,
-              maxWidth: 1600,
-              requestFullMetadata: false,
-            );
-      if (photo != null && mounted) {
-        setState(() => _selectedPhoto = photo);
+      final photos = await _selectPhotosFromGallery();
+      if (photos.isNotEmpty && mounted) {
+        setState(() => _selectedPhotos.addAll(photos));
       }
     } on PlatformException {
       _showPhotoError(accessError);
@@ -503,13 +507,30 @@ final class _AddHistoryEventScreenState extends State<AddHistoryEventScreen> {
     }
   }
 
+  Future<List<XFile>> _selectPhotosFromGallery() async {
+    if (widget.pickPhotos != null) {
+      return widget.pickPhotos!();
+    }
+
+    if (widget.pickPhoto != null) {
+      final photo = await widget.pickPhoto!();
+      return photo == null ? const [] : [photo];
+    }
+
+    return _imagePicker.pickMultiImage(
+      imageQuality: 85,
+      maxWidth: 1600,
+      requestFullMetadata: false,
+    );
+  }
+
   Future<void> _restoreLostPhoto() async {
     final restoreError = AppLocalizations.of(context).couldNotRestorePhoto;
     try {
       final response = await _imagePicker.retrieveLostData();
       final files = response.files;
       if (files != null && files.isNotEmpty && mounted) {
-        setState(() => _selectedPhoto = files.first);
+        setState(() => _selectedPhotos.addAll(files));
       } else if (response.exception != null) {
         _showPhotoError(restoreError);
       }
@@ -523,6 +544,10 @@ final class _AddHistoryEventScreenState extends State<AddHistoryEventScreen> {
     ScaffoldMessenger.maybeOf(
       context,
     )?.showSnackBar(SnackBar(content: Text(message)));
+  }
+
+  void _removePhoto(XFile photo) {
+    setState(() => _selectedPhotos.remove(photo));
   }
 
   Future<void> _selectOccurredAt() async {
@@ -551,7 +576,10 @@ final class _AddHistoryEventScreenState extends State<AddHistoryEventScreen> {
     });
   }
 
-  HistoryEvent _createEvent({required String id, String? photoPath}) {
+  HistoryEvent _createEvent({
+    required String id,
+    required List<String> photoPaths,
+  }) {
     return switch (_type) {
       HistoryEventType.fuel => HistoryEvent(
         id: id,
@@ -581,7 +609,7 @@ final class _AddHistoryEventScreenState extends State<AddHistoryEventScreen> {
           replacedParts: HistoryEventFormUtils.parseCommaSeparated(
             _replacedPartsController.text,
           ),
-          photoUrls: photoPath == null ? null : [photoPath],
+          photoUrls: photoPaths.isEmpty ? null : List.unmodifiable(photoPaths),
         ),
       ),
       HistoryEventType.trip => HistoryEvent(
@@ -599,6 +627,16 @@ final class _AddHistoryEventScreenState extends State<AddHistoryEventScreen> {
         ),
       ),
     };
+  }
+
+  String _photoCacheKey(HistoryEvent event) {
+    return [
+      event.carId,
+      event.type.name,
+      event.occurredAt.toUtc().toIso8601String(),
+      event.title.trim().toLowerCase(),
+      event.currentMileageKm,
+    ].join('|');
   }
 }
 
@@ -883,16 +921,16 @@ final class _InformationCard extends StatelessWidget {
 
 final class _PhotoCard extends StatelessWidget {
   const _PhotoCard({
-    required this.photo,
+    required this.photos,
     required this.isPicking,
     required this.onPick,
     required this.onRemove,
   });
 
-  final XFile? photo;
+  final List<XFile> photos;
   final bool isPicking;
   final VoidCallback onPick;
-  final VoidCallback? onRemove;
+  final ValueChanged<XFile> onRemove;
 
   @override
   Widget build(BuildContext context) {
@@ -901,7 +939,7 @@ final class _PhotoCard extends StatelessWidget {
     return _FormCard(
       label: l10n.partPhoto,
       optional: true,
-      child: photo == null
+      child: photos.isEmpty
           ? OutlinedButton.icon(
               key: const ValueKey('maintenance-photo-add'),
               onPressed: isPicking ? null : onPick,
@@ -916,51 +954,73 @@ final class _PhotoCard extends StatelessWidget {
           : Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                Stack(
-                  children: [
-                    ClipRRect(
-                      borderRadius: AppRadius.input,
-                      child: Image.file(
-                        File(photo!.path),
-                        key: const ValueKey('maintenance-photo-preview'),
-                        width: double.infinity,
-                        height: 220,
-                        fit: BoxFit.cover,
-                        errorBuilder: (context, error, stackTrace) => Container(
-                          height: 220,
-                          color: AppColors.surfaceHighest,
-                          alignment: Alignment.center,
-                          child: const Icon(
-                            Icons.broken_image_outlined,
-                            color: AppColors.textMuted,
+                GridView.builder(
+                  key: const ValueKey('maintenance-photo-grid'),
+                  shrinkWrap: true,
+                  physics: const NeverScrollableScrollPhysics(),
+                  itemCount: photos.length,
+                  gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                    crossAxisCount: 2,
+                    crossAxisSpacing: AppSpacing.sm,
+                    mainAxisSpacing: AppSpacing.sm,
+                    childAspectRatio: 1.12,
+                  ),
+                  itemBuilder: (context, index) {
+                    final photo = photos[index];
+
+                    return Stack(
+                      fit: StackFit.expand,
+                      children: [
+                        ClipRRect(
+                          borderRadius: AppRadius.input,
+                          child: Image.file(
+                            File(photo.path),
+                            key: ValueKey('maintenance-photo-preview-$index'),
+                            fit: BoxFit.cover,
+                            errorBuilder: (context, error, stackTrace) =>
+                                Container(
+                                  color: AppColors.surfaceHighest,
+                                  alignment: Alignment.center,
+                                  child: const Icon(
+                                    Icons.broken_image_outlined,
+                                    color: AppColors.textMuted,
+                                  ),
+                                ),
                           ),
                         ),
-                      ),
-                    ),
-                    Positioned(
-                      top: AppSpacing.sm,
-                      right: AppSpacing.sm,
-                      child: IconButton.filled(
-                        key: const ValueKey('maintenance-photo-remove'),
-                        onPressed: onRemove,
-                        tooltip: l10n.removePhoto,
-                        style: IconButton.styleFrom(
-                          backgroundColor: AppColors.backgroundDark.withValues(
-                            alpha: 0.82,
+                        Positioned(
+                          top: AppSpacing.xs,
+                          right: AppSpacing.xs,
+                          child: IconButton.filled(
+                            key: ValueKey('maintenance-photo-remove-$index'),
+                            onPressed: () => onRemove(photo),
+                            tooltip: l10n.removePhoto,
+                            style: IconButton.styleFrom(
+                              backgroundColor: AppColors.backgroundDark
+                                  .withValues(alpha: 0.82),
+                              foregroundColor: AppColors.textPrimary,
+                            ),
+                            icon: const Icon(Icons.close, size: 18),
                           ),
-                          foregroundColor: AppColors.textPrimary,
                         ),
-                        icon: const Icon(Icons.close),
-                      ),
-                    ),
-                  ],
+                      ],
+                    );
+                  },
                 ),
                 const SizedBox(height: AppSpacing.sm),
                 OutlinedButton.icon(
-                  key: const ValueKey('maintenance-photo-change'),
+                  key: const ValueKey('maintenance-photo-add-more'),
                   onPressed: isPicking ? null : onPick,
-                  icon: const Icon(Icons.photo_library_outlined, size: 18),
-                  label: Text(l10n.chooseAnotherPhoto),
+                  icon: isPicking
+                      ? const SizedBox.square(
+                          dimension: 18,
+                          child: CircularProgressIndicator(strokeWidth: 2),
+                        )
+                      : const Icon(
+                          Icons.add_photo_alternate_outlined,
+                          size: 18,
+                        ),
+                  label: Text(l10n.addPhoto),
                 ),
               ],
             ),
