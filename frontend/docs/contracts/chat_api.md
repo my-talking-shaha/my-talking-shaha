@@ -132,6 +132,7 @@ Supported screens:
 - `ANALYTICS`
 - `MAINTENANCE_FORECAST`
 - `DASHBOARD`
+- `HISTORY_EVENT_EDIT` with `prefill.eventId` and `prefill.eventType`
 
 ## Fallbacks
 
@@ -147,7 +148,8 @@ invent live tank sensor data; the car may answer from fuel history and consumpti
 ## Automatic Event Creation
 
 If the message contains enough validated event data, the backend may create the timeline
-event immediately and return a confirmation message without an action:
+event immediately and return a confirmation message with an action that opens the edit
+screen for the created event:
 
 ```json
 {
@@ -163,7 +165,15 @@ event immediately and return a confirmation message without an action:
     "role": "ASSISTANT",
     "text": "I recorded my refuel: 5 L 95 octane, 1000 RUB. My mileage is now 10000 km.",
     "createdAt": "2026-06-12T10:00:01Z",
-    "action": null
+    "action": {
+      "type": "OPEN_SCREEN",
+      "form": null,
+      "screen": "HISTORY_EVENT_EDIT",
+      "prefill": {
+        "eventId": "994v15jc-15d3-4957-9189-u8e79789ea66",
+        "eventType": "REFUEL"
+      }
+    }
   },
   "createdEvent": {
     "id": "994v15jc-15d3-4957-9189-u8e79789ea66",
@@ -180,10 +190,11 @@ event immediately and return a confirmation message without an action:
 ```
 
 When required data for an event type is incomplete, the backend asks the user to provide
-the missing fields in chat and keeps the extracted fields as a pending draft. For example,
-after `I refueled the car with 5 liters of 95 octane.`, the car asks for the cost; after
-`for 1000 rubles`, it validates the combined data and creates the event. If any field is
-invalid, the response explains what is wrong and asks for corrected values.
+the missing fields in chat, keeps the extracted fields as a pending draft, and returns an
+`OPEN_FORM` action with those fields in `prefill`. For example, after `I refueled the car
+with 5 liters of 95 octane.`, the car asks for the cost and can open a pre-filled refuel
+form; after `for 1000 rubles`, it validates the combined data and creates the event. If
+any field is invalid, the response explains what is wrong and asks for corrected values.
 
 For chat-created refuel records, accepted `fuelName` values are limited to the current
 form options: `92 octane`, `95 octane`, `98 octane`, and `Diesel`.

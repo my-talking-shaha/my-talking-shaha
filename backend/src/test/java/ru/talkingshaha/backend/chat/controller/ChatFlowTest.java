@@ -104,7 +104,7 @@ class ChatFlowTest {
     }
 
     @Test
-    void asksForMissingRefuelFieldsInsteadOfOpeningForm() throws Exception {
+    void asksForMissingRefuelFieldsAndSuggestsPrefilledForm() throws Exception {
         String vehicleId = createVehicle();
         mockMvc.perform(post("/api/v1/vehicles/{vehicleId}/chat/messages", vehicleId)
                         .header("Authorization", bearer())
@@ -113,11 +113,14 @@ class ChatFlowTest {
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.assistantMessage.text", containsString("нужно указать литры")))
                 .andExpect(jsonPath("$.assistantMessage.text", containsString("нужно указать стоимость")))
-                .andExpect(jsonPath("$.assistantMessage.action").doesNotExist());
+                .andExpect(jsonPath("$.assistantMessage.action.type").value("OPEN_FORM"))
+                .andExpect(jsonPath("$.assistantMessage.action.form").value("REFUEL"))
+                .andExpect(jsonPath("$.assistantMessage.action.prefill.mileageKm").value(10000));
         mockMvc.perform(get("/api/v1/vehicles/{vehicleId}/chat", vehicleId)
                         .header("Authorization", bearer()))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.messages[2].action").doesNotExist());
+                .andExpect(jsonPath("$.messages[2].action.type").value("OPEN_FORM"))
+                .andExpect(jsonPath("$.messages[2].action.form").value("REFUEL"));
     }
 
     @Test
@@ -130,7 +133,10 @@ class ChatFlowTest {
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.createdEvent.type").value("REFUEL"))
                 .andExpect(jsonPath("$.createdEvent.liters").value(5))
-                .andExpect(jsonPath("$.assistantMessage.action").doesNotExist());
+                .andExpect(jsonPath("$.assistantMessage.action.type").value("OPEN_SCREEN"))
+                .andExpect(jsonPath("$.assistantMessage.action.screen").value("HISTORY_EVENT_EDIT"))
+                .andExpect(jsonPath("$.assistantMessage.action.prefill.eventId").exists())
+                .andExpect(jsonPath("$.assistantMessage.action.prefill.eventType").value("REFUEL"));
         mockMvc.perform(get("/api/v1/vehicles/{vehicleId}/timeline?type=REFUEL", vehicleId)
                         .header("Authorization", bearer()))
                 .andExpect(status().isOk())
@@ -152,7 +158,10 @@ class ChatFlowTest {
                         .content("{\"text\":\"Я заправляла машину на 5 литров 95-м бензином\"}"))
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.assistantMessage.text", containsString("нужно указать стоимость")))
-                .andExpect(jsonPath("$.assistantMessage.action").doesNotExist());
+                .andExpect(jsonPath("$.assistantMessage.action.type").value("OPEN_FORM"))
+                .andExpect(jsonPath("$.assistantMessage.action.form").value("REFUEL"))
+                .andExpect(jsonPath("$.assistantMessage.action.prefill.liters").value(5))
+                .andExpect(jsonPath("$.assistantMessage.action.prefill.fuelName").value("95 octane"));
         mockMvc.perform(get("/api/v1/vehicles/{vehicleId}/timeline?type=REFUEL", vehicleId)
                         .header("Authorization", bearer()))
                 .andExpect(status().isOk())
@@ -163,7 +172,9 @@ class ChatFlowTest {
                         .content("{\"text\":\"за 1000 рублей\"}"))
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.assistantMessage.text", containsString("Записала себе заправку")))
-                .andExpect(jsonPath("$.assistantMessage.action").doesNotExist());
+                .andExpect(jsonPath("$.assistantMessage.action.type").value("OPEN_SCREEN"))
+                .andExpect(jsonPath("$.assistantMessage.action.screen").value("HISTORY_EVENT_EDIT"))
+                .andExpect(jsonPath("$.assistantMessage.action.prefill.eventType").value("REFUEL"));
         mockMvc.perform(get("/api/v1/vehicles/{vehicleId}/timeline?type=REFUEL", vehicleId)
                         .header("Authorization", bearer()))
                 .andExpect(status().isOk())
@@ -184,7 +195,8 @@ class ChatFlowTest {
                         .content("{\"text\":\"Я заправляла машину на 5 литров 95-м бензином за 0 рублей\"}"))
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.assistantMessage.text", containsString("стоимость должна быть больше 0")))
-                .andExpect(jsonPath("$.assistantMessage.action").doesNotExist());
+                .andExpect(jsonPath("$.assistantMessage.action.type").value("OPEN_FORM"))
+                .andExpect(jsonPath("$.assistantMessage.action.form").value("REFUEL"));
         mockMvc.perform(get("/api/v1/vehicles/{vehicleId}/timeline?type=REFUEL", vehicleId)
                         .header("Authorization", bearer()))
                 .andExpect(status().isOk())
@@ -201,7 +213,8 @@ class ChatFlowTest {
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.assistantMessage.text", containsString("тип топлива должен быть одним из")))
                 .andExpect(jsonPath("$.assistantMessage.text", containsString("92 octane")))
-                .andExpect(jsonPath("$.assistantMessage.action").doesNotExist());
+                .andExpect(jsonPath("$.assistantMessage.action.type").value("OPEN_FORM"))
+                .andExpect(jsonPath("$.assistantMessage.action.form").value("REFUEL"));
         mockMvc.perform(get("/api/v1/vehicles/{vehicleId}/timeline?type=REFUEL", vehicleId)
                         .header("Authorization", bearer()))
                 .andExpect(status().isOk())
@@ -225,7 +238,9 @@ class ChatFlowTest {
                 .andExpect(jsonPath("$.createdEvent.type").value("REFUEL"))
                 .andExpect(jsonPath("$.createdEvent.title").value("Заправка"))
                 .andExpect(jsonPath("$.createdEvent.fuelName").value("92 octane"))
-                .andExpect(jsonPath("$.assistantMessage.action").doesNotExist());
+                .andExpect(jsonPath("$.assistantMessage.action.type").value("OPEN_SCREEN"))
+                .andExpect(jsonPath("$.assistantMessage.action.screen").value("HISTORY_EVENT_EDIT"))
+                .andExpect(jsonPath("$.assistantMessage.action.prefill.eventType").value("REFUEL"));
         mockMvc.perform(get("/api/v1/vehicles/{vehicleId}/timeline?type=REFUEL", vehicleId)
                         .header("Authorization", bearer()))
                 .andExpect(status().isOk())
@@ -244,7 +259,9 @@ class ChatFlowTest {
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.createdEvent.type").value("TRIP"))
                 .andExpect(jsonPath("$.createdEvent.distanceKm").value(12))
-                .andExpect(jsonPath("$.assistantMessage.action").doesNotExist());
+                .andExpect(jsonPath("$.assistantMessage.action.type").value("OPEN_SCREEN"))
+                .andExpect(jsonPath("$.assistantMessage.action.screen").value("HISTORY_EVENT_EDIT"))
+                .andExpect(jsonPath("$.assistantMessage.action.prefill.eventType").value("TRIP"));
         mockMvc.perform(get("/api/v1/vehicles/{vehicleId}/timeline?type=TRIP", vehicleId)
                         .header("Authorization", bearer()))
                 .andExpect(status().isOk())
@@ -268,7 +285,9 @@ class ChatFlowTest {
                 .andExpect(jsonPath("$.createdEvent.route").value("Иннополис -> Казань"))
                 .andExpect(jsonPath("$.createdEvent.distanceKm").value(60))
                 .andExpect(jsonPath("$.createdEvent.durationMinutes").value(60))
-                .andExpect(jsonPath("$.assistantMessage.action").doesNotExist());
+                .andExpect(jsonPath("$.assistantMessage.action.type").value("OPEN_SCREEN"))
+                .andExpect(jsonPath("$.assistantMessage.action.screen").value("HISTORY_EVENT_EDIT"))
+                .andExpect(jsonPath("$.assistantMessage.action.prefill.eventType").value("TRIP"));
     }
 
     @Test
@@ -281,7 +300,9 @@ class ChatFlowTest {
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.createdEvent.type").value("TRIP"))
                 .andExpect(jsonPath("$.createdEvent.tripStatus").value("IN_PROGRESS"))
-                .andExpect(jsonPath("$.assistantMessage.action").doesNotExist());
+                .andExpect(jsonPath("$.assistantMessage.action.type").value("OPEN_FORM"))
+                .andExpect(jsonPath("$.assistantMessage.action.form").value("TRIP"))
+                .andExpect(jsonPath("$.assistantMessage.action.prefill.tripId").exists());
         mockMvc.perform(get("/api/v1/vehicles/{vehicleId}/timeline?type=TRIP", vehicleId)
                         .header("Authorization", bearer()))
                 .andExpect(status().isOk())
@@ -298,7 +319,9 @@ class ChatFlowTest {
                 .andExpect(jsonPath("$.createdEvent.fuelLiters").value(1.4))
                 .andExpect(jsonPath("$.createdEvent.tripStatus").value("COMPLETE"))
                 .andExpect(jsonPath("$.createdEvent.endedAt").exists())
-                .andExpect(jsonPath("$.assistantMessage.action").doesNotExist());
+                .andExpect(jsonPath("$.assistantMessage.action.type").value("OPEN_SCREEN"))
+                .andExpect(jsonPath("$.assistantMessage.action.screen").value("HISTORY_EVENT_EDIT"))
+                .andExpect(jsonPath("$.assistantMessage.action.prefill.eventType").value("TRIP"));
         mockMvc.perform(get("/api/v1/vehicles/{vehicleId}/timeline?type=TRIP", vehicleId)
                         .header("Authorization", bearer()))
                 .andExpect(status().isOk())
@@ -437,7 +460,9 @@ class ChatFlowTest {
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.assistantMessage.text", containsString("Для ремонта")))
                 .andExpect(jsonPath("$.assistantMessage.text", containsString("Без описания работы")))
-                .andExpect(jsonPath("$.assistantMessage.action").doesNotExist());
+                .andExpect(jsonPath("$.assistantMessage.action.type").value("OPEN_FORM"))
+                .andExpect(jsonPath("$.assistantMessage.action.form").value("MAINTENANCE"))
+                .andExpect(jsonPath("$.assistantMessage.action.prefill.mileageKm").value(10000));
         mockMvc.perform(get("/api/v1/vehicles/{vehicleId}/timeline?type=MAINTENANCE", vehicleId)
                         .header("Authorization", bearer()))
                 .andExpect(status().isOk())
@@ -452,7 +477,9 @@ class ChatFlowTest {
                 .andExpect(jsonPath("$.createdEvent.description").value("поменяла двигатель\nReplaced parts: двигатель"))
                 .andExpect(jsonPath("$.createdEvent.mileageKm").value(11000))
                 .andExpect(jsonPath("$.createdEvent.cost").value(1000))
-                .andExpect(jsonPath("$.assistantMessage.action").doesNotExist());
+                .andExpect(jsonPath("$.assistantMessage.action.type").value("OPEN_SCREEN"))
+                .andExpect(jsonPath("$.assistantMessage.action.screen").value("HISTORY_EVENT_EDIT"))
+                .andExpect(jsonPath("$.assistantMessage.action.prefill.eventType").value("MAINTENANCE"));
     }
 
     @Test
@@ -464,7 +491,9 @@ class ChatFlowTest {
                         .content("{\"text\":\"Я хочу записать ремонт\"}"))
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.assistantMessage.text", containsString("нужно описание работы")))
-                .andExpect(jsonPath("$.assistantMessage.action").doesNotExist());
+                .andExpect(jsonPath("$.assistantMessage.action.type").value("OPEN_FORM"))
+                .andExpect(jsonPath("$.assistantMessage.action.form").value("MAINTENANCE"))
+                .andExpect(jsonPath("$.assistantMessage.action.prefill.mileageKm").value(10000));
         mockMvc.perform(post("/api/v1/vehicles/{vehicleId}/chat/messages", vehicleId)
                         .header("Authorization", bearer())
                         .contentType(MediaType.APPLICATION_JSON)
@@ -474,7 +503,9 @@ class ChatFlowTest {
                 .andExpect(jsonPath("$.createdEvent.name").value("замена двигателя"))
                 .andExpect(jsonPath("$.createdEvent.description").value("заменила двигатель\nReplaced parts: двигатель"))
                 .andExpect(jsonPath("$.createdEvent.cost").value(50000))
-                .andExpect(jsonPath("$.assistantMessage.action").doesNotExist());
+                .andExpect(jsonPath("$.assistantMessage.action.type").value("OPEN_SCREEN"))
+                .andExpect(jsonPath("$.assistantMessage.action.screen").value("HISTORY_EVENT_EDIT"))
+                .andExpect(jsonPath("$.assistantMessage.action.prefill.eventType").value("MAINTENANCE"));
         mockMvc.perform(get("/api/v1/vehicles/{vehicleId}/timeline?type=MAINTENANCE", vehicleId)
                         .header("Authorization", bearer()))
                 .andExpect(status().isOk())
@@ -496,7 +527,9 @@ class ChatFlowTest {
                 .andExpect(jsonPath("$.createdEvent.description").value("поменяла двигатель\nReplaced parts: двигатель"))
                 .andExpect(jsonPath("$.createdEvent.mileageKm").value(11000))
                 .andExpect(jsonPath("$.createdEvent.cost").value(1000))
-                .andExpect(jsonPath("$.assistantMessage.action").doesNotExist());
+                .andExpect(jsonPath("$.assistantMessage.action.type").value("OPEN_SCREEN"))
+                .andExpect(jsonPath("$.assistantMessage.action.screen").value("HISTORY_EVENT_EDIT"))
+                .andExpect(jsonPath("$.assistantMessage.action.prefill.eventType").value("MAINTENANCE"));
     }
 
     @Test

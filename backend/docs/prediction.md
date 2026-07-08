@@ -120,6 +120,28 @@ When the assistant suggests a form, the backend returns an `action` inside the a
 }
 ```
 
+When the backend creates a timeline event directly from chat, the assistant message should
+suggest opening the edit screen for that exact event:
+
+```json
+{
+  "role": "ASSISTANT",
+  "text": "I recorded my refuel.",
+  "action": {
+    "type": "OPEN_SCREEN",
+    "screen": "HISTORY_EVENT_EDIT",
+    "prefill": {
+      "eventId": "994v15jc-15d3-4957-9189-u8e79789ea66",
+      "eventType": "REFUEL"
+    }
+  }
+}
+```
+
+When event data is incomplete, the backend keeps the pending draft in chat and exposes it
+as an `OPEN_FORM` action with extracted values in `prefill`, so the client can offer a
+pre-filled create-event form while the chat still asks for the missing fields.
+
 ## Rule-based prediction
 
 Input data:
