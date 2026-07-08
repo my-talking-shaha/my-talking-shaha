@@ -185,7 +185,7 @@ public class ChatService {
                 return endActiveTripFromChatMessage(userText, session, vehicle);
             }
             if (asksForRequiredFields(userText)) {
-                Map<String, Object> fields = prefill(userText);
+                Map<String, Object> fields = prefillForIntent(userText, decision.intent(), vehicle);
                 return switch (decision.intent()) {
                     case OPEN_REFUEL_FORM -> Optional.of(new AssistantDraft(refuelRequiredFieldsAnswer(), pendingAction("REFUEL", fields), null));
                     case OPEN_TRIP_FORM -> Optional.of(new AssistantDraft(tripRequiredFieldsAnswer(), pendingAction("TRIP", fields), null));
@@ -255,7 +255,7 @@ public class ChatService {
                         fuelType,
                         fuelName,
                         null));
-        return Optional.of(new AssistantDraft(refuelCreatedAnswer(event), null, event));
+        return Optional.of(new AssistantDraft(refuelCreatedAnswer(event), editEventAction(event), event));
     }
 
     private Optional<AssistantDraft> createTripFromText(
@@ -282,7 +282,7 @@ public class ChatService {
                         integerField(fields, "endMileageKm").orElseThrow(),
                         stringField(fields, "route").orElse(null),
                         integerField(fields, "durationMinutes").orElseThrow()));
-        return Optional.of(new AssistantDraft(tripCreatedAnswer(event), null, event));
+        return Optional.of(new AssistantDraft(tripCreatedAnswer(event), editEventAction(event), event));
     }
 
     private Optional<AssistantDraft> startTripFromChatMessage(String userText, ChatSession session, Vehicle vehicle) {
@@ -328,7 +328,7 @@ public class ChatService {
                         decimalField(fields, "fuelLiters").orElse(null),
                         userText));
         if (event.tripStatus() == ru.talkingshaha.backend.timeline.model.TripCompletionStatus.COMPLETE) {
-            return Optional.of(new AssistantDraft(tripLifecycleCompletedAnswer(event), null, event));
+            return Optional.of(new AssistantDraft(tripLifecycleCompletedAnswer(event), editEventAction(event), event));
         }
         Map<String, Object> nextFields = new LinkedHashMap<>(fields);
         nextFields.put("tripId", tripId.toString());
@@ -358,7 +358,7 @@ public class ChatService {
                         description,
                         decimalField(fields, "cost").orElse(null),
                         List.of()));
-        return Optional.of(new AssistantDraft(maintenanceCreatedAnswer(event), null, event));
+        return Optional.of(new AssistantDraft(maintenanceCreatedAnswer(event), editEventAction(event), event));
     }
 
     private ChatActionResponse action(ChatDecision decision, String userText) {
@@ -386,6 +386,21 @@ public class ChatService {
         return prefill;
     }
 
+    private Map<String, Object> prefillForIntent(String userText, ChatIntent intent, Vehicle vehicle) {
+        Map<String, Object> fields = prefill(userText);
+        switch (intent) {
+            case OPEN_REFUEL_FORM -> {
+                fields.putIfAbsent("mileageKm", vehicle.getMileageKm());
+                fields.putIfAbsent("fuelType", fuelType(userText, vehicle).name());
+            }
+            case OPEN_TRIP_FORM -> fields.putIfAbsent("startMileageKm", vehicle.getMileageKm());
+            case OPEN_REPAIR_FORM -> fields.putIfAbsent("mileageKm", vehicle.getMileageKm());
+            default -> {
+            }
+        }
+        return fields;
+    }
+
     private Optional<ChatActionResponse> latestPendingAction(ChatSession session) {
         return messages.findAllBySessionOrderByCreatedAtAsc(session).stream()
                 .filter(message -> message.getRole() == ChatMessageRole.ASSISTANT)
@@ -400,6 +415,13 @@ public class ChatService {
 
     private ChatActionResponse pendingAction(String form, Map<String, Object> fields) {
         return new ChatActionResponse("PENDING_EVENT", form, null, fields);
+    }
+
+    private ChatActionResponse editEventAction(TimelineEventResponse event) {
+        Map<String, Object> prefill = new LinkedHashMap<>();
+        prefill.put("eventId", event.id().toString());
+        prefill.put("eventType", event.type().name());
+        return new ChatActionResponse("OPEN_SCREEN", null, "HISTORY_EVENT_EDIT", prefill);
     }
 
     private boolean startsTripConversation(String userText) {
@@ -1258,7 +1280,11 @@ public class ChatService {
             return null;
         }
         if ("PENDING_EVENT".equals(message.getActionType())) {
-            return null;
+            return new ChatActionResponse(
+                    "OPEN_FORM",
+                    message.getActionForm(),
+                    null,
+                    prefillFromJson(message.getActionPrefill()));
         }
 
         return new ChatActionResponse(

@@ -830,10 +830,13 @@ For screen redirects, the assistant message uses:
 
 When the raw text contains enough validated data for a supported event, the same endpoint
 creates the timeline event immediately and returns a confirmation assistant message with
-`action = null` and `createdEvent` filled with the created timeline event. Supported
-automatic event creation currently covers refuel, trip, and maintenance/repair messages.
-If required fields are missing or validation fails, the car asks for the missing or
-corrected values in chat and keeps a pending draft.
+an `OPEN_SCREEN` action pointing to `HISTORY_EVENT_EDIT` and `createdEvent` filled with
+the created timeline event. The action `prefill` contains at least `eventId` and
+`eventType`, so the client can suggest opening the edit screen for this exact event.
+Supported automatic event creation currently covers refuel, trip, and
+maintenance/repair messages. If required fields are missing or validation fails, the car
+asks for the missing or corrected values in chat, keeps a pending draft, and returns an
+`OPEN_FORM` action with the extracted fields in `prefill`.
 
 Example:
 
@@ -850,9 +853,18 @@ Response `201`:
   "assistantMessage": {
     "role": "ASSISTANT",
     "text": "I recorded my refuel: 5 L 95 octane, 1000 RUB. My mileage is now 10000 km.",
-    "action": null
+    "action": {
+      "type": "OPEN_SCREEN",
+      "form": null,
+      "screen": "HISTORY_EVENT_EDIT",
+      "prefill": {
+        "eventId": "994v15jc-15d3-4957-9189-u8e79789ea66",
+        "eventType": "REFUEL"
+      }
+    }
   },
   "createdEvent": {
+    "id": "994v15jc-15d3-4957-9189-u8e79789ea66",
     "type": "REFUEL",
     "mileageKm": 10000,
     "liters": 5,
@@ -865,8 +877,9 @@ Response `201`:
 
 If required fields are missing, the car asks the user to send the missing values in chat.
 For example, `I filled the car with 5 liters of 95 octane.` creates a pending refuel
-draft and asks for the cost; a follow-up like `for 1000 rubles` completes validation and
-creates the `REFUEL` timeline event.
+draft, asks for the cost, and returns `OPEN_FORM` with the extracted refuel fields in
+`prefill`; a follow-up like `for 1000 rubles` completes validation and creates the
+`REFUEL` timeline event.
 
 For chat-created refuel records, `fuelName` must match one of the currently supported
 frontend values: `92 octane`, `95 octane`, `98 octane`, `100 octane`, or `Diesel`.
@@ -885,6 +898,10 @@ and optional cost before creating the record.
   }
 }
 ```
+
+Supported `screen` values are `ANALYTICS`, `MAINTENANCE_FORECAST`, `DASHBOARD`, and
+`HISTORY_EVENT_EDIT`. `HISTORY_EVENT_EDIT` requires `prefill.eventId` and
+`prefill.eventType`.
 
 If there is not enough data:
 

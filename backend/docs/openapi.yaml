@@ -1658,12 +1658,13 @@ components:
         screen:
           type: string
           nullable: true
-          enum: [ ANALYTICS, MAINTENANCE_FORECAST, DASHBOARD ]
+          enum: [ ANALYTICS, MAINTENANCE_FORECAST, DASHBOARD, HISTORY_EVENT_EDIT ]
         prefill:
           type: object
           additionalProperties: true
           example:
-            mileageKm: 10000
+            eventId: 994v15jc-15d3-4957-9189-u8e79789ea66
+            eventType: REFUEL
     ChatMessageRole:
       type: string
       enum: [ USER, ASSISTANT, SYSTEM ]
