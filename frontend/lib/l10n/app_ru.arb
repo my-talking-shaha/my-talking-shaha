@@ -172,9 +172,24 @@
   "tryAnotherSearch": "Попробуйте другой поиск или тип события.",
   "historyEmptyDescription": "Поездки, заправки и ремонты появятся здесь.",
   "couldNotLoadHistory": "Не удалось загрузить историю",
+  "backToChat": "Назад к чату",
   "newRefueling": "Новая заправка",
   "newMaintenance": "Новое обслуживание",
   "newTrip": "Новая поездка",
+  "editRefueling": "Редактировать заправку",
+  "editMaintenance": "Редактировать обслуживание",
+  "editTrip": "Редактировать поездку",
+  "deleteEventQuestion": "Удалить событие?",
+  "deleteEventConfirmation": "{eventTitle} будет удалено из истории.",
+  "@deleteEventConfirmation": {
+    "placeholders": {
+      "eventTitle": {}
+    }
+  },
+  "eventAdded": "Событие добавлено.",
+  "eventUpdated": "Событие обновлено.",
+  "eventDeleted": "Событие удалено.",
+  "couldNotDeleteEvent": "Не удалось удалить событие. Попробуйте снова.",
   "eventType": "ТИП СОБЫТИЯ",
   "dateAndTime": "ДАТА И ВРЕМЯ",
   "title": "НАЗВАНИЕ",

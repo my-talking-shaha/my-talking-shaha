@@ -39,19 +39,22 @@ class _EventCardState extends State<EventCard> with TickerProviderStateMixin {
     final details = event.details;
     final presentation = _EventPresentation.from(event);
     final photoUrls = _photoUrls(details);
+    final l10n = AppLocalizations.of(context);
 
     return _HistorySwipeRevealActions(
       actions: [
         if (widget.onEdit != null)
           _HistorySwipeActionButton(
-            label: 'Edit',
+            actionKey: 'edit',
+            label: l10n.edit,
             iconPath: 'assets/icons/garage/edit.svg',
             color: const Color(0xFFDCA249),
             onPressed: widget.onEdit!,
           ),
         if (widget.onDelete != null)
           _HistorySwipeActionButton(
-            label: 'Delete',
+            actionKey: 'delete',
+            label: l10n.delete,
             iconPath: 'assets/icons/garage/delete.svg',
             color: const Color(0xFFD4352F),
             onPressed: widget.onDelete!,
@@ -93,7 +96,9 @@ class _EventCardState extends State<EventCard> with TickerProviderStateMixin {
                           Text(
                             metric,
                             textAlign: TextAlign.end,
-                            style: Theme.of(context).textTheme.titleMedium
+                            style: Theme.of(context)
+                                .textTheme
+                                .titleMedium
                                 ?.copyWith(color: AppColors.primaryLight),
                           ),
                         ],
@@ -139,22 +144,22 @@ class _EventCardState extends State<EventCard> with TickerProviderStateMixin {
 
     return switch (details) {
       FuelDetails() => [
-        Text(
-          '${_formatLiters(details.liters)} L • ${details.fuelType}',
-          style: bodyStyle,
-        ),
-      ],
-      MaintenanceDetails() => [
-        if (details.description.trim().isNotEmpty)
-          Text(details.description, style: bodyStyle),
-        if (_nonEmptyParts(details).isNotEmpty) ...[
-          const SizedBox(height: AppSpacing.xs),
           Text(
-            l10n.replaced(_nonEmptyParts(details).join(', ')),
+            '${_formatLiters(details.liters)} L • ${details.fuelType}',
             style: bodyStyle,
           ),
         ],
-      ],
+      MaintenanceDetails() => [
+          if (details.description.trim().isNotEmpty)
+            Text(details.description, style: bodyStyle),
+          if (_nonEmptyParts(details).isNotEmpty) ...[
+            const SizedBox(height: AppSpacing.xs),
+            Text(
+              l10n.replaced(_nonEmptyParts(details).join(', ')),
+              style: bodyStyle,
+            ),
+          ],
+        ],
       TripDetails() => [Text(_tripDetails(context, details), style: bodyStyle)],
     };
   }

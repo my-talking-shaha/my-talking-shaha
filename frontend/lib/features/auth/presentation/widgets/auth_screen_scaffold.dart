@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:frontend/app/theme/app_theme.dart';
+import 'package:frontend/l10n/generated/app_localizations.dart';
 
 enum AuthMode { login, register }
 
@@ -64,18 +65,20 @@ final class AuthModeSwitch extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+
     return SegmentedButton<AuthMode>(
       showSelectedIcon: false,
-      segments: const [
+      segments: [
         ButtonSegment<AuthMode>(
           value: AuthMode.login,
-          icon: Icon(Icons.login_outlined),
-          label: Text('Login'),
+          icon: const Icon(Icons.login_outlined),
+          label: Text(l10n.logIn),
         ),
         ButtonSegment<AuthMode>(
           value: AuthMode.register,
-          icon: Icon(Icons.person_add_alt_1_outlined),
-          label: Text('Register'),
+          icon: const Icon(Icons.person_add_alt_1_outlined),
+          label: Text(l10n.register),
         ),
       ],
       selected: {selectedMode},
@@ -179,9 +182,9 @@ final class AuthTextField extends StatelessWidget {
         Text(
           label.toUpperCase(),
           style: Theme.of(context).textTheme.labelMedium?.copyWith(
-            color: AppColors.primaryLight,
-            letterSpacing: 0,
-          ),
+                color: AppColors.primaryLight,
+                letterSpacing: 0,
+              ),
         ),
         const SizedBox(height: AppSpacing.sm),
         TextFormField(

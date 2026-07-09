@@ -49,7 +49,7 @@ final class _HistoryScreenState extends ConsumerState<HistoryScreen> {
             ? IconButton(
                 onPressed: () =>
                     context.go('/vehicle/${widget.vehicleId}/chat'),
-                tooltip: 'Back to chat',
+                tooltip: l10n.backToChat,
                 icon: const Icon(Icons.chevron_left_rounded, size: 32),
               )
             : null,
@@ -63,7 +63,7 @@ final class _HistoryScreenState extends ConsumerState<HistoryScreen> {
           if (!mounted) return;
           if (event != null) {
             _invalidateAfterHistoryMutation(affectsMileage: true);
-            _showSuccessMessage('Event added.');
+            _showSuccessMessage(l10n.eventAdded);
           }
         },
         tooltip: l10n.addEvent,
@@ -134,15 +134,12 @@ final class _HistoryScreenState extends ConsumerState<HistoryScreen> {
   bool get _hasFilters => _query.isNotEmpty || _selectedType != null;
 
   List<HistoryEvent> _filterEvents(List<HistoryEvent> events) {
-    return events
-        .where((event) {
-          final matchesType =
-              _selectedType == null || event.type == _selectedType;
-          final matchesQuery =
-              _query.isEmpty || _searchableText(event).contains(_query);
-          return matchesType && matchesQuery;
-        })
-        .toList(growable: false);
+    return events.where((event) {
+      final matchesType = _selectedType == null || event.type == _selectedType;
+      final matchesQuery =
+          _query.isEmpty || _searchableText(event).contains(_query);
+      return matchesType && matchesQuery;
+    }).toList(growable: false);
   }
 
   Future<void> _editEvent(HistoryEvent event) async {
@@ -154,25 +151,26 @@ final class _HistoryScreenState extends ConsumerState<HistoryScreen> {
     setState(() => _cardStateRevision++);
     if (updatedEvent != null) {
       _invalidateAfterHistoryMutation(affectsMileage: true);
-      _showSuccessMessage('Event updated.');
+      _showSuccessMessage(AppLocalizations.of(context).eventUpdated);
     }
   }
 
   Future<void> _confirmDelete(HistoryEvent event) async {
+    final l10n = AppLocalizations.of(context);
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) {
         return AlertDialog(
-          title: const Text('Delete event?'),
-          content: Text('${event.title} will be removed from the history.'),
+          title: Text(l10n.deleteEventQuestion),
+          content: Text(l10n.deleteEventConfirmation(event.title)),
           actions: [
             TextButton(
               onPressed: () => Navigator.of(context).pop(false),
-              child: const Text('Cancel'),
+              child: Text(l10n.cancel),
             ),
             TextButton(
               onPressed: () => Navigator.of(context).pop(true),
-              child: const Text('Delete'),
+              child: Text(l10n.delete),
             ),
           ],
         );
@@ -191,11 +189,11 @@ final class _HistoryScreenState extends ConsumerState<HistoryScreen> {
       if (!mounted) return;
       _invalidateAfterHistoryMutation(affectsMileage: false);
       setState(() => _cardStateRevision++);
-      _showSuccessMessage('Event deleted.');
+      _showSuccessMessage(l10n.eventDeleted);
     } catch (_) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Could not delete the event. Try again.')),
+        SnackBar(content: Text(l10n.couldNotDeleteEvent)),
       );
     }
   }

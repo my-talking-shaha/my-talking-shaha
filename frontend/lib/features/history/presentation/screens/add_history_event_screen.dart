@@ -18,12 +18,11 @@ part 'add_history_event_widgets.dart';
 typedef SaveHistoryEvent = Future<void> Function(HistoryEvent event);
 typedef PickHistoryPhoto = Future<XFile?> Function();
 typedef PickHistoryPhotos = Future<List<XFile>> Function();
-typedef PersistHistoryPhoto =
-    Future<String> Function({
-      required String sourcePath,
-      required String originalName,
-      required String eventId,
-    });
+typedef PersistHistoryPhoto = Future<String> Function({
+  required String sourcePath,
+  required String originalName,
+  required String eventId,
+});
 typedef DeleteHistoryPhoto = Future<void> Function(String path);
 
 const _defaultFuelTypes = ['92 octane', '95 octane', '98 octane', 'Diesel'];
@@ -144,7 +143,7 @@ final class _AddHistoryEventScreenState extends State<AddHistoryEventScreen> {
       appBar: AppBar(
         title: Text(
           _isEditing
-              ? HistoryEventFormUtils.editTitleFor(_type)
+              ? HistoryEventFormUtils.editTitleFor(_type, l10n)
               : HistoryEventFormUtils.titleFor(_type, l10n),
         ),
       ),
@@ -209,7 +208,7 @@ final class _AddHistoryEventScreenState extends State<AddHistoryEventScreen> {
                         dimension: 20,
                         child: CircularProgressIndicator(strokeWidth: 2),
                       )
-                    : Text(_isEditing ? 'Save changes' : l10n.save),
+                    : Text(_isEditing ? l10n.saveChanges : l10n.save),
               ),
             ],
           ),
@@ -259,9 +258,9 @@ final class _AddHistoryEventScreenState extends State<AddHistoryEventScreen> {
                       allowDecimal: true,
                       validator: (value) =>
                           HistoryEventFormUtils.validateFuelLiters(
-                            value,
-                            l10n: AppLocalizations.of(context),
-                          ),
+                        value,
+                        l10n: AppLocalizations.of(context),
+                      ),
                     ),
                   ),
                 ),
@@ -276,10 +275,10 @@ final class _AddHistoryEventScreenState extends State<AddHistoryEventScreen> {
                       suffixText: '₽',
                       validator: (value) =>
                           HistoryEventFormUtils.validatePositiveInt(
-                            value,
-                            label: AppLocalizations.of(context).cost,
-                            l10n: AppLocalizations.of(context),
-                          ),
+                        value,
+                        label: AppLocalizations.of(context).cost,
+                        l10n: AppLocalizations.of(context),
+                      ),
                     ),
                   ),
                 ),
@@ -476,8 +475,7 @@ final class _AddHistoryEventScreenState extends State<AddHistoryEventScreen> {
     setState(() => _isSaving = true);
     final persistedPhotoPaths = <String>[];
     try {
-      final eventId =
-          widget.initialEvent?.id ??
+      final eventId = widget.initialEvent?.id ??
           'local-${DateTime.now().microsecondsSinceEpoch}';
       final eventWithoutPhotos = _createEvent(
         id: eventId,
@@ -528,11 +526,11 @@ final class _AddHistoryEventScreenState extends State<AddHistoryEventScreen> {
         _fuelCostController.text = cost.toString();
         _fuelType = fuelType;
       case MaintenanceDetails(
-        :final description,
-        :final cost,
-        :final replacedParts,
-        :final photoUrls,
-      ):
+          :final description,
+          :final cost,
+          :final replacedParts,
+          :final photoUrls,
+        ):
         _mileageController.text = event.currentMileageKm.toString();
         _maintenanceDescriptionController.text = description;
         _maintenanceCostController.text = cost?.toString() ?? '';
@@ -541,11 +539,11 @@ final class _AddHistoryEventScreenState extends State<AddHistoryEventScreen> {
             ?.where((url) => url.trim().isNotEmpty)
             .toList(growable: false);
       case TripDetails(
-        :final startKm,
-        :final endKm,
-        :final route,
-        :final duration,
-      ):
+          :final startKm,
+          :final endKm,
+          :final route,
+          :final duration,
+        ):
         _tripStartController.text = startKm.toString();
         _tripEndController.text = endKm.toString();
         _tripRouteController.text = route ?? '';
@@ -670,50 +668,51 @@ final class _AddHistoryEventScreenState extends State<AddHistoryEventScreen> {
   }) {
     return switch (_type) {
       HistoryEventType.fuel => HistoryEvent(
-        id: id,
-        carId: widget.vehicleId,
-        type: _type,
-        occurredAt: _occurredAt,
-        title: _titleController.text.trim(),
-        currentMileageKm: int.parse(_mileageController.text),
-        details: FuelDetails(
-          cost: int.parse(_fuelCostController.text),
-          liters: HistoryEventFormUtils.parseDecimal(
-            _fuelLitersController.text,
-          )!,
-          fuelType: _fuelType,
-        ),
-      ),
-      HistoryEventType.maintenance => HistoryEvent(
-        id: id,
-        carId: widget.vehicleId,
-        type: _type,
-        occurredAt: _occurredAt,
-        title: _titleController.text.trim(),
-        currentMileageKm: int.parse(_mileageController.text),
-        details: MaintenanceDetails(
-          description: _maintenanceDescriptionController.text.trim(),
-          cost: int.tryParse(_maintenanceCostController.text),
-          replacedParts: HistoryEventFormUtils.parseCommaSeparated(
-            _replacedPartsController.text,
+          id: id,
+          carId: widget.vehicleId,
+          type: _type,
+          occurredAt: _occurredAt,
+          title: _titleController.text.trim(),
+          currentMileageKm: int.parse(_mileageController.text),
+          details: FuelDetails(
+            cost: int.parse(_fuelCostController.text),
+            liters: HistoryEventFormUtils.parseDecimal(
+              _fuelLitersController.text,
+            )!,
+            fuelType: _fuelType,
           ),
-          photoUrls: _maintenancePhotoUrls(photoPaths),
         ),
-      ),
+      HistoryEventType.maintenance => HistoryEvent(
+          id: id,
+          carId: widget.vehicleId,
+          type: _type,
+          occurredAt: _occurredAt,
+          title: _titleController.text.trim(),
+          currentMileageKm: int.parse(_mileageController.text),
+          details: MaintenanceDetails(
+            description: _maintenanceDescriptionController.text.trim(),
+            cost: int.tryParse(_maintenanceCostController.text),
+            replacedParts: HistoryEventFormUtils.parseCommaSeparated(
+              _replacedPartsController.text,
+            ),
+            photoUrls: _maintenancePhotoUrls(photoPaths),
+          ),
+        ),
       HistoryEventType.trip => HistoryEvent(
-        id: id,
-        carId: widget.vehicleId,
-        type: _type,
-        occurredAt: _occurredAt,
-        title: _titleController.text.trim(),
-        currentMileageKm: int.parse(_tripEndController.text),
-        details: TripDetails(
-          startKm: int.parse(_tripStartController.text),
-          endKm: int.parse(_tripEndController.text),
-          route: HistoryEventFormUtils.trimToNull(_tripRouteController.text),
-          duration: Duration(minutes: int.parse(_tripDurationController.text)),
+          id: id,
+          carId: widget.vehicleId,
+          type: _type,
+          occurredAt: _occurredAt,
+          title: _titleController.text.trim(),
+          currentMileageKm: int.parse(_tripEndController.text),
+          details: TripDetails(
+            startKm: int.parse(_tripStartController.text),
+            endKm: int.parse(_tripEndController.text),
+            route: HistoryEventFormUtils.trimToNull(_tripRouteController.text),
+            duration:
+                Duration(minutes: int.parse(_tripDurationController.text)),
+          ),
         ),
-      ),
     };
   }
 

@@ -455,6 +455,9 @@ class AppLocalizationsRu extends AppLocalizations {
   String get couldNotLoadHistory => 'Не удалось загрузить историю';
 
   @override
+  String get backToChat => 'Назад к чату';
+
+  @override
   String get newRefueling => 'Новая заправка';
 
   @override
@@ -462,6 +465,36 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get newTrip => 'Новая поездка';
+
+  @override
+  String get editRefueling => 'Редактировать заправку';
+
+  @override
+  String get editMaintenance => 'Редактировать обслуживание';
+
+  @override
+  String get editTrip => 'Редактировать поездку';
+
+  @override
+  String get deleteEventQuestion => 'Удалить событие?';
+
+  @override
+  String deleteEventConfirmation(Object eventTitle) {
+    return '$eventTitle будет удалено из истории.';
+  }
+
+  @override
+  String get eventAdded => 'Событие добавлено.';
+
+  @override
+  String get eventUpdated => 'Событие обновлено.';
+
+  @override
+  String get eventDeleted => 'Событие удалено.';
+
+  @override
+  String get couldNotDeleteEvent =>
+      'Не удалось удалить событие. Попробуйте снова.';
 
   @override
   String get eventType => 'ТИП СОБЫТИЯ';

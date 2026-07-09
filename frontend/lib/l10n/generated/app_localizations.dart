@@ -968,6 +968,12 @@ abstract class AppLocalizations {
   /// **'Could not load history'**
   String get couldNotLoadHistory;
 
+  /// No description provided for @backToChat.
+  ///
+  /// In en, this message translates to:
+  /// **'Back to chat'**
+  String get backToChat;
+
   /// No description provided for @newRefueling.
   ///
   /// In en, this message translates to:
@@ -985,6 +991,60 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'New trip'**
   String get newTrip;
+
+  /// No description provided for @editRefueling.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit refueling'**
+  String get editRefueling;
+
+  /// No description provided for @editMaintenance.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit maintenance'**
+  String get editMaintenance;
+
+  /// No description provided for @editTrip.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit trip'**
+  String get editTrip;
+
+  /// No description provided for @deleteEventQuestion.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete event?'**
+  String get deleteEventQuestion;
+
+  /// No description provided for @deleteEventConfirmation.
+  ///
+  /// In en, this message translates to:
+  /// **'{eventTitle} will be removed from the history.'**
+  String deleteEventConfirmation(Object eventTitle);
+
+  /// No description provided for @eventAdded.
+  ///
+  /// In en, this message translates to:
+  /// **'Event added.'**
+  String get eventAdded;
+
+  /// No description provided for @eventUpdated.
+  ///
+  /// In en, this message translates to:
+  /// **'Event updated.'**
+  String get eventUpdated;
+
+  /// No description provided for @eventDeleted.
+  ///
+  /// In en, this message translates to:
+  /// **'Event deleted.'**
+  String get eventDeleted;
+
+  /// No description provided for @couldNotDeleteEvent.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not delete the event. Try again.'**
+  String get couldNotDeleteEvent;
 
   /// No description provided for @eventType.
   ///

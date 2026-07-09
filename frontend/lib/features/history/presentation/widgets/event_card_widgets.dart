@@ -88,9 +88,8 @@ final class _HistorySwipeRevealActionsState
       },
       onHorizontalDragEnd: (_) {
         setState(() {
-          _dragOffset = _dragOffset.abs() > _actionWidth * 0.38
-              ? -_actionWidth
-              : 0;
+          _dragOffset =
+              _dragOffset.abs() > _actionWidth * 0.38 ? -_actionWidth : 0;
         });
       },
       child: Stack(
@@ -104,11 +103,9 @@ final class _HistorySwipeRevealActionsState
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.end,
                   children: [
-                    for (
-                      var index = 0;
-                      index < widget.actions.length;
-                      index++
-                    ) ...[
+                    for (var index = 0;
+                        index < widget.actions.length;
+                        index++) ...[
                       widget.actions[index],
                       if (index < widget.actions.length - 1)
                         const SizedBox(width: AppSpacing.sm),
@@ -141,18 +138,18 @@ final class _HistorySwipeRevealActionsState
 
 final class _HistorySwipeActionButton extends StatelessWidget {
   const _HistorySwipeActionButton({
+    required this.actionKey,
     required this.label,
     required this.iconPath,
     required this.color,
     required this.onPressed,
   });
 
+  final String actionKey;
   final String label;
   final String iconPath;
   final Color color;
   final VoidCallback onPressed;
-
-  String get _actionKey => 'history_swipe_action_${label.toLowerCase()}';
 
   @override
   Widget build(BuildContext context) {
@@ -162,7 +159,7 @@ final class _HistorySwipeActionButton extends StatelessWidget {
       child: SizedBox.square(
         dimension: 52,
         child: IconButton.filled(
-          key: ValueKey(_actionKey),
+          key: ValueKey('history_swipe_action_$actionKey'),
           onPressed: onPressed,
           tooltip: label,
           style: IconButton.styleFrom(
@@ -327,8 +324,8 @@ class _EventPhotoPreviewState extends State<_EventPhotoPreview> {
                       child: Text(
                         '${_currentIndex + 1}/${widget.urls.length}',
                         style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                          color: AppColors.textPrimary,
-                        ),
+                              color: AppColors.textPrimary,
+                            ),
                       ),
                     ),
                   ),
@@ -438,30 +435,30 @@ class _EventPresentation {
   factory _EventPresentation.from(HistoryEvent event) {
     return switch (event.type) {
       HistoryEventType.fuel => _EventPresentation(
-        iconAsset: 'assets/icons/events/gas.svg',
-        iconColor: AppColors.primaryLight,
-        iconBackground: AppColors.primarySoft,
-        metric: event.details is FuelDetails
-            ? '${_formatNumber((event.details as FuelDetails).cost)} ₽'
-            : null,
-      ),
+          iconAsset: 'assets/icons/events/gas.svg',
+          iconColor: AppColors.primaryLight,
+          iconBackground: AppColors.primarySoft,
+          metric: event.details is FuelDetails
+              ? '${_formatNumber((event.details as FuelDetails).cost)} ₽'
+              : null,
+        ),
       HistoryEventType.maintenance => _EventPresentation(
-        iconAsset: 'assets/icons/events/spanner.svg',
-        iconColor: AppColors.error,
-        iconBackground: AppColors.error.withValues(alpha: 0.14),
-        metric: switch (event.details) {
-          MaintenanceDetails(cost: final cost?) => '${_formatNumber(cost)} ₽',
-          _ => null,
-        },
-      ),
+          iconAsset: 'assets/icons/events/spanner.svg',
+          iconColor: AppColors.error,
+          iconBackground: AppColors.error.withValues(alpha: 0.14),
+          metric: switch (event.details) {
+            MaintenanceDetails(cost: final cost?) => '${_formatNumber(cost)} ₽',
+            _ => null,
+          },
+        ),
       HistoryEventType.trip => _EventPresentation(
-        iconAsset: 'assets/icons/events/trip.svg',
-        iconColor: AppColors.textSecondary,
-        iconBackground: AppColors.surfaceHighest,
-        metric: event.details is TripDetails
-            ? '${_formatNumber((event.details as TripDetails).distanceKm)} km'
-            : null,
-      ),
+          iconAsset: 'assets/icons/events/trip.svg',
+          iconColor: AppColors.textSecondary,
+          iconBackground: AppColors.surfaceHighest,
+          metric: event.details is TripDetails
+              ? '${_formatNumber((event.details as TripDetails).distanceKm)} km'
+              : null,
+        ),
     };
   }
 }
