@@ -96,9 +96,7 @@ class _EventCardState extends State<EventCard> with TickerProviderStateMixin {
                           Text(
                             metric,
                             textAlign: TextAlign.end,
-                            style: Theme.of(context)
-                                .textTheme
-                                .titleMedium
+                            style: Theme.of(context).textTheme.titleMedium
                                 ?.copyWith(color: AppColors.primaryLight),
                           ),
                         ],
@@ -144,22 +142,22 @@ class _EventCardState extends State<EventCard> with TickerProviderStateMixin {
 
     return switch (details) {
       FuelDetails() => [
+        Text(
+          '${_formatLiters(details.liters)} L • ${details.fuelType}',
+          style: bodyStyle,
+        ),
+      ],
+      MaintenanceDetails() => [
+        if (details.description.trim().isNotEmpty)
+          Text(details.description, style: bodyStyle),
+        if (_nonEmptyParts(details).isNotEmpty) ...[
+          const SizedBox(height: AppSpacing.xs),
           Text(
-            '${_formatLiters(details.liters)} L • ${details.fuelType}',
+            l10n.replaced(_nonEmptyParts(details).join(', ')),
             style: bodyStyle,
           ),
         ],
-      MaintenanceDetails() => [
-          if (details.description.trim().isNotEmpty)
-            Text(details.description, style: bodyStyle),
-          if (_nonEmptyParts(details).isNotEmpty) ...[
-            const SizedBox(height: AppSpacing.xs),
-            Text(
-              l10n.replaced(_nonEmptyParts(details).join(', ')),
-              style: bodyStyle,
-            ),
-          ],
-        ],
+      ],
       TripDetails() => [Text(_tripDetails(context, details), style: bodyStyle)],
     };
   }

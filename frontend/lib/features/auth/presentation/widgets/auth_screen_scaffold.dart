@@ -182,9 +182,9 @@ final class AuthTextField extends StatelessWidget {
         Text(
           label.toUpperCase(),
           style: Theme.of(context).textTheme.labelMedium?.copyWith(
-                color: AppColors.primaryLight,
-                letterSpacing: 0,
-              ),
+            color: AppColors.primaryLight,
+            letterSpacing: 0,
+          ),
         ),
         const SizedBox(height: AppSpacing.sm),
         TextFormField(
