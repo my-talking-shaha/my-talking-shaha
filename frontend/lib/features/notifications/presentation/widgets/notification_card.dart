@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:frontend/app/theme/app_theme.dart';
 import 'package:frontend/features/notifications/domain/entities/app_notification.dart';
+import 'package:frontend/features/notifications/presentation/colors.dart';
+import 'package:frontend/features/notifications/presentation/utils/notification_presentation_utils.dart';
 
 final class NotificationCard extends StatelessWidget {
   const NotificationCard({
@@ -14,7 +16,7 @@ final class NotificationCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final accentColor = _accentColor(notification.type);
+    final accentColor = notificationAccentColor(notification.type);
 
     return Card(
       child: InkWell(
@@ -32,7 +34,10 @@ final class NotificationCard extends StatelessWidget {
                   color: accentColor.withValues(alpha: 0.14),
                   borderRadius: BorderRadius.circular(AppRadius.sm),
                 ),
-                child: Icon(_icon(notification.type), color: accentColor),
+                child: Icon(
+                  notificationIcon(notification.type),
+                  color: accentColor,
+                ),
               ),
               const SizedBox(width: AppSpacing.md),
               Expanded(
@@ -50,14 +55,14 @@ final class NotificationCard extends StatelessWidget {
                         ),
                         const SizedBox(width: AppSpacing.sm),
                         Text(
-                          _dateLabel(notification.createdAt),
+                          notificationDateLabel(notification.createdAt),
                           style: Theme.of(context).textTheme.bodySmall,
                         ),
                       ],
                     ),
                     const SizedBox(height: AppSpacing.sm),
                     Text(
-                      _shortDescription(notification.description),
+                      notificationPreview(notification.description),
                       key: ValueKey('notification_preview_${notification.id}'),
                       maxLines: 2,
                       overflow: TextOverflow.clip,
@@ -69,7 +74,7 @@ final class NotificationCard extends StatelessWidget {
                         width: 8,
                         height: 8,
                         decoration: const BoxDecoration(
-                          color: AppColors.primaryLight,
+                          color: NotificationsColors.unread,
                           shape: BoxShape.circle,
                         ),
                       ),
@@ -83,35 +88,4 @@ final class NotificationCard extends StatelessWidget {
       ),
     );
   }
-}
-
-Color _accentColor(AppNotificationType type) {
-  return switch (type) {
-    AppNotificationType.partLifetimeWarning => AppColors.warning,
-    AppNotificationType.maintenanceReminder => AppColors.info,
-    AppNotificationType.system => AppColors.primaryLight,
-  };
-}
-
-IconData _icon(AppNotificationType type) {
-  return switch (type) {
-    AppNotificationType.partLifetimeWarning => Icons.warning_amber_rounded,
-    AppNotificationType.maintenanceReminder => Icons.build_circle_outlined,
-    AppNotificationType.system => Icons.notifications_none_rounded,
-  };
-}
-
-String _shortDescription(String description) {
-  const maxLength = 118;
-  final trimmed = description.trim();
-  if (trimmed.length <= maxLength) return trimmed;
-
-  return '${trimmed.substring(0, maxLength).trimRight()}...';
-}
-
-String _dateLabel(DateTime dateTime) {
-  final day = dateTime.day.toString().padLeft(2, '0');
-  final month = dateTime.month.toString().padLeft(2, '0');
-  final year = dateTime.year.toString();
-  return '$day.$month.$year';
 }

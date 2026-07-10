@@ -10,7 +10,7 @@ import 'package:frontend/features/auth/domain/entities/auth_session.dart';
 import 'package:frontend/features/auth/domain/repositories/auth_repository.dart';
 import 'package:frontend/features/auth/presentation/screens/login_screen.dart';
 import 'package:frontend/features/notifications/data/datasources/mock_notifications_datasource.dart';
-import 'package:frontend/features/notifications/presentation/providers/notifications_providers.dart';
+import 'package:frontend/features/notifications/di/notifications_providers.dart';
 import 'package:shared_preferences_platform_interface/in_memory_shared_preferences_async.dart';
 import 'package:shared_preferences_platform_interface/shared_preferences_async_platform_interface.dart';
 
