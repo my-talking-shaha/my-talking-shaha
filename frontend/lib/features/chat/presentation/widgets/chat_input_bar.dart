@@ -71,7 +71,7 @@ final class _ChatInputBarState extends State<ChatInputBar> {
               child: DecoratedBox(
                 decoration: BoxDecoration(
                   color: AppColors.surfaceHigh,
-                  borderRadius: BorderRadius.circular(22),
+                  borderRadius: BorderRadius.circular(20),
                   border: Border.all(color: AppColors.border),
                 ),
                 child: TextField(
@@ -89,7 +89,7 @@ final class _ChatInputBarState extends State<ChatInputBar> {
                     focusedBorder: InputBorder.none,
                     contentPadding: const EdgeInsets.symmetric(
                       horizontal: AppSpacing.lg,
-                      vertical: AppSpacing.md,
+                      vertical: 10,
                     ),
                   ),
                 ),
@@ -97,7 +97,7 @@ final class _ChatInputBarState extends State<ChatInputBar> {
             ),
             const SizedBox(width: AppSpacing.sm),
             SizedBox.square(
-              dimension: 48,
+              dimension: 44,
               child: IconButton.filled(
                 onPressed: canSend
                     ? () => widget.onSend(widget.controller.text)

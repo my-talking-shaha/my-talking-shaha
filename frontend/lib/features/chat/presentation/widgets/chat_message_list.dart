@@ -88,10 +88,10 @@ final class _ChatBubble extends StatelessWidget {
                 ),
                 child: Padding(
                   padding: EdgeInsets.fromLTRB(
-                    isUser ? AppSpacing.xl : AppSpacing.lg,
-                    AppSpacing.lg,
-                    isUser ? AppSpacing.xl : AppSpacing.lg,
-                    AppSpacing.sm,
+                    isUser ? 18 : 17,
+                    13,
+                    isUser ? 18 : 17,
+                    8,
                   ),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -99,13 +99,14 @@ final class _ChatBubble extends StatelessWidget {
                     children: [
                       Text(
                         text,
-                        style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                        style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                           color: AppColors.textPrimary,
-                          height: 1.35,
+                          fontSize: 15,
+                          height: 1.42,
                         ),
                       ),
                       if (!isUser && message.action != null) ...[
-                        const SizedBox(height: AppSpacing.md),
+                        const SizedBox(height: AppSpacing.sm),
                         _ChatActionPill(
                           vehicleId: vehicleId,
                           action: message.action!,
@@ -188,38 +189,33 @@ final class _ChatActionPill extends StatelessWidget {
           },
           borderRadius: BorderRadius.circular(18),
           child: Ink(
-            padding: const EdgeInsets.fromLTRB(
-              AppSpacing.sm,
-              AppSpacing.xs,
-              AppSpacing.md,
-              AppSpacing.xs,
-            ),
+            padding: const EdgeInsets.fromLTRB(7, 5, 12, 5),
             decoration: BoxDecoration(
-              color: AppColors.primary.withValues(alpha: 0.12),
-              borderRadius: BorderRadius.circular(18),
+              color: AppColors.primary.withValues(alpha: 0.1),
+              borderRadius: BorderRadius.circular(16),
               border: Border.all(
-                color: AppColors.primaryLight.withValues(alpha: 0.22),
+                color: AppColors.primaryLight.withValues(alpha: 0.18),
               ),
             ),
             child: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
                 Container(
-                  width: 26,
-                  height: 26,
+                  width: 22,
+                  height: 22,
                   decoration: BoxDecoration(
-                    color: AppColors.primary.withValues(alpha: 0.22),
+                    color: AppColors.primary.withValues(alpha: 0.18),
                     shape: BoxShape.circle,
                   ),
-                  child: Icon(_icon(), size: 16, color: AppColors.primaryLight),
+                  child: Icon(_icon(), size: 14, color: AppColors.primaryLight),
                 ),
-                const SizedBox(width: AppSpacing.sm),
+                const SizedBox(width: 7),
                 Text(
                   _label(context),
-                  style: Theme.of(context).textTheme.labelLarge?.copyWith(
+                  style: Theme.of(context).textTheme.labelMedium?.copyWith(
                     color: AppColors.primaryLight,
                     fontWeight: FontWeight.w700,
-                    height: 1.1,
+                    height: 1,
                   ),
                 ),
               ],
