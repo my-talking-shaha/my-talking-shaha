@@ -53,29 +53,29 @@ final class GarageColorField extends StatelessWidget {
           },
           fieldViewBuilder:
               (context, textEditingController, focusNode, onFieldSubmitted) {
-            return TextField(
-              key: const ValueKey('vehicle_color_field'),
-              controller: textEditingController,
-              focusNode: focusNode,
-              style: const TextStyle(
-                color: GarageColors.white,
-                fontSize: 16,
-              ),
-              cursorColor: GarageColors.primaryLight,
-              textInputAction: TextInputAction.next,
-              textCapitalization: TextCapitalization.words,
-              decoration: garageInputDecoration(
-                hintText: l10n.selectColor,
-                suffixIcon: const Icon(
-                  Icons.search,
-                  color: GarageColors.primaryLight,
-                ),
-              ),
-              onChanged: onChanged,
-              onSubmitted: (_) => onFieldSubmitted(),
-              onTapOutside: (_) => FocusScope.of(context).unfocus(),
-            );
-          },
+                return TextField(
+                  key: const ValueKey('vehicle_color_field'),
+                  controller: textEditingController,
+                  focusNode: focusNode,
+                  style: const TextStyle(
+                    color: GarageColors.white,
+                    fontSize: 16,
+                  ),
+                  cursorColor: GarageColors.primaryLight,
+                  textInputAction: TextInputAction.next,
+                  textCapitalization: TextCapitalization.words,
+                  decoration: garageInputDecoration(
+                    hintText: l10n.selectColor,
+                    suffixIcon: const Icon(
+                      Icons.search,
+                      color: GarageColors.primaryLight,
+                    ),
+                  ),
+                  onChanged: onChanged,
+                  onSubmitted: (_) => onFieldSubmitted(),
+                  onTapOutside: (_) => FocusScope.of(context).unfocus(),
+                );
+              },
           optionsViewBuilder: (context, onSelected, options) {
             return Align(
               alignment: Alignment.topLeft,

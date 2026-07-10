@@ -41,7 +41,9 @@ final class LoginFormState extends ChangeNotifier {
   Future<void> submit(WidgetRef ref, AppLocalizations l10n) async {
     if (!formKey.currentState!.validate()) return;
 
-    final message = await ref.read(authControllerProvider.notifier).login(
+    final message = await ref
+        .read(authControllerProvider.notifier)
+        .login(
           LoginCredentials(
             login: loginController.text,
             password: passwordController.text,

@@ -3,9 +3,9 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:frontend/app/theme/app_theme.dart';
+import 'package:frontend/features/dashboard/di/dashboard_providers.dart';
 import 'package:frontend/features/dashboard/domain/entities/dashboard_data.dart';
 import 'package:frontend/features/dashboard/domain/repositories/dashboard_repository.dart';
-import 'package:frontend/features/dashboard/presentation/providers/dashboard_providers.dart';
 import 'package:frontend/features/dashboard/presentation/screens/dashboard_screen.dart';
 import 'package:frontend/features/garage/domain/entities/vehicle.dart';
 import 'package:frontend/features/history/domain/entities/history_event_type.dart';
@@ -105,18 +105,59 @@ void main() {
     expect(find.text('Could not load the dashboard'), findsOneWidget);
     expect(find.text('Retry'), findsOneWidget);
   });
+
+  testWidgets('retry refreshes the same dashboard and renders recovered data', (
+    tester,
+  ) async {
+    final repository = _RetryDashboardRepository();
+
+    await _pumpDashboard(tester, repository: repository);
+
+    expect(find.text('Could not load the dashboard'), findsOneWidget);
+    final callsBeforeRetry = repository.callCount;
+    repository.shouldFail = false;
+
+    await tester.tap(find.text('Retry'));
+    await tester.pumpAndSettle();
+
+    expect(repository.callCount, greaterThan(callsBeforeRetry));
+    expect(find.text('Lada Niva'), findsOneWidget);
+  });
+
+  testWidgets('keeps empty optional values and engine fallback behavior', (
+    tester,
+  ) async {
+    await _pumpDashboard(
+      tester,
+      dashboard: _dashboardWithEmptyOptionalValues(),
+    );
+
+    expect(find.text('Unknown'), findsOneWidget);
+    expect(find.text('VIN unavailable'), findsWidgets);
+
+    final copyButton = tester.widget<IconButton>(
+      find.widgetWithIcon(IconButton, Icons.copy_outlined),
+    );
+    expect(copyButton.onPressed, isNull);
+
+    await tester.scrollUntilVisible(find.text('No events yet'), 400);
+    expect(find.text('No events yet'), findsOneWidget);
+    expect(tester.takeException(), isNull);
+  });
 }
 
 Future<void> _pumpDashboard(
   WidgetTester tester, {
   DashboardData? dashboard,
   Object? error,
+  DashboardRepository? repository,
 }) async {
   await tester.pumpWidget(
     ProviderScope(
       overrides: [
         dashboardRepositoryProvider.overrideWithValue(
-          _FakeDashboardRepository(dashboard: dashboard, error: error),
+          repository ??
+              _FakeDashboardRepository(dashboard: dashboard, error: error),
         ),
       ],
       child: MaterialApp(
@@ -129,6 +170,26 @@ Future<void> _pumpDashboard(
     ),
   );
   await tester.pumpAndSettle();
+}
+
+DashboardData _dashboardWithEmptyOptionalValues() {
+  return const DashboardData(
+    vehicle: Vehicle(
+      id: 'vehicle_1',
+      brand: 'Lada',
+      model: 'Niva',
+      year: 1998,
+      currentMileageKm: 0,
+      engineType: 'custom',
+      engineVolumeLiters: null,
+      enginePowerHp: null,
+      vin: '   ',
+      status: 'ok',
+      activeWarningsCount: 0,
+    ),
+    maintenanceParts: [],
+    recentEvents: [],
+  );
 }
 
 final class _FakeDashboardRepository implements DashboardRepository {
@@ -148,5 +209,17 @@ final class _FakeDashboardRepository implements DashboardRepository {
     }
 
     return dashboard;
+  }
+}
+
+final class _RetryDashboardRepository implements DashboardRepository {
+  int callCount = 0;
+  bool shouldFail = true;
+
+  @override
+  Future<DashboardData> getDashboard(String vehicleId) async {
+    callCount++;
+    if (shouldFail) throw Exception('Temporary failure');
+    return _dashboardWithEmptyOptionalValues();
   }
 }

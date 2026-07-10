@@ -48,30 +48,30 @@ final class GarageBrandField extends StatelessWidget {
           onSelected: onChanged,
           fieldViewBuilder:
               (context, textEditingController, focusNode, onFieldSubmitted) {
-            return TextField(
-              controller: textEditingController,
-              focusNode: focusNode,
-              style: const TextStyle(
-                color: GarageColors.white,
-                fontSize: 16,
-              ),
-              cursorColor: GarageColors.primaryLight,
-              textInputAction: TextInputAction.next,
-              textCapitalization: TextCapitalization.words,
-              decoration: garageInputDecoration(
-                hintText: 'Lada',
-                errorText: errorText,
-                suffixIcon: _GarageBrandSuffixIcon(
-                  isLoading: isLoading,
-                  hasLoadError: errorText == 'Could not load brands',
-                  onRetry: onRetry,
-                ),
-              ),
-              onChanged: onChanged,
-              onSubmitted: (_) => onFieldSubmitted(),
-              onTapOutside: (_) => FocusScope.of(context).unfocus(),
-            );
-          },
+                return TextField(
+                  controller: textEditingController,
+                  focusNode: focusNode,
+                  style: const TextStyle(
+                    color: GarageColors.white,
+                    fontSize: 16,
+                  ),
+                  cursorColor: GarageColors.primaryLight,
+                  textInputAction: TextInputAction.next,
+                  textCapitalization: TextCapitalization.words,
+                  decoration: garageInputDecoration(
+                    hintText: 'Lada',
+                    errorText: errorText,
+                    suffixIcon: _GarageBrandSuffixIcon(
+                      isLoading: isLoading,
+                      hasLoadError: errorText == 'Could not load brands',
+                      onRetry: onRetry,
+                    ),
+                  ),
+                  onChanged: onChanged,
+                  onSubmitted: (_) => onFieldSubmitted(),
+                  onTapOutside: (_) => FocusScope.of(context).unfocus(),
+                );
+              },
           optionsViewBuilder: (context, onSelected, options) {
             return _GarageAutocompleteOptions(
               options: options,

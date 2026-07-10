@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:frontend/app/theme/app_theme.dart';
+import 'package:frontend/features/dashboard/presentation/utils/dashboard_text_style_utils.dart';
 
 final class DashboardSectionHeader extends StatelessWidget {
   const DashboardSectionHeader({required this.title, this.trailing, super.key});
@@ -12,18 +12,14 @@ final class DashboardSectionHeader extends StatelessWidget {
     return Row(
       children: [
         Expanded(
-          child: Text(title, style: dashboardSectionLabelStyle(context)),
+          child: Text(
+            title,
+            style: DashboardTextStyleUtils.sectionLabel(context),
+          ),
         ),
-        ?trailing,
+        // ignore: use_null_aware_elements
+        if (trailing != null) trailing!,
       ],
     );
   }
-}
-
-TextStyle? dashboardSectionLabelStyle(BuildContext context) {
-  return Theme.of(context).textTheme.labelMedium?.copyWith(
-    color: AppColors.textSecondary,
-    fontWeight: FontWeight.w700,
-    letterSpacing: 0.8,
-  );
 }

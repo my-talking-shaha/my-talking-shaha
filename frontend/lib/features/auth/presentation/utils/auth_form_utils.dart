@@ -2,10 +2,7 @@ import 'package:flutter/widgets.dart';
 import 'package:frontend/l10n/generated/app_localizations.dart';
 
 abstract final class AuthFormUtils {
-  static String localizedErrorMessage(
-    AppLocalizations l10n,
-    String message,
-  ) {
+  static String localizedErrorMessage(AppLocalizations l10n, String message) {
     return switch (message) {
       'Something went wrong. Please try again later' => l10n.somethingWentWrong,
       _ => message,

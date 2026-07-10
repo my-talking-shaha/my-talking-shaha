@@ -48,16 +48,16 @@ final class RegistrationForm extends StatelessWidget {
             Text(
               l10n.registration,
               style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                    fontSize: 28,
-                    fontWeight: FontWeight.w800,
-                  ),
+                fontSize: 28,
+                fontWeight: FontWeight.w800,
+              ),
             ),
             const SizedBox(height: AppSpacing.md),
             Text(
               l10n.createYourProfile,
-              style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                    color: AuthColors.textSecondary,
-                  ),
+              style: Theme.of(
+                context,
+              ).textTheme.bodyLarge?.copyWith(color: AuthColors.textSecondary),
             ),
             const SizedBox(height: AppSpacing.xxl),
             if (formState.errorMessage case final message?) ...[

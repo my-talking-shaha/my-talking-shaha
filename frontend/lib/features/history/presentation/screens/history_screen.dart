@@ -6,7 +6,7 @@ import 'package:frontend/app/providers/vehicle_mileage_provider.dart';
 import 'package:frontend/app/theme/app_theme.dart';
 import 'package:frontend/features/analytics/domain/entities/analytics_period.dart';
 import 'package:frontend/features/analytics/presentation/providers/analytics_providers.dart';
-import 'package:frontend/features/dashboard/presentation/providers/dashboard_providers.dart';
+import 'package:frontend/features/dashboard/di/dashboard_providers.dart';
 import 'package:frontend/features/garage/di/garage_providers.dart';
 import 'package:frontend/features/history/domain/entities/event_details.dart';
 import 'package:frontend/features/history/domain/entities/history_event.dart';

@@ -17,7 +17,7 @@ String garageEngineTypeLabel(AppLocalizations l10n, String value) {
 
 String formatGarageMileage(int mileage) {
   return mileage.toString().replaceAllMapped(
-        RegExp(r'\B(?=(\d{3})+(?!\d))'),
-        (_) => ' ',
-      );
+    RegExp(r'\B(?=(\d{3})+(?!\d))'),
+    (_) => ' ',
+  );
 }

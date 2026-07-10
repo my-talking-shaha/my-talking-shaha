@@ -10,11 +10,11 @@ final class AuthBrandTitle extends StatelessWidget {
       'My Talking\nShaha',
       textAlign: TextAlign.center,
       style: Theme.of(context).textTheme.headlineLarge?.copyWith(
-            color: AuthColors.primaryLight,
-            fontSize: 42,
-            fontWeight: FontWeight.w900,
-            height: 1.12,
-          ),
+        color: AuthColors.primaryLight,
+        fontSize: 42,
+        fontWeight: FontWeight.w900,
+        height: 1.12,
+      ),
     );
   }
 }

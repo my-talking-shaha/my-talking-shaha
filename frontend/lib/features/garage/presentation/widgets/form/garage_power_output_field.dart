@@ -131,8 +131,9 @@ final class _PowerOutputUnitOption extends StatelessWidget {
             child: Text(
               label,
               style: TextStyle(
-                color:
-                    isSelected ? GarageColors.white : GarageColors.primaryLight,
+                color: isSelected
+                    ? GarageColors.white
+                    : GarageColors.primaryLight,
                 fontSize: 14,
                 fontWeight: FontWeight.w700,
               ),

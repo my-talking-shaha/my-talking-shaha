@@ -4,6 +4,6 @@ import 'package:frontend/features/auth/presentation/controllers/auth_controller.
 
 final authControllerProvider =
     AsyncNotifierProvider<AuthController, AuthSession?>(
-  AuthController.new,
-  retry: (_, _) => null,
-);
+      AuthController.new,
+      retry: (_, _) => null,
+    );

@@ -16,11 +16,7 @@ final class GarageErrorState extends StatelessWidget {
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          const Icon(
-            Icons.error_outline,
-            color: GarageColors.error,
-            size: 40,
-          ),
+          const Icon(Icons.error_outline, color: GarageColors.error, size: 40),
           const SizedBox(height: AppSpacing.lg),
           Text(
             l10n.couldNotLoadGarage,

@@ -73,7 +73,9 @@ void main() {
     expect(repository.loginCalls, 0);
 
     await tester.enterText(
-        find.byType(TextFormField).at(0), 'user@example.com');
+      find.byType(TextFormField).at(0),
+      'user@example.com',
+    );
     await tester.enterText(find.byType(TextFormField).at(1), 'secret1');
     await tester.tap(find.byTooltip('Show password'));
     await tester.pump();
@@ -86,7 +88,9 @@ void main() {
     expect(find.text('Invalid credentials'), findsOneWidget);
 
     await tester.enterText(
-        find.byType(TextFormField).at(0), 'next@example.com');
+      find.byType(TextFormField).at(0),
+      'next@example.com',
+    );
     await tester.pump();
     expect(find.text('Invalid credentials'), findsNothing);
   });
@@ -115,10 +119,10 @@ void main() {
     await tester.ensureVisible(find.byTooltip('Show password'));
     await tester.tap(find.byTooltip('Show password'));
     await tester.pump();
-    expect(
-      _editableFields(tester).skip(2).map((field) => field.obscureText),
-      [false, false],
-    );
+    expect(_editableFields(tester).skip(2).map((field) => field.obscureText), [
+      false,
+      false,
+    ]);
 
     await tester.enterText(fields.at(3), 'secret1');
     await tester.ensureVisible(find.text('Register').last);

@@ -32,11 +32,11 @@ final class GarageEmptyState extends StatelessWidget {
               Text(
                 l10n.brandName,
                 style: Theme.of(context).textTheme.headlineLarge?.copyWith(
-                      color: GarageColors.primaryLight,
-                      fontSize: 31,
-                      fontWeight: FontWeight.w800,
-                      height: 1.08,
-                    ),
+                  color: GarageColors.primaryLight,
+                  fontSize: 31,
+                  fontWeight: FontWeight.w800,
+                  height: 1.08,
+                ),
               ),
               const Spacer(),
               Center(
@@ -48,9 +48,7 @@ final class GarageEmptyState extends StatelessWidget {
                       Text(
                         l10n.garageEmpty,
                         textAlign: TextAlign.center,
-                        style: Theme.of(context)
-                            .textTheme
-                            .headlineMedium
+                        style: Theme.of(context).textTheme.headlineMedium
                             ?.copyWith(
                               fontSize: 24,
                               fontWeight: FontWeight.w800,
@@ -62,9 +60,9 @@ final class GarageEmptyState extends StatelessWidget {
                         l10n.garageEmptyDescription,
                         textAlign: TextAlign.center,
                         style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                              color: GarageColors.textSecondary,
-                              height: 1.35,
-                            ),
+                          color: GarageColors.textSecondary,
+                          height: 1.35,
+                        ),
                       ),
                       const SizedBox(height: AppSpacing.xxl),
                       SizedBox(

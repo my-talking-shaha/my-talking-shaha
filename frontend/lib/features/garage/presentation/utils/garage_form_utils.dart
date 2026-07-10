@@ -106,10 +106,7 @@ String localizedGarageEngineType(AppLocalizations l10n, String value) {
   };
 }
 
-String? localizedGarageVehicleError(
-  AppLocalizations l10n,
-  String? message,
-) {
+String? localizedGarageVehicleError(AppLocalizations l10n, String? message) {
   if (message == null) return null;
 
   final yearMatch = RegExp(

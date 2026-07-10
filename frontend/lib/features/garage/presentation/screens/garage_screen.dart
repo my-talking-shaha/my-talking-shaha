@@ -39,8 +39,9 @@ final class GarageScreen extends ConsumerWidget {
                 confirmAndDeleteGarageVehicle(
                   context: context,
                   vehicle: vehicle,
-                  onDelete:
-                      ref.read(garageControllerProvider.notifier).deleteVehicle,
+                  onDelete: ref
+                      .read(garageControllerProvider.notifier)
+                      .deleteVehicle,
                 ),
               );
             },

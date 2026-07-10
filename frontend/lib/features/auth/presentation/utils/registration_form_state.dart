@@ -43,7 +43,9 @@ final class RegistrationFormState extends ChangeNotifier {
   Future<void> submit(WidgetRef ref, AppLocalizations l10n) async {
     if (!formKey.currentState!.validate()) return;
 
-    final message = await ref.read(authControllerProvider.notifier).register(
+    final message = await ref
+        .read(authControllerProvider.notifier)
+        .register(
           RegistrationCredentials(
             fullName: fullNameController.text,
             login: loginController.text,

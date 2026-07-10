@@ -18,11 +18,11 @@ final class GarageHeader extends StatelessWidget {
         Text(
           l10n.brandName,
           style: Theme.of(context).textTheme.headlineLarge?.copyWith(
-                color: GarageColors.primaryLight,
-                fontSize: 31,
-                fontWeight: FontWeight.w800,
-                height: 1.08,
-              ),
+            color: GarageColors.primaryLight,
+            fontSize: 31,
+            fontWeight: FontWeight.w800,
+            height: 1.08,
+          ),
         ),
         const SizedBox(height: 42),
         Row(
@@ -35,20 +35,20 @@ final class GarageHeader extends StatelessWidget {
                   Text(
                     l10n.yourFleet,
                     style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                          color: GarageColors.success,
-                          fontSize: 12,
-                          fontWeight: FontWeight.w800,
-                          letterSpacing: 0.8,
-                        ),
+                      color: GarageColors.success,
+                      fontSize: 12,
+                      fontWeight: FontWeight.w800,
+                      letterSpacing: 0.8,
+                    ),
                   ),
                   const SizedBox(height: AppSpacing.sm),
                   Text(
                     l10n.garage,
                     style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                          fontSize: 25,
-                          fontWeight: FontWeight.w800,
-                          height: 1.05,
-                        ),
+                      fontSize: 25,
+                      fontWeight: FontWeight.w800,
+                      height: 1.05,
+                    ),
                   ),
                 ],
               ),

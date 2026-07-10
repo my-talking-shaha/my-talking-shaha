@@ -60,15 +60,14 @@ final class GarageEngineTypeField extends StatelessWidget {
               enabledBorder: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(8),
                 borderSide: BorderSide(
-                  color:
-                      hasError ? GarageColors.error : GarageColors.formBorder,
+                  color: hasError
+                      ? GarageColors.error
+                      : GarageColors.formBorder,
                 ),
               ),
               focusedBorder: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(8),
-                borderSide: const BorderSide(
-                  color: GarageColors.primaryLight,
-                ),
+                borderSide: const BorderSide(color: GarageColors.primaryLight),
               ),
               errorBorder: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(8),

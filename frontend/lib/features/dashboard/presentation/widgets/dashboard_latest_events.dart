@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_svg/flutter_svg.dart';
 import 'package:frontend/app/theme/app_theme.dart';
 import 'package:frontend/features/dashboard/domain/entities/dashboard_data.dart';
-import 'package:frontend/features/dashboard/presentation/widgets/dashboard_section_header.dart';
-import 'package:frontend/features/history/domain/entities/history_event_type.dart';
+import 'package:frontend/features/dashboard/presentation/common/dashboard_section_header.dart';
+import 'package:frontend/features/dashboard/presentation/utils/dashboard_actions.dart';
+import 'package:frontend/features/dashboard/presentation/widgets/events_message.dart';
+import 'package:frontend/features/dashboard/presentation/widgets/recent_event_tile.dart';
 import 'package:frontend/l10n/generated/app_localizations.dart';
-import 'package:go_router/go_router.dart';
 
 final class DashboardLatestEvents extends StatelessWidget {
   const DashboardLatestEvents({
@@ -27,18 +27,18 @@ final class DashboardLatestEvents extends StatelessWidget {
         DashboardSectionHeader(
           title: l10n.latestEvents,
           trailing: TextButton(
-            onPressed: () => context.go('/vehicle/$vehicleId/history'),
+            onPressed: () => DashboardActions.openHistory(context, vehicleId),
             child: Text(l10n.viewAll),
           ),
         ),
         const SizedBox(height: AppSpacing.sm),
         if (events.isEmpty)
-          _EventsMessage(message: l10n.noEventsYet)
+          EventsMessage(message: l10n.noEventsYet)
         else
           Column(
             children: [
               for (var index = 0; index < events.length; index++) ...[
-                _RecentEventTile(event: events[index]),
+                RecentEventTile(event: events[index]),
                 if (index < events.length - 1)
                   const SizedBox(height: AppSpacing.sm),
               ],
@@ -46,148 +46,5 @@ final class DashboardLatestEvents extends StatelessWidget {
           ),
       ],
     );
-  }
-}
-
-final class _RecentEventTile extends StatelessWidget {
-  const _RecentEventTile({required this.event});
-
-  final DashboardRecentEvent event;
-
-  @override
-  Widget build(BuildContext context) {
-    final presentation = _RecentEventPresentation.from(event.type);
-
-    return Container(
-      padding: const EdgeInsets.all(AppSpacing.lg),
-      decoration: BoxDecoration(
-        color: AppColors.surfaceHigh,
-        borderRadius: AppRadius.card,
-        border: Border.all(color: AppColors.border),
-      ),
-      child: Row(
-        children: [
-          Container(
-            width: 52,
-            height: 52,
-            alignment: Alignment.center,
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              color: presentation.backgroundColor,
-            ),
-            child: SvgPicture.asset(
-              presentation.assetPath,
-              width: 22,
-              height: 22,
-              colorFilter: ColorFilter.mode(
-                presentation.iconColor,
-                BlendMode.srcIn,
-              ),
-            ),
-          ),
-          const SizedBox(width: AppSpacing.lg),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  event.title,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: Theme.of(context).textTheme.titleMedium,
-                ),
-                const SizedBox(height: AppSpacing.xs),
-                Text(
-                  event.subtitle,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                    color: AppColors.textSecondary,
-                  ),
-                ),
-              ],
-            ),
-          ),
-          const SizedBox(width: AppSpacing.sm),
-          Text(
-            _relativeDate(context, event.occurredAt),
-            style: Theme.of(context).textTheme.bodySmall,
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-String _relativeDate(BuildContext context, DateTime value) {
-  final local = value.toLocal();
-  final now = DateTime.now();
-  final today = DateTime(now.year, now.month, now.day);
-  final eventDay = DateTime(local.year, local.month, local.day);
-  final difference = today.difference(eventDay).inDays;
-  final materialLocalizations = MaterialLocalizations.of(context);
-
-  if (difference == 0) {
-    return materialLocalizations.formatTimeOfDay(
-      TimeOfDay.fromDateTime(local),
-      alwaysUse24HourFormat: true,
-    );
-  }
-  if (difference == 1) {
-    return materialLocalizations.formatMediumDate(local).toUpperCase();
-  }
-
-  return materialLocalizations.formatShortMonthDay(local).toUpperCase();
-}
-
-final class _EventsMessage extends StatelessWidget {
-  const _EventsMessage({required this.message});
-
-  final String message;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(AppSpacing.xl),
-      decoration: BoxDecoration(
-        color: AppColors.surfaceHigh,
-        borderRadius: AppRadius.card,
-        border: Border.all(color: AppColors.border),
-      ),
-      child: Text(message, style: Theme.of(context).textTheme.bodyMedium),
-    );
-  }
-}
-
-final class _RecentEventPresentation {
-  const _RecentEventPresentation({
-    required this.assetPath,
-    required this.iconColor,
-    required this.backgroundColor,
-  });
-
-  final String assetPath;
-  final Color iconColor;
-  final Color backgroundColor;
-
-  factory _RecentEventPresentation.from(HistoryEventType type) {
-    return switch (type) {
-      HistoryEventType.fuel => const _RecentEventPresentation(
-        assetPath: 'assets/icons/events/gas.svg',
-        iconColor: AppColors.warning,
-        backgroundColor: Color(0xFF30291F),
-      ),
-      HistoryEventType.maintenance => const _RecentEventPresentation(
-        assetPath: 'assets/icons/events/spanner.svg',
-        iconColor: AppColors.success,
-        backgroundColor: Color(0xFF123138),
-      ),
-      HistoryEventType.trip => const _RecentEventPresentation(
-        assetPath: 'assets/icons/events/trip.svg',
-        iconColor: AppColors.primaryLight,
-        backgroundColor: AppColors.surfaceHighest,
-      ),
-    };
   }
 }

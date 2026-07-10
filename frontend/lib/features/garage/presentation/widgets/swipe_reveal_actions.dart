@@ -55,8 +55,9 @@ final class _SwipeRevealActionsState extends State<SwipeRevealActions> {
       },
       onHorizontalDragEnd: (_) {
         setState(() {
-          _dragOffset =
-              _dragOffset.abs() > _actionWidth * 0.38 ? -_actionWidth : 0;
+          _dragOffset = _dragOffset.abs() > _actionWidth * 0.38
+              ? -_actionWidth
+              : 0;
         });
       },
       child: Stack(

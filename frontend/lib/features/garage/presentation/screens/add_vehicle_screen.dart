@@ -275,8 +275,9 @@ final class _AddVehicleScreenState extends ConsumerState<AddVehicleScreen> {
                           l10n,
                           state.fieldErrors['engineType'],
                         ),
-                        onChanged:
-                            state.isSubmitting ? null : _updateEngineType,
+                        onChanged: state.isSubmitting
+                            ? null
+                            : _updateEngineType,
                       ),
                       if (hasEngineType) ...[
                         const SizedBox(height: 24),
@@ -328,16 +329,15 @@ final class _AddVehicleScreenState extends ConsumerState<AddVehicleScreen> {
                             l10n,
                             state.errorMessage,
                           )!,
-                          style: Theme.of(context)
-                              .textTheme
-                              .bodyMedium
+                          style: Theme.of(context).textTheme.bodyMedium
                               ?.copyWith(color: GarageColors.error),
                         ),
                       ],
                       const SizedBox(height: 40),
                       GarageSubmitButton(
-                        label:
-                            isEditing ? l10n.saveChanges : l10n.startNewShaha,
+                        label: isEditing
+                            ? l10n.saveChanges
+                            : l10n.startNewShaha,
                         isSubmitting: state.isSubmitting,
                         onPressed: _submit,
                       ),
