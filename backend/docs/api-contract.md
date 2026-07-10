@@ -407,7 +407,7 @@ event `type` are populated; the rest are `null`.
 
 `GET /api/v1/vehicles/{vehicleId}/timeline?type=REFUEL`
 
-`type` is optional. Supported values: `TRIP`, `REFUEL`, `REPAIR`, `MAINTENANCE`,
+`type` is optional. Supported values: `TRIP`, `REFUEL`, `RECHARGE`, `REPAIR`, `MAINTENANCE`,
 `PART_REPLACEMENT`, `WARNING`. Events are returned most recent first. Pagination is not
 implemented yet.
 
@@ -447,6 +447,28 @@ Request:
   "fuelType": "GASOLINE",
   "fuelName": "95 octane",
   "stationName": "Test Station"
+}
+```
+
+Response `201`: timeline event. `liters > 0` and `cost > 0`.
+
+### Add recharge
+
+`POST /api/v1/vehicles/{vehicleId}/timeline/recharge`
+
+Request uses the same payload shape as refuel. The created event has `type = RECHARGE`
+and must use `fuelType = ELECTRIC`. For backwards compatibility, posting the same
+electric payload to `/timeline/refuel` also creates a `RECHARGE` event.
+
+```json
+{
+  "eventDateTime": "2026-06-12T14:30:00Z",
+  "mileageKm": 10000,
+  "liters": 37.5,
+  "cost": 1200,
+  "fuelType": "ELECTRIC",
+  "fuelName": "AC charging",
+  "stationName": "Home charger"
 }
 ```
 
@@ -524,7 +546,7 @@ mileage advances the vehicle mileage and recalculates its parts.
 
 Request body uses the same event-specific fields as the matching add endpoint:
 
-- refuel: `eventDateTime`, `mileageKm`, `liters`, `cost`, `fuelType`, optional
+- refuel/recharge: `eventDateTime`, `mileageKm`, `liters`, `cost`, `fuelType`, optional
   `fuelName`, optional `stationName`;
 - trip: `eventDateTime`, `endMileageKm`, `durationMinutes`, optional
   `startMileageKm`, optional `route`;

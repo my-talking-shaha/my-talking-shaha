@@ -15,7 +15,6 @@ import jakarta.validation.ConstraintViolationException;
 import jakarta.validation.Validator;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import ru.talkingshaha.backend.common.error.ResourceNotFoundException;
 import ru.talkingshaha.backend.common.model.BaseEvent;
 import ru.talkingshaha.backend.common.error.ResourceNotFoundException;
 import ru.talkingshaha.backend.chat.model.ChatSession;
@@ -35,6 +34,7 @@ import ru.talkingshaha.backend.timeline.repository.RefuelEventRepository;
 import ru.talkingshaha.backend.timeline.repository.TimelineEventRepository;
 import ru.talkingshaha.backend.timeline.repository.TripEventRepository;
 import ru.talkingshaha.backend.part.service.PartService;
+import ru.talkingshaha.backend.vehicle.model.FuelType;
 import ru.talkingshaha.backend.vehicle.model.Vehicle;
 import ru.talkingshaha.backend.vehicle.service.VehicleService;
 
@@ -81,20 +81,43 @@ public class TimelineEventService {
     @Transactional
     public TimelineEventResponse createRefuelEvent(UUID vehicleId, CreateRefuelEventRequest request) {
         Vehicle vehicle = vehicles.requireOwnedVehicle(vehicleId);
+        TimelineEventType type = isRechargeRequest(vehicle, request)
+                ? TimelineEventType.RECHARGE
+                : TimelineEventType.REFUEL;
+        return createFuelEvent(vehicle, request, type);
+    }
+
+    @Transactional
+    public TimelineEventResponse createRechargeEvent(UUID vehicleId, CreateRefuelEventRequest request) {
+        if (request.fuelType() != FuelType.ELECTRIC) {
+            throw new IllegalArgumentException("Recharge events must use ELECTRIC fuel type");
+        }
+        Vehicle vehicle = vehicles.requireOwnedVehicle(vehicleId);
+        return createFuelEvent(vehicle, request, TimelineEventType.RECHARGE);
+    }
+
+    private TimelineEventResponse createFuelEvent(Vehicle vehicle, CreateRefuelEventRequest request, TimelineEventType type) {
         validateMileage(vehicle, request.mileageKm());
         RefuelEvent event = new RefuelEvent();
         event.setVehicle(vehicle);
-        event.setType(TimelineEventType.REFUEL);
+        event.setType(type);
         event.setEventDateTime(request.eventDateTime());
         event.setTitle(request.title());
         event.setMileageKm(request.mileageKm());
         event.setLiters(request.liters());
         event.setCost(request.cost());
-        event.setFuelType(request.fuelType());
+        event.setFuelType(type == TimelineEventType.RECHARGE ? FuelType.ELECTRIC : request.fuelType());
         event.setFuelName(request.fuelName());
         event.setStationName(request.stationName());
         updateVehicleMileage(vehicle, request.mileageKm());
         return toResponse(refuels.save(event));
+    }
+
+    private boolean isRechargeRequest(Vehicle vehicle, CreateRefuelEventRequest request) {
+        if (request.fuelType() == FuelType.ELECTRIC) {
+            return true;
+        }
+        return vehicle.getFuelType() == FuelType.ELECTRIC;
     }
 
     @Transactional
@@ -392,7 +415,7 @@ public class TimelineEventService {
     }
 
     private BigDecimal averageFuelConsumptionLitersPerKm(Vehicle vehicle) {
-        BigDecimal liters = events.findAllByVehicleAndTypeOrderByEventDateTimeDesc(vehicle, TimelineEventType.REFUEL)
+        BigDecimal liters = events.findAllByVehicleOrderByEventDateTimeDesc(vehicle)
                 .stream()
                 .filter(RefuelEvent.class::isInstance)
                 .map(RefuelEvent.class::cast)

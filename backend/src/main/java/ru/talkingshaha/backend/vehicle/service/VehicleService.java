@@ -19,6 +19,7 @@ import ru.talkingshaha.backend.part.model.PartStatus;
 import ru.talkingshaha.backend.part.repository.PartRepository;
 import ru.talkingshaha.backend.timeline.model.MaintenanceEvent;
 import ru.talkingshaha.backend.timeline.model.RefuelEvent;
+import ru.talkingshaha.backend.timeline.model.TimelineEventType;
 import ru.talkingshaha.backend.timeline.model.TripEvent;
 import ru.talkingshaha.backend.user.model.AppUser;
 import ru.talkingshaha.backend.user.service.CurrentUserService;
@@ -167,7 +168,10 @@ public class VehicleService {
     }
 
     private String refuelLabel(RefuelEvent event) {
-        return "Заправка";
+        if (event.getType() == TimelineEventType.RECHARGE) {
+            return "Recharge";
+        }
+        return "Refuel";
     }
 
     @Transactional(readOnly = true)
