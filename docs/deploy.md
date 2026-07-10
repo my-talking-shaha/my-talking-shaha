@@ -10,12 +10,11 @@ and migration policy.
 
 ## One-time server setup
 
-1. Install Git, Docker, and Docker Compose on the server.
-2. Clone this repository on the server:
+1. Install Docker and Docker Compose on the server. Git is not required.
+2. Create an application-state directory owned by the SSH deploy user:
 
    ```bash
-   git clone https://github.com/my-talking-shaha/my-talking-shaha.git /opt/my-talking-shaha
-   cd /opt/my-talking-shaha
+   install -d -m 0750 /opt/my-talking-shaha
    ```
 
 3. Make sure the SSH user used by GitHub Actions can run Docker:
@@ -26,26 +25,22 @@ and migration policy.
 
    Log out and log back in after changing groups.
 
-4. Optionally run the application once manually for a private local smoke test
-   with explicit local-only values:
+GitHub Actions creates `$SERVER_APP_PATH/runtime/docker` on the first deploy
+and copies only the deployment Compose manifest, router configuration, and
+blue-green script there. The server never stores a source checkout.
 
-   ```bash
-   cat > .env <<'EOF'
-   JWT_SECRET=local-jwt-secret-with-more-than-32-bytes
-   DB_USERNAME=local_shaha_user
-   DB_PASSWORD=local-db-password-32-bytes
-   TIMEWEB_AI_BASE_URL=https://agent.timeweb.cloud/api/v1/cloud-ai/agents/YOUR_AGENT_ID/v1
-   TIMEWEB_AI_TOKEN=local-placeholder-token
-   TIMEWEB_AI_MODEL=timeweb-agent
-   EOF
+## GHCR package setup
 
-   docker compose --env-file .env -f docker/docker-compose.yml down --remove-orphans
-   docker compose --env-file .env -f docker/docker-compose.yml up -d --build --remove-orphans backend frontend router
-   ```
+After the first successful CI run on `main`, GitHub Packages contains:
 
-   These local values are development-only. Do not leave them on the shared
-   development server, staging, or production-like deployment. Those
-   environments must use GitHub secrets or real environment variables instead.
+- `ghcr.io/my-talking-shaha/my-talking-shaha-backend`
+- `ghcr.io/my-talking-shaha/my-talking-shaha-frontend`
+
+An administrator must open each package's Settings in GitHub Packages and set
+its visibility to **Public** once. Public GHCR container packages can be pulled
+anonymously, so the deployment server does not need a package token or a
+`docker login`. The images are tagged with the full commit SHA; deployment
+always pulls that immutable tag rather than `latest`.
 
 ## GitHub secrets
 
@@ -54,7 +49,8 @@ Add these secrets in GitHub:
 - `SERVER_HOST` - server IP address or hostname.
 - `SERVER_USER` - SSH user.
 - `SERVER_SSH_KEY` - private SSH key with access to the server.
-- `SERVER_APP_PATH` - repository path on the server, for example `/opt/my-talking-shaha`.
+- `SERVER_APP_PATH` - application-state directory on the server, for example
+  `/opt/my-talking-shaha`; it is not a repository checkout.
 - `SERVER_PORT` - optional SSH port. If omitted, port `22` is used.
 - `JWT_SECRET` - production-grade JWT signing secret, at least 32 bytes, not
   the local development placeholder.
@@ -79,25 +75,22 @@ On every push to `main`, the workflow:
 4. Waits for `http://localhost/health`.
 5. Verifies the generated OpenAPI docs at `http://localhost/v3/api-docs`.
 6. Verifies Swagger UI and an authenticated API smoke flow through `/api`.
-7. Connects to the server over SSH.
-8. Goes to `SERVER_APP_PATH`.
-9. Runs `git fetch --prune origin main`.
-10. Updates the server checkout with `git pull --ff-only origin main`.
-11. Reads `.deploy/active-slot` to find the active slot, either `blue` or `green`.
-12. Selects the inactive slot as the target slot.
-13. Builds backend and frontend images for the target slot while the active slot keeps serving traffic.
-14. If the first Docker build fails, prunes the BuildKit cache and retries once.
-15. Starts the target backend and frontend containers without binding either app container to public port `80`.
-16. Verifies the target slot before switching traffic:
+7. Validates the image-only blue-green runtime manifest and deploy script.
+8. Publishes backend and frontend images to public GHCR with the full commit SHA.
+9. Connects to the server over SSH and uploads only the deployment runtime
+   files to `SERVER_APP_PATH/runtime/docker`.
+10. Reads `SERVER_APP_PATH/.deploy/active-slot` to find the active slot, either
+    `blue` or `green`.
+11. Selects the inactive slot as the target slot and pulls the exact GHCR
+    backend and frontend images for that commit SHA.
+12. Starts the target backend and frontend containers without binding either app container to public port `80`.
+13. Verifies the target slot before switching traffic:
     backend health, frontend health, OpenAPI, Swagger UI, Swagger CSS, and an expected `/api/v1/users/me` unauthorized response through the target frontend nginx.
-17. Switches traffic by updating `.deploy/nginx/active-upstreams.conf` and reloading the stable `talking-shaha-router` nginx container.
-18. Verifies public traffic after the switch:
+14. Switches traffic by updating `SERVER_APP_PATH/.deploy/nginx/active-upstreams.conf` and reloading the stable `talking-shaha-router` nginx container.
+15. Verifies public traffic after the switch:
     backend health, frontend health, OpenAPI, Swagger UI, Swagger CSS, and `/api` routing.
-19. If public post-switch verification fails, automatically reloads the router back to the previous slot and stops the failed target slot.
-
-   ```bash
-   bash docker/deploy-blue-green.sh
-   ```
+16. If public post-switch verification fails, automatically reloads the router
+    back to the previous slot and stops the failed target slot.
 
 After deployment, the web app should be available at `http://SERVER_HOST`.
 
@@ -106,15 +99,16 @@ The generated OpenAPI JSON should be available at `http://SERVER_HOST/v3/api-doc
 
 ## Blue-green runtime
 
-The blue-green deployment uses `docker/docker-compose.blue-green.yml`.
+The blue-green deployment uses the image-only
+`SERVER_APP_PATH/runtime/docker/docker-compose.blue-green.yml` manifest.
 
 - `backend-blue` and `frontend-blue` are the blue slot.
 - `backend-green` and `frontend-green` are the green slot.
 - `router` is the only service that binds public port `80`.
 - app containers expose ports only on Docker networks.
 - `postgres` is shared by both slots and keeps the `postgres-data` volume.
-- `.deploy/active-slot` stores the active slot name.
-- `.deploy/nginx/active-upstreams.conf` stores the nginx upstreams used by the router.
+- `SERVER_APP_PATH/.deploy/active-slot` stores the active slot name.
+- `SERVER_APP_PATH/.deploy/nginx/active-upstreams.conf` stores the nginx upstreams used by the router.
 
 Deployment logs include `active_slot`, `target_slot`, `switch_result`, and
 `rollback_status`. A healthy deploy ends with:
@@ -137,11 +131,14 @@ verification. To roll back manually later, SSH to the server and switch the
 router back to the inactive slot:
 
 ```bash
-cd /opt/my-talking-shaha
+export BACKEND_IMAGE=ghcr.io/my-talking-shaha/my-talking-shaha-backend:<deployed-commit-sha>
+export FRONTEND_IMAGE=ghcr.io/my-talking-shaha/my-talking-shaha-frontend:<deployed-commit-sha>
+export DEPLOY_STATE_DIR=/opt/my-talking-shaha/.deploy
+cd /opt/my-talking-shaha/runtime
 
 previous_slot=blue # or green
-mkdir -p .deploy/nginx
-cat > .deploy/nginx/active-upstreams.conf <<EOF
+mkdir -p "$DEPLOY_STATE_DIR/nginx"
+cat > "$DEPLOY_STATE_DIR/nginx/active-upstreams.conf" <<EOF
 upstream frontend_active {
     server frontend-${previous_slot}:80;
 }
@@ -150,7 +147,7 @@ upstream backend_active {
     server backend-${previous_slot}:8080;
 }
 EOF
-printf '%s\n' "$previous_slot" > .deploy/active-slot
+printf '%s\n' "$previous_slot" > "$DEPLOY_STATE_DIR/active-slot"
 docker exec talking-shaha-router nginx -t
 docker exec talking-shaha-router nginx -s reload
 
