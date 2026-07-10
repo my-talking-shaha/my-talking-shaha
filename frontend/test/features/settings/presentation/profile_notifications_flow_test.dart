@@ -3,10 +3,12 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:frontend/app/app.dart';
 import 'package:frontend/app/router.dart';
+import 'package:frontend/app/theme/app_theme.dart';
 import 'package:frontend/features/auth/di/auth_providers.dart';
 import 'package:frontend/features/auth/domain/entities/auth_credentials.dart';
 import 'package:frontend/features/auth/domain/entities/auth_session.dart';
 import 'package:frontend/features/auth/domain/repositories/auth_repository.dart';
+import 'package:frontend/features/auth/presentation/screens/login_screen.dart';
 import 'package:frontend/features/notifications/data/datasources/mock_notifications_datasource.dart';
 import 'package:frontend/features/notifications/presentation/providers/notifications_providers.dart';
 import 'package:shared_preferences_platform_interface/in_memory_shared_preferences_async.dart';
@@ -59,6 +61,61 @@ void main() {
     );
 
     expect(find.text('Выйти'), findsOneWidget);
+  });
+
+  testWidgets('theme and notifications controls keep local visual state', (
+    tester,
+  ) async {
+    await _pumpApp(tester);
+
+    Color segmentColor(String label) {
+      final segment = tester.widget<AnimatedContainer>(
+        find.ancestor(
+          of: find.text(label),
+          matching: find.byType(AnimatedContainer),
+        ),
+      );
+      return (segment.decoration! as BoxDecoration).color!;
+    }
+
+    expect(segmentColor('Dark'), AppColors.primary);
+    expect(segmentColor('Light'), Colors.transparent);
+    expect(tester.widget<Switch>(find.byType(Switch)).value, isTrue);
+
+    await tester.tap(find.text('Light'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byType(Switch));
+    await tester.pumpAndSettle();
+
+    expect(segmentColor('Light'), AppColors.primary);
+    expect(segmentColor('Dark'), Colors.transparent);
+    expect(tester.widget<Switch>(find.byType(Switch)).value, isFalse);
+  });
+
+  testWidgets('settings list responds only to vertical scrolling', (
+    tester,
+  ) async {
+    await _pumpApp(tester);
+
+    final scrollable = tester.state<ScrollableState>(
+      find.descendant(
+        of: find.byType(ListView),
+        matching: find.byType(Scrollable),
+      ),
+    );
+    expect(scrollable.position.pixels, 0);
+
+    await tester.drag(find.byType(ListView), const Offset(-280, 0));
+    await tester.pumpAndSettle();
+    expect(scrollable.position.pixels, 0);
+
+    await tester.drag(find.byType(ListView), const Offset(0, -320));
+    await tester.pumpAndSettle();
+    expect(scrollable.position.pixels, greaterThan(0));
+
+    await tester.drag(find.byType(ListView), const Offset(0, 640));
+    await tester.pumpAndSettle();
+    expect(scrollable.position.pixels, 0);
   });
 
   testWidgets('profile restores selected language on next launch', (
@@ -137,14 +194,54 @@ void main() {
     );
     expect(find.text('Test Driver'), findsOneWidget);
   });
+
+  testWidgets('successful logout returns to login', (tester) async {
+    await _pumpApp(tester);
+
+    await tester.dragUntilVisible(
+      find.text('Log out'),
+      find.byType(ListView),
+      const Offset(0, -320),
+    );
+    await tester.tap(find.text('Log out'));
+    await tester.pumpAndSettle();
+
+    expect(find.byType(LoginScreen), findsOneWidget);
+  });
+
+  testWidgets('failed logout keeps profile open and shows localized error', (
+    tester,
+  ) async {
+    await _pumpApp(
+      tester,
+      repository: const _AuthenticatedRepository(logoutFails: true),
+    );
+
+    await tester.tap(find.text('EN'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Russian (RU)'));
+    await tester.pumpAndSettle();
+
+    await tester.dragUntilVisible(
+      find.text('Выйти'),
+      find.byType(ListView),
+      const Offset(0, -320),
+    );
+    await tester.tap(find.text('Выйти'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Профиль'), findsOneWidget);
+    expect(find.text('Не удалось выйти. Попробуйте снова'), findsOneWidget);
+  });
 }
 
-Future<void> _pumpApp(WidgetTester tester) async {
+Future<void> _pumpApp(
+  WidgetTester tester, {
+  AuthRepository repository = const _AuthenticatedRepository(),
+}) async {
   final container = ProviderContainer(
     overrides: [
-      authRepositoryProvider.overrideWithValue(
-        const _AuthenticatedRepository(),
-      ),
+      authRepositoryProvider.overrideWithValue(repository),
       notificationsDatasourceProvider.overrideWithValue(
         const MockNotificationsDatasource(delay: Duration.zero),
       ),
@@ -163,7 +260,9 @@ Future<void> _pumpApp(WidgetTester tester) async {
 }
 
 final class _AuthenticatedRepository implements AuthRepository {
-  const _AuthenticatedRepository();
+  const _AuthenticatedRepository({this.logoutFails = false});
+
+  final bool logoutFails;
 
   @override
   Future<AuthSession?> restoreSession() async {
@@ -185,5 +284,9 @@ final class _AuthenticatedRepository implements AuthRepository {
   }
 
   @override
-  Future<void> logout() async {}
+  Future<void> logout() async {
+    if (logoutFails) {
+      throw StateError('logout failed');
+    }
+  }
 }

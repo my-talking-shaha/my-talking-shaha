@@ -1,12 +1,18 @@
-import 'dart:async';
-
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:frontend/app/localization/app_locale_controller.dart';
 import 'package:frontend/app/theme/app_theme.dart';
 import 'package:frontend/features/auth/di/auth_providers.dart';
+import 'package:frontend/features/settings/presentation/colors.dart';
+import 'package:frontend/features/settings/presentation/common/settings_section.dart';
+import 'package:frontend/features/settings/presentation/common/settings_tile.dart';
+import 'package:frontend/features/settings/presentation/utils/settings_actions.dart';
+import 'package:frontend/features/settings/presentation/utils/settings_profile_utils.dart';
+import 'package:frontend/features/settings/presentation/widgets/profile_header_card.dart';
+import 'package:frontend/features/settings/presentation/widgets/settings_language_choice.dart';
+import 'package:frontend/features/settings/presentation/widgets/settings_logout_button.dart';
+import 'package:frontend/features/settings/presentation/widgets/settings_theme_section.dart';
 import 'package:frontend/l10n/generated/app_localizations.dart';
-import 'package:go_router/go_router.dart';
 
 final class SettingsScreen extends ConsumerStatefulWidget {
   const SettingsScreen({super.key});
@@ -32,15 +38,15 @@ final class _SettingsScreenState extends ConsumerState<SettingsScreen> {
       data: (session) => session,
       orElse: () => null,
     );
-    final isLoggingOut = authState.isLoading && authState.hasValue;
-    final fullName = session?.fullName.trim();
-    final login = session?.login.trim();
-    final profileName = fullName == null || fullName.isEmpty
-        ? login == null || login.isEmpty
-              ? l10n.driver
-              : login
-        : fullName;
-    final profileLogin = login == null || login.isEmpty ? l10n.signedIn : login;
+    final profileName = settingsProfileName(
+      fullName: session?.fullName,
+      login: session?.login,
+      fallback: l10n.driver,
+    );
+    final profileLogin = settingsProfileLogin(
+      login: session?.login,
+      fallback: l10n.signedIn,
+    );
 
     return Scaffold(
       appBar: AppBar(
@@ -59,457 +65,68 @@ final class _SettingsScreenState extends ConsumerState<SettingsScreen> {
             AppSpacing.xxl,
           ),
           children: [
-            _ProfileHeaderCard(fullName: profileName, login: profileLogin),
+            ProfileHeaderCard(fullName: profileName, login: profileLogin),
             const SizedBox(height: AppSpacing.xxxl),
-            _ThemeSection(
+            SettingsThemeSection(
               selectedTheme: _theme,
               lightLabel: l10n.light,
               darkLabel: l10n.dark,
               title: l10n.theme,
               onChanged: (value) {
-                setState(() {
-                  _theme = value;
-                });
+                setState(() => _theme = value);
               },
             ),
             const SizedBox(height: AppSpacing.xxl),
-            _SettingsSection(
+            SettingsSection(
               title: l10n.general,
               children: [
-                _SettingsTile(
+                SettingsTile(
                   icon: Icons.language_rounded,
                   title: l10n.appLanguage,
                   subtitle: locale.languageCode == 'ru'
                       ? l10n.russian
                       : l10n.english,
-                  trailing: _LanguageChoice(
+                  trailing: SettingsLanguageChoice(
                     selectedLocale: locale,
                     englishLabel: l10n.english,
                     russianLabel: l10n.russian,
-                    onChanged: (value) {
-                      unawaited(
-                        ref
-                            .read(appLocaleControllerProvider.notifier)
-                            .setLocale(value),
-                      );
-                    },
+                    onChanged: (value) => setSettingsLocale(ref, value),
                   ),
                 ),
-                _SettingsTile(
+                SettingsTile(
                   icon: Icons.notifications_none_rounded,
                   title: l10n.notifications,
                   trailing: Switch(
                     value: _notificationsEnabled,
                     onChanged: (value) {
-                      setState(() {
-                        _notificationsEnabled = value;
-                      });
+                      setState(() => _notificationsEnabled = value);
                     },
                   ),
                 ),
               ],
             ),
             const SizedBox(height: AppSpacing.xxl),
-            _SettingsSection(
+            SettingsSection(
               title: l10n.vehicle,
               children: [
-                _SettingsTile(
+                SettingsTile(
                   actionKey: const ValueKey('profile_all_notifications_action'),
                   icon: Icons.notifications_active_outlined,
                   title: l10n.allNotifications,
                   trailing: const Icon(
                     Icons.chevron_right_rounded,
-                    color: AppColors.textMuted,
+                    color: SettingsColors.textMuted,
                   ),
-                  onTap: () => context.push('/notifications'),
+                  onTap: () => openSettingsNotifications(context),
                 ),
               ],
             ),
             const SizedBox(height: AppSpacing.xxxl),
-            SizedBox(
-              width: double.infinity,
-              child: OutlinedButton.icon(
-                onPressed: isLoggingOut
-                    ? null
-                    : () async {
-                        final messenger = ScaffoldMessenger.of(context);
-                        final message = await ref
-                            .read(authControllerProvider.notifier)
-                            .logout();
-                        if (message != null) {
-                          messenger.showSnackBar(
-                            SnackBar(
-                              content: Text(_localizedSettingsError(message)),
-                            ),
-                          );
-                        }
-                      },
-                icon: isLoggingOut
-                    ? const SizedBox.square(
-                        dimension: 18,
-                        child: CircularProgressIndicator(strokeWidth: 2),
-                      )
-                    : const Icon(Icons.logout),
-                label: Text(l10n.logOut),
-              ),
+            SettingsLogoutButton(
+              isLoggingOut: authState.isLoading && authState.hasValue,
+              label: l10n.logOut,
+              onPressed: () => logoutFromSettings(context, ref),
             ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  String _localizedSettingsError(String message) {
-    final l10n = AppLocalizations.of(context);
-    return switch (message) {
-      'Could not log out. Please try again' => l10n.couldNotLogOut,
-      _ => message,
-    };
-  }
-}
-
-final class _ProfileHeaderCard extends StatelessWidget {
-  const _ProfileHeaderCard({required this.fullName, required this.login});
-
-  final String fullName;
-  final String login;
-
-  @override
-  Widget build(BuildContext context) {
-    return _SurfaceCard(
-      child: ConstrainedBox(
-        constraints: const BoxConstraints(minHeight: 104),
-        child: Padding(
-          padding: const EdgeInsets.symmetric(
-            horizontal: AppSpacing.xl,
-            vertical: AppSpacing.lg,
-          ),
-          child: Row(
-            children: [
-              _ProfileAvatar(initials: _initials(fullName)),
-              const SizedBox(width: AppSpacing.lg),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      fullName,
-                      style: Theme.of(context).textTheme.titleLarge,
-                    ),
-                    const SizedBox(height: AppSpacing.xs),
-                    Text(login, style: Theme.of(context).textTheme.bodyMedium),
-                  ],
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
-  String _initials(String value) {
-    final parts = value
-        .trim()
-        .split(RegExp(r'\s+'))
-        .where((part) => part.isNotEmpty)
-        .toList();
-    if (parts.isEmpty) return '?';
-    return parts.take(2).map((part) => part[0].toUpperCase()).join();
-  }
-}
-
-final class _SurfaceCard extends StatelessWidget {
-  const _SurfaceCard({required this.child});
-
-  final Widget child;
-
-  @override
-  Widget build(BuildContext context) {
-    return Card(
-      shape: const RoundedRectangleBorder(
-        borderRadius: AppRadius.card,
-        side: BorderSide(color: AppColors.border),
-      ),
-      child: child,
-    );
-  }
-}
-
-final class _ProfileAvatar extends StatelessWidget {
-  const _ProfileAvatar({required this.initials});
-
-  final String initials;
-
-  @override
-  Widget build(BuildContext context) {
-    return Stack(
-      clipBehavior: Clip.none,
-      children: [
-        Container(
-          width: 64,
-          height: 64,
-          alignment: Alignment.center,
-          decoration: BoxDecoration(
-            color: AppColors.surfaceHighest,
-            shape: BoxShape.circle,
-            border: Border.all(color: AppColors.border),
-          ),
-          child: Text(
-            initials,
-            style: Theme.of(
-              context,
-            ).textTheme.titleLarge?.copyWith(color: AppColors.primaryLight),
-          ),
-        ),
-        Positioned(
-          right: -1,
-          bottom: 4,
-          child: Container(
-            width: 18,
-            height: 18,
-            decoration: BoxDecoration(
-              color: AppColors.primary,
-              shape: BoxShape.circle,
-              border: Border.all(color: AppColors.surface, width: 2),
-            ),
-            child: const Icon(
-              Icons.check_rounded,
-              color: AppColors.white,
-              size: 11,
-            ),
-          ),
-        ),
-      ],
-    );
-  }
-}
-
-final class _ThemeSection extends StatelessWidget {
-  const _ThemeSection({
-    required this.selectedTheme,
-    required this.lightLabel,
-    required this.darkLabel,
-    required this.title,
-    required this.onChanged,
-  });
-
-  final String selectedTheme;
-  final String lightLabel;
-  final String darkLabel;
-  final String title;
-  final ValueChanged<String> onChanged;
-
-  @override
-  Widget build(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        _SectionLabel(title),
-        const SizedBox(height: AppSpacing.md),
-        Container(
-          padding: const EdgeInsets.all(AppSpacing.xs),
-          decoration: BoxDecoration(
-            color: AppColors.surface,
-            borderRadius: AppRadius.input,
-            border: Border.all(color: AppColors.border),
-          ),
-          child: Row(
-            children: [
-              _ThemeSegment(
-                label: lightLabel,
-                selected: selectedTheme == 'light',
-                onTap: () => onChanged('light'),
-              ),
-              _ThemeSegment(
-                label: darkLabel,
-                selected: selectedTheme == 'dark',
-                onTap: () => onChanged('dark'),
-              ),
-            ],
-          ),
-        ),
-      ],
-    );
-  }
-}
-
-final class _ThemeSegment extends StatelessWidget {
-  const _ThemeSegment({
-    required this.label,
-    required this.selected,
-    required this.onTap,
-  });
-
-  final String label;
-  final bool selected;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    return Expanded(
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: AppRadius.input,
-        child: AnimatedContainer(
-          duration: const Duration(milliseconds: 160),
-          alignment: Alignment.center,
-          padding: const EdgeInsets.symmetric(vertical: AppSpacing.md),
-          decoration: BoxDecoration(
-            color: selected ? AppColors.primary : Colors.transparent,
-            borderRadius: AppRadius.input,
-          ),
-          child: Text(
-            label,
-            style: Theme.of(context).textTheme.labelLarge?.copyWith(
-              color: selected ? AppColors.white : AppColors.textSecondary,
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-final class _LanguageChoice extends StatelessWidget {
-  const _LanguageChoice({
-    required this.selectedLocale,
-    required this.englishLabel,
-    required this.russianLabel,
-    required this.onChanged,
-  });
-
-  final Locale selectedLocale;
-  final String englishLabel;
-  final String russianLabel;
-  final ValueChanged<Locale> onChanged;
-
-  @override
-  Widget build(BuildContext context) {
-    final selectedLanguageCode = selectedLocale.languageCode == 'ru'
-        ? 'RU'
-        : 'EN';
-
-    return PopupMenuButton<Locale>(
-      initialValue: selectedLocale,
-      color: AppColors.surfaceHighest,
-      shape: const RoundedRectangleBorder(borderRadius: AppRadius.input),
-      onSelected: onChanged,
-      itemBuilder: (context) => [
-        PopupMenuItem(
-          value: const Locale('en'),
-          child: Text('$englishLabel (EN)'),
-        ),
-        PopupMenuItem(
-          value: const Locale('ru'),
-          child: Text('$russianLabel (RU)'),
-        ),
-      ],
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Text(
-            selectedLanguageCode,
-            style: Theme.of(context).textTheme.labelLarge,
-          ),
-          const SizedBox(width: AppSpacing.xs),
-          const Icon(Icons.chevron_right_rounded, color: AppColors.textMuted),
-        ],
-      ),
-    );
-  }
-}
-
-final class _SettingsSection extends StatelessWidget {
-  const _SettingsSection({required this.title, required this.children});
-
-  final String title;
-  final List<Widget> children;
-
-  @override
-  Widget build(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        _SectionLabel(title),
-        const SizedBox(height: AppSpacing.md),
-        _SurfaceCard(
-          child: Column(children: [for (final child in children) child]),
-        ),
-      ],
-    );
-  }
-}
-
-final class _SectionLabel extends StatelessWidget {
-  const _SectionLabel(this.title);
-
-  final String title;
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.only(left: AppSpacing.xs),
-      child: Text(
-        title.toUpperCase(),
-        style: Theme.of(context).textTheme.labelMedium?.copyWith(
-          letterSpacing: 1.8,
-          color: AppColors.textSecondary,
-        ),
-      ),
-    );
-  }
-}
-
-final class _SettingsTile extends StatelessWidget {
-  const _SettingsTile({
-    required this.icon,
-    required this.title,
-    required this.trailing,
-    this.actionKey,
-    this.onTap,
-    this.subtitle,
-  });
-
-  final Key? actionKey;
-  final IconData icon;
-  final String title;
-  final String? subtitle;
-  final Widget trailing;
-  final VoidCallback? onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    return InkWell(
-      key: actionKey,
-      onTap: onTap,
-      borderRadius: AppRadius.card,
-      child: Padding(
-        padding: const EdgeInsets.symmetric(
-          horizontal: AppSpacing.lg,
-          vertical: AppSpacing.lg,
-        ),
-        child: Row(
-          children: [
-            Icon(icon, color: AppColors.textPrimary, size: 24),
-            const SizedBox(width: AppSpacing.md),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(title, style: Theme.of(context).textTheme.titleMedium),
-                  if (subtitle != null) ...[
-                    const SizedBox(height: AppSpacing.xs),
-                    Text(
-                      subtitle!,
-                      style: Theme.of(context).textTheme.bodySmall,
-                    ),
-                  ],
-                ],
-              ),
-            ),
-            const SizedBox(width: AppSpacing.md),
-            trailing,
           ],
         ),
       ),
