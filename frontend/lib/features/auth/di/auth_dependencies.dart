@@ -9,9 +9,7 @@ import 'package:frontend/features/auth/data/datasources/auth_secure_storage.dart
 import 'package:frontend/features/auth/data/datasources/auth_session_storage.dart';
 import 'package:frontend/features/auth/data/datasources/shared_preferences_auth_session_storage.dart';
 import 'package:frontend/features/auth/data/repositories/auth_repository_impl.dart';
-import 'package:frontend/features/auth/domain/entities/auth_session.dart';
 import 'package:frontend/features/auth/domain/repositories/auth_repository.dart';
-import 'package:frontend/features/auth/presentation/controllers/auth_controller.dart';
 
 final flutterSecureStorageProvider = Provider<FlutterSecureStorage>((ref) {
   return const FlutterSecureStorage();
@@ -37,9 +35,3 @@ final authRepositoryProvider = Provider<AuthRepository>((ref) {
     storage: ref.watch(authSessionStorageProvider),
   );
 });
-
-final authControllerProvider =
-    AsyncNotifierProvider<AuthController, AuthSession?>(
-      AuthController.new,
-      retry: (_, _) => null,
-    );

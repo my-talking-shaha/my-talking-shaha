@@ -4,7 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:frontend/app/localization/app_locale_controller.dart';
 import 'package:frontend/app/theme/app_theme.dart';
-import 'package:frontend/features/auth/presentation/providers/auth_providers.dart';
+import 'package:frontend/features/auth/di/auth_providers.dart';
 import 'package:frontend/l10n/generated/app_localizations.dart';
 import 'package:go_router/go_router.dart';
 
