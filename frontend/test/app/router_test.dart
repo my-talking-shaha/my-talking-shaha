@@ -25,9 +25,9 @@ import 'package:frontend/features/dashboard/presentation/providers/dashboard_pro
 import 'package:frontend/features/dashboard/presentation/screens/dashboard_screen.dart';
 import 'package:frontend/features/garage/data/datasources/garage_datasource.dart';
 import 'package:frontend/features/garage/data/datasources/in_memory_garage_datasource.dart';
+import 'package:frontend/features/garage/di/garage_providers.dart';
 import 'package:frontend/features/garage/domain/entities/vehicle.dart';
 import 'package:frontend/features/garage/domain/entities/vehicle_draft.dart';
-import 'package:frontend/features/garage/presentation/providers/garage_providers.dart';
 import 'package:frontend/features/history/data/datasources/history_datasource.dart';
 import 'package:frontend/features/history/data/datasources/mock_history_datasource.dart';
 import 'package:frontend/features/history/domain/entities/history_event.dart';

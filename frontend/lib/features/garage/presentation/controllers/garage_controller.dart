@@ -1,6 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:frontend/features/garage/di/garage_providers.dart';
 import 'package:frontend/features/garage/domain/entities/vehicle.dart';
-import 'package:frontend/features/garage/presentation/providers/garage_providers.dart';
 
 final class GarageController extends AsyncNotifier<List<Vehicle>> {
   @override

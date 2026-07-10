@@ -2,10 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:frontend/features/garage/di/garage_providers.dart';
 import 'package:frontend/features/garage/domain/entities/garage_vehicle.dart';
 import 'package:frontend/features/garage/domain/entities/vehicle_draft.dart';
 import 'package:frontend/features/garage/domain/repositories/garage_repository.dart';
-import 'package:frontend/features/garage/presentation/providers/garage_providers.dart';
 import 'package:frontend/features/garage/presentation/screens/add_vehicle_screen.dart';
 import 'package:frontend/features/garage/presentation/screens/garage_screen.dart';
 import 'package:frontend/features/garage/presentation/widgets/vehicle_garage_card.dart';
@@ -147,6 +147,55 @@ void main() {
       findsOneWidget,
     );
   });
+
+  testWidgets(
+    'right swipe cannot open actions and closes an open card',
+    (tester) async {
+      final repository = _FakeGarageRepository(
+        vehicles: [_vehicle(id: 'vehicle_123', brand: 'Lada', model: '2106')],
+      );
+
+      await _pumpGarage(tester, repository);
+
+      const foregroundKey = ValueKey('garage_swipe_foreground');
+      final foreground = find.byKey(foregroundKey);
+
+      double horizontalOffset() {
+        return tester.widget<AnimatedContainer>(foreground).transform![12];
+      }
+
+      expect(horizontalOffset(), 0);
+
+      await tester.drag(
+        find.byType(VehicleGarageCard),
+        const Offset(160, 0),
+      );
+      await tester.pumpAndSettle();
+      expect(horizontalOffset(), 0);
+
+      await tester.drag(
+        find.byType(VehicleGarageCard),
+        const Offset(-40, 0),
+      );
+      await tester.pumpAndSettle();
+      expect(horizontalOffset(), 0);
+
+      await tester.drag(
+        find.byType(VehicleGarageCard),
+        const Offset(-160, 0),
+      );
+      await tester.pumpAndSettle();
+      expect(horizontalOffset(), -120);
+
+      await tester.drag(
+        find.byType(VehicleGarageCard),
+        const Offset(160, 0),
+      );
+      await tester.pumpAndSettle();
+      expect(horizontalOffset(), 0);
+      expect(find.text('chat:vehicle_123'), findsNothing);
+    },
+  );
 
   testWidgets('edit action opens prefilled form and saves changes', (
     tester,

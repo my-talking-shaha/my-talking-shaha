@@ -12,7 +12,7 @@ import 'package:frontend/features/auth/presentation/screens/registration_screen.
 import 'package:frontend/features/chat/presentation/screens/chat_screen.dart';
 import 'package:frontend/features/dashboard/presentation/providers/dashboard_providers.dart';
 import 'package:frontend/features/dashboard/presentation/screens/dashboard_screen.dart';
-import 'package:frontend/features/garage/presentation/providers/garage_providers.dart';
+import 'package:frontend/features/garage/di/garage_providers.dart';
 import 'package:frontend/features/garage/presentation/screens/add_vehicle_screen.dart';
 import 'package:frontend/features/garage/presentation/screens/garage_screen.dart';
 import 'package:frontend/features/history/domain/entities/history_event.dart';
