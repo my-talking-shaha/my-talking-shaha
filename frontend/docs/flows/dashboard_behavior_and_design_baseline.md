@@ -86,5 +86,5 @@ All dashboard-owned presentation colors are centralized in
 | `maintenanceEventBackground` | `0xFF123138` |
 
 The embedded maintenance card belongs to the `parts` feature, so its internal
-colors remain centralized in that feature's `parts_design_tokens.dart`. Moving
+colors remain centralized in that feature's `presentation/colors.dart`. Moving
 those tokens into dashboard would reverse the intended feature ownership.

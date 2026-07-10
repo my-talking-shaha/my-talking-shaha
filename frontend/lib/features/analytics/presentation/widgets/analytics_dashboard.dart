@@ -13,7 +13,7 @@ import 'package:frontend/features/analytics/presentation/widgets/analytics_filte
 import 'package:frontend/features/analytics/presentation/widgets/analytics_summary_card.dart';
 import 'package:frontend/features/analytics/presentation/widgets/history_analysis_card.dart';
 import 'package:frontend/features/analytics/presentation/widgets/mileage_trend_card.dart';
-import 'package:frontend/features/parts/presentation/providers/parts_providers.dart';
+import 'package:frontend/features/parts/di/parts_providers.dart';
 import 'package:frontend/features/parts/presentation/widgets/maintenance_forecast_card.dart';
 import 'package:frontend/l10n/generated/app_localizations.dart';
 

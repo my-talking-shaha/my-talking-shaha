@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-abstract final class PartsDesignColors {
+abstract final class PartsColors {
   static const headerText = Color(0xFFC4C5D9);
   static const headerTextMuted = Color(0xFFB8C3FF);
   static const cardBackground = Color(0xFF1C1F25);
@@ -14,9 +14,6 @@ abstract final class PartsDesignColors {
   static const warning = Color(0xFFFFD08A);
   static const critical = Color(0xFFFFAAA5);
   static const unknown = Color(0xFF8E90A2);
-}
-
-abstract final class PartsDesignMetrics {
-  static const double cardRadius = 16;
-  static const double progressHeight = 7;
+  static const border = Color(0xFF2B303B);
+  static const error = Color(0xFFE85D75);
 }

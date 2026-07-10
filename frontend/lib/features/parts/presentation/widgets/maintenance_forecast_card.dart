@@ -1,11 +1,13 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_svg/flutter_svg.dart';
 import 'package:frontend/app/theme/app_theme.dart';
 import 'package:frontend/features/parts/domain/entities/vehicle_part.dart';
+import 'package:frontend/features/parts/presentation/colors.dart';
+import 'package:frontend/features/parts/presentation/metrics.dart';
+import 'package:frontend/features/parts/presentation/utils/maintenance_forecast_utils.dart';
+import 'package:frontend/features/parts/presentation/widgets/forecast_summary.dart';
+import 'package:frontend/features/parts/presentation/widgets/maintenance_forecast_header.dart';
 import 'package:frontend/features/parts/presentation/widgets/part_resource_row.dart';
-import 'package:frontend/features/parts/presentation/widgets/parts_design_tokens.dart';
 import 'package:frontend/features/parts/presentation/widgets/resource_badge.dart';
-import 'package:frontend/l10n/generated/app_localizations.dart';
 
 final class MaintenanceForecastCard extends StatelessWidget {
   const MaintenanceForecastCard({
@@ -19,60 +21,19 @@ final class MaintenanceForecastCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context);
-    final knownParts = parts
-        .where((part) => part.remainingPercent != null)
-        .toList(growable: false);
-    final aggregatePercent = knownParts.isEmpty
-        ? null
-        : _averagePercent(knownParts);
+    final aggregatePercent = averagePartsPercent(parts);
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: AppSpacing.xs),
-          child: Row(
-            children: [
-              Expanded(
-                child: Text(
-                  l10n.maintenanceForecastCaps,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                    color: PartsDesignColors.headerText,
-                    fontSize: 13,
-                    fontWeight: FontWeight.w700,
-                    letterSpacing: 0.8,
-                    height: 1,
-                  ),
-                ),
-              ),
-              const SizedBox(width: AppSpacing.sm),
-              Expanded(
-                child: Text(
-                  lastUpdatedLabel ?? l10n.updatedTwoHoursAgo,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  textAlign: TextAlign.end,
-                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                    color: PartsDesignColors.headerTextMuted,
-                    fontSize: 11,
-                    fontWeight: FontWeight.w700,
-                    height: 1,
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ),
+        MaintenanceForecastHeader(lastUpdatedLabel: lastUpdatedLabel),
         const SizedBox(height: AppSpacing.md),
         DecoratedBox(
           key: const ValueKey('maintenance_forecast_card_body'),
           decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(PartsDesignMetrics.cardRadius),
-            color: PartsDesignColors.cardBackground,
-            border: Border.all(color: AppColors.border),
+            borderRadius: BorderRadius.circular(PartsMetrics.cardRadius),
+            color: PartsColors.cardBackground,
+            border: Border.all(color: PartsColors.border),
           ),
           child: Padding(
             padding: const EdgeInsets.fromLTRB(
@@ -87,7 +48,7 @@ final class MaintenanceForecastCard extends StatelessWidget {
                 Row(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Expanded(child: _ForecastSummary(parts: parts)),
+                    Expanded(child: ForecastSummary(parts: parts)),
                     const SizedBox(width: AppSpacing.lg),
                     ResourceBadge(percent: aggregatePercent),
                   ],
@@ -104,138 +65,4 @@ final class MaintenanceForecastCard extends StatelessWidget {
       ],
     );
   }
-}
-
-final class _ForecastSummary extends StatelessWidget {
-  const _ForecastSummary({required this.parts});
-
-  static const double _averageDailyMileageKm = 53;
-
-  final List<VehiclePart> parts;
-
-  @override
-  Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context);
-    final criticalParts = parts
-        .where((part) => part.status == PartResourceStatus.critical)
-        .toList(growable: false);
-    final nextPositiveRemainingKm = parts
-        .map((part) => part.remainingKm)
-        .whereType<int>()
-        .where((remainingKm) => remainingKm > 0)
-        .fold<int?>(null, (min, remainingKm) {
-          if (min == null || remainingKm < min) {
-            return remainingKm;
-          }
-
-          return min;
-        });
-
-    final headline = criticalParts.isNotEmpty
-        ? l10n.serviceNeededNow
-        : nextPositiveRemainingKm != null
-        ? l10n.inKm(_formatInt(nextPositiveRemainingKm))
-        : l10n.notEnoughData;
-    final caption = criticalParts.isNotEmpty
-        ? _criticalCaption(l10n, criticalParts)
-        : nextPositiveRemainingKm != null
-        ? _approximateWindow(l10n, nextPositiveRemainingKm)
-        : l10n.addLifetimeData;
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            SvgPicture.asset(
-              'assets/icons/parts/maintenance.svg',
-              width: 24,
-              height: 24,
-              colorFilter: const ColorFilter.mode(
-                PartsDesignColors.warning,
-                BlendMode.srcIn,
-              ),
-            ),
-            const SizedBox(width: AppSpacing.sm),
-            Flexible(
-              child: Text(
-                l10n.nextService,
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                  color: PartsDesignColors.bodyText,
-                  fontSize: 14,
-                  fontWeight: FontWeight.w700,
-                  letterSpacing: 0.6,
-                  height: 1,
-                ),
-              ),
-            ),
-          ],
-        ),
-        const SizedBox(height: AppSpacing.lg),
-        Text(
-          headline,
-          maxLines: 2,
-          overflow: TextOverflow.ellipsis,
-          style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-            color: PartsDesignColors.bodyText,
-            fontSize: 30,
-            fontWeight: FontWeight.w700,
-            height: 1.25,
-          ),
-        ),
-        const SizedBox(height: AppSpacing.sm),
-        Text(
-          caption,
-          maxLines: 2,
-          overflow: TextOverflow.ellipsis,
-          style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-            color: PartsDesignColors.bodyTextMuted,
-            fontSize: 16,
-            fontWeight: FontWeight.w400,
-            height: 1.45,
-          ),
-        ),
-      ],
-    );
-  }
-
-  String _approximateWindow(AppLocalizations l10n, int remainingKm) {
-    final days = (remainingKm / _averageDailyMileageKm).ceil();
-    final displayDays = days < 1 ? 1 : days;
-
-    return l10n.approxDateInDays(displayDays);
-  }
-
-  String _criticalCaption(
-    AppLocalizations l10n,
-    List<VehiclePart> criticalParts,
-  ) {
-    if (criticalParts.length == 1) {
-      return l10n.replacePartNow(criticalParts.first.name);
-    }
-
-    return l10n.replaceCriticalPartsNow(criticalParts.length);
-  }
-}
-
-int _averagePercent(List<VehiclePart> knownParts) {
-  final total = knownParts.fold<int>(
-    0,
-    (sum, part) => sum + part.remainingPercent!.clamp(0, 100).toInt(),
-  );
-
-  return (total / knownParts.length).round().clamp(0, 100);
-}
-
-String _formatInt(int value) {
-  final prefix = value < 0 ? '-' : '';
-  final formatted = value.abs().toString().replaceAllMapped(
-    RegExp(r'\B(?=(\d{3})+(?!\d))'),
-    (_) => ' ',
-  );
-
-  return '$prefix$formatted';
 }

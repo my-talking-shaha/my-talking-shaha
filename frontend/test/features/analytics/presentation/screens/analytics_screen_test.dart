@@ -5,7 +5,7 @@ import 'package:frontend/app/theme/app_theme.dart';
 import 'package:frontend/features/analytics/data/datasources/mock_analytics_datasource.dart';
 import 'package:frontend/features/analytics/di/analytics_providers.dart';
 import 'package:frontend/features/analytics/presentation/screens/analytics_screen.dart';
-import 'package:frontend/features/parts/presentation/providers/parts_providers.dart';
+import 'package:frontend/features/parts/di/parts_providers.dart';
 import 'package:frontend/l10n/generated/app_localizations.dart';
 import 'package:go_router/go_router.dart';
 

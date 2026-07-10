@@ -22,7 +22,7 @@ import 'package:frontend/features/history/presentation/screens/add_history_event
 import 'package:frontend/features/history/presentation/screens/history_screen.dart';
 import 'package:frontend/features/notifications/presentation/screens/notification_details_screen.dart';
 import 'package:frontend/features/notifications/presentation/screens/notifications_screen.dart';
-import 'package:frontend/features/parts/presentation/providers/parts_providers.dart';
+import 'package:frontend/features/parts/di/parts_providers.dart';
 import 'package:frontend/features/settings/presentation/screens/settings_screen.dart';
 import 'package:frontend/l10n/generated/app_localizations.dart';
 import 'package:go_router/go_router.dart';
