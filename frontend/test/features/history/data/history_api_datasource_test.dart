@@ -76,6 +76,31 @@ void main() {
       expect(payload['liters'], 42.5);
     });
 
+    test(
+      'keeps recharge payload on refuel contract with electric fuel type',
+      () {
+        final payload = HistoryApiEventMapper.createPayload(
+          HistoryEvent(
+            id: 'local-recharge',
+            carId: 'vehicle_1',
+            type: HistoryEventType.fuel,
+            occurredAt: DateTime.utc(2026, 6, 12, 14, 30),
+            title: 'Recharge',
+            currentMileageKm: 10000,
+            details: FuelDetails(
+              cost: 1200,
+              liters: 37.5,
+              fuelType: 'AC charging',
+            ),
+          ),
+        );
+
+        expect(payload['liters'], 37.5);
+        expect(payload['fuelType'], 'ELECTRIC');
+        expect(payload['fuelName'], 'AC charging');
+      },
+    );
+
     test('uses event-specific title instead of backend type label', () {
       final refuel = HistoryApiEventMapper.fromJson(const {
         'id': '044c10dc-13d1-4587-9169-e9e79789ea45',

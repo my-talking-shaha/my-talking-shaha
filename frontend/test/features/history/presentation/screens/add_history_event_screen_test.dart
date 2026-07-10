@@ -78,6 +78,46 @@ void main() {
     expect(details.liters, 42.5);
   });
 
+  testWidgets('uses recharge labels for electric vehicle fuel events', (
+    tester,
+  ) async {
+    HistoryEvent? savedEvent;
+    await _pumpScreen(
+      tester,
+      isElectricVehicle: true,
+      onSave: (event) async => savedEvent = event,
+    );
+
+    expect(find.text('New recharge'), findsOneWidget);
+    expect(find.text('RECHARGE DETAILS'), findsOneWidget);
+    expect(find.text('ENERGY'), findsOneWidget);
+    expect(find.text('CHARGER TYPE'), findsOneWidget);
+    expect(find.text('AC charging'), findsOneWidget);
+
+    await tester.enterText(
+      find.byKey(const ValueKey('event-title')),
+      'Evening recharge',
+    );
+    await tester.enterText(
+      find.byKey(const ValueKey('fuel-mileage')),
+      '124600',
+    );
+    await tester.enterText(find.byKey(const ValueKey('fuel-liters')), '0');
+    await tester.enterText(find.byKey(const ValueKey('fuel-cost')), '3000');
+    await _tapSave(tester);
+
+    expect(savedEvent, isNull);
+    expect(find.text('Must be > 0 kWh'), findsOneWidget);
+
+    await tester.enterText(find.byKey(const ValueKey('fuel-liters')), '37.5');
+    await _tapSave(tester);
+
+    final details = savedEvent?.details as FuelDetails;
+    expect(savedEvent?.title, 'Evening recharge');
+    expect(details.liters, 37.5);
+    expect(details.fuelType, 'AC charging');
+  });
+
   testWidgets('localizes fuel amount validation errors', (tester) async {
     await _pumpScreen(tester, locale: const Locale('ru'), onSave: (_) async {});
 
@@ -392,6 +432,7 @@ Future<void> _pumpScreen(
   DeleteHistoryPhoto? deletePhoto,
   Locale locale = const Locale('en'),
   HistoryEvent? initialEvent,
+  bool isElectricVehicle = false,
 }) async {
   await tester.pumpWidget(
     MaterialApp(
@@ -404,6 +445,7 @@ Future<void> _pumpScreen(
         initialEvent: initialEvent,
         initialMileageKm: 124580,
         initialOccurredAt: DateTime(2026, 6, 20, 12),
+        isElectricVehicle: isElectricVehicle,
         onSave: onSave,
         pickPhoto: pickPhoto,
         pickPhotos: pickPhotos,

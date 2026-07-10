@@ -2,25 +2,35 @@ import 'package:frontend/features/history/domain/entities/history_event_type.dar
 import 'package:frontend/l10n/generated/app_localizations.dart';
 
 abstract final class HistoryEventFormUtils {
-  static String titleFor(HistoryEventType type, [AppLocalizations? l10n]) {
+  static String titleFor(
+    HistoryEventType type, {
+    AppLocalizations? l10n,
+    bool isElectricVehicle = false,
+  }) {
     if (l10n == null) {
       return switch (type) {
-        HistoryEventType.fuel => 'New refueling',
+        HistoryEventType.fuel =>
+          isElectricVehicle ? 'New recharge' : 'New refueling',
         HistoryEventType.maintenance => 'New maintenance',
         HistoryEventType.trip => 'New trip',
       };
     }
 
     return switch (type) {
-      HistoryEventType.fuel => l10n.newRefueling,
+      HistoryEventType.fuel =>
+        isElectricVehicle ? l10n.newRecharge : l10n.newRefueling,
       HistoryEventType.maintenance => l10n.newMaintenance,
       HistoryEventType.trip => l10n.newTrip,
     };
   }
 
-  static String editTitleFor(HistoryEventType type) {
+  static String editTitleFor(
+    HistoryEventType type, {
+    bool isElectricVehicle = false,
+  }) {
     return switch (type) {
-      HistoryEventType.fuel => 'Edit refueling',
+      HistoryEventType.fuel =>
+        isElectricVehicle ? 'Edit recharge' : 'Edit refueling',
       HistoryEventType.maintenance => 'Edit maintenance',
       HistoryEventType.trip => 'Edit trip',
     };
@@ -107,6 +117,17 @@ abstract final class HistoryEventFormUtils {
     if (liters == null) return l10n?.fuelLitersInvalidNumber ?? 'Enter number';
     if (liters <= 0) return l10n?.fuelLitersMustBePositive ?? '> 0 L';
     if (liters > 100) return l10n?.fuelLitersMax(100) ?? 'Max 100 L';
+    return null;
+  }
+
+  static String? validateEnergyKwh(String? value, {AppLocalizations? l10n}) {
+    final energyKwh = parseDecimal(value);
+    if (energyKwh == null) {
+      return l10n?.energyKwhInvalidNumber ?? 'Enter energy';
+    }
+    if (energyKwh <= 0) {
+      return l10n?.energyKwhMustBePositive ?? 'Must be > 0 kWh';
+    }
     return null;
   }
 

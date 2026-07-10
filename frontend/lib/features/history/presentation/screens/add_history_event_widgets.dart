@@ -4,18 +4,26 @@ final class _EventTypeSelector extends StatelessWidget {
   const _EventTypeSelector({
     required this.selectedType,
     required this.onSelected,
+    this.isElectricVehicle = false,
     this.enabled = true,
   });
 
   final HistoryEventType selectedType;
   final ValueChanged<HistoryEventType> onSelected;
+  final bool isElectricVehicle;
   final bool enabled;
 
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
     final options = [
-      (HistoryEventType.fuel, l10n.fuelEvent, 'assets/icons/events/gas.svg'),
+      (
+        HistoryEventType.fuel,
+        isElectricVehicle ? l10n.rechargeEvent : l10n.fuelEvent,
+        isElectricVehicle
+            ? 'assets/icons/events/charge.svg'
+            : 'assets/icons/events/gas.svg',
+      ),
       (
         HistoryEventType.maintenance,
         l10n.maintenanceEvent,

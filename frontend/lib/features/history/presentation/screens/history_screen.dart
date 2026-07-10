@@ -42,6 +42,13 @@ final class _HistoryScreenState extends ConsumerState<HistoryScreen> {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
     final eventsState = ref.watch(historyEventsProvider(widget.vehicleId));
+    final engineTypeState = ref.watch(
+      vehicleEngineTypeProvider(widget.vehicleId),
+    );
+    final isElectricVehicle = engineTypeState.maybeWhen(
+      data: (engineType) => _isElectricEngine(engineType),
+      orElse: () => false,
+    );
 
     return Scaffold(
       appBar: AppBar(
@@ -95,6 +102,7 @@ final class _HistoryScreenState extends ConsumerState<HistoryScreen> {
             const SizedBox(height: AppSpacing.md),
             _TypeFilters(
               selectedType: _selectedType,
+              isElectricVehicle: isElectricVehicle,
               onSelected: (type) {
                 setState(() => _selectedType = type);
               },
@@ -228,4 +236,8 @@ final class _HistoryScreenState extends ConsumerState<HistoryScreen> {
     ref.invalidate(vehicleMileageProvider(vehicleId));
     ref.invalidate(vehiclePartsProvider(vehicleId));
   }
+}
+
+bool _isElectricEngine(String? engineType) {
+  return engineType?.toLowerCase() == 'electric';
 }

@@ -214,6 +214,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get fuel => 'FUEL';
 
   @override
+  String get charge => 'CHARGE';
+
+  @override
   String get noIssues => 'No issues';
 
   @override
@@ -460,6 +463,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get newRefueling => 'New refueling';
 
   @override
+  String get newRecharge => 'New recharge';
+
+  @override
   String get newMaintenance => 'New maintenance';
 
   @override
@@ -484,7 +490,13 @@ class AppLocalizationsEn extends AppLocalizations {
   String get refuelingDetails => 'REFUELING DETAILS';
 
   @override
+  String get rechargeDetails => 'RECHARGE DETAILS';
+
+  @override
   String get amount => 'AMOUNT';
+
+  @override
+  String get energy => 'ENERGY';
 
   @override
   String get fuelLitersInvalidNumber => 'Enter amount';
@@ -498,10 +510,19 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
+  String get energyKwhInvalidNumber => 'Enter energy';
+
+  @override
+  String get energyKwhMustBePositive => 'Must be > 0 kWh';
+
+  @override
   String get cost => 'COST';
 
   @override
   String get fuelType => 'FUEL TYPE';
+
+  @override
+  String get chargerType => 'CHARGER TYPE';
 
   @override
   String get mileageForecastInfo =>
@@ -564,6 +585,9 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get fuelEvent => 'Fuel';
+
+  @override
+  String get rechargeEvent => 'Recharge';
 
   @override
   String get maintenanceEvent => 'Maintenance';

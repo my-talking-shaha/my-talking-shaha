@@ -27,6 +27,12 @@ typedef PersistHistoryPhoto =
 typedef DeleteHistoryPhoto = Future<void> Function(String path);
 
 const _defaultFuelTypes = ['92 octane', '95 octane', '98 octane', 'Diesel'];
+const _defaultChargerTypes = [
+  'AC charging',
+  'DC fast charging',
+  'Home charging',
+  'Supercharger',
+];
 
 final class AddHistoryEventScreen extends StatefulWidget {
   const AddHistoryEventScreen({
@@ -40,6 +46,7 @@ final class AddHistoryEventScreen extends StatefulWidget {
     this.initialMileageKm = 0,
     this.initialType = HistoryEventType.fuel,
     this.initialOccurredAt,
+    this.isElectricVehicle = false,
     super.key,
   });
 
@@ -53,6 +60,7 @@ final class AddHistoryEventScreen extends StatefulWidget {
   final int initialMileageKm;
   final HistoryEventType initialType;
   final DateTime? initialOccurredAt;
+  final bool isElectricVehicle;
 
   @override
   State<AddHistoryEventScreen> createState() => _AddHistoryEventScreenState();
@@ -112,6 +120,9 @@ final class _AddHistoryEventScreenState extends State<AddHistoryEventScreen> {
       _mileageController.text = widget.initialMileageKm.toString();
       _tripStartController.text = widget.initialMileageKm.toString();
     }
+    if (initialEvent == null && widget.isElectricVehicle) {
+      _fuelType = _defaultChargerTypes.first;
+    }
     if (!kIsWeb &&
         widget.pickPhoto == null &&
         widget.pickPhotos == null &&
@@ -144,8 +155,15 @@ final class _AddHistoryEventScreenState extends State<AddHistoryEventScreen> {
       appBar: AppBar(
         title: Text(
           _isEditing
-              ? HistoryEventFormUtils.editTitleFor(_type)
-              : HistoryEventFormUtils.titleFor(_type, l10n),
+              ? HistoryEventFormUtils.editTitleFor(
+                  _type,
+                  isElectricVehicle: widget.isElectricVehicle,
+                )
+              : HistoryEventFormUtils.titleFor(
+                  _type,
+                  l10n: l10n,
+                  isElectricVehicle: widget.isElectricVehicle,
+                ),
         ),
       ),
       body: SafeArea(
@@ -165,6 +183,7 @@ final class _AddHistoryEventScreenState extends State<AddHistoryEventScreen> {
               _EventTypeSelector(
                 selectedType: _type,
                 enabled: !_isEditing,
+                isElectricVehicle: widget.isElectricVehicle,
                 onSelected: (type) {
                   if (type == _type) return;
                   setState(() => _type = type);
@@ -219,14 +238,20 @@ final class _AddHistoryEventScreenState extends State<AddHistoryEventScreen> {
   }
 
   List<Widget> _fuelFields() {
-    final fuelTypeItems = [
-      if (!_defaultFuelTypes.contains(_fuelType)) _fuelType,
-      ..._defaultFuelTypes,
-    ];
+    final l10n = AppLocalizations.of(context);
+    final fuelTypeItems = widget.isElectricVehicle
+        ? [
+            if (!_defaultChargerTypes.contains(_fuelType)) _fuelType,
+            ..._defaultChargerTypes,
+          ]
+        : [
+            if (!_defaultFuelTypes.contains(_fuelType)) _fuelType,
+            ..._defaultFuelTypes,
+          ];
 
     return [
       _FormCard(
-        label: AppLocalizations.of(context).currentMileageLabel,
+        label: l10n.currentMileageLabel,
         child: _NumberField(
           key: const ValueKey('fuel-mileage'),
           controller: _mileageController,
@@ -236,13 +261,15 @@ final class _AddHistoryEventScreenState extends State<AddHistoryEventScreen> {
           validator: (value) => HistoryEventFormUtils.validateMileage(
             value,
             minimumMileageKm: _minimumMileageKm,
-            l10n: AppLocalizations.of(context),
+            l10n: l10n,
           ),
         ),
       ),
       const SizedBox(height: AppSpacing.md),
       _FormCard(
-        label: AppLocalizations.of(context).refuelingDetails,
+        label: widget.isElectricVehicle
+            ? l10n.rechargeDetails
+            : l10n.refuelingDetails,
         child: Column(
           children: [
             Row(
@@ -250,25 +277,29 @@ final class _AddHistoryEventScreenState extends State<AddHistoryEventScreen> {
               children: [
                 Expanded(
                   child: _LabeledField(
-                    label: AppLocalizations.of(context).amount,
+                    label: widget.isElectricVehicle ? l10n.energy : l10n.amount,
                     child: _NumberField(
                       key: const ValueKey('fuel-liters'),
                       controller: _fuelLitersController,
                       hintText: '0',
-                      suffixText: 'L',
+                      suffixText: widget.isElectricVehicle ? 'kWh' : 'L',
                       allowDecimal: true,
-                      validator: (value) =>
-                          HistoryEventFormUtils.validateFuelLiters(
-                            value,
-                            l10n: AppLocalizations.of(context),
-                          ),
+                      validator: (value) => widget.isElectricVehicle
+                          ? HistoryEventFormUtils.validateEnergyKwh(
+                              value,
+                              l10n: l10n,
+                            )
+                          : HistoryEventFormUtils.validateFuelLiters(
+                              value,
+                              l10n: l10n,
+                            ),
                     ),
                   ),
                 ),
                 const SizedBox(width: AppSpacing.sm),
                 Expanded(
                   child: _LabeledField(
-                    label: AppLocalizations.of(context).cost,
+                    label: l10n.cost,
                     child: _NumberField(
                       key: const ValueKey('fuel-cost'),
                       controller: _fuelCostController,
@@ -277,8 +308,8 @@ final class _AddHistoryEventScreenState extends State<AddHistoryEventScreen> {
                       validator: (value) =>
                           HistoryEventFormUtils.validatePositiveInt(
                             value,
-                            label: AppLocalizations.of(context).cost,
-                            l10n: AppLocalizations.of(context),
+                            label: l10n.cost,
+                            l10n: l10n,
                           ),
                     ),
                   ),
@@ -287,7 +318,9 @@ final class _AddHistoryEventScreenState extends State<AddHistoryEventScreen> {
             ),
             const SizedBox(height: AppSpacing.md),
             _LabeledField(
-              label: AppLocalizations.of(context).fuelType,
+              label: widget.isElectricVehicle
+                  ? l10n.chargerType
+                  : l10n.fuelType,
               child: DropdownButtonFormField<String>(
                 key: const ValueKey('fuel-type'),
                 initialValue: _fuelType,
@@ -305,9 +338,7 @@ final class _AddHistoryEventScreenState extends State<AddHistoryEventScreen> {
         ),
       ),
       const SizedBox(height: AppSpacing.md),
-      _InformationCard(
-        message: AppLocalizations.of(context).mileageForecastInfo,
-      ),
+      _InformationCard(message: l10n.mileageForecastInfo),
     ];
   }
 

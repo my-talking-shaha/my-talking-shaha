@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:frontend/app/providers/vehicle_mileage_provider.dart';
 import 'package:frontend/app/theme/app_theme.dart';
 import 'package:frontend/features/history/data/datasources/mock_history_datasource.dart';
 import 'package:frontend/features/history/domain/entities/history_event.dart';
@@ -21,6 +22,9 @@ void main() {
             MockHistoryDatasource(delay: Duration.zero),
           ),
           historyPhotoReaderProvider.overrideWithValue(null),
+          vehicleEngineTypeProvider.overrideWith(
+            (ref, vehicleId) async => 'gasoline',
+          ),
         ],
         child: MaterialApp(
           locale: const Locale('en'),
@@ -38,6 +42,8 @@ void main() {
     expect(find.text('Oil and filter change'), findsOneWidget);
     expect(find.byTooltip('Add event'), findsOneWidget);
     expect(find.byIcon(Icons.tune), findsNothing);
+    expect(find.text('FUEL'), findsOneWidget);
+    expect(find.text('CHARGE'), findsNothing);
 
     final repairsButton = tester.widget<TextButton>(
       find.widgetWithText(TextButton, 'REPAIRS'),
@@ -63,6 +69,39 @@ void main() {
     expect(find.text('Oil and filter change'), findsNothing);
   });
 
+  testWidgets('shows charge filter for electric vehicles', (tester) async {
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [
+          historyDatasourceProvider.overrideWithValue(
+            MockHistoryDatasource(delay: Duration.zero),
+          ),
+          historyPhotoReaderProvider.overrideWithValue(null),
+          vehicleEngineTypeProvider.overrideWith(
+            (ref, vehicleId) async => 'electric',
+          ),
+        ],
+        child: MaterialApp(
+          locale: const Locale('en'),
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
+          theme: AppTheme.dark,
+          home: const HistoryScreen(vehicleId: 'vehicle_1'),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    expect(find.text('CHARGE'), findsOneWidget);
+    expect(find.text('FUEL'), findsNothing);
+
+    await tester.tap(find.text('CHARGE'));
+    await tester.pump();
+
+    expect(find.text('Refueling AI-95'), findsOneWidget);
+    expect(find.text('Oil and filter change'), findsNothing);
+  });
+
   testWidgets('deleting an event clears its cached photos', (tester) async {
     final datasource = MockHistoryDatasource(delay: Duration.zero);
     HistoryEvent? cacheDeletedFor;
@@ -75,6 +114,9 @@ void main() {
           deleteHistoryPhotoCacheProvider.overrideWithValue((event) async {
             cacheDeletedFor = event;
           }),
+          vehicleEngineTypeProvider.overrideWith(
+            (ref, vehicleId) async => 'gasoline',
+          ),
         ],
         child: MaterialApp(
           locale: const Locale('en'),
@@ -137,6 +179,9 @@ void main() {
         overrides: [
           historyDatasourceProvider.overrideWithValue(datasource),
           historyPhotoReaderProvider.overrideWithValue(null),
+          vehicleEngineTypeProvider.overrideWith(
+            (ref, vehicleId) async => 'gasoline',
+          ),
         ],
         child: MaterialApp.router(
           locale: const Locale('en'),

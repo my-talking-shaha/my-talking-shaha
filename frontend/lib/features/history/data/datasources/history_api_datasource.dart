@@ -210,7 +210,12 @@ abstract final class HistoryApiEventMapper {
     if (lowerValue.contains('diesel') || lowerValue.contains('диз')) {
       return 'DIESEL';
     }
-    if (lowerValue.contains('electric')) return 'ELECTRIC';
+    if (lowerValue.contains('electric') ||
+        lowerValue.contains('charging') ||
+        lowerValue.contains('charger') ||
+        lowerValue.contains('supercharger')) {
+      return 'ELECTRIC';
+    }
     if (lowerValue.contains('hybrid')) return 'HYBRID';
     if (lowerValue.contains('gas') ||
         lowerValue.contains('petrol') ||

@@ -494,6 +494,12 @@ abstract class AppLocalizations {
   /// **'FUEL'**
   String get fuel;
 
+  /// No description provided for @charge.
+  ///
+  /// In en, this message translates to:
+  /// **'CHARGE'**
+  String get charge;
+
   /// No description provided for @noIssues.
   ///
   /// In en, this message translates to:
@@ -974,6 +980,12 @@ abstract class AppLocalizations {
   /// **'New refueling'**
   String get newRefueling;
 
+  /// No description provided for @newRecharge.
+  ///
+  /// In en, this message translates to:
+  /// **'New recharge'**
+  String get newRecharge;
+
   /// No description provided for @newMaintenance.
   ///
   /// In en, this message translates to:
@@ -1022,11 +1034,23 @@ abstract class AppLocalizations {
   /// **'REFUELING DETAILS'**
   String get refuelingDetails;
 
+  /// No description provided for @rechargeDetails.
+  ///
+  /// In en, this message translates to:
+  /// **'RECHARGE DETAILS'**
+  String get rechargeDetails;
+
   /// No description provided for @amount.
   ///
   /// In en, this message translates to:
   /// **'AMOUNT'**
   String get amount;
+
+  /// No description provided for @energy.
+  ///
+  /// In en, this message translates to:
+  /// **'ENERGY'**
+  String get energy;
 
   /// No description provided for @fuelLitersInvalidNumber.
   ///
@@ -1046,6 +1070,18 @@ abstract class AppLocalizations {
   /// **'Max {max} L'**
   String fuelLitersMax(int max);
 
+  /// No description provided for @energyKwhInvalidNumber.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter energy'**
+  String get energyKwhInvalidNumber;
+
+  /// No description provided for @energyKwhMustBePositive.
+  ///
+  /// In en, this message translates to:
+  /// **'Must be > 0 kWh'**
+  String get energyKwhMustBePositive;
+
   /// No description provided for @cost.
   ///
   /// In en, this message translates to:
@@ -1057,6 +1093,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'FUEL TYPE'**
   String get fuelType;
+
+  /// No description provided for @chargerType.
+  ///
+  /// In en, this message translates to:
+  /// **'CHARGER TYPE'**
+  String get chargerType;
 
   /// No description provided for @mileageForecastInfo.
   ///
@@ -1177,6 +1219,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Fuel'**
   String get fuelEvent;
+
+  /// No description provided for @rechargeEvent.
+  ///
+  /// In en, this message translates to:
+  /// **'Recharge'**
+  String get rechargeEvent;
 
   /// No description provided for @maintenanceEvent.
   ///

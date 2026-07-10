@@ -213,6 +213,9 @@ class AppLocalizationsRu extends AppLocalizations {
   String get fuel => 'ТОПЛИВО';
 
   @override
+  String get charge => 'ЗАРЯДКА';
+
+  @override
   String get noIssues => 'Проблем нет';
 
   @override
@@ -458,6 +461,9 @@ class AppLocalizationsRu extends AppLocalizations {
   String get newRefueling => 'Новая заправка';
 
   @override
+  String get newRecharge => 'Новая зарядка';
+
+  @override
   String get newMaintenance => 'Новое обслуживание';
 
   @override
@@ -482,7 +488,13 @@ class AppLocalizationsRu extends AppLocalizations {
   String get refuelingDetails => 'ДЕТАЛИ ЗАПРАВКИ';
 
   @override
+  String get rechargeDetails => 'ДЕТАЛИ ЗАРЯДКИ';
+
+  @override
   String get amount => 'КОЛИЧЕСТВО';
+
+  @override
+  String get energy => 'ЭНЕРГИЯ';
 
   @override
   String get fuelLitersInvalidNumber => 'Введите литры';
@@ -496,10 +508,19 @@ class AppLocalizationsRu extends AppLocalizations {
   }
 
   @override
+  String get energyKwhInvalidNumber => 'Введите кВт·ч';
+
+  @override
+  String get energyKwhMustBePositive => 'Больше 0 кВт·ч';
+
+  @override
   String get cost => 'СТОИМОСТЬ';
 
   @override
   String get fuelType => 'ТИП ТОПЛИВА';
+
+  @override
+  String get chargerType => 'ТИП ЗАРЯДКИ';
 
   @override
   String get mileageForecastInfo =>
@@ -562,6 +583,9 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get fuelEvent => 'Заправка';
+
+  @override
+  String get rechargeEvent => 'Зарядка';
 
   @override
   String get maintenanceEvent => 'Обслуживание';
