@@ -98,13 +98,14 @@ public class TimelineEventService {
 
     private TimelineEventResponse createFuelEvent(Vehicle vehicle, CreateRefuelEventRequest request, TimelineEventType type) {
         validateMileage(vehicle, request.mileageKm());
+        BigDecimal amount = fuelAmount(request, type);
         RefuelEvent event = new RefuelEvent();
         event.setVehicle(vehicle);
         event.setType(type);
         event.setEventDateTime(request.eventDateTime());
         event.setTitle(request.title());
         event.setMileageKm(request.mileageKm());
-        event.setLiters(request.liters());
+        event.setLiters(amount);
         event.setCost(request.cost());
         event.setFuelType(type == TimelineEventType.RECHARGE ? FuelType.ELECTRIC : request.fuelType());
         event.setFuelName(request.fuelName());
@@ -118,6 +119,23 @@ public class TimelineEventService {
             return true;
         }
         return vehicle.getFuelType() == FuelType.ELECTRIC;
+    }
+
+    private BigDecimal fuelAmount(CreateRefuelEventRequest request, TimelineEventType type) {
+        if (type == TimelineEventType.RECHARGE) {
+            if (request.kwh() != null && request.liters() != null && request.kwh().compareTo(request.liters()) != 0) {
+                throw new IllegalArgumentException("Recharge kWh must match legacy liters when both are provided");
+            }
+            BigDecimal amount = request.kwh() != null ? request.kwh() : request.liters();
+            if (amount == null) {
+                throw new IllegalArgumentException("Recharge kWh must be provided");
+            }
+            return amount;
+        }
+        if (request.liters() == null) {
+            throw new IllegalArgumentException("Refuel liters must be provided");
+        }
+        return request.liters();
     }
 
     @Transactional
@@ -300,9 +318,9 @@ public class TimelineEventService {
         event.setEventDateTime(request.eventDateTime());
         event.setTitle(request.title());
         event.setMileageKm(request.mileageKm());
-        event.setLiters(request.liters());
+        event.setLiters(fuelAmount(request, event.getType()));
         event.setCost(request.cost());
-        event.setFuelType(request.fuelType());
+        event.setFuelType(event.getType() == TimelineEventType.RECHARGE ? FuelType.ELECTRIC : request.fuelType());
         event.setFuelName(request.fuelName());
         event.setStationName(request.stationName());
     }
@@ -365,6 +383,7 @@ public class TimelineEventService {
                     r.getCost(),
                     r.getMileageKm(),
                     r.getLiters(),
+                    r.getType() == TimelineEventType.RECHARGE ? r.getLiters() : null,
                     r.getFuelType(),
                     r.getFuelName(),
                     r.getStationName(),
@@ -386,7 +405,7 @@ public class TimelineEventService {
                         t.getEventDateTime(),
                         null,
                         t.getEndMileageKm(),
-                        null, null, null, null,
+                        null, null, null, null, null,
                         t.getStartMileageKm(),
                         t.getEndMileageKm(),
                         distance,
@@ -403,7 +422,7 @@ public class TimelineEventService {
                     m.getEventDateTime(),
                     m.getCost(),
                     m.getMileageKm(),
-                    null, null, null, null,
+                    null, null, null, null, null,
                     null, null, null, null, null,
                     null,
                     m.getName(),

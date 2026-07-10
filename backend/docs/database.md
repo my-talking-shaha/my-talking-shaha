@@ -11,7 +11,9 @@ Service-history events use **JOINED inheritance**: the shared fields (`vehicle_i
 `event_date_time`) live in `timeline_events`, while each concrete kind - `trips`, `refuel`,
 `maintenance` - keeps its own columns in a separate table whose `id` is both the primary key
 and a foreign key back to the parent (`PK_FK`). `RECHARGE` events use the same `refuel`
-table because their amount/cost/provider fields match the refuel payload; the event
+table because their amount/cost/provider fields match the refuel payload; for recharge
+events the `refuel.liters` column stores the charged energy in kWh and is exposed through
+the API as `kwh` plus a legacy `liters` alias for current mobile compatibility. The event
 semantics are distinguished by `timeline_events.type`. One logical event is therefore
 stored as two rows sharing the same `id`.
 

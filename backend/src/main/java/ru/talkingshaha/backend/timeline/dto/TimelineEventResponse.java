@@ -12,7 +12,7 @@ import ru.talkingshaha.backend.vehicle.model.FuelType;
 public record TimelineEventResponse(
         UUID id, TimelineEventType type, String title, OffsetDateTime eventDateTime,
         BigDecimal cost, Integer mileageKm,
-        BigDecimal liters, FuelType fuelType, String fuelName, String stationName,
+        BigDecimal liters, BigDecimal kwh, FuelType fuelType, String fuelName, String stationName,
         Integer startMileageKm, Integer endMileageKm, Integer distanceKm, String route, Integer durationMinutes,
         BigDecimal averageFuelConsumptionLitersPerKm,
         String name, String description, List<String> photoUrls,

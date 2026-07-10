@@ -438,7 +438,7 @@ paths:
   /vehicles/{vehicleId}/timeline/recharge:
     post:
       summary: Add recharge event
-      description: Uses the refuel payload shape, requires fuelType ELECTRIC, and returns a timeline event with type RECHARGE.
+      description: Uses kwh for the charged energy amount, requires fuelType ELECTRIC, and returns a timeline event with type RECHARGE. The legacy liters field is still accepted and returned for current mobile compatibility.
       tags: [ Timeline ]
       parameters:
         - $ref: '#/components/parameters/VehicleId'
@@ -1187,7 +1187,8 @@ components:
             $ref: '#/components/schemas/VehiclePhoto'
     CreateRefuelEventRequest:
       type: object
-      required: [ eventDateTime, title, mileageKm, liters, cost, fuelType ]
+      description: Refuel requests require liters. Recharge requests require kwh, while liters is accepted as a legacy alias for current mobile clients.
+      required: [ eventDateTime, title, mileageKm, cost, fuelType ]
       properties:
         eventDateTime:
           type: string
@@ -1202,6 +1203,12 @@ components:
           type: number
           minimum: 0
           exclusiveMinimum: true
+          description: Refuel volume in liters. For recharge requests, this is accepted as a legacy alias for kwh.
+        kwh:
+          type: number
+          minimum: 0
+          exclusiveMinimum: true
+          description: Recharge energy in kilowatt-hours. Used when the event type is RECHARGE.
         cost:
           type: number
           minimum: 0
@@ -1300,8 +1307,9 @@ components:
     TimelineEvent:
       type: object
       description: >-
-        Unified timeline event. Fields are populated according to `type`: refuel/recharge
-        events use liters/fuelType/fuelName/stationName and cost; trip events use
+        Unified timeline event. Fields are populated according to `type`: refuel events
+        use liters/fuelType/fuelName/stationName and cost; recharge events use kwh and
+        also return legacy liters for current mobile compatibility; trip events use
         startMileageKm/endMileageKm/distanceKm/route/durationMinutes; maintenance events use
         name/description/photoUrls and cost.
       required: [ id, type, eventDateTime ]
@@ -1326,6 +1334,11 @@ components:
         liters:
           type: number
           nullable: true
+          description: Refuel volume in liters. For recharge events, this mirrors kwh as a legacy alias.
+        kwh:
+          type: number
+          nullable: true
+          description: Recharge energy in kilowatt-hours.
         fuelType:
           allOf:
             - $ref: '#/components/schemas/FuelType'
