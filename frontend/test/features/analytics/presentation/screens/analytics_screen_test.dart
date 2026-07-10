@@ -3,7 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:frontend/app/theme/app_theme.dart';
 import 'package:frontend/features/analytics/data/datasources/mock_analytics_datasource.dart';
-import 'package:frontend/features/analytics/presentation/providers/analytics_providers.dart';
+import 'package:frontend/features/analytics/di/analytics_providers.dart';
 import 'package:frontend/features/analytics/presentation/screens/analytics_screen.dart';
 import 'package:frontend/features/parts/presentation/providers/parts_providers.dart';
 import 'package:frontend/l10n/generated/app_localizations.dart';
@@ -103,6 +103,55 @@ void main() {
     expect(find.text('Нагрузка обслуживания'), findsOneWidget);
   });
 
+  testWidgets('preserves period selection and ignores horizontal swipes', (
+    tester,
+  ) async {
+    await _pumpAnalyticsScreen(tester, vehicleId: 'vehicle_1');
+
+    await tester.drag(find.byType(ListView), const Offset(-250, 0));
+    await tester.pumpAndSettle();
+
+    expect(find.text('1,258,700 ₽'), findsOneWidget);
+    expect(find.text('ANNUAL EXPENSES'), findsOneWidget);
+
+    await tester.tap(find.byKey(const ValueKey('analytics-period-all')));
+    await tester.pumpAndSettle();
+
+    expect(find.text('4,862,200 ₽'), findsOneWidget);
+    expect(find.text('ALL-TIME EXPENSES'), findsOneWidget);
+  });
+
+  testWidgets('cancelling custom range leaves the current request unchanged', (
+    tester,
+  ) async {
+    await _pumpAnalyticsScreen(tester, vehicleId: 'vehicle_1');
+
+    await tester.tap(find.byKey(const ValueKey('analytics-custom-date-range')));
+    await tester.pumpAndSettle();
+
+    expect(find.byType(DateRangePickerDialog), findsOneWidget);
+    await tester.tap(find.byIcon(Icons.close));
+    await tester.pumpAndSettle();
+
+    expect(find.text('1,258,700 ₽'), findsOneWidget);
+    expect(
+      find.byKey(const ValueKey('analytics-clear-date-range')),
+      findsNothing,
+    );
+  });
+
+  testWidgets('chat launch controls the analytics app bar', (tester) async {
+    await _pumpAnalyticsScreen(
+      tester,
+      vehicleId: 'vehicle_1',
+      launchedFromChat: true,
+    );
+
+    expect(find.byType(AppBar), findsOneWidget);
+    expect(find.byTooltip('Back to chat'), findsOneWidget);
+    expect(find.byIcon(Icons.chevron_left_rounded), findsOneWidget);
+  });
+
   testWidgets('renders analytics insufficient-data state', (tester) async {
     await _pumpAnalyticsScreen(tester, vehicleId: 'vehicle_empty');
 
@@ -143,6 +192,7 @@ Future<void> _pumpAnalyticsScreen(
   WidgetTester tester, {
   required String vehicleId,
   Locale locale = const Locale('en'),
+  bool launchedFromChat = false,
 }) async {
   await tester.pumpWidget(
     ProviderScope(
@@ -157,7 +207,10 @@ Future<void> _pumpAnalyticsScreen(
         localizationsDelegates: AppLocalizations.localizationsDelegates,
         supportedLocales: AppLocalizations.supportedLocales,
         theme: AppTheme.dark,
-        home: AnalyticsScreen(vehicleId: vehicleId),
+        home: AnalyticsScreen(
+          vehicleId: vehicleId,
+          launchedFromChat: launchedFromChat,
+        ),
       ),
     ),
   );

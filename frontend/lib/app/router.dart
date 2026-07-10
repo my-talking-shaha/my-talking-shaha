@@ -3,7 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:frontend/app/providers/vehicle_mileage_provider.dart';
 import 'package:frontend/core/ui/navigation_shell.dart';
 import 'package:frontend/core/utils/uuid_format.dart';
-import 'package:frontend/features/analytics/presentation/providers/analytics_providers.dart';
+import 'package:frontend/features/analytics/di/analytics_providers.dart';
 import 'package:frontend/features/analytics/presentation/screens/analytics_screen.dart';
 import 'package:frontend/features/auth/di/auth_providers.dart';
 import 'package:frontend/features/auth/domain/entities/auth_session.dart';
