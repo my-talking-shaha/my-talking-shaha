@@ -306,9 +306,8 @@ final class _AddHistoryEventScreenState extends State<AddHistoryEventScreen> {
                       hintText: '0',
                       suffixText: '₽',
                       validator: (value) =>
-                          HistoryEventFormUtils.validatePositiveInt(
+                          HistoryEventFormUtils.validateStoredCost(
                             value,
-                            label: l10n.cost,
                             l10n: l10n,
                           ),
                     ),
@@ -713,6 +712,7 @@ final class _AddHistoryEventScreenState extends State<AddHistoryEventScreen> {
             _fuelLitersController.text,
           )!,
           fuelType: _fuelType,
+          isRecharge: widget.isElectricVehicle,
         ),
       ),
       HistoryEventType.maintenance => HistoryEvent(

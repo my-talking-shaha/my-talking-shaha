@@ -116,6 +116,38 @@ void main() {
     expect(savedEvent?.title, 'Evening recharge');
     expect(details.liters, 37.5);
     expect(details.fuelType, 'AC charging');
+    expect(details.isRecharge, isTrue);
+  });
+
+  testWidgets('blocks unrealistic recharge values', (tester) async {
+    HistoryEvent? savedEvent;
+    await _pumpScreen(
+      tester,
+      isElectricVehicle: true,
+      onSave: (event) async => savedEvent = event,
+    );
+
+    await tester.enterText(
+      find.byKey(const ValueKey('event-title')),
+      'Impossible recharge',
+    );
+    await tester.enterText(
+      find.byKey(const ValueKey('fuel-mileage')),
+      '124600',
+    );
+    await tester.enterText(
+      find.byKey(const ValueKey('fuel-liters')),
+      '100000000',
+    );
+    await tester.enterText(
+      find.byKey(const ValueKey('fuel-cost')),
+      '100000000',
+    );
+    await _tapSave(tester);
+
+    expect(savedEvent, isNull);
+    expect(find.text('Max 500 kWh'), findsOneWidget);
+    expect(find.text('Max 100 000'), findsOneWidget);
   });
 
   testWidgets('localizes fuel amount validation errors', (tester) async {

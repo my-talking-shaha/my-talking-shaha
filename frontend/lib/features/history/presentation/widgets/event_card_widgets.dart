@@ -470,6 +470,7 @@ class _EventPresentation {
 
 bool _isChargeFuelDetails(EventDetails details) {
   if (details is! FuelDetails) return false;
+  if (details.isRecharge) return true;
 
   final fuelType = details.fuelType.toLowerCase();
   return fuelType.contains('charging') ||
@@ -478,6 +479,11 @@ bool _isChargeFuelDetails(EventDetails details) {
       fuelType.contains('electric') ||
       fuelType.contains('kwh') ||
       fuelType.contains('квт');
+}
+
+String _formatFuelAmount(FuelDetails details) {
+  final unit = details.isRecharge ? 'kWh' : 'L';
+  return '${_formatDecimal(details.liters)} $unit';
 }
 
 String _formatNumber(int value) {
@@ -494,7 +500,7 @@ String _formatNumber(int value) {
   return value < 0 ? '-$buffer' : buffer.toString();
 }
 
-String _formatLiters(double value) {
+String _formatDecimal(double value) {
   if (value == value.roundToDouble()) {
     return value.toInt().toString();
   }

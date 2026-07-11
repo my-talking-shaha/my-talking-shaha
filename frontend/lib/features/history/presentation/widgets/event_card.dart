@@ -140,7 +140,7 @@ class _EventCardState extends State<EventCard> with TickerProviderStateMixin {
     return switch (details) {
       FuelDetails() => [
         Text(
-          '${_formatLiters(details.liters)} L • ${details.fuelType}',
+          '${_formatFuelAmount(details)} • ${details.fuelType}',
           style: bodyStyle,
         ),
       ],

@@ -2,6 +2,9 @@ import 'package:frontend/features/history/domain/entities/history_event_type.dar
 import 'package:frontend/l10n/generated/app_localizations.dart';
 
 abstract final class HistoryEventFormUtils {
+  static const int _maxEventCost = 100000;
+  static const double _maxRechargeEnergyKwh = 500;
+
   static String titleFor(
     HistoryEventType type, {
     AppLocalizations? l10n,
@@ -104,12 +107,25 @@ abstract final class HistoryEventFormUtils {
     String? value, {
     required String label,
     AppLocalizations? l10n,
+    int? maxValue,
   }) {
     final number = int.tryParse(value ?? '');
     if (number == null || number <= 0) {
       return l10n?.fieldMustBePositive(label) ?? '$label must be positive';
     }
+    if (maxValue != null && number > maxValue) {
+      return 'Max ${_formatCompactNumber(maxValue)}';
+    }
     return null;
+  }
+
+  static String? validateStoredCost(String? value, {AppLocalizations? l10n}) {
+    return validatePositiveInt(
+      value,
+      label: l10n?.cost ?? 'Cost',
+      l10n: l10n,
+      maxValue: _maxEventCost,
+    );
   }
 
   static String? validateFuelLiters(String? value, {AppLocalizations? l10n}) {
@@ -128,7 +144,27 @@ abstract final class HistoryEventFormUtils {
     if (energyKwh <= 0) {
       return l10n?.energyKwhMustBePositive ?? 'Must be > 0 kWh';
     }
+    if (energyKwh > _maxRechargeEnergyKwh) {
+      return 'Max ${_formatCompactNumber(_maxRechargeEnergyKwh)} kWh';
+    }
     return null;
+  }
+
+  static String _formatCompactNumber(num value) {
+    final text = value is int
+        ? value.toString()
+        : value.toStringAsFixed(2).replaceFirst(RegExp(r'0+$'), '');
+    final parts = text.split('.');
+    final digits = parts.first;
+    final buffer = StringBuffer();
+    for (var index = 0; index < digits.length; index++) {
+      if (index > 0 && (digits.length - index) % 3 == 0) {
+        buffer.write(' ');
+      }
+      buffer.write(digits[index]);
+    }
+    if (parts.length == 1 || parts.last.isEmpty) return buffer.toString();
+    return '$buffer.${parts.last}';
   }
 
   static double? parseDecimal(String? value) {
