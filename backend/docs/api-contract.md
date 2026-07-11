@@ -474,7 +474,7 @@ Posting the same electric payload to `/timeline/refuel` also creates a `RECHARGE
 }
 ```
 
-Response `201`: timeline event. `kwh > 0` and `cost > 0`.
+Response `201`: timeline event. `0 < kwh <= 500` and `0 < cost <= 100000`.
 
 ### Add trip
 

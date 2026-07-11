@@ -1208,11 +1208,13 @@ components:
           type: number
           minimum: 0
           exclusiveMinimum: true
+          maximum: 500
           description: Recharge energy in kilowatt-hours. Used when the event type is RECHARGE.
         cost:
           type: number
           minimum: 0
           exclusiveMinimum: true
+          description: Event cost. Recharge requests are limited to 100000.
         fuelType:
           $ref: '#/components/schemas/FuelType'
         fuelName:

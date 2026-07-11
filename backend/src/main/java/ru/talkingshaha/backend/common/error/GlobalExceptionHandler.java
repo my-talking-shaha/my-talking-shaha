@@ -45,6 +45,13 @@ public class GlobalExceptionHandler {
                 .body(new ApiError("VALIDATION_ERROR", "Request contains invalid fields", fields));
     }
 
+    @ExceptionHandler(FieldValidationException.class)
+    public ResponseEntity<ApiError> handleFieldValidation(FieldValidationException exception) {
+        log.warn("API error code=VALIDATION_ERROR fields={}", exception.fields().keySet());
+        return ResponseEntity.badRequest()
+                .body(new ApiError("VALIDATION_ERROR", exception.getMessage(), exception.fields()));
+    }
+
     @ExceptionHandler(IllegalArgumentException.class)
     public ResponseEntity<ApiError> handleIllegalArgument(IllegalArgumentException exception) {
         log.warn("API error code=VALIDATION_ERROR message={}", exception.getMessage());
