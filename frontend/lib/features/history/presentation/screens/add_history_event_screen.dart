@@ -228,7 +228,7 @@ final class _AddHistoryEventScreenState extends State<AddHistoryEventScreen> {
                         dimension: 20,
                         child: CircularProgressIndicator(strokeWidth: 2),
                       )
-                    : Text(_isEditing ? 'Save changes' : l10n.save),
+                    : Text(_isEditing ? l10n.saveChanges : l10n.save),
               ),
             ],
           ),

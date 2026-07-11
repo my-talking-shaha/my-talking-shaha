@@ -112,6 +112,7 @@ Open form:
 Supported forms:
 
 - `REFUEL`
+- `RECHARGE`
 - `TRIP`
 - `PART_REPLACEMENT`
 - `MAINTENANCE`
@@ -198,6 +199,65 @@ any field is invalid, the response explains what is wrong and asks for corrected
 
 For chat-created refuel records, accepted `fuelName` values are limited to the current
 form options: `92 octane`, `95 octane`, `98 octane`, and `Diesel`.
+
+For chat-created recharge records, backend should use a separate `RECHARGE` timeline event
+instead of overloading `REFUEL`. Required fields are:
+
+- `eventDateTime`
+- `mileageKm`
+- `energyKwh`
+- `cost`
+
+Optional fields:
+
+- `stationName`
+- `chargerType`
+- `batteryPercentFrom`
+- `batteryPercentTo`
+
+Example complete recharge response:
+
+```json
+{
+  "userMessage": {
+    "id": "533c17vc-13d5-6857-5269-e9e80739ea42",
+    "role": "USER",
+    "text": "I charged 37.5 kWh at the Supercharger for 1200 rubles",
+    "createdAt": "2026-06-12T10:00:00Z",
+    "action": null
+  },
+  "assistantMessage": {
+    "id": "784v15jc-15d3-4957-9189-u8e79789ea66",
+    "role": "ASSISTANT",
+    "text": "I recorded my recharge: 37.5 kWh, 1200 RUB. My mileage is now 10000 km.",
+    "createdAt": "2026-06-12T10:00:01Z",
+    "action": {
+      "type": "OPEN_SCREEN",
+      "form": null,
+      "screen": "HISTORY_EVENT_EDIT",
+      "prefill": {
+        "eventId": "994v15jc-15d3-4957-9189-u8e79789ea66",
+        "eventType": "RECHARGE"
+      }
+    }
+  },
+  "createdEvent": {
+    "id": "994v15jc-15d3-4957-9189-u8e79789ea66",
+    "type": "RECHARGE",
+    "title": "Recharge",
+    "eventDateTime": "2026-06-12T10:00:01Z",
+    "mileageKm": 10000,
+    "energyKwh": 37.5,
+    "cost": 1200,
+    "chargerType": "Supercharger",
+    "stationName": "Supercharger"
+  }
+}
+```
+
+If recharge data is incomplete, backend asks for the missing values and may return an
+`OPEN_FORM` action with `form: "RECHARGE"` and extracted fields in `prefill`.
+Recharge analytics must not mix `energyKwh` with refuel `liters`.
 
 For repair/maintenance records, generic intent messages such as `I want to record the repair`
 must not create an event by themselves. The backend asks for the work description and any

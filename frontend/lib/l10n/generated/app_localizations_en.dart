@@ -460,6 +460,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get couldNotLoadHistory => 'Could not load history';
 
   @override
+  String get backToChat => 'Back to chat';
+
+  @override
   String get newRefueling => 'New refueling';
 
   @override
@@ -470,6 +473,35 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get newTrip => 'New trip';
+
+  @override
+  String get editRefueling => 'Edit refueling';
+
+  @override
+  String get editMaintenance => 'Edit maintenance';
+
+  @override
+  String get editTrip => 'Edit trip';
+
+  @override
+  String get deleteEventQuestion => 'Delete event?';
+
+  @override
+  String deleteEventConfirmation(Object eventTitle) {
+    return '$eventTitle will be removed from the history.';
+  }
+
+  @override
+  String get eventAdded => 'Event added.';
+
+  @override
+  String get eventUpdated => 'Event updated.';
+
+  @override
+  String get eventDeleted => 'Event deleted.';
+
+  @override
+  String get couldNotDeleteEvent => 'Could not delete the event. Try again.';
 
   @override
   String get eventType => 'EVENT TYPE';

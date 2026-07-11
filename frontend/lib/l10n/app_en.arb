@@ -173,10 +173,25 @@
   "tryAnotherSearch": "Try another search or event type.",
   "historyEmptyDescription": "Trips, refueling, and repairs will appear here.",
   "couldNotLoadHistory": "Could not load history",
+  "backToChat": "Back to chat",
   "newRefueling": "New refueling",
   "newRecharge": "New recharge",
   "newMaintenance": "New maintenance",
   "newTrip": "New trip",
+  "editRefueling": "Edit refueling",
+  "editMaintenance": "Edit maintenance",
+  "editTrip": "Edit trip",
+  "deleteEventQuestion": "Delete event?",
+  "deleteEventConfirmation": "{eventTitle} will be removed from the history.",
+  "@deleteEventConfirmation": {
+    "placeholders": {
+      "eventTitle": {}
+    }
+  },
+  "eventAdded": "Event added.",
+  "eventUpdated": "Event updated.",
+  "eventDeleted": "Event deleted.",
+  "couldNotDeleteEvent": "Could not delete the event. Try again.",
   "eventType": "EVENT TYPE",
   "dateAndTime": "DATE AND TIME",
   "title": "TITLE",
