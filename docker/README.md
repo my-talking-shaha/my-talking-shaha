@@ -7,7 +7,8 @@
 - `docker-compose.yml` - Orchestration configuration
 - `nginx.conf` - Nginx configuration inside each frontend container
 - `router.local.conf` - stable local routing layer for frontend, API, OpenAPI, and Swagger UI
-- `docker-compose.blue-green.yml` - blue-green deployment topology
+- `docker-compose.blue-green.yml` - image-only blue-green runtime topology;
+  GitHub Actions supplies public GHCR image references during deployment
 - `router.blue-green.conf` - stable deployment router that switches between blue and green slots
 - `deploy-blue-green.sh` - remote deployment script used by GitHub Actions
 
@@ -87,3 +88,5 @@ docker compose --env-file .env -f docker/docker-compose.yml logs -f frontend
 In the blue-green deployment topology, only `talking-shaha-router` binds public
 port `80`. The blue and green frontend/backend app containers expose ports only
 inside Docker networks, and the router reloads nginx upstreams to switch traffic.
+This runtime manifest does not build images or require a source checkout on the
+server; it pulls the immutable public GHCR images published by CI.

@@ -310,18 +310,12 @@ stop_legacy_stack_for_initial_switch() {
 }
 
 main() {
-  require_env JWT_SECRET DB_USERNAME DB_PASSWORD
+  require_env JWT_SECRET DB_USERNAME DB_PASSWORD BACKEND_IMAGE FRONTEND_IMAGE DEPLOY_STATE_DIR
   detect_compose
-
-  export DOCKER_BUILDKIT="${DOCKER_BUILDKIT:-1}"
-  export BUILDKIT_PROGRESS="${BUILDKIT_PROGRESS:-plain}"
-  export COMPOSE_PROGRESS="${COMPOSE_PROGRESS:-plain}"
-  export DEPLOY_IMAGE_TAG="${DEPLOY_IMAGE_TAG:-$(git rev-parse --short=12 HEAD 2>/dev/null || date +%Y%m%d%H%M%S)}"
 
   local active_slot
   local target_slot
   local first_deploy=false
-  local build_args=()
 
   active_slot="$(read_active_slot || true)"
   if ! is_slot "$active_slot"; then
@@ -332,7 +326,7 @@ main() {
     target_slot="$(opposite_slot "$active_slot")"
   fi
 
-  log "active_slot=$active_slot target_slot=$target_slot image_tag=$DEPLOY_IMAGE_TAG"
+  log "active_slot=$active_slot target_slot=$target_slot backend_image=$BACKEND_IMAGE frontend_image=$FRONTEND_IMAGE"
 
   if is_slot "$active_slot"; then
     write_active_upstreams "$active_slot"
@@ -344,15 +338,11 @@ main() {
 
   compose up -d postgres
 
-  if compose build --help 2>&1 | grep -q -- "--progress"; then
-    build_args+=(--progress=plain)
+  if ! compose pull "backend-$target_slot" "frontend-$target_slot"; then
+    log "image_pull=failed target_slot=$target_slot"
+    exit 1
   fi
-
-  if ! compose build "${build_args[@]}" "backend-$target_slot" "frontend-$target_slot"; then
-    log "build_status=failed action=prune_buildkit_cache_and_retry target_slot=$target_slot"
-    docker builder prune -af >&2 || true
-    compose build "${build_args[@]}" "backend-$target_slot" "frontend-$target_slot"
-  fi
+  log "image_pull=pass target_slot=$target_slot"
 
   if ! compose up -d --no-build --force-recreate "backend-$target_slot" "frontend-$target_slot"; then
     log "switch_result=not_attempted target_slot=$target_slot reason=target_start_failed"
