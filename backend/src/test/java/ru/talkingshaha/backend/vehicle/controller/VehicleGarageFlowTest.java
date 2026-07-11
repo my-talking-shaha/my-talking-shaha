@@ -200,14 +200,12 @@ class VehicleGarageFlowTest {
                                           "mileageKm": 10400,
                                           "name": "Brake pads",
                                           "description": "Front axle replacement",
-                                          "cost": 4200,
-                                          "photoUrls": ["https://example.com/brake-pads.jpg"]
+                                          "cost": 4200
                                         }
                                         """))
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.type").value("PART_REPLACEMENT"))
-                .andExpect(jsonPath("$.name").value("Brake pads"))
-                .andExpect(jsonPath("$.photoUrls[0]").value("https://example.com/brake-pads.jpg"));
+                .andExpect(jsonPath("$.name").value("Brake pads"));
         mockMvc.perform(get("/api/v1/vehicles/{vehicleId}/analytics?period=ALL_TIME", vehicleId)
                         .header("Authorization", bearer()))
                 .andExpect(status().isOk())

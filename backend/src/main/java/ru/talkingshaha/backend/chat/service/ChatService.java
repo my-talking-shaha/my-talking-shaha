@@ -357,8 +357,8 @@ public class ChatService {
                         integerField(fields, "mileageKm").orElseThrow(),
                         stringField(fields, "name").orElseThrow(),
                         description,
-                        decimalField(fields, "cost").orElse(null),
-                        List.of()));
+                        decimalField(fields, "cost").orElse(null)),
+                null);
         return Optional.of(new AssistantDraft(maintenanceCreatedAnswer(event), editEventAction(event), event));
     }
 
