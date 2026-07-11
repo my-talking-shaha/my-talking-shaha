@@ -15,7 +15,7 @@
 ## Prerequisites
 
 - Docker
-- Docker Compose (v3.8 or higher)
+- Docker Compose (v3.8 or higher is ok)
 - Explicit local secrets. Copy `.env.example` to `.env` in the repository root
   and replace `JWT_SECRET`, `DB_USERNAME`, `DB_PASSWORD`, and `TIMEWEB_AI_TOKEN`.
   The example placeholders and local development values must not be reused for
