@@ -157,6 +157,7 @@ final class _AddHistoryEventScreenState extends State<AddHistoryEventScreen> {
           _isEditing
               ? HistoryEventFormUtils.editTitleFor(
                   _type,
+                  l10n: l10n,
                   isElectricVehicle: widget.isElectricVehicle,
                 )
               : HistoryEventFormUtils.titleFor(

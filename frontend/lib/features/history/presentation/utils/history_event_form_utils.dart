@@ -29,13 +29,23 @@ abstract final class HistoryEventFormUtils {
 
   static String editTitleFor(
     HistoryEventType type, {
+    AppLocalizations? l10n,
     bool isElectricVehicle = false,
   }) {
+    if (l10n == null) {
+      return switch (type) {
+        HistoryEventType.fuel =>
+          isElectricVehicle ? 'Edit recharge' : 'Edit refueling',
+        HistoryEventType.maintenance => 'Edit maintenance',
+        HistoryEventType.trip => 'Edit trip',
+      };
+    }
+
     return switch (type) {
       HistoryEventType.fuel =>
-        isElectricVehicle ? 'Edit recharge' : 'Edit refueling',
-      HistoryEventType.maintenance => 'Edit maintenance',
-      HistoryEventType.trip => 'Edit trip',
+        isElectricVehicle ? l10n.editRecharge : l10n.editRefueling,
+      HistoryEventType.maintenance => l10n.editMaintenance,
+      HistoryEventType.trip => l10n.editTrip,
     };
   }
 
@@ -114,7 +124,8 @@ abstract final class HistoryEventFormUtils {
       return l10n?.fieldMustBePositive(label) ?? '$label must be positive';
     }
     if (maxValue != null && number > maxValue) {
-      return 'Max ${_formatCompactNumber(maxValue)}';
+      final formattedMax = _formatCompactNumber(maxValue);
+      return l10n?.fieldMax(formattedMax) ?? 'Max $formattedMax';
     }
     return null;
   }
@@ -145,7 +156,8 @@ abstract final class HistoryEventFormUtils {
       return l10n?.energyKwhMustBePositive ?? 'Must be > 0 kWh';
     }
     if (energyKwh > _maxRechargeEnergyKwh) {
-      return 'Max ${_formatCompactNumber(_maxRechargeEnergyKwh)} kWh';
+      final formattedMax = _formatCompactNumber(_maxRechargeEnergyKwh);
+      return l10n?.energyKwhMax(formattedMax) ?? 'Max $formattedMax kWh';
     }
     return null;
   }

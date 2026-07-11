@@ -476,6 +476,9 @@ class AppLocalizationsRu extends AppLocalizations {
   String get editRefueling => 'Редактировать заправку';
 
   @override
+  String get editRecharge => 'Редактировать зарядку';
+
+  @override
   String get editMaintenance => 'Редактировать обслуживание';
 
   @override
@@ -545,6 +548,16 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get energyKwhMustBePositive => 'Больше 0 кВт·ч';
+
+  @override
+  String energyKwhMax(Object max) {
+    return 'Макс. $max кВт·ч';
+  }
+
+  @override
+  String fieldMax(Object max) {
+    return 'Макс. $max';
+  }
 
   @override
   String get cost => 'СТОИМОСТЬ';

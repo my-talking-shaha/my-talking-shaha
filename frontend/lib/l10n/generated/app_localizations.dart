@@ -1010,6 +1010,12 @@ abstract class AppLocalizations {
   /// **'Edit refueling'**
   String get editRefueling;
 
+  /// No description provided for @editRecharge.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit recharge'**
+  String get editRecharge;
+
   /// No description provided for @editMaintenance.
   ///
   /// In en, this message translates to:
@@ -1141,6 +1147,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Must be > 0 kWh'**
   String get energyKwhMustBePositive;
+
+  /// No description provided for @energyKwhMax.
+  ///
+  /// In en, this message translates to:
+  /// **'Max {max} kWh'**
+  String energyKwhMax(Object max);
+
+  /// No description provided for @fieldMax.
+  ///
+  /// In en, this message translates to:
+  /// **'Max {max}'**
+  String fieldMax(Object max);
 
   /// No description provided for @cost.
   ///

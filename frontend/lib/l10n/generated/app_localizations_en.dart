@@ -478,6 +478,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get editRefueling => 'Edit refueling';
 
   @override
+  String get editRecharge => 'Edit recharge';
+
+  @override
   String get editMaintenance => 'Edit maintenance';
 
   @override
@@ -546,6 +549,16 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get energyKwhMustBePositive => 'Must be > 0 kWh';
+
+  @override
+  String energyKwhMax(Object max) {
+    return 'Max $max kWh';
+  }
+
+  @override
+  String fieldMax(Object max) {
+    return 'Max $max';
+  }
 
   @override
   String get cost => 'COST';

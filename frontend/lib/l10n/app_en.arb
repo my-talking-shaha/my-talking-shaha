@@ -179,6 +179,7 @@
   "newMaintenance": "New maintenance",
   "newTrip": "New trip",
   "editRefueling": "Edit refueling",
+  "editRecharge": "Edit recharge",
   "editMaintenance": "Edit maintenance",
   "editTrip": "Edit trip",
   "deleteEventQuestion": "Delete event?",
@@ -213,6 +214,18 @@
   },
   "energyKwhInvalidNumber": "Enter energy",
   "energyKwhMustBePositive": "Must be > 0 kWh",
+  "energyKwhMax": "Max {max} kWh",
+  "@energyKwhMax": {
+    "placeholders": {
+      "max": {}
+    }
+  },
+  "fieldMax": "Max {max}",
+  "@fieldMax": {
+    "placeholders": {
+      "max": {}
+    }
+  },
   "cost": "COST",
   "fuelType": "FUEL TYPE",
   "chargerType": "CHARGER TYPE",

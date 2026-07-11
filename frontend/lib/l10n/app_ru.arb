@@ -179,6 +179,7 @@
   "newMaintenance": "Новое обслуживание",
   "newTrip": "Новая поездка",
   "editRefueling": "Редактировать заправку",
+  "editRecharge": "Редактировать зарядку",
   "editMaintenance": "Редактировать обслуживание",
   "editTrip": "Редактировать поездку",
   "deleteEventQuestion": "Удалить событие?",
@@ -213,6 +214,18 @@
   },
   "energyKwhInvalidNumber": "Введите кВт·ч",
   "energyKwhMustBePositive": "Больше 0 кВт·ч",
+  "energyKwhMax": "Макс. {max} кВт·ч",
+  "@energyKwhMax": {
+    "placeholders": {
+      "max": {}
+    }
+  },
+  "fieldMax": "Макс. {max}",
+  "@fieldMax": {
+    "placeholders": {
+      "max": {}
+    }
+  },
   "cost": "СТОИМОСТЬ",
   "fuelType": "ТИП ТОПЛИВА",
   "chargerType": "ТИП ЗАРЯДКИ",
