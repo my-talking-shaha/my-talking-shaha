@@ -26,14 +26,9 @@ final class HistoryApiDatasource implements HistoryDatasource {
 
   @override
   Future<void> addEvent(HistoryEvent event) async {
-    final endpoint = switch (event.type) {
-      HistoryEventType.fuel => 'refuel',
-      HistoryEventType.maintenance => 'maintenance',
-      HistoryEventType.trip => 'trip',
-    };
-
     await _dio.post<Map<String, dynamic>>(
-      '/vehicles/${event.carId}/timeline/$endpoint',
+      '/vehicles/${event.carId}/timeline/'
+      '${HistoryApiEventMapper.createEndpoint(event)}',
       data: HistoryApiEventMapper.createPayload(event),
     );
   }
@@ -53,8 +48,18 @@ final class HistoryApiDatasource implements HistoryDatasource {
 }
 
 abstract final class HistoryApiEventMapper {
+  static String createEndpoint(HistoryEvent event) {
+    return switch (event.type) {
+      HistoryEventType.fuel =>
+        _isRechargeDetails(event.details) ? 'recharge' : 'refuel',
+      HistoryEventType.maintenance => 'maintenance',
+      HistoryEventType.trip => 'trip',
+    };
+  }
+
   static HistoryEvent fromJson(Map<String, dynamic> json, String vehicleId) {
     final backendType = _stringValue(json['type']);
+    final isRecharge = _isRechargeBackendType(backendType);
     final type = _eventType(backendType);
     final mileageKm =
         _intValue(json['mileageKm']) ??
@@ -75,8 +80,11 @@ abstract final class HistoryApiEventMapper {
       details: switch (type) {
         HistoryEventType.fuel => FuelDetails(
           cost: _intValue(json['cost']) ?? 0,
-          liters: _doubleValue(json['liters']) ?? 0,
+          liters: isRecharge
+              ? _doubleValue(json['kwh']) ?? _doubleValue(json['liters']) ?? 0
+              : _doubleValue(json['liters']) ?? 0,
           fuelType: _fuelLabel(json),
+          isRecharge: isRecharge,
         ),
         HistoryEventType.maintenance => MaintenanceDetails(
           description: maintenanceDescription.description,
@@ -102,7 +110,10 @@ abstract final class HistoryApiEventMapper {
         'title': event.title,
         'eventDateTime': _dateTimePayload(event.occurredAt),
         'mileageKm': event.currentMileageKm,
-        'liters': details.liters,
+        if (_isRechargeDetails(details))
+          'kwh': details.liters
+        else
+          'liters': details.liters,
         'cost': details.cost,
         'fuelType': _backendFuelType(details.fuelType),
         'fuelName': _fuelNamePayload(details.fuelType),
@@ -129,7 +140,7 @@ abstract final class HistoryApiEventMapper {
 
   static HistoryEventType _eventType(String value) {
     return switch (value.toUpperCase()) {
-      'REFUEL' => HistoryEventType.fuel,
+      'REFUEL' || 'RECHARGE' => HistoryEventType.fuel,
       'TRIP' => HistoryEventType.trip,
       'MAINTENANCE' ||
       'PART_REPLACEMENT' ||
@@ -148,7 +159,7 @@ abstract final class HistoryApiEventMapper {
 
   static String _title(Map<String, dynamic> json, HistoryEventType type) {
     return switch (type) {
-      HistoryEventType.fuel => _refuelTitle(json),
+      HistoryEventType.fuel => _fuelTitle(json),
       HistoryEventType.trip => _tripTitle(json),
       HistoryEventType.maintenance =>
         _nullableStringValue(json['name']) ??
@@ -157,14 +168,16 @@ abstract final class HistoryApiEventMapper {
     };
   }
 
-  static String _refuelTitle(Map<String, dynamic> json) {
+  static String _fuelTitle(Map<String, dynamic> json) {
+    final isRecharge = _isRechargeBackendType(_stringValue(json['type']));
     final title = _nullableStringValue(json['title']);
-    if (title != null && !_isGenericRefuelTitle(title)) {
+    if (title != null && !_isGenericFuelTitle(title)) {
       return title;
     }
 
     final fuelName = _nullableStringValue(json['fuelName']);
-    return fuelName == null ? 'Refueling' : 'Refueling $fuelName';
+    final defaultTitle = isRecharge ? 'Recharge' : 'Refueling';
+    return fuelName == null ? defaultTitle : '$defaultTitle $fuelName';
   }
 
   static String _tripTitle(Map<String, dynamic> json) {
@@ -182,12 +195,16 @@ abstract final class HistoryApiEventMapper {
     return distanceKm == null ? 'Trip' : 'Trip $distanceKm km';
   }
 
-  static bool _isGenericRefuelTitle(String title) {
+  static bool _isGenericFuelTitle(String title) {
     final normalizedTitle = title.trim().toLowerCase();
     return normalizedTitle == 'заправка' ||
+        normalizedTitle == 'зарядка' ||
         normalizedTitle == 'refueling' ||
         normalizedTitle == 'fueling' ||
-        normalizedTitle == 'fuel';
+        normalizedTitle == 'fuel' ||
+        normalizedTitle == 'recharge' ||
+        normalizedTitle == 'charging' ||
+        normalizedTitle == 'charge';
   }
 
   static bool _isGenericTripTitle(String title) {
@@ -210,7 +227,12 @@ abstract final class HistoryApiEventMapper {
     if (lowerValue.contains('diesel') || lowerValue.contains('диз')) {
       return 'DIESEL';
     }
-    if (lowerValue.contains('electric')) return 'ELECTRIC';
+    if (lowerValue.contains('electric') ||
+        lowerValue.contains('charging') ||
+        lowerValue.contains('charger') ||
+        lowerValue.contains('supercharger')) {
+      return 'ELECTRIC';
+    }
     if (lowerValue.contains('hybrid')) return 'HYBRID';
     if (lowerValue.contains('gas') ||
         lowerValue.contains('petrol') ||
@@ -222,6 +244,16 @@ abstract final class HistoryApiEventMapper {
     }
 
     return 'OTHER';
+  }
+
+  static bool _isRechargeBackendType(String value) {
+    return value.toUpperCase() == 'RECHARGE';
+  }
+
+  static bool _isRechargeDetails(EventDetails details) {
+    return details is FuelDetails &&
+        (details.isRecharge ||
+            _backendFuelType(details.fuelType) == 'ELECTRIC');
   }
 
   static String _fuelNamePayload(String value) {

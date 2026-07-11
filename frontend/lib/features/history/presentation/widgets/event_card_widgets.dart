@@ -438,7 +438,9 @@ class _EventPresentation {
   factory _EventPresentation.from(HistoryEvent event) {
     return switch (event.type) {
       HistoryEventType.fuel => _EventPresentation(
-        iconAsset: 'assets/icons/events/gas.svg',
+        iconAsset: _isChargeFuelDetails(event.details)
+            ? 'assets/icons/events/charge.svg'
+            : 'assets/icons/events/gas.svg',
         iconColor: AppColors.primaryLight,
         iconBackground: AppColors.primarySoft,
         metric: event.details is FuelDetails
@@ -466,6 +468,24 @@ class _EventPresentation {
   }
 }
 
+bool _isChargeFuelDetails(EventDetails details) {
+  if (details is! FuelDetails) return false;
+  if (details.isRecharge) return true;
+
+  final fuelType = details.fuelType.toLowerCase();
+  return fuelType.contains('charging') ||
+      fuelType.contains('charger') ||
+      fuelType.contains('supercharger') ||
+      fuelType.contains('electric') ||
+      fuelType.contains('kwh') ||
+      fuelType.contains('квт');
+}
+
+String _formatFuelAmount(FuelDetails details) {
+  final unit = details.isRecharge ? 'kWh' : 'L';
+  return '${_formatDecimal(details.liters)} $unit';
+}
+
 String _formatNumber(int value) {
   final digits = value.abs().toString();
   final buffer = StringBuffer();
@@ -480,7 +500,7 @@ String _formatNumber(int value) {
   return value < 0 ? '-$buffer' : buffer.toString();
 }
 
-String _formatLiters(double value) {
+String _formatDecimal(double value) {
   if (value == value.roundToDouble()) {
     return value.toInt().toString();
   }

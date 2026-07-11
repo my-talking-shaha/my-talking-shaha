@@ -6,11 +6,13 @@ class FuelDetails extends EventDetails {
   final int cost;
   final double liters;
   final String fuelType;
+  final bool isRecharge;
 
   FuelDetails({
     required this.cost,
     required this.liters,
     required this.fuelType,
+    this.isRecharge = false,
   });
 }
 

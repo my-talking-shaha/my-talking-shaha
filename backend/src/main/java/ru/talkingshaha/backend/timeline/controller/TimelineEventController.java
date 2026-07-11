@@ -68,6 +68,14 @@ public class TimelineEventController {
         return service.createRefuelEvent(vehicleId, request);
     }
 
+    @PostMapping("/recharge")
+    @ResponseStatus(HttpStatus.CREATED)
+    public TimelineEventResponse createRechargeEvent(
+            @PathVariable UUID vehicleId,
+            @Valid @RequestBody CreateRefuelEventRequest request) {
+        return service.createRechargeEvent(vehicleId, request);
+    }
+
     @PostMapping("/trip")
     @ResponseStatus(HttpStatus.CREATED)
     public TimelineEventResponse createTripEvent(

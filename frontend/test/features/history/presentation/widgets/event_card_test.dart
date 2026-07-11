@@ -31,6 +31,29 @@ void main() {
     expect(_svgAssetName(tester), 'assets/icons/events/gas.svg');
   });
 
+  testWidgets('charging fuel card uses charge icon', (tester) async {
+    final event = HistoryEvent(
+      id: 'charge_1',
+      carId: 'vehicle_1',
+      type: HistoryEventType.fuel,
+      occurredAt: DateTime(2026, 6, 15, 14, 30),
+      title: 'Evening recharge',
+      currentMileageKm: 124580,
+      details: FuelDetails(
+        cost: 1200,
+        liters: 37.5,
+        fuelType: 'AC charging',
+        isRecharge: true,
+      ),
+    );
+
+    await _pumpCard(tester, event);
+
+    expect(find.text('Evening recharge'), findsOneWidget);
+    expect(find.text('37.5 kWh • AC charging'), findsOneWidget);
+    expect(_svgAssetName(tester), 'assets/icons/events/charge.svg');
+  });
+
   testWidgets(
     'maintenance card handles optional cost, parts, and photo fallback',
     (tester) async {

@@ -79,6 +79,7 @@
   "mileage": "MILEAGE",
   "service": "SERVICE",
   "fuel": "FUEL",
+  "charge": "CHARGE",
   "noIssues": "No issues",
   "noData": "No data",
   "warningsCount": "{count} warnings",
@@ -174,9 +175,11 @@
   "couldNotLoadHistory": "Could not load history",
   "backToChat": "Back to chat",
   "newRefueling": "New refueling",
+  "newRecharge": "New recharge",
   "newMaintenance": "New maintenance",
   "newTrip": "New trip",
   "editRefueling": "Edit refueling",
+  "editRecharge": "Edit recharge",
   "editMaintenance": "Edit maintenance",
   "editTrip": "Edit trip",
   "deleteEventQuestion": "Delete event?",
@@ -196,7 +199,9 @@
   "enterEventTitle": "Enter event title...",
   "currentMileageLabel": "CURRENT MILEAGE",
   "refuelingDetails": "REFUELING DETAILS",
+  "rechargeDetails": "RECHARGE DETAILS",
   "amount": "AMOUNT",
+  "energy": "ENERGY",
   "fuelLitersInvalidNumber": "Enter amount",
   "fuelLitersMustBePositive": "Must be > 0 L",
   "fuelLitersMax": "Max {max} L",
@@ -207,8 +212,23 @@
       }
     }
   },
+  "energyKwhInvalidNumber": "Enter energy",
+  "energyKwhMustBePositive": "Must be > 0 kWh",
+  "energyKwhMax": "Max {max} kWh",
+  "@energyKwhMax": {
+    "placeholders": {
+      "max": {}
+    }
+  },
+  "fieldMax": "Max {max}",
+  "@fieldMax": {
+    "placeholders": {
+      "max": {}
+    }
+  },
   "cost": "COST",
   "fuelType": "FUEL TYPE",
+  "chargerType": "CHARGER TYPE",
   "mileageForecastInfo": "Mileage data will be used to update service intervals and forecasts.",
   "workDescription": "WORK DESCRIPTION",
   "describeWorkPerformed": "Describe the work performed...",
@@ -229,6 +249,7 @@
   "couldNotSelectPhoto": "Could not select the photo.",
   "couldNotRestorePhoto": "Could not restore the selected photo.",
   "fuelEvent": "Fuel",
+  "rechargeEvent": "Recharge",
   "maintenanceEvent": "Maintenance",
   "tripEvent": "Trip",
   "fieldMustBePositive": "{field} must be positive",

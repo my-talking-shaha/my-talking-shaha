@@ -78,6 +78,78 @@ void main() {
     expect(details.liters, 42.5);
   });
 
+  testWidgets('uses recharge labels for electric vehicle fuel events', (
+    tester,
+  ) async {
+    HistoryEvent? savedEvent;
+    await _pumpScreen(
+      tester,
+      isElectricVehicle: true,
+      onSave: (event) async => savedEvent = event,
+    );
+
+    expect(find.text('New recharge'), findsOneWidget);
+    expect(find.text('RECHARGE DETAILS'), findsOneWidget);
+    expect(find.text('ENERGY'), findsOneWidget);
+    expect(find.text('CHARGER TYPE'), findsOneWidget);
+    expect(find.text('AC charging'), findsOneWidget);
+
+    await tester.enterText(
+      find.byKey(const ValueKey('event-title')),
+      'Evening recharge',
+    );
+    await tester.enterText(
+      find.byKey(const ValueKey('fuel-mileage')),
+      '124600',
+    );
+    await tester.enterText(find.byKey(const ValueKey('fuel-liters')), '0');
+    await tester.enterText(find.byKey(const ValueKey('fuel-cost')), '3000');
+    await _tapSave(tester);
+
+    expect(savedEvent, isNull);
+    expect(find.text('Must be > 0 kWh'), findsOneWidget);
+
+    await tester.enterText(find.byKey(const ValueKey('fuel-liters')), '37.5');
+    await _tapSave(tester);
+
+    final details = savedEvent?.details as FuelDetails;
+    expect(savedEvent?.title, 'Evening recharge');
+    expect(details.liters, 37.5);
+    expect(details.fuelType, 'AC charging');
+    expect(details.isRecharge, isTrue);
+  });
+
+  testWidgets('blocks unrealistic recharge values', (tester) async {
+    HistoryEvent? savedEvent;
+    await _pumpScreen(
+      tester,
+      isElectricVehicle: true,
+      onSave: (event) async => savedEvent = event,
+    );
+
+    await tester.enterText(
+      find.byKey(const ValueKey('event-title')),
+      'Impossible recharge',
+    );
+    await tester.enterText(
+      find.byKey(const ValueKey('fuel-mileage')),
+      '124600',
+    );
+    await tester.enterText(
+      find.byKey(const ValueKey('fuel-liters')),
+      '100000000',
+    );
+    await tester.enterText(
+      find.byKey(const ValueKey('fuel-cost')),
+      '100000000',
+    );
+    await _tapSave(tester);
+
+    expect(savedEvent, isNull);
+    expect(find.text('Max 500 kWh'), findsOneWidget);
+    expect(find.text('Max 100 000'), findsOneWidget);
+  });
+
   testWidgets('localizes fuel amount validation errors', (tester) async {
     await _pumpScreen(tester, locale: const Locale('ru'), onSave: (_) async {});
 
@@ -254,6 +326,50 @@ void main() {
     expect((savedEvent?.details as FuelDetails).fuelType, 'AI-95');
   });
 
+  testWidgets('localizes electric edit title and max validators', (
+    tester,
+  ) async {
+    HistoryEvent? savedEvent;
+    final initialEvent = HistoryEvent(
+      id: 'recharge_1',
+      carId: 'vehicle_1',
+      type: HistoryEventType.fuel,
+      occurredAt: DateTime(2026, 6, 15, 14, 30),
+      title: 'Evening recharge',
+      currentMileageKm: 124580,
+      details: FuelDetails(
+        cost: 1200,
+        liters: 37.5,
+        fuelType: 'AC charging',
+        isRecharge: true,
+      ),
+    );
+
+    await _pumpScreen(
+      tester,
+      locale: const Locale('ru'),
+      initialEvent: initialEvent,
+      isElectricVehicle: true,
+      onSave: (event) async => savedEvent = event,
+    );
+
+    expect(find.text('Редактировать зарядку'), findsOneWidget);
+
+    await tester.enterText(
+      find.byKey(const ValueKey('fuel-liters')),
+      '100000000',
+    );
+    await tester.enterText(
+      find.byKey(const ValueKey('fuel-cost')),
+      '100000000',
+    );
+    await _tapSave(tester, label: 'Сохранить изменения');
+
+    expect(savedEvent, isNull);
+    expect(find.text('Макс. 500 кВт·ч'), findsOneWidget);
+    expect(find.text('Макс. 100 000'), findsOneWidget);
+  });
+
   testWidgets('allows saving an edited trip with its original start mileage', (
     tester,
   ) async {
@@ -392,6 +508,7 @@ Future<void> _pumpScreen(
   DeleteHistoryPhoto? deletePhoto,
   Locale locale = const Locale('en'),
   HistoryEvent? initialEvent,
+  bool isElectricVehicle = false,
 }) async {
   await tester.pumpWidget(
     MaterialApp(
@@ -404,6 +521,7 @@ Future<void> _pumpScreen(
         initialEvent: initialEvent,
         initialMileageKm: 124580,
         initialOccurredAt: DateTime(2026, 6, 20, 12),
+        isElectricVehicle: isElectricVehicle,
         onSave: onSave,
         pickPhoto: pickPhoto,
         pickPhotos: pickPhotos,

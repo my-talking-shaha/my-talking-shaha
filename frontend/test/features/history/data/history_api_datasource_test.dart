@@ -30,6 +30,40 @@ void main() {
         );
       },
     );
+
+    test('adds electric fuel event using recharge endpoint', () async {
+      final adapter = _CapturingAdapter();
+      final dio = Dio(BaseOptions(baseUrl: 'http://localhost:8080/api/v1'))
+        ..httpClientAdapter = adapter;
+      final datasource = HistoryApiDatasource(dio);
+
+      await datasource.addEvent(
+        HistoryEvent(
+          id: 'local-recharge',
+          carId: 'vehicle_1',
+          type: HistoryEventType.fuel,
+          occurredAt: DateTime.utc(2026, 6, 12, 14, 30),
+          title: 'Recharge',
+          currentMileageKm: 10000,
+          details: FuelDetails(
+            cost: 1200,
+            liters: 37.5,
+            fuelType: 'AC charging',
+            isRecharge: true,
+          ),
+        ),
+      );
+
+      expect(adapter.lastOptions?.method, 'POST');
+      expect(
+        adapter.lastOptions?.path,
+        '/vehicles/vehicle_1/timeline/recharge',
+      );
+      final data = adapter.lastOptions?.data as Map<String, dynamic>;
+      expect(data, containsPair('kwh', 37.5));
+      expect(data.containsKey('liters'), isFalse);
+      expect(data, containsPair('fuelType', 'ELECTRIC'));
+    });
   });
 
   group('HistoryApiEventMapper', () {
@@ -74,6 +108,54 @@ void main() {
       );
 
       expect(payload['liters'], 42.5);
+    });
+
+    test('builds backend recharge payload with electric fuel type and kwh', () {
+      final payload = HistoryApiEventMapper.createPayload(
+        HistoryEvent(
+          id: 'local-recharge',
+          carId: 'vehicle_1',
+          type: HistoryEventType.fuel,
+          occurredAt: DateTime.utc(2026, 6, 12, 14, 30),
+          title: 'Recharge',
+          currentMileageKm: 10000,
+          details: FuelDetails(
+            cost: 1200,
+            liters: 37.5,
+            fuelType: 'AC charging',
+            isRecharge: true,
+          ),
+        ),
+      );
+
+      expect(payload['kwh'], 37.5);
+      expect(payload.containsKey('liters'), isFalse);
+      expect(payload['fuelType'], 'ELECTRIC');
+      expect(payload['fuelName'], 'AC charging');
+    });
+
+    test('maps backend recharge event to history fuel details', () {
+      final event = HistoryApiEventMapper.fromJson(const {
+        'id': 'recharge_1',
+        'type': 'RECHARGE',
+        'title': 'Recharge',
+        'eventDateTime': '2026-06-12T14:30:00Z',
+        'cost': 1200,
+        'mileageKm': 10000,
+        'liters': 37.5,
+        'kwh': 37.5,
+        'fuelType': 'ELECTRIC',
+        'fuelName': 'AC charging',
+        'stationName': 'Home charger',
+      }, 'vehicle_1');
+
+      expect(event.type, HistoryEventType.fuel);
+      expect(event.title, 'Recharge AC charging');
+
+      final details = event.details as FuelDetails;
+      expect(details.liters, 37.5);
+      expect(details.fuelType, 'AC charging • Home charger');
+      expect(details.isRecharge, isTrue);
     });
 
     test('uses event-specific title instead of backend type label', () {

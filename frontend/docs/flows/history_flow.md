@@ -11,6 +11,7 @@ Covers:
 - Add event type selector.
 - Add trip form.
 - Add refueling form.
+- Add recharge form for electric vehicles.
 - Add service form.
 - Add part event form.
 - Event details screen or bottom sheet.
@@ -41,6 +42,17 @@ Fields:
 - liters;
 - cost;
 - fuel type.
+
+### Recharge
+For electric vehicles, the first event type uses recharge wording and the
+dedicated recharge API endpoint.
+
+Fields:
+- date and time;
+- mileage;
+- energy in kWh;
+- cost;
+- charger type.
 
 ### Trip
 Fields:
@@ -75,6 +87,7 @@ Fields:
 - New mileage cannot be lower than previous known vehicle mileage unless backend explicitly supports corrections.
 - Trip end mileage must be >= start mileage.
 - Refueling amount supports decimal values and must be greater than 0 and no more than 100 liters.
+- Recharge energy supports decimal kWh values and must be greater than 0.
 - If backend rejects mileage, show field-level error.
 
 ## Acceptance Criteria

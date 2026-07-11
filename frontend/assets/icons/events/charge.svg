@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="28 36 327 316" role="img" aria-labelledby="title desc">
+  <title id="title">Electric vehicle charging station icon</title>
+  <desc id="desc">A monochrome electric charging station with a lightning bolt, cable, and plug on a transparent background.</desc>
+
+  <g>
+    <g fill="none" stroke="#B9BEFF" stroke-width="25" stroke-linecap="round" stroke-linejoin="round">
+      <!-- Charging-station body -->
+      <path d="M58 291V68c0-11 9-20 20-20h90c11 0 20 9 20 20v223"/>
+      <path d="M58 190h130"/>
+
+      <!-- Cable -->
+      <path d="M188 156h9c18 0 28 11 28 29v61c0 31 20 51 49 51s45-20 45-51v-50"/>
+
+      <!-- Plug -->
+      <path d="M278 133h66v25c0 22-14 38-33 38s-33-16-33-38z"/>
+      <path d="M293 133V96"/>
+      <path d="M329 133V96"/>
+    </g>
+
+    <!-- Station base, with transparent slot -->
+    <path fill="#B9BEFF" fill-rule="evenodd"
+      d="M47 286h153c5 0 9 4 9 9v37c0 5-4 9-9 9H47c-5 0-9-4-9-9v-37c0-5 4-9 9-9zm8 17v21h137v-21z"/>
+
+    <!-- Lightning bolt -->
+    <path fill="#B9BEFF"
+      d="M126 79c5-7 16-1 12 7l-17 27h19c8 0 12 9 7 15l-27 37c-5 7-16 1-12-7l15-28h-19c-8 0-12-8-8-14z"/>
+  </g>
+</svg>

@@ -414,6 +414,7 @@ paths:
   /vehicles/{vehicleId}/timeline/refuel:
     post:
       summary: Add refuel event
+      description: Electric refuel payloads create a RECHARGE event for backwards compatibility.
       tags: [ Timeline ]
       parameters:
         - $ref: '#/components/parameters/VehicleId'
@@ -426,6 +427,30 @@ paths:
       responses:
         '201':
           description: Created refuel event
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TimelineEvent'
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /vehicles/{vehicleId}/timeline/recharge:
+    post:
+      summary: Add recharge event
+      description: Uses kwh for the charged energy amount, requires fuelType ELECTRIC, and returns a timeline event with type RECHARGE. The legacy liters field is still accepted and returned for current mobile compatibility.
+      tags: [ Timeline ]
+      parameters:
+        - $ref: '#/components/parameters/VehicleId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateRefuelEventRequest'
+      responses:
+        '201':
+          description: Created recharge event
           content:
             application/json:
               schema:
@@ -1162,7 +1187,8 @@ components:
             $ref: '#/components/schemas/VehiclePhoto'
     CreateRefuelEventRequest:
       type: object
-      required: [ eventDateTime, title, mileageKm, liters, cost, fuelType ]
+      description: Refuel requests require liters. Recharge requests require kwh, while liters is accepted as a legacy alias for current mobile clients.
+      required: [ eventDateTime, title, mileageKm, cost, fuelType ]
       properties:
         eventDateTime:
           type: string
@@ -1177,10 +1203,18 @@ components:
           type: number
           minimum: 0
           exclusiveMinimum: true
+          description: Refuel volume in liters. For recharge requests, this is accepted as a legacy alias for kwh.
+        kwh:
+          type: number
+          minimum: 0
+          exclusiveMinimum: true
+          maximum: 500
+          description: Recharge energy in kilowatt-hours. Used when the event type is RECHARGE.
         cost:
           type: number
           minimum: 0
           exclusiveMinimum: true
+          description: Event cost. Recharge requests are limited to 100000.
         fuelType:
           $ref: '#/components/schemas/FuelType'
         fuelName:
@@ -1275,8 +1309,9 @@ components:
     TimelineEvent:
       type: object
       description: >-
-        Unified timeline event. Fields are populated according to `type`: refuel events use
-        liters/fuelType/fuelName/stationName and cost; trip events use
+        Unified timeline event. Fields are populated according to `type`: refuel events
+        use liters/fuelType/fuelName/stationName and cost; recharge events use kwh and
+        also return legacy liters for current mobile compatibility; trip events use
         startMileageKm/endMileageKm/distanceKm/route/durationMinutes; maintenance events use
         name/description/photoUrls and cost.
       required: [ id, type, eventDateTime ]
@@ -1301,6 +1336,11 @@ components:
         liters:
           type: number
           nullable: true
+          description: Refuel volume in liters. For recharge events, this mirrors kwh as a legacy alias.
+        kwh:
+          type: number
+          nullable: true
+          description: Recharge energy in kilowatt-hours.
         fuelType:
           allOf:
             - $ref: '#/components/schemas/FuelType'
@@ -1355,7 +1395,7 @@ components:
     FuelType:
       type: string
       description: >
-        Fuel type of a vehicle or a refuel event. GASOLINE is a legacy generic
+        Fuel type of a vehicle or a refuel/recharge event. GASOLINE is a legacy generic
         petrol value kept for already stored data; new clients should prefer
         the octane-specific PETROL_* values.
       enum: [ PETROL_92, PETROL_95, PETROL_98, PETROL_100, DIESEL, ELECTRIC, HYBRID, PHEV, GASOLINE, OTHER ]
@@ -1376,7 +1416,7 @@ components:
       enum: [ OK, ATTENTION, CRITICAL, UNKNOWN, REPLACED ]
     TimelineEventType:
       type: string
-      enum: [ TRIP, REFUEL, REPAIR, MAINTENANCE, PART_REPLACEMENT, WARNING ]
+      enum: [ TRIP, REFUEL, RECHARGE, REPAIR, MAINTENANCE, PART_REPLACEMENT, WARNING ]
     TripCompletionStatus:
       type: string
       enum: [ IN_PROGRESS, COMPLETE, PARTIAL ]
@@ -1654,7 +1694,7 @@ components:
         form:
           type: string
           nullable: true
-          enum: [ REFUEL, TRIP, PART_REPLACEMENT, MAINTENANCE ]
+          enum: [ REFUEL, RECHARGE, TRIP, PART_REPLACEMENT, MAINTENANCE ]
         screen:
           type: string
           nullable: true

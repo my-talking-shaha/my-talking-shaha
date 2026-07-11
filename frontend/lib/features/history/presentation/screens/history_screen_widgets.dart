@@ -21,17 +21,22 @@ final class _SearchField extends StatelessWidget {
 }
 
 final class _TypeFilters extends StatelessWidget {
-  const _TypeFilters({required this.selectedType, required this.onSelected});
+  const _TypeFilters({
+    required this.selectedType,
+    required this.onSelected,
+    required this.isElectricVehicle,
+  });
 
   final HistoryEventType? selectedType;
   final ValueChanged<HistoryEventType?> onSelected;
+  final bool isElectricVehicle;
 
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
     final filters = <(String, HistoryEventType?)>[
       (l10n.all, null),
-      (l10n.fuel, HistoryEventType.fuel),
+      (isElectricVehicle ? l10n.charge : l10n.fuel, HistoryEventType.fuel),
       (l10n.repairs, HistoryEventType.maintenance),
       (l10n.trips, HistoryEventType.trip),
     ];

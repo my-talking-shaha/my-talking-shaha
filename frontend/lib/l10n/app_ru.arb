@@ -79,6 +79,7 @@
   "mileage": "ПРОБЕГ",
   "service": "СЕРВИС",
   "fuel": "ТОПЛИВО",
+  "charge": "ЗАРЯДКА",
   "noIssues": "Проблем нет",
   "noData": "Нет данных",
   "warningsCount": "{count} предупреждений",
@@ -174,9 +175,11 @@
   "couldNotLoadHistory": "Не удалось загрузить историю",
   "backToChat": "Назад к чату",
   "newRefueling": "Новая заправка",
+  "newRecharge": "Новая зарядка",
   "newMaintenance": "Новое обслуживание",
   "newTrip": "Новая поездка",
   "editRefueling": "Редактировать заправку",
+  "editRecharge": "Редактировать зарядку",
   "editMaintenance": "Редактировать обслуживание",
   "editTrip": "Редактировать поездку",
   "deleteEventQuestion": "Удалить событие?",
@@ -196,7 +199,9 @@
   "enterEventTitle": "Введите название события...",
   "currentMileageLabel": "ТЕКУЩИЙ ПРОБЕГ",
   "refuelingDetails": "ДЕТАЛИ ЗАПРАВКИ",
+  "rechargeDetails": "ДЕТАЛИ ЗАРЯДКИ",
   "amount": "КОЛИЧЕСТВО",
+  "energy": "ЭНЕРГИЯ",
   "fuelLitersInvalidNumber": "Введите литры",
   "fuelLitersMustBePositive": "Больше 0 л",
   "fuelLitersMax": "Макс. {max} л",
@@ -207,8 +212,23 @@
       }
     }
   },
+  "energyKwhInvalidNumber": "Введите кВт·ч",
+  "energyKwhMustBePositive": "Больше 0 кВт·ч",
+  "energyKwhMax": "Макс. {max} кВт·ч",
+  "@energyKwhMax": {
+    "placeholders": {
+      "max": {}
+    }
+  },
+  "fieldMax": "Макс. {max}",
+  "@fieldMax": {
+    "placeholders": {
+      "max": {}
+    }
+  },
   "cost": "СТОИМОСТЬ",
   "fuelType": "ТИП ТОПЛИВА",
+  "chargerType": "ТИП ЗАРЯДКИ",
   "mileageForecastInfo": "Пробег будет использован для обновления сервисных интервалов и прогнозов.",
   "workDescription": "ОПИСАНИЕ РАБОТ",
   "describeWorkPerformed": "Опишите выполненные работы...",
@@ -229,6 +249,7 @@
   "couldNotSelectPhoto": "Не удалось выбрать фото.",
   "couldNotRestorePhoto": "Не удалось восстановить выбранное фото.",
   "fuelEvent": "Заправка",
+  "rechargeEvent": "Зарядка",
   "maintenanceEvent": "Обслуживание",
   "tripEvent": "Поездка",
   "fieldMustBePositive": "{field} должно быть больше нуля",

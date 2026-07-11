@@ -251,6 +251,7 @@ public class ChatService {
                         "Заправка",
                         mileageKm,
                         liters,
+                        null,
                         cost,
                         fuelType,
                         fuelName,

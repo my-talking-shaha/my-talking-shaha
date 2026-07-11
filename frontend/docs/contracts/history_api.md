@@ -9,6 +9,7 @@ Auth: required.
 ```text
 TRIP
 REFUEL
+RECHARGE
 MAINTENANCE
 PART_REPLACEMENT
 ```
@@ -58,6 +59,34 @@ Response:
 
 Validation: `mileageKm >= previous mileage`, `liters > 0`, `cost > 0`,
 `eventDateTime <= now`.
+
+Electric refuel payloads may be returned as `type = RECHARGE` for backwards
+compatibility, but the client should use the dedicated recharge endpoint for
+electric vehicles.
+
+## Add Recharge Event
+
+`POST /api/v1/vehicles/{vehicleId}/timeline/recharge`
+
+```json
+{
+  "eventDateTime": "2026-06-12T14:30:00Z",
+  "title": "Recharge",
+  "mileageKm": 10000,
+  "kwh": 37.5,
+  "cost": 1200,
+  "fuelType": "ELECTRIC",
+  "fuelName": "AC charging",
+  "stationName": "Home charger"
+}
+```
+
+The created event has `type = RECHARGE`. Recharge responses include `kwh` and
+may also include legacy `liters` with the same value for current mobile
+compatibility.
+
+Validation: `mileageKm >= previous mileage`, `kwh > 0`, `cost > 0`,
+`fuelType = ELECTRIC`, `eventDateTime <= now`.
 
 ## Add Trip Event
 
@@ -122,6 +151,8 @@ Request body uses the same event-specific fields as add endpoints:
 
 - refuel: `eventDateTime`, `mileageKm`, `liters`, `cost`, `fuelType`, optional
   `fuelName`, optional `stationName`;
+- recharge: `eventDateTime`, `mileageKm`, `kwh`, `cost`, `fuelType = ELECTRIC`,
+  optional `fuelName`, optional `stationName`;
 - trip: `eventDateTime`, `startMileageKm`, `endMileageKm`, optional `route`,
   `durationMinutes`;
 - maintenance/part: `eventDateTime`, `mileageKm`, `name`, `description`,

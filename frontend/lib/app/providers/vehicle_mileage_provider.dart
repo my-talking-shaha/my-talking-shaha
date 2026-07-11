@@ -13,3 +13,14 @@ final vehicleMileageProvider = FutureProvider.autoDispose.family<int, String>((
   }
   return 0;
 });
+
+final vehicleEngineTypeProvider = FutureProvider.autoDispose
+    .family<String?, String>((ref, vehicleId) async {
+      final vehicles = await ref.watch(garageControllerProvider.future);
+      for (final vehicle in vehicles) {
+        if (vehicle.id == vehicleId) {
+          return vehicle.engineType;
+        }
+      }
+      return null;
+    });

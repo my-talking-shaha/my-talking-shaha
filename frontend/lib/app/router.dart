@@ -91,25 +91,49 @@ final routerProvider = Provider<GoRouter>((ref) {
           return Consumer(
             builder: (context, ref, _) {
               final mileageState = ref.watch(vehicleMileageProvider(vehicleId));
+              final engineTypeState = ref.watch(
+                vehicleEngineTypeProvider(vehicleId),
+              );
 
               return mileageState.when(
                 data: (currentMileageKm) {
-                  final initialMileageKm = prefillMileageKm == null
-                      ? currentMileageKm
-                      : prefillMileageKm < currentMileageKm
-                      ? currentMileageKm
-                      : prefillMileageKm;
-                  return AddHistoryEventScreen(
-                    vehicleId: vehicleId,
-                    initialMileageKm: initialMileageKm,
-                    initialType: initialType,
-                    onSave: (event) => _saveHistoryEvent(ref, event),
-                    persistPhoto: ref
-                        .read(historyPhotoStorageProvider)
-                        .persistPhoto,
-                    deletePhoto: ref
-                        .read(historyPhotoStorageProvider)
-                        .deletePhoto,
+                  return engineTypeState.when(
+                    data: (engineType) {
+                      final initialMileageKm = prefillMileageKm == null
+                          ? currentMileageKm
+                          : prefillMileageKm < currentMileageKm
+                          ? currentMileageKm
+                          : prefillMileageKm;
+                      return AddHistoryEventScreen(
+                        vehicleId: vehicleId,
+                        initialMileageKm: initialMileageKm,
+                        initialType: initialType,
+                        isElectricVehicle: _isElectricEngine(engineType),
+                        onSave: (event) => _saveHistoryEvent(ref, event),
+                        persistPhoto: ref
+                            .read(historyPhotoStorageProvider)
+                            .persistPhoto,
+                        deletePhoto: ref
+                            .read(historyPhotoStorageProvider)
+                            .deletePhoto,
+                      );
+                    },
+                    loading: () => const Scaffold(
+                      body: Center(child: CircularProgressIndicator()),
+                    ),
+                    error: (error, stackTrace) => Scaffold(
+                      appBar: AppBar(),
+                      body: Center(
+                        child: TextButton(
+                          onPressed: () {
+                            ref.invalidate(
+                              vehicleEngineTypeProvider(vehicleId),
+                            );
+                          },
+                          child: Text(AppLocalizations.of(context).retry),
+                        ),
+                      ),
+                    ),
                   );
                 },
                 loading: () => const Scaffold(
@@ -143,18 +167,38 @@ final routerProvider = Provider<GoRouter>((ref) {
           return Consumer(
             builder: (context, ref, _) {
               Widget screenFor(HistoryEvent event) {
-                return AddHistoryEventScreen(
-                  vehicleId: vehicleId,
-                  initialEvent: event,
-                  initialMileageKm: event.currentMileageKm,
-                  initialType: event.type,
-                  onSave: ref.read(updateHistoryEventProvider),
-                  persistPhoto: ref
-                      .read(historyPhotoStorageProvider)
-                      .persistPhoto,
-                  deletePhoto: ref
-                      .read(historyPhotoStorageProvider)
-                      .deletePhoto,
+                final engineTypeState = ref.watch(
+                  vehicleEngineTypeProvider(vehicleId),
+                );
+                return engineTypeState.when(
+                  data: (engineType) => AddHistoryEventScreen(
+                    vehicleId: vehicleId,
+                    initialEvent: event,
+                    initialMileageKm: event.currentMileageKm,
+                    initialType: event.type,
+                    isElectricVehicle: _isElectricEngine(engineType),
+                    onSave: ref.read(updateHistoryEventProvider),
+                    persistPhoto: ref
+                        .read(historyPhotoStorageProvider)
+                        .persistPhoto,
+                    deletePhoto: ref
+                        .read(historyPhotoStorageProvider)
+                        .deletePhoto,
+                  ),
+                  loading: () => const Scaffold(
+                    body: Center(child: CircularProgressIndicator()),
+                  ),
+                  error: (error, stackTrace) => Scaffold(
+                    appBar: AppBar(),
+                    body: Center(
+                      child: TextButton(
+                        onPressed: () {
+                          ref.invalidate(vehicleEngineTypeProvider(vehicleId));
+                        },
+                        child: Text(AppLocalizations.of(context).retry),
+                      ),
+                    ),
+                  ),
                 );
               }
 
@@ -412,6 +456,10 @@ HistoryEvent? _historyEventById(List<HistoryEvent> events, String eventId) {
 
 bool _launchedFromChat(Uri uri) {
   return uri.queryParameters['from'] == 'chat';
+}
+
+bool _isElectricEngine(String? engineType) {
+  return engineType?.toLowerCase() == 'electric';
 }
 
 Future<void> _saveHistoryEvent(WidgetRef ref, HistoryEvent event) async {

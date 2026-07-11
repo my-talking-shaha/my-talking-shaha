@@ -27,9 +27,11 @@ public record CreateRefuelEventRequest(
         @PositiveOrZero(message = "must be greater than or equal to 0")
         Integer mileageKm,
         @Schema(example = "30")
-        @NotNull(message = "must be provided")
         @DecimalMin(value = "0", inclusive = false, message = "must be greater than 0")
         BigDecimal liters,
+        @Schema(example = "37.5", description = "Recharge energy in kWh. Used for RECHARGE events; liters is still accepted as a legacy alias.")
+        @DecimalMin(value = "0", inclusive = false, message = "must be greater than 0")
+        BigDecimal kwh,
         @Schema(example = "2000")
         @NotNull(message = "must be provided")
         @Positive(message = "must be greater than 0")
