@@ -141,18 +141,18 @@ final class _HistorySwipeRevealActionsState
 
 final class _HistorySwipeActionButton extends StatelessWidget {
   const _HistorySwipeActionButton({
+    required this.actionKey,
     required this.label,
     required this.iconPath,
     required this.color,
     required this.onPressed,
   });
 
+  final String actionKey;
   final String label;
   final String iconPath;
   final Color color;
   final VoidCallback onPressed;
-
-  String get _actionKey => 'history_swipe_action_${label.toLowerCase()}';
 
   @override
   Widget build(BuildContext context) {
@@ -162,7 +162,7 @@ final class _HistorySwipeActionButton extends StatelessWidget {
       child: SizedBox.square(
         dimension: 52,
         child: IconButton.filled(
-          key: ValueKey(_actionKey),
+          key: ValueKey('history_swipe_action_$actionKey'),
           onPressed: onPressed,
           tooltip: label,
           style: IconButton.styleFrom(

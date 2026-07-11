@@ -144,7 +144,7 @@ final class _AddHistoryEventScreenState extends State<AddHistoryEventScreen> {
       appBar: AppBar(
         title: Text(
           _isEditing
-              ? HistoryEventFormUtils.editTitleFor(_type)
+              ? HistoryEventFormUtils.editTitleFor(_type, l10n)
               : HistoryEventFormUtils.titleFor(_type, l10n),
         ),
       ),
@@ -209,7 +209,7 @@ final class _AddHistoryEventScreenState extends State<AddHistoryEventScreen> {
                         dimension: 20,
                         child: CircularProgressIndicator(strokeWidth: 2),
                       )
-                    : Text(_isEditing ? 'Save changes' : l10n.save),
+                    : Text(_isEditing ? l10n.saveChanges : l10n.save),
               ),
             ],
           ),

@@ -39,19 +39,22 @@ class _EventCardState extends State<EventCard> with TickerProviderStateMixin {
     final details = event.details;
     final presentation = _EventPresentation.from(event);
     final photoUrls = _photoUrls(details);
+    final l10n = AppLocalizations.of(context);
 
     return _HistorySwipeRevealActions(
       actions: [
         if (widget.onEdit != null)
           _HistorySwipeActionButton(
-            label: 'Edit',
+            actionKey: 'edit',
+            label: l10n.edit,
             iconPath: 'assets/icons/garage/edit.svg',
             color: const Color(0xFFDCA249),
             onPressed: widget.onEdit!,
           ),
         if (widget.onDelete != null)
           _HistorySwipeActionButton(
-            label: 'Delete',
+            actionKey: 'delete',
+            label: l10n.delete,
             iconPath: 'assets/icons/garage/delete.svg',
             color: const Color(0xFFD4352F),
             onPressed: widget.onDelete!,

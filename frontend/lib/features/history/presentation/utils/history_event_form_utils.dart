@@ -18,11 +18,19 @@ abstract final class HistoryEventFormUtils {
     };
   }
 
-  static String editTitleFor(HistoryEventType type) {
+  static String editTitleFor(HistoryEventType type, [AppLocalizations? l10n]) {
+    if (l10n == null) {
+      return switch (type) {
+        HistoryEventType.fuel => 'Edit refueling',
+        HistoryEventType.maintenance => 'Edit maintenance',
+        HistoryEventType.trip => 'Edit trip',
+      };
+    }
+
     return switch (type) {
-      HistoryEventType.fuel => 'Edit refueling',
-      HistoryEventType.maintenance => 'Edit maintenance',
-      HistoryEventType.trip => 'Edit trip',
+      HistoryEventType.fuel => l10n.editRefueling,
+      HistoryEventType.maintenance => l10n.editMaintenance,
+      HistoryEventType.trip => l10n.editTrip,
     };
   }
 

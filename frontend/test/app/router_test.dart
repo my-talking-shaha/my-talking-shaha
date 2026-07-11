@@ -36,6 +36,7 @@ import 'package:frontend/features/history/presentation/providers/history_provide
 import 'package:frontend/features/history/presentation/screens/add_history_event_screen.dart';
 import 'package:frontend/features/parts/domain/entities/vehicle_part.dart';
 import 'package:frontend/features/parts/presentation/providers/parts_providers.dart';
+import 'package:frontend/l10n/generated/app_localizations.dart';
 import 'package:go_router/go_router.dart';
 
 void main() {
@@ -69,23 +70,32 @@ void main() {
     );
 
     expect(app.router.routeInformationProvider.value.uri.path, '/login');
-    expect(find.widgetWithText(SegmentedButton<AuthMode>, 'Login'), findsOne);
+    final l10n = AppLocalizations.of(
+      tester.element(find.byType(SegmentedButton<AuthMode>)),
+    );
     expect(
-      find.widgetWithText(SegmentedButton<AuthMode>, 'Register'),
+      find.widgetWithText(SegmentedButton<AuthMode>, l10n.logIn),
+      findsOne,
+    );
+    expect(
+      find.widgetWithText(SegmentedButton<AuthMode>, l10n.register),
       findsOne,
     );
     await tester.tap(
       find.descendant(
         of: find.byType(SegmentedButton<AuthMode>),
-        matching: find.text('Register'),
+        matching: find.text(l10n.register),
       ),
     );
     await tester.pumpAndSettle();
 
     expect(app.router.routeInformationProvider.value.uri.path, '/registration');
-    expect(find.widgetWithText(SegmentedButton<AuthMode>, 'Login'), findsOne);
     expect(
-      find.widgetWithText(SegmentedButton<AuthMode>, 'Register'),
+      find.widgetWithText(SegmentedButton<AuthMode>, l10n.logIn),
+      findsOne,
+    );
+    expect(
+      find.widgetWithText(SegmentedButton<AuthMode>, l10n.register),
       findsOne,
     );
   });
