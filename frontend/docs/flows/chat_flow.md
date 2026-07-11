@@ -41,7 +41,7 @@ Covers:
    - `Vehicle status`;
    - `When is service due?`;
    - `What can break soon?`;
-   - `Add refuel`;
+   - `Add refuel` for fuel vehicles or `Add recharge` for electric vehicles;
    - `Record repair`.
 6. Buttons may be dynamic and personalized for the selected user and vehicle.
 7. User taps a quick-question button.
@@ -87,6 +87,7 @@ Backend may return cards such as:
 For CHAT-05, backend must support structured actions for these recognized event intents:
 - repair;
 - refuel;
+- recharge;
 - trip.
 
 Flutter should render structured actions but not invent them.
@@ -147,6 +148,7 @@ event immediately instead of only returning an `OPEN_FORM` action.
 
 Supported automatic creation intents:
 - refuel: liters, cost, fuel type/name, mileage if present;
+- recharge: energy in kWh, cost, charger/station details, mileage if present;
 - trip: distance and duration;
 - repair/maintenance: repair text, mileage if present, cost if present.
 
@@ -170,6 +172,20 @@ Expected behavior:
 - client refreshes timeline/dashboard/analytics data after receiving `createdEvent`.
 - supported fuel names are limited to the current form values: `92 octane`, `95 octane`,
   `98 octane`, and `Diesel`.
+
+Example complete recharge message for an electric vehicle:
+
+```text
+I charged 37.5 kWh at the Supercharger for 1200 rubles
+```
+
+Expected behavior:
+- backend validates extracted data using timeline rules;
+- backend creates a `RECHARGE` timeline event;
+- assistant returns a confirmation message without an action;
+- response includes `createdEvent`;
+- client refreshes timeline/dashboard/analytics data after receiving `createdEvent`;
+- recharge amount is stored as energy (`energyKwh`), not fuel liters.
 
 Generic repair messages such as `I want to record a repair` are not enough to create an
 event. The car should ask for the work description and any invalid or missing validation
