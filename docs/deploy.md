@@ -11,9 +11,9 @@ and migration policy.
 ## Android APK releases
 
 CI builds an Android release APK for every pull request, push to `main`, and
-push of a tag starting with `v`. Builds from pull requests and `main` are kept
-as GitHub Actions artifacts for 14 days. A tag in the `vX.Y.Z` format also
-publishes the APK in GitHub Releases after all CI checks finish successfully.
+push of a tag. Builds from pull requests and `main` are kept as GitHub Actions
+artifacts for 14 days. Only a tag in the strict `vX.Y.Z` format publishes the
+APK in GitHub Releases after all CI checks finish successfully.
 
 Publishing an APK release does not deploy the backend or web application to the
 development server. The development deploy workflow still runs only for pushes
@@ -21,16 +21,11 @@ to `main`.
 
 ### Create a release
 
-1. Update `version` in `frontend/pubspec.yaml`. Keep the tag and version name
-   aligned, and increase the numeric build number after `+` for every release
-   that users may install over a previous APK. For example:
+1. Commit and push the release changes to `main`. The release version does not
+   need a manual edit in `frontend/pubspec.yaml`; the tag overrides it for the
+   release build.
 
-   ```yaml
-   version: 1.2.3+4
-   ```
-
-2. Commit and push the release changes to `main`. Create an annotated tag on
-   the exact commit to release, then push the tag:
+2. Create an annotated tag on the exact commit to release, then push the tag:
 
    ```bash
    git switch main
@@ -50,6 +45,13 @@ to `main`.
 
 ### Release behavior and troubleshooting
 
+- The tag is the source of the release version: `v1.2.3` sets Android
+  `versionName` to `1.2.3`. CI sets Android `versionCode` to
+  `GITHUB_RUN_NUMBER`, an increasing counter for this workflow. Re-running the
+  same workflow preserves that number, while a new workflow run receives the
+  next one.
+- `frontend/pubspec.yaml` remains the version source for local builds and CI
+  artifacts from pull requests and `main`.
 - Re-running a successful tag workflow replaces the APK asset in the existing
   GitHub Release; release notes are generated only when the release is first
   created.
