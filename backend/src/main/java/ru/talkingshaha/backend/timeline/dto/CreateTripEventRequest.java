@@ -2,7 +2,6 @@ package ru.talkingshaha.backend.timeline.dto;
 
 import java.time.OffsetDateTime;
 
-import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.PastOrPresent;
 import jakarta.validation.constraints.Positive;
@@ -16,7 +15,6 @@ public record CreateTripEventRequest(
         @PastOrPresent(message = "must not be in the future")
         OffsetDateTime eventDateTime,
         @Schema(example = "Trip to university")
-        @NotBlank(message = "must not be blank")
         @Size(max = 255, message = "must contain at most 255 characters")
         String title,
         @Schema(example = "10000")

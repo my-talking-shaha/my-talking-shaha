@@ -5,6 +5,8 @@
 - `Dockerfile.backend` - Multi-stage build for Spring Boot backend
 - `Dockerfile.frontend` - Multi-stage build for Flutter web frontend
 - `docker-compose.yml` - Orchestration configuration
+- `prometheus.yml` - local Prometheus scrape configuration for backend metrics
+- `grafana/provisioning/` - local Grafana datasource and dashboard provisioning
 - `nginx.conf` - Nginx configuration inside each frontend container
 - `router.local.conf` - stable local routing layer for frontend, API, OpenAPI, and Swagger UI
 - `docker-compose.blue-green.yml` - image-only blue-green runtime topology;
@@ -38,6 +40,8 @@ Docker Compose will automatically build:
 - **Backend**: Multi-stage Maven build for Spring Boot application
 - **Frontend**: Uses a prebuilt Flutter SDK image, installs dependencies, and builds the web app
 - **Router**: Nginx container that owns public port `80` and proxies to the frontend/backend containers
+- **Prometheus**: Scrapes backend metrics from `/actuator/prometheus` for local/internal monitoring
+- **Grafana**: Opens a preconfigured local dashboard backed by Prometheus
 
 The Dockerfiles use BuildKit cache mounts for downloaded dependencies:
 
@@ -84,9 +88,42 @@ docker compose --env-file .env -f docker/docker-compose.yml logs -f frontend
 - **Backend API**: http://localhost:8080, bound to localhost only
 - **Health Check**: http://localhost/health
 - **Database**: postgres://localhost:5432/talking_shaha, bound to localhost only
+- **Prometheus**: http://localhost:9090, bound to localhost only
+- **Grafana**: http://localhost:3000, bound to localhost only.
+  Default local credentials are `admin` / `admin` unless `GRAFANA_ADMIN_USER`
+  and `GRAFANA_ADMIN_PASSWORD` are set in `.env`.
+
+## Metrics
+
+The backend exposes Prometheus metrics at `/actuator/prometheus`. The local
+Prometheus container scrapes that endpoint through the Docker network, and
+Grafana provisions the `My Talking Shaha Overview` dashboard automatically.
+
+The dashboard includes basic technical metrics from Spring Boot and Micrometer:
+
+- backend scrape health;
+- API request rate by method, path, and status;
+- API max latency;
+- JVM heap and non-heap memory usage.
+
+It also includes a small set of business-oriented metrics that are available
+from current backend flows without adding a separate event pipeline:
+
+- total registered users, vehicles, timeline events, parts, and chat messages;
+- successful registrations;
+- created vehicles;
+- created timeline events by type;
+- created parts;
+- user chat messages;
+- analytics endpoint views.
 
 In the blue-green deployment topology, only `talking-shaha-router` binds public
 port `80`. The blue and green frontend/backend app containers expose ports only
 inside Docker networks, and the router reloads nginx upstreams to switch traffic.
 This runtime manifest does not build images or require a source checkout on the
 server; it pulls the immutable public GHCR images published by CI.
+
+Prometheus and Grafana are not included in the blue-green deployment manifest.
+They are internal monitoring tools, not end-user application components. If the
+development VM needs shared monitoring, run a separate VM-side monitoring stack
+and keep Grafana/Prometheus private.

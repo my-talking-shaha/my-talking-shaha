@@ -1,0 +1,11 @@
+apiVersion: 1
+
+providers:
+  - name: Talking Shaha
+    orgId: 1
+    folder: My Talking Shaha
+    type: file
+    disableDeletion: false
+    editable: true
+    options:
+      path: /etc/grafana/provisioning/dashboards

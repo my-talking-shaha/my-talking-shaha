@@ -15,6 +15,7 @@ import ru.talkingshaha.backend.auth.repository.RefreshTokenRepository;
 import ru.talkingshaha.backend.auth.security.JwtService;
 import ru.talkingshaha.backend.common.error.EmailAlreadyExistsException;
 import ru.talkingshaha.backend.common.error.InvalidCredentialsException;
+import ru.talkingshaha.backend.common.metrics.BusinessMetrics;
 import ru.talkingshaha.backend.user.model.AppUser;
 import ru.talkingshaha.backend.user.repository.AppUserRepository;
 
@@ -27,6 +28,7 @@ public class AuthService {
     private final RefreshTokenRepository refreshTokens;
     private final PasswordEncoder passwordEncoder;
     private final JwtService jwtService;
+    private final BusinessMetrics metrics;
     private final Duration refreshTtl;
 
     public AuthService(
@@ -34,11 +36,13 @@ public class AuthService {
             RefreshTokenRepository refreshTokens,
             PasswordEncoder passwordEncoder,
             JwtService jwtService,
+            BusinessMetrics metrics,
             @Value("${app.jwt.refresh-ttl}") Duration refreshTtl) {
         this.users = users;
         this.refreshTokens = refreshTokens;
         this.passwordEncoder = passwordEncoder;
         this.jwtService = jwtService;
+        this.metrics = metrics;
         this.refreshTtl = refreshTtl;
     }
 
@@ -52,6 +56,7 @@ public class AuthService {
         user.setDisplayName(request.displayName());
         user.setPasswordHash(passwordEncoder.encode(request.password()));
         users.save(user);
+        metrics.recordRegistration();
         return issueTokens(user);
     }
 

@@ -1,0 +1,147 @@
+{
+  "uid": "talking-shaha-overview",
+  "title": "My Talking Shaha Overview",
+  "schemaVersion": 39,
+  "version": 3,
+  "refresh": "15s",
+  "time": {
+    "from": "now-6h",
+    "to": "now"
+  },
+  "panels": [
+    {
+      "id": 1,
+      "type": "stat",
+      "title": "Backend Health",
+      "gridPos": { "x": 0, "y": 0, "w": 6, "h": 4 },
+      "targets": [
+        {
+          "expr": "up{job=\"talking-shaha-backend\"}",
+          "legendFormat": "up"
+        }
+      ]
+    },
+    {
+      "id": 2,
+      "type": "timeseries",
+      "title": "API Requests",
+      "gridPos": { "x": 6, "y": 0, "w": 18, "h": 8 },
+      "targets": [
+        {
+          "expr": "sum(rate(http_server_requests_seconds_count{uri!~\"/actuator.*\"}[5m])) by (method, uri, status)",
+          "legendFormat": "{{method}} {{uri}} {{status}}"
+        }
+      ]
+    },
+    {
+      "id": 3,
+      "type": "timeseries",
+      "title": "API Max Latency",
+      "gridPos": { "x": 0, "y": 4, "w": 12, "h": 8 },
+      "targets": [
+        {
+          "expr": "http_server_requests_seconds_max{uri!~\"/actuator.*\"}",
+          "legendFormat": "{{uri}}"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "s"
+        }
+      }
+    },
+    {
+      "id": 4,
+      "type": "timeseries",
+      "title": "JVM Memory Used",
+      "gridPos": { "x": 12, "y": 8, "w": 12, "h": 8 },
+      "targets": [
+        {
+          "expr": "sum(jvm_memory_used_bytes{area=\"heap\"})",
+          "legendFormat": "heap"
+        },
+        {
+          "expr": "sum(jvm_memory_used_bytes{area=\"nonheap\"})",
+          "legendFormat": "nonheap"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "bytes"
+        }
+      }
+    },
+    {
+      "id": 5,
+      "type": "stat",
+      "title": "Users",
+      "gridPos": { "x": 0, "y": 12, "w": 4, "h": 4 },
+      "targets": [
+        {
+          "expr": "talkingshaha_users",
+          "legendFormat": "users"
+        }
+      ]
+    },
+    {
+      "id": 6,
+      "type": "stat",
+      "title": "Vehicles",
+      "gridPos": { "x": 4, "y": 12, "w": 4, "h": 4 },
+      "targets": [
+        {
+          "expr": "talkingshaha_vehicles",
+          "legendFormat": "vehicles"
+        }
+      ]
+    },
+    {
+      "id": 7,
+      "type": "stat",
+      "title": "Timeline Events",
+      "gridPos": { "x": 8, "y": 12, "w": 4, "h": 4 },
+      "targets": [
+        {
+          "expr": "talkingshaha_timeline_events",
+          "legendFormat": "events"
+        }
+      ]
+    },
+    {
+      "id": 8,
+      "type": "bargauge",
+      "title": "Created Timeline Events Since Start",
+      "gridPos": { "x": 0, "y": 16, "w": 12, "h": 8 },
+      "targets": [
+        {
+          "expr": "sum(talkingshaha_timeline_event_creations_total) by (type)",
+          "legendFormat": "{{type}}"
+        }
+      ]
+    },
+    {
+      "id": 9,
+      "type": "bargauge",
+      "title": "Business Actions Since Start",
+      "gridPos": { "x": 12, "y": 16, "w": 12, "h": 8 },
+      "targets": [
+        {
+          "expr": "talkingshaha_users_registered_total",
+          "legendFormat": "registrations"
+        },
+        {
+          "expr": "talkingshaha_vehicle_creations_total",
+          "legendFormat": "vehicles created"
+        },
+        {
+          "expr": "talkingshaha_chat_user_messages_total",
+          "legendFormat": "chat messages"
+        },
+        {
+          "expr": "sum(talkingshaha_analytics_views_total) by (view)",
+          "legendFormat": "analytics {{view}}"
+        }
+      ]
+    }
+  ]
+}
