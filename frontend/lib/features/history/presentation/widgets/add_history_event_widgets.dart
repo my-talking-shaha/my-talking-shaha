@@ -1,4 +1,4 @@
-part of 'add_history_event_screen.dart';
+part of '../screens/add_history_event_screen.dart';
 
 final class _EventTypeSelector extends StatelessWidget {
   const _EventTypeSelector({
@@ -36,7 +36,7 @@ final class _EventTypeSelector extends StatelessWidget {
       height: 58,
       padding: const EdgeInsets.all(AppSpacing.xs),
       decoration: const BoxDecoration(
-        color: AppColors.surfaceHigh,
+        color: HistoryColors.surface,
         borderRadius: AppRadius.card,
       ),
       child: Stack(
@@ -57,7 +57,7 @@ final class _EventTypeSelector extends StatelessWidget {
                 heightFactor: 1,
                 child: DecoratedBox(
                   decoration: BoxDecoration(
-                    color: AppColors.primaryPressed.withValues(alpha: 0.45),
+                    color: HistoryColors.primaryPressed.withValues(alpha: 0.45),
                     borderRadius: AppRadius.input,
                   ),
                 ),
@@ -83,8 +83,8 @@ final class _EventTypeSelector extends StatelessWidget {
                           height: 22,
                           colorFilter: ColorFilter.mode(
                             type == selectedType
-                                ? AppColors.primaryLight
-                                : AppColors.textSecondary,
+                                ? HistoryColors.primary
+                                : HistoryColors.textSecondary,
                             BlendMode.srcIn,
                           ),
                         ),
@@ -116,8 +116,8 @@ final class _FormCard extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(AppSpacing.lg),
       decoration: BoxDecoration(
-        color: AppColors.surfaceHigh,
-        border: Border.all(color: AppColors.border),
+        color: HistoryColors.surface,
+        border: Border.all(color: HistoryColors.border),
         borderRadius: AppRadius.card,
       ),
       child: Column(
@@ -228,7 +228,7 @@ final class _ReadOnlyValue extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Material(
-      color: AppColors.backgroundDark,
+      color: HistoryColors.background,
       borderRadius: AppRadius.input,
       child: InkWell(
         onTap: onTap,
@@ -240,7 +240,7 @@ final class _ReadOnlyValue extends StatelessWidget {
           ),
           child: Row(
             children: [
-              Icon(icon, size: 17, color: AppColors.primaryLight),
+              Icon(icon, size: 17, color: HistoryColors.primary),
               const SizedBox(width: AppSpacing.sm),
               Text(value, style: Theme.of(context).textTheme.bodyMedium),
             ],
@@ -261,9 +261,9 @@ final class _InformationCard extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(AppSpacing.lg),
       decoration: BoxDecoration(
-        color: AppColors.primarySoft,
+        color: HistoryColors.primarySoft,
         border: Border.all(
-          color: AppColors.primaryPressed.withValues(alpha: 0.4),
+          color: HistoryColors.primaryPressed.withValues(alpha: 0.4),
         ),
         borderRadius: AppRadius.card,
       ),
@@ -271,7 +271,7 @@ final class _InformationCard extends StatelessWidget {
         children: [
           const Icon(
             Icons.info_outline,
-            color: AppColors.primaryLight,
+            color: HistoryColors.primary,
             size: 18,
           ),
           const SizedBox(width: AppSpacing.md),
@@ -280,7 +280,7 @@ final class _InformationCard extends StatelessWidget {
               message,
               style: Theme.of(
                 context,
-              ).textTheme.bodyMedium?.copyWith(color: AppColors.primaryLight),
+              ).textTheme.bodyMedium?.copyWith(color: HistoryColors.primary),
             ),
           ),
         ],
@@ -373,13 +373,13 @@ final class _PhotoCard extends StatelessWidget {
                           fit: BoxFit.cover,
                           errorBuilder: (context, error, stackTrace) =>
                               Container(
-                                color: AppColors.surfaceHighest,
-                                alignment: Alignment.center,
-                                child: const Icon(
-                                  Icons.broken_image_outlined,
-                                  color: AppColors.textMuted,
-                                ),
-                              ),
+                            color: HistoryColors.surfaceElevated,
+                            alignment: Alignment.center,
+                            child: const Icon(
+                              Icons.broken_image_outlined,
+                              color: HistoryColors.textMuted,
+                            ),
+                          ),
                         ),
                       );
                     },
@@ -436,10 +436,10 @@ final class _PhotoPreviewTile extends StatelessWidget {
               onPressed: onRemove,
               tooltip: l10n.removePhoto,
               style: IconButton.styleFrom(
-                backgroundColor: AppColors.backgroundDark.withValues(
+                backgroundColor: HistoryColors.background.withValues(
                   alpha: 0.82,
                 ),
-                foregroundColor: AppColors.textPrimary,
+                foregroundColor: HistoryColors.textPrimary,
                 minimumSize: const Size.square(32),
                 fixedSize: const Size.square(32),
                 padding: EdgeInsets.zero,
@@ -463,19 +463,18 @@ final class _ExistingHistoryPhoto extends StatelessWidget {
   Widget build(BuildContext context) {
     final uri = Uri.tryParse(url);
     final isRemote = uri?.scheme == 'http' || uri?.scheme == 'https';
-    final imageProvider = isRemote
-        ? NetworkImage(url) as ImageProvider
-        : FileImage(File(url));
+    final imageProvider =
+        isRemote ? NetworkImage(url) as ImageProvider : FileImage(File(url));
 
     return Image(
       image: imageProvider,
       fit: BoxFit.cover,
       errorBuilder: (context, error, stackTrace) => Container(
-        color: AppColors.surfaceHighest,
+        color: HistoryColors.surfaceElevated,
         alignment: Alignment.center,
         child: const Icon(
           Icons.broken_image_outlined,
-          color: AppColors.textMuted,
+          color: HistoryColors.textMuted,
         ),
       ),
     );

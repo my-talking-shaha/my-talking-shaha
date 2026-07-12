@@ -8,16 +8,17 @@ import 'package:frontend/features/analytics/di/analytics_providers.dart';
 import 'package:frontend/features/analytics/domain/entities/analytics_period.dart';
 import 'package:frontend/features/dashboard/di/dashboard_providers.dart';
 import 'package:frontend/features/garage/di/garage_providers.dart';
-import 'package:frontend/features/history/domain/entities/event_details.dart';
+import 'package:frontend/features/history/di/history_providers.dart';
 import 'package:frontend/features/history/domain/entities/history_event.dart';
 import 'package:frontend/features/history/domain/entities/history_event_type.dart';
-import 'package:frontend/features/history/presentation/providers/history_providers.dart';
+import 'package:frontend/features/history/presentation/colors.dart';
+import 'package:frontend/features/history/presentation/utils/history_timeline_utils.dart';
 import 'package:frontend/features/history/presentation/widgets/event_card.dart';
 import 'package:frontend/features/parts/di/parts_providers.dart';
 import 'package:frontend/l10n/generated/app_localizations.dart';
 import 'package:go_router/go_router.dart';
 
-part 'history_screen_widgets.dart';
+part '../widgets/history_screen_widgets.dart';
 
 final class HistoryScreen extends ConsumerStatefulWidget {
   const HistoryScreen({
@@ -46,7 +47,7 @@ final class _HistoryScreenState extends ConsumerState<HistoryScreen> {
       vehicleEngineTypeProvider(widget.vehicleId),
     );
     final isElectricVehicle = engineTypeState.maybeWhen(
-      data: (engineType) => _isElectricEngine(engineType),
+      data: HistoryTimelineUtils.isElectricEngine,
       orElse: () => false,
     );
 
@@ -74,8 +75,8 @@ final class _HistoryScreenState extends ConsumerState<HistoryScreen> {
           }
         },
         tooltip: l10n.addEvent,
-        backgroundColor: AppColors.primaryLight,
-        foregroundColor: const Color(0xFF002388),
+        backgroundColor: HistoryColors.primary,
+        foregroundColor: HistoryColors.onPrimary,
         elevation: 8,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(AppRadius.lg),
@@ -142,15 +143,12 @@ final class _HistoryScreenState extends ConsumerState<HistoryScreen> {
   bool get _hasFilters => _query.isNotEmpty || _selectedType != null;
 
   List<HistoryEvent> _filterEvents(List<HistoryEvent> events) {
-    return events
-        .where((event) {
-          final matchesType =
-              _selectedType == null || event.type == _selectedType;
-          final matchesQuery =
-              _query.isEmpty || _searchableText(event).contains(_query);
-          return matchesType && matchesQuery;
-        })
-        .toList(growable: false);
+    return events.where((event) {
+      final matchesType = _selectedType == null || event.type == _selectedType;
+      final matchesQuery = _query.isEmpty ||
+          HistoryTimelineUtils.searchableText(event).contains(_query);
+      return matchesType && matchesQuery;
+    }).toList(growable: false);
   }
 
   Future<void> _editEvent(HistoryEvent event) async {
@@ -237,8 +235,4 @@ final class _HistoryScreenState extends ConsumerState<HistoryScreen> {
     ref.invalidate(vehicleMileageProvider(vehicleId));
     ref.invalidate(vehiclePartsProvider(vehicleId));
   }
-}
-
-bool _isElectricEngine(String? engineType) {
-  return engineType?.toLowerCase() == 'electric';
 }

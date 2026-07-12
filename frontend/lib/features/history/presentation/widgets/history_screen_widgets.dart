@@ -1,4 +1,4 @@
-part of 'history_screen.dart';
+part of '../screens/history_screen.dart';
 
 final class _SearchField extends StatelessWidget {
   const _SearchField({required this.onChanged});
@@ -58,16 +58,16 @@ final class _TypeFilters extends StatelessWidget {
               onPressed: () => onSelected(type),
               style: TextButton.styleFrom(
                 foregroundColor: isSelected
-                    ? AppColors.primaryLight
-                    : AppColors.textSecondary,
+                    ? HistoryColors.primary
+                    : HistoryColors.textSecondary,
                 backgroundColor: isSelected
-                    ? AppColors.primarySoft
-                    : AppColors.surfaceHigh,
-                overlayColor: Colors.transparent,
+                    ? HistoryColors.primarySoft
+                    : HistoryColors.surface,
+                overlayColor: HistoryColors.transparent,
                 side: BorderSide(
                   color: isSelected
-                      ? AppColors.primaryPressed
-                      : AppColors.border,
+                      ? HistoryColors.primaryPressed
+                      : HistoryColors.border,
                 ),
                 shape: const StadiumBorder(),
                 padding: const EdgeInsets.symmetric(horizontal: AppSpacing.xl),
@@ -76,9 +76,9 @@ final class _TypeFilters extends StatelessWidget {
                 animationDuration: Duration.zero,
                 splashFactory: NoSplash.splashFactory,
                 textStyle: Theme.of(context).textTheme.labelMedium?.copyWith(
-                  fontWeight: FontWeight.w700,
-                  letterSpacing: 0.5,
-                ),
+                      fontWeight: FontWeight.w700,
+                      letterSpacing: 0.5,
+                    ),
               ),
               child: Text(label),
             ),
@@ -104,7 +104,7 @@ final class _HistoryEventsList extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final groups = _groupByMonth(events);
+    final groups = HistoryTimelineUtils.groupByMonth(events);
 
     return ListView.builder(
       padding: const EdgeInsets.fromLTRB(
@@ -130,11 +130,11 @@ final class _HistoryEventsList extends StatelessWidget {
                   bottom: AppSpacing.md,
                 ),
                 child: Text(
-                  _monthTitle(context, group.month),
+                  HistoryTimelineUtils.monthTitle(context, group.month),
                   style: Theme.of(context).textTheme.labelMedium?.copyWith(
-                    color: AppColors.textSecondary,
-                    letterSpacing: 1.1,
-                  ),
+                        color: HistoryColors.textSecondary,
+                        letterSpacing: 1.1,
+                      ),
                 ),
               ),
               for (var index = 0; index < group.events.length; index++) ...[
@@ -173,7 +173,7 @@ final class _HistoryEmptyState extends StatelessWidget {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            const Icon(Icons.history, color: AppColors.primaryLight, size: 48),
+            const Icon(Icons.history, color: HistoryColors.primary, size: 48),
             const SizedBox(height: AppSpacing.lg),
             Text(
               hasFilters ? l10n.noEventsFound : l10n.historyEmpty,
@@ -215,45 +215,4 @@ final class _HistoryErrorState extends StatelessWidget {
       ),
     );
   }
-}
-
-String _searchableText(HistoryEvent event) {
-  final details = switch (event.details) {
-    FuelDetails(:final fuelType, :final liters) => '$fuelType $liters',
-    MaintenanceDetails(:final description, :final replacedParts) => [
-      description,
-      ...?replacedParts,
-    ].join(' '),
-    TripDetails(:final route) => route ?? '',
-  };
-
-  return '${event.title} $details'.toLowerCase();
-}
-
-List<_MonthGroup> _groupByMonth(List<HistoryEvent> events) {
-  final sortedEvents = [...events]
-    ..sort((left, right) => right.occurredAt.compareTo(left.occurredAt));
-  final groups = <_MonthGroup>[];
-
-  for (final event in sortedEvents) {
-    final month = DateTime(event.occurredAt.year, event.occurredAt.month);
-    if (groups.isEmpty || groups.last.month != month) {
-      groups.add(_MonthGroup(month: month, events: [event]));
-    } else {
-      groups.last.events.add(event);
-    }
-  }
-
-  return groups;
-}
-
-String _monthTitle(BuildContext context, DateTime month) {
-  return MaterialLocalizations.of(context).formatMonthYear(month).toUpperCase();
-}
-
-final class _MonthGroup {
-  _MonthGroup({required this.month, required this.events});
-
-  final DateTime month;
-  final List<HistoryEvent> events;
 }

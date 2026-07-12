@@ -32,7 +32,7 @@ import 'package:frontend/features/history/data/datasources/history_datasource.da
 import 'package:frontend/features/history/data/datasources/mock_history_datasource.dart';
 import 'package:frontend/features/history/domain/entities/history_event.dart';
 import 'package:frontend/features/history/domain/entities/history_event_type.dart';
-import 'package:frontend/features/history/presentation/providers/history_providers.dart';
+import 'package:frontend/features/history/di/history_providers.dart';
 import 'package:frontend/features/history/presentation/screens/add_history_event_screen.dart';
 import 'package:frontend/features/parts/di/parts_providers.dart';
 import 'package:frontend/features/parts/domain/entities/vehicle_part.dart';

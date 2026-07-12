@@ -15,9 +15,9 @@ import 'package:frontend/features/dashboard/presentation/screens/dashboard_scree
 import 'package:frontend/features/garage/di/garage_providers.dart';
 import 'package:frontend/features/garage/presentation/screens/add_vehicle_screen.dart';
 import 'package:frontend/features/garage/presentation/screens/garage_screen.dart';
+import 'package:frontend/features/history/di/history_providers.dart';
 import 'package:frontend/features/history/domain/entities/history_event.dart';
 import 'package:frontend/features/history/domain/entities/history_event_type.dart';
-import 'package:frontend/features/history/presentation/providers/history_providers.dart';
 import 'package:frontend/features/history/presentation/screens/add_history_event_screen.dart';
 import 'package:frontend/features/history/presentation/screens/history_screen.dart';
 import 'package:frontend/features/notifications/presentation/screens/notification_details_screen.dart';
