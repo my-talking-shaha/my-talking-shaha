@@ -15,32 +15,32 @@ class _PhotoToggle extends StatelessWidget {
         horizontal: AppSpacing.sm,
         vertical: AppSpacing.xs,
       ),
-      decoration: const BoxDecoration(
-        color: HistoryColors.surfaceElevated,
+      decoration: BoxDecoration(
+        color: context.appColors.surfaceElevated,
         borderRadius: AppRadius.input,
       ),
       child: Row(
         children: [
-          const Icon(
+          Icon(
             Icons.photo_library_outlined,
             size: 16,
-            color: HistoryColors.primary,
+            color: context.appColors.primary,
           ),
           const SizedBox(width: AppSpacing.xs),
           Expanded(
             child: Text(
               '${l10n.partPhotoLabel} $count',
               style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                color: HistoryColors.textSecondary,
+                color: context.appColors.textSecondary,
               ),
             ),
           ),
           AnimatedRotation(
             turns: isExpanded ? 0.5 : 0,
             duration: const Duration(milliseconds: 180),
-            child: const Icon(
+            child: Icon(
               Icons.keyboard_arrow_down_rounded,
-              color: HistoryColors.textMuted,
+              color: context.appColors.textMuted,
             ),
           ),
         ],
@@ -167,15 +167,15 @@ final class _HistorySwipeActionButton extends StatelessWidget {
           tooltip: label,
           style: IconButton.styleFrom(
             backgroundColor: color,
-            foregroundColor: HistoryColors.white,
+            foregroundColor: context.appColors.white,
             shape: const CircleBorder(),
           ),
           icon: SvgPicture.asset(
             iconPath,
             width: 26,
             height: 26,
-            colorFilter: const ColorFilter.mode(
-              HistoryColors.white,
+            colorFilter: ColorFilter.mode(
+              context.appColors.white,
               BlendMode.srcIn,
             ),
           ),
@@ -223,7 +223,7 @@ class _EventPhotoList extends StatelessWidget {
     unawaited(
       showDialog<void>(
         context: context,
-        barrierColor: HistoryColors.background.withValues(alpha: 0.96),
+        barrierColor: context.appColors.background.withValues(alpha: 0.96),
         builder: (context) {
           return _EventPhotoPreview(urls: urls, initialIndex: initialIndex);
         },
@@ -263,7 +263,7 @@ class _EventPhotoPreviewState extends State<_EventPhotoPreview> {
   Widget build(BuildContext context) {
     return Dialog.fullscreen(
       key: const ValueKey('event-photo-preview'),
-      backgroundColor: HistoryColors.background,
+      backgroundColor: context.appColors.background,
       child: SafeArea(
         child: Stack(
           children: [
@@ -281,9 +281,9 @@ class _EventPhotoPreviewState extends State<_EventPhotoPreview> {
                     child: Image(
                       image: _eventPhotoImageProvider(widget.urls[index]),
                       fit: BoxFit.contain,
-                      errorBuilder: (context, error, stackTrace) => const Icon(
+                      errorBuilder: (context, error, stackTrace) => Icon(
                         Icons.broken_image_outlined,
-                        color: HistoryColors.textMuted,
+                        color: context.appColors.textMuted,
                         size: 48,
                       ),
                     ),
@@ -298,10 +298,10 @@ class _EventPhotoPreviewState extends State<_EventPhotoPreview> {
                 key: const ValueKey('event-photo-preview-close'),
                 onPressed: () => Navigator.of(context).pop(),
                 style: IconButton.styleFrom(
-                  backgroundColor: HistoryColors.surface.withValues(
+                  backgroundColor: context.appColors.surface.withValues(
                     alpha: 0.88,
                   ),
-                  foregroundColor: HistoryColors.textPrimary,
+                  foregroundColor: context.appColors.textPrimary,
                 ),
                 icon: const Icon(Icons.close),
               ),
@@ -314,7 +314,7 @@ class _EventPhotoPreviewState extends State<_EventPhotoPreview> {
                 child: Center(
                   child: DecoratedBox(
                     decoration: BoxDecoration(
-                      color: HistoryColors.surface.withValues(alpha: 0.88),
+                      color: context.appColors.surface.withValues(alpha: 0.88),
                       borderRadius: const BorderRadius.all(
                         Radius.circular(AppRadius.sm),
                       ),
@@ -327,7 +327,7 @@ class _EventPhotoPreviewState extends State<_EventPhotoPreview> {
                       child: Text(
                         '${_currentIndex + 1}/${widget.urls.length}',
                         style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                          color: HistoryColors.textPrimary,
+                          color: context.appColors.textPrimary,
                         ),
                       ),
                     ),
@@ -376,7 +376,7 @@ class _EventTimestamp extends StatelessWidget {
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
-        const Icon(Icons.access_time, size: 14, color: HistoryColors.textMuted),
+        Icon(Icons.access_time, size: 14, color: context.appColors.textMuted),
         const SizedBox(width: AppSpacing.xs),
         Flexible(
           child: Text(
@@ -404,11 +404,11 @@ class _EventPhoto extends StatelessWidget {
         height: double.infinity,
         fit: BoxFit.cover,
         errorBuilder: (context, error, stackTrace) => Container(
-          color: HistoryColors.surfaceElevated,
+          color: context.appColors.surfaceElevated,
           alignment: Alignment.center,
-          child: const Icon(
+          child: Icon(
             Icons.broken_image_outlined,
-            color: HistoryColors.textMuted,
+            color: context.appColors.textMuted,
           ),
         ),
       ),
@@ -435,22 +435,22 @@ class _EventPresentation {
     required this.metric,
   });
 
-  factory _EventPresentation.from(HistoryEvent event) {
+  factory _EventPresentation.from(BuildContext context, HistoryEvent event) {
     return switch (event.type) {
       HistoryEventType.fuel => _EventPresentation(
         iconAsset: _isChargeFuelDetails(event.details)
             ? 'assets/icons/events/charge.svg'
             : 'assets/icons/events/gas.svg',
-        iconColor: HistoryColors.primary,
-        iconBackground: HistoryColors.primarySoft,
+        iconColor: context.appColors.primary,
+        iconBackground: context.appColors.primarySoft,
         metric: event.details is FuelDetails
             ? '${_formatNumber((event.details as FuelDetails).cost)} ₽'
             : null,
       ),
       HistoryEventType.maintenance => _EventPresentation(
         iconAsset: 'assets/icons/events/spanner.svg',
-        iconColor: HistoryColors.error,
-        iconBackground: HistoryColors.error.withValues(alpha: 0.14),
+        iconColor: context.appColors.error,
+        iconBackground: context.appColors.error.withValues(alpha: 0.14),
         metric: switch (event.details) {
           MaintenanceDetails(cost: final cost?) => '${_formatNumber(cost)} ₽',
           _ => null,
@@ -458,8 +458,8 @@ class _EventPresentation {
       ),
       HistoryEventType.trip => _EventPresentation(
         iconAsset: 'assets/icons/events/trip.svg',
-        iconColor: HistoryColors.textSecondary,
-        iconBackground: HistoryColors.surfaceElevated,
+        iconColor: context.appColors.textSecondary,
+        iconBackground: context.appColors.surfaceElevated,
         metric: event.details is TripDetails
             ? '${_formatNumber((event.details as TripDetails).distanceKm)} km'
             : null,

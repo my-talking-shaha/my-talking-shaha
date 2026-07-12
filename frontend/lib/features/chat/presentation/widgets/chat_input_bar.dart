@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:frontend/app/theme/app_palette.dart';
 import 'package:frontend/app/theme/app_theme.dart';
-import 'package:frontend/features/chat/presentation/colors.dart';
 import 'package:frontend/l10n/generated/app_localizations.dart';
 
 final class ChatInputBar extends StatelessWidget {
@@ -25,10 +25,10 @@ final class ChatInputBar extends StatelessWidget {
         final canSend = value.text.trim().isNotEmpty && !isSending;
         return DecoratedBox(
           decoration: BoxDecoration(
-            color: ChatColors.background,
+            color: context.appColors.background,
             boxShadow: [
               BoxShadow(
-                color: ChatColors.black.withValues(alpha: 0.24),
+                color: context.appColors.black.withValues(alpha: 0.24),
                 blurRadius: 18,
                 offset: const Offset(0, -8),
               ),
@@ -47,9 +47,9 @@ final class ChatInputBar extends StatelessWidget {
                 Expanded(
                   child: DecoratedBox(
                     decoration: BoxDecoration(
-                      color: ChatColors.surfaceHigh,
+                      color: context.appColors.surfaceHigh,
                       borderRadius: BorderRadius.circular(20),
-                      border: Border.all(color: ChatColors.border),
+                      border: Border.all(color: context.appColors.border),
                     ),
                     child: TextField(
                       controller: controller,

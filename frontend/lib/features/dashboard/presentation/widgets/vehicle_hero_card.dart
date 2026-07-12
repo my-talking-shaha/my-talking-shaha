@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
+import 'package:frontend/app/theme/app_palette.dart';
 import 'package:frontend/app/theme/app_theme.dart';
-import 'package:frontend/features/dashboard/presentation/colors.dart';
 import 'package:frontend/features/garage/domain/entities/vehicle.dart';
 
 final class VehicleHeroCard extends StatelessWidget {
@@ -17,10 +17,10 @@ final class VehicleHeroCard extends StatelessWidget {
       height: 252,
       clipBehavior: Clip.antiAlias,
       decoration: BoxDecoration(
-        color: DashboardColors.surface,
+        color: context.appColors.surface,
         borderRadius: AppRadius.card,
         border: Border.all(
-          color: DashboardColors.border,
+          color: context.appColors.border,
           strokeAlign: BorderSide.strokeAlignOutside,
         ),
       ),
@@ -36,16 +36,16 @@ final class VehicleHeroCard extends StatelessWidget {
             )
           else
             const _VehicleHeroFallback(),
-          const DecoratedBox(
+          DecoratedBox(
             decoration: BoxDecoration(
               gradient: LinearGradient(
                 begin: Alignment.topCenter,
                 end: Alignment.bottomCenter,
                 colors: [
-                  DashboardColors.transparent,
-                  DashboardColors.heroOverlay,
+                  context.appColors.transparent,
+                  context.appColors.heroOverlay,
                 ],
-                stops: [0.44, 1],
+                stops: const [0.44, 1],
               ),
             ),
           ),
@@ -74,14 +74,14 @@ final class _VehicleHeroFallback extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return DecoratedBox(
-      decoration: const BoxDecoration(
+      decoration: BoxDecoration(
         gradient: LinearGradient(
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
           colors: [
-            DashboardColors.heroGradientStart,
-            DashboardColors.heroGradientMiddle,
-            DashboardColors.heroGradientEnd,
+            context.appColors.heroGradientStart,
+            context.appColors.heroGradientMiddle,
+            context.appColors.heroGradientEnd,
           ],
         ),
       ),
@@ -89,8 +89,8 @@ final class _VehicleHeroFallback extends StatelessWidget {
         child: SvgPicture.asset(
           'assets/icons/navigation/car.svg',
           width: 118,
-          colorFilter: const ColorFilter.mode(
-            DashboardColors.primaryLight,
+          colorFilter: ColorFilter.mode(
+            context.appColors.primaryLight,
             BlendMode.srcIn,
           ),
         ),

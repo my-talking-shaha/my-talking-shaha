@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:frontend/app/theme/app_palette.dart';
 import 'package:frontend/app/theme/app_theme.dart';
-import 'package:frontend/features/chat/presentation/colors.dart';
 import 'package:frontend/features/chat/presentation/widgets/common/chat_assistant_mark.dart';
 import 'package:frontend/l10n/generated/app_localizations.dart';
 
@@ -71,7 +71,7 @@ final class _QuickQuestionTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Material(
-      color: ChatColors.surfaceHigh,
+      color: context.appColors.surfaceHigh,
       borderRadius: AppRadius.card,
       child: InkWell(
         onTap: onTap,
@@ -84,7 +84,7 @@ final class _QuickQuestionTile extends StatelessWidget {
           ),
           decoration: BoxDecoration(
             borderRadius: AppRadius.card,
-            border: Border.all(color: ChatColors.border),
+            border: Border.all(color: context.appColors.border),
           ),
           child: Text(question, style: Theme.of(context).textTheme.bodyLarge),
         ),

@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:frontend/app/theme/app_palette.dart';
 import 'package:frontend/app/theme/app_theme.dart';
-import 'package:frontend/features/parts/presentation/colors.dart';
 import 'package:frontend/l10n/generated/app_localizations.dart';
 
 final class PartsLoadingState extends StatelessWidget {
@@ -8,9 +8,9 @@ final class PartsLoadingState extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const Center(
-      key: ValueKey('parts_loading_state'),
-      child: CircularProgressIndicator(color: PartsColors.accent),
+    return Center(
+      key: const ValueKey('parts_loading_state'),
+      child: CircularProgressIndicator(color: context.appColors.accent),
     );
   }
 }
@@ -33,12 +33,12 @@ final class PartsEmptyState extends StatelessWidget {
               width: 72,
               height: 72,
               decoration: BoxDecoration(
-                color: PartsColors.cardBackground,
+                color: context.appColors.cardBackground,
                 borderRadius: BorderRadius.circular(AppRadius.lg),
               ),
-              child: const Icon(
+              child: Icon(
                 Icons.build_circle_outlined,
-                color: PartsColors.accent,
+                color: context.appColors.accent,
                 size: 36,
               ),
             ),
@@ -77,7 +77,7 @@ final class PartsErrorState extends StatelessWidget {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            const Icon(Icons.error_outline, color: PartsColors.error, size: 42),
+            Icon(Icons.error_outline, color: context.appColors.error, size: 42),
             const SizedBox(height: AppSpacing.lg),
             Text(
               l10n.couldNotLoadParts,

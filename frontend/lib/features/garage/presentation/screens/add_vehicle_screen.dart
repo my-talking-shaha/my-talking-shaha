@@ -3,10 +3,10 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:frontend/app/theme/app_palette.dart';
 import 'package:frontend/features/garage/di/garage_providers.dart';
 import 'package:frontend/features/garage/presentation/controllers/add_vehicle_controller.dart';
 import 'package:frontend/features/garage/presentation/controllers/power_output_unit_controller.dart';
-import 'package:frontend/features/garage/presentation/garage_colors.dart';
 import 'package:frontend/features/garage/presentation/utils/garage_form_utils.dart';
 import 'package:frontend/features/garage/presentation/widgets/common/garage_text_field.dart';
 import 'package:frontend/features/garage/presentation/widgets/form/garage_brand_field.dart';
@@ -133,16 +133,16 @@ final class _AddVehicleScreenState extends ConsumerState<AddVehicleScreen> {
     final isEditing = widget.vehicleId != null;
 
     return Scaffold(
-      backgroundColor: GarageColors.formBackground,
+      backgroundColor: context.appColors.formBackground,
       appBar: AppBar(
-        backgroundColor: GarageColors.formBackground,
+        backgroundColor: context.appColors.formBackground,
         elevation: 0,
         titleSpacing: 0,
-        iconTheme: const IconThemeData(color: GarageColors.primaryLight),
+        iconTheme: IconThemeData(color: context.appColors.primaryLight),
         title: Text(
           isEditing ? l10n.editCar : l10n.carSpecifications,
-          style: const TextStyle(
-            color: GarageColors.primaryLight,
+          style: TextStyle(
+            color: context.appColors.primaryLight,
             fontWeight: FontWeight.w700,
           ),
         ),
@@ -330,7 +330,7 @@ final class _AddVehicleScreenState extends ConsumerState<AddVehicleScreen> {
                             state.errorMessage,
                           )!,
                           style: Theme.of(context).textTheme.bodyMedium
-                              ?.copyWith(color: GarageColors.error),
+                              ?.copyWith(color: context.appColors.error),
                         ),
                       ],
                       const SizedBox(height: 40),

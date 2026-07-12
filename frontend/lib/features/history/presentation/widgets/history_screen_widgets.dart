@@ -58,16 +58,16 @@ final class _TypeFilters extends StatelessWidget {
               onPressed: () => onSelected(type),
               style: TextButton.styleFrom(
                 foregroundColor: isSelected
-                    ? HistoryColors.primary
-                    : HistoryColors.textSecondary,
+                    ? context.appColors.primary
+                    : context.appColors.textSecondary,
                 backgroundColor: isSelected
-                    ? HistoryColors.primarySoft
-                    : HistoryColors.surface,
-                overlayColor: HistoryColors.transparent,
+                    ? context.appColors.primarySoft
+                    : context.appColors.surface,
+                overlayColor: context.appColors.transparent,
                 side: BorderSide(
                   color: isSelected
-                      ? HistoryColors.primaryPressed
-                      : HistoryColors.border,
+                      ? context.appColors.primaryPressed
+                      : context.appColors.border,
                 ),
                 shape: const StadiumBorder(),
                 padding: const EdgeInsets.symmetric(horizontal: AppSpacing.xl),
@@ -132,7 +132,7 @@ final class _HistoryEventsList extends StatelessWidget {
                 child: Text(
                   HistoryTimelineUtils.monthTitle(context, group.month),
                   style: Theme.of(context).textTheme.labelMedium?.copyWith(
-                    color: HistoryColors.textSecondary,
+                    color: context.appColors.textSecondary,
                     letterSpacing: 1.1,
                   ),
                 ),
@@ -173,7 +173,7 @@ final class _HistoryEmptyState extends StatelessWidget {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            const Icon(Icons.history, color: HistoryColors.primary, size: 48),
+            Icon(Icons.history, color: context.appColors.primary, size: 48),
             const SizedBox(height: AppSpacing.lg),
             Text(
               hasFilters ? l10n.noEventsFound : l10n.historyEmpty,

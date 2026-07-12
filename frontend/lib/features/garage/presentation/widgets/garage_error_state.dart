@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:frontend/app/theme/app_palette.dart';
 import 'package:frontend/app/theme/app_theme.dart';
-import 'package:frontend/features/garage/presentation/garage_colors.dart';
 import 'package:frontend/l10n/generated/app_localizations.dart';
 
 final class GarageErrorState extends StatelessWidget {
@@ -16,7 +16,7 @@ final class GarageErrorState extends StatelessWidget {
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          const Icon(Icons.error_outline, color: GarageColors.error, size: 40),
+          Icon(Icons.error_outline, color: context.appColors.error, size: 40),
           const SizedBox(height: AppSpacing.lg),
           Text(
             l10n.couldNotLoadGarage,

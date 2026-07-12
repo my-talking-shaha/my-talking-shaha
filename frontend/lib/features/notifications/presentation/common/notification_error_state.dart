@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:frontend/app/theme/app_palette.dart';
 import 'package:frontend/app/theme/app_theme.dart';
-import 'package:frontend/features/notifications/presentation/colors.dart';
 
 final class NotificationErrorState extends StatelessWidget {
   const NotificationErrorState({
@@ -26,9 +26,9 @@ final class NotificationErrorState extends StatelessWidget {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            const Icon(
+            Icon(
               Icons.wifi_off_rounded,
-              color: NotificationsColors.error,
+              color: context.appColors.error,
               size: 44,
             ),
             const SizedBox(height: AppSpacing.lg),

@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:frontend/app/theme/app_palette.dart';
 import 'package:frontend/app/theme/app_theme.dart';
-import 'package:frontend/features/parts/presentation/colors.dart';
 import 'package:frontend/l10n/generated/app_localizations.dart';
 
 final class MaintenanceForecastHeader extends StatelessWidget {
@@ -22,7 +22,7 @@ final class MaintenanceForecastHeader extends StatelessWidget {
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
               style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                color: PartsColors.headerText,
+                color: context.appColors.headerText,
                 fontSize: 13,
                 fontWeight: FontWeight.w700,
                 letterSpacing: 0.8,
@@ -38,7 +38,7 @@ final class MaintenanceForecastHeader extends StatelessWidget {
               overflow: TextOverflow.ellipsis,
               textAlign: TextAlign.end,
               style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                color: PartsColors.headerTextMuted,
+                color: context.appColors.headerTextMuted,
                 fontSize: 11,
                 fontWeight: FontWeight.w700,
                 height: 1,

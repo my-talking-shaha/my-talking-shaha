@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:frontend/app/theme/app_palette.dart';
 
 abstract final class AppTheme {
   static ThemeData get light {
@@ -20,6 +21,8 @@ abstract final class AppTheme {
       colorScheme: colorScheme,
       scaffoldBackgroundColor: AppLightColors.background,
       dividerColor: AppLightColors.divider,
+      iconTheme: const IconThemeData(color: AppLightColors.textSecondary),
+      primaryIconTheme: const IconThemeData(color: AppLightColors.primary),
       appBarTheme: darkTheme.appBarTheme.copyWith(
         backgroundColor: AppLightColors.background,
         foregroundColor: AppLightColors.textPrimary,
@@ -109,6 +112,12 @@ abstract final class AppTheme {
           return const IconThemeData(color: AppLightColors.textMuted);
         }),
       ),
+      bottomNavigationBarTheme: const BottomNavigationBarThemeData(
+        backgroundColor: AppLightColors.surface,
+        selectedItemColor: AppLightColors.primary,
+        unselectedItemColor: AppLightColors.textMuted,
+        elevation: 0,
+      ),
       switchTheme: SwitchThemeData(
         thumbColor: WidgetStateProperty.resolveWith((states) {
           if (states.contains(WidgetState.selected)) {
@@ -149,6 +158,7 @@ abstract final class AppTheme {
       bottomSheetTheme: darkTheme.bottomSheetTheme.copyWith(
         backgroundColor: AppLightColors.surface,
       ),
+      extensions: const [AppPalette.light],
     );
   }
 
@@ -171,6 +181,8 @@ abstract final class AppTheme {
       colorScheme: colorScheme,
       scaffoldBackgroundColor: AppColors.background,
       dividerColor: AppColors.divider,
+      iconTheme: const IconThemeData(color: AppColors.textSecondary),
+      primaryIconTheme: const IconThemeData(color: AppColors.primaryLight),
       appBarTheme: const AppBarTheme(
         backgroundColor: AppColors.background,
         foregroundColor: AppColors.textPrimary,
@@ -265,6 +277,12 @@ abstract final class AppTheme {
           return const IconThemeData(color: AppColors.textMuted);
         }),
       ),
+      bottomNavigationBarTheme: const BottomNavigationBarThemeData(
+        backgroundColor: AppColors.surface,
+        selectedItemColor: AppColors.primaryLight,
+        unselectedItemColor: AppColors.textMuted,
+        elevation: 0,
+      ),
       switchTheme: SwitchThemeData(
         thumbColor: WidgetStateProperty.resolveWith((states) {
           if (states.contains(WidgetState.selected)) {
@@ -351,29 +369,30 @@ abstract final class AppTheme {
         surfaceTintColor: Colors.transparent,
         shape: RoundedRectangleBorder(borderRadius: AppRadius.bottomSheet),
       ),
+      extensions: const [AppPalette.dark],
     );
   }
 }
 
 abstract final class AppLightColors {
-  static const background = Color(0xFFF4F6FB);
-  static const backgroundDark = Color(0xFFE9EDF5);
+  static const background = Color(0xFFF1F4F9);
+  static const backgroundDark = Color(0xFFE8EDF5);
 
-  static const surface = Color(0xFFFFFFFF);
-  static const surfaceHigh = Color(0xFFF0F3F9);
-  static const surfaceHighest = Color(0xFFE2E7F0);
+  static const surface = Color(0xFFF9FAFD);
+  static const surfaceHigh = Color(0xFFF3F6FA);
+  static const surfaceHighest = Color(0xFFE6EBF3);
 
-  static const border = Color(0xFFD3D9E5);
-  static const divider = Color(0xFFDDE2EC);
+  static const border = Color(0xFFCBD3DF);
+  static const divider = Color(0xFFD5DCE7);
 
   static const primary = Color(0xFF3157D5);
-  static const primaryLight = Color(0xFF526FDB);
-  static const primarySoft = Color(0xFFE3E9FF);
+  static const primaryLight = Color(0xFF4664C6);
+  static const primarySoft = Color(0xFFDDE5FF);
 
-  static const textPrimary = Color(0xFF171B26);
-  static const textSecondary = Color(0xFF50596B);
-  static const textMuted = Color(0xFF717B8E);
-  static const textDisabled = Color(0xFFA3ABBA);
+  static const textPrimary = Color(0xFF182033);
+  static const textSecondary = Color(0xFF445067);
+  static const textMuted = Color(0xFF5F6B80);
+  static const textDisabled = Color(0xFF8B95A7);
 
   static const error = Color(0xFFC23B55);
   static const info = Color(0xFF356F88);

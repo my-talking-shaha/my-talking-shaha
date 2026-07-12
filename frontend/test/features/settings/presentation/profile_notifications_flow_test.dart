@@ -90,7 +90,7 @@ void main() {
     await tester.tap(find.byType(Switch));
     await tester.pumpAndSettle();
 
-    expect(segmentColor('Light'), AppColors.primary);
+    expect(segmentColor('Light'), AppLightColors.primary);
     expect(segmentColor('Dark'), Colors.transparent);
     expect(tester.widget<MaterialApp>(find.byType(MaterialApp)).themeMode,
         ThemeMode.light);

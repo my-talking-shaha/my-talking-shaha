@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:frontend/features/garage/presentation/garage_colors.dart';
+import 'package:frontend/app/theme/app_palette.dart';
 import 'package:frontend/features/garage/presentation/utils/garage_form_utils.dart';
 import 'package:frontend/features/garage/presentation/utils/garage_input_decoration.dart';
 import 'package:frontend/features/garage/presentation/widgets/common/garage_field_label.dart';
@@ -57,18 +57,19 @@ final class GarageColorField extends StatelessWidget {
                   key: const ValueKey('vehicle_color_field'),
                   controller: textEditingController,
                   focusNode: focusNode,
-                  style: const TextStyle(
-                    color: GarageColors.white,
+                  style: TextStyle(
+                    color: context.appColors.textPrimary,
                     fontSize: 16,
                   ),
-                  cursorColor: GarageColors.primaryLight,
+                  cursorColor: context.appColors.primaryLight,
                   textInputAction: TextInputAction.next,
                   textCapitalization: TextCapitalization.words,
                   decoration: garageInputDecoration(
+                    context: context,
                     hintText: l10n.selectColor,
-                    suffixIcon: const Icon(
+                    suffixIcon: Icon(
                       Icons.search,
-                      color: GarageColors.primaryLight,
+                      color: context.appColors.primaryLight,
                     ),
                   ),
                   onChanged: onChanged,
@@ -80,7 +81,7 @@ final class GarageColorField extends StatelessWidget {
             return Align(
               alignment: Alignment.topLeft,
               child: Material(
-                color: GarageColors.formField,
+                color: context.appColors.formField,
                 elevation: 8,
                 borderRadius: BorderRadius.circular(8),
                 child: ConstrainedBox(
@@ -103,8 +104,8 @@ final class GarageColorField extends StatelessWidget {
                           ),
                           child: Text(
                             localizedGarageVehicleColor(l10n, color),
-                            style: const TextStyle(
-                              color: GarageColors.white,
+                            style: TextStyle(
+                              color: context.appColors.textPrimary,
                               fontSize: 16,
                             ),
                           ),

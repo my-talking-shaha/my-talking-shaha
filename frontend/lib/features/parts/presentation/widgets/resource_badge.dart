@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:frontend/app/theme/app_palette.dart';
 import 'package:frontend/app/theme/app_theme.dart';
-import 'package:frontend/features/parts/presentation/colors.dart';
 import 'package:frontend/features/parts/presentation/metrics.dart';
 import 'package:frontend/l10n/generated/app_localizations.dart';
 
@@ -18,9 +18,9 @@ final class ResourceBadge extends StatelessWidget {
       height: 86,
       padding: const EdgeInsets.all(AppSpacing.md),
       decoration: BoxDecoration(
-        color: PartsColors.badgeBackground,
+        color: context.appColors.badgeBackground,
         borderRadius: BorderRadius.circular(PartsMetrics.cardRadius),
-        border: Border.all(color: PartsColors.badgeBorder),
+        border: Border.all(color: context.appColors.badgeBorder),
       ),
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
@@ -30,7 +30,7 @@ final class ResourceBadge extends StatelessWidget {
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
             style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-              color: PartsColors.warning,
+              color: context.appColors.partsWarning,
               fontSize: 30,
               fontWeight: FontWeight.w900,
               height: 1,
@@ -42,7 +42,7 @@ final class ResourceBadge extends StatelessWidget {
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
             style: Theme.of(context).textTheme.bodySmall?.copyWith(
-              color: PartsColors.warning,
+              color: context.appColors.partsWarning,
               fontSize: 10,
               fontWeight: FontWeight.w900,
               height: 1,

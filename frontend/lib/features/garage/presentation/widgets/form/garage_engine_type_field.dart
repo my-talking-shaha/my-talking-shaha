@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:frontend/features/garage/presentation/garage_colors.dart';
+import 'package:frontend/app/theme/app_palette.dart';
 import 'package:frontend/features/garage/presentation/utils/garage_engine_type_utils.dart';
 import 'package:frontend/features/garage/presentation/utils/garage_form_utils.dart';
 import 'package:frontend/features/garage/presentation/widgets/common/garage_field_label.dart';
@@ -32,27 +32,27 @@ final class GarageEngineTypeField extends StatelessWidget {
         const SizedBox(height: 10),
         PopupMenuButton<String>(
           enabled: onChanged != null,
-          color: GarageColors.formField,
+          color: context.appColors.formField,
           elevation: 8,
           onOpened: () => FocusScope.of(context).unfocus(),
           constraints: const BoxConstraints(minWidth: 220, maxWidth: 260),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(8),
-            side: const BorderSide(color: GarageColors.formBorder),
+            side: BorderSide(color: context.appColors.formBorder),
           ),
           onSelected: onChanged,
           itemBuilder: (context) => [
-            garageEngineTypeMenuItem(l10n, 'gasoline'),
-            garageEngineTypeMenuItem(l10n, 'diesel'),
-            garageEngineTypeMenuItem(l10n, 'hybrid'),
-            garageEngineTypeMenuItem(l10n, 'phev'),
-            garageEngineTypeMenuItem(l10n, 'electric'),
+            garageEngineTypeMenuItem(context, l10n, 'gasoline'),
+            garageEngineTypeMenuItem(context, l10n, 'diesel'),
+            garageEngineTypeMenuItem(context, l10n, 'hybrid'),
+            garageEngineTypeMenuItem(context, l10n, 'phev'),
+            garageEngineTypeMenuItem(context, l10n, 'electric'),
           ],
           child: InputDecorator(
             decoration: InputDecoration(
               errorText: errorText,
               filled: true,
-              fillColor: GarageColors.formField,
+              fillColor: context.appColors.formField,
               contentPadding: const EdgeInsets.symmetric(
                 horizontal: 16,
                 vertical: 18,
@@ -61,21 +61,21 @@ final class GarageEngineTypeField extends StatelessWidget {
                 borderRadius: BorderRadius.circular(8),
                 borderSide: BorderSide(
                   color: hasError
-                      ? GarageColors.error
-                      : GarageColors.formBorder,
+                      ? context.appColors.error
+                      : context.appColors.formBorder,
                 ),
               ),
               focusedBorder: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(8),
-                borderSide: const BorderSide(color: GarageColors.primaryLight),
+                borderSide: BorderSide(color: context.appColors.primaryLight),
               ),
               errorBorder: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(8),
-                borderSide: const BorderSide(color: GarageColors.error),
+                borderSide: BorderSide(color: context.appColors.error),
               ),
               focusedErrorBorder: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(8),
-                borderSide: const BorderSide(color: GarageColors.error),
+                borderSide: BorderSide(color: context.appColors.error),
               ),
             ),
             child: Row(
@@ -85,15 +85,15 @@ final class GarageEngineTypeField extends StatelessWidget {
                     valueText,
                     style: TextStyle(
                       color: selectedValue.isEmpty
-                          ? GarageColors.hint
-                          : GarageColors.white,
+                          ? context.appColors.hint
+                          : context.appColors.textPrimary,
                       fontSize: 16,
                     ),
                   ),
                 ),
-                const Icon(
+                Icon(
                   Icons.keyboard_arrow_down_rounded,
-                  color: GarageColors.primaryLight,
+                  color: context.appColors.primaryLight,
                 ),
               ],
             ),

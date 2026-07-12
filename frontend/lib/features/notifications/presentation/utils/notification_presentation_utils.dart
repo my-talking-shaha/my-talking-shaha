@@ -1,12 +1,15 @@
 import 'package:flutter/material.dart';
+import 'package:frontend/app/theme/app_palette.dart';
 import 'package:frontend/features/notifications/domain/entities/app_notification.dart';
-import 'package:frontend/features/notifications/presentation/colors.dart';
 
-Color notificationAccentColor(AppNotificationType type) {
+Color notificationAccentColor(
+  AppNotificationType type, {
+  AppPalette colors = AppPalette.dark,
+}) {
   return switch (type) {
-    AppNotificationType.partLifetimeWarning => NotificationsColors.warning,
-    AppNotificationType.maintenanceReminder => NotificationsColors.info,
-    AppNotificationType.system => NotificationsColors.unread,
+    AppNotificationType.partLifetimeWarning => colors.warning,
+    AppNotificationType.maintenanceReminder => colors.info,
+    AppNotificationType.system => colors.unread,
   };
 }
 

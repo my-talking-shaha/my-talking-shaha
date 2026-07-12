@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:frontend/app/theme/app_palette.dart';
 import 'package:frontend/app/theme/app_theme.dart';
 import 'package:frontend/features/parts/domain/entities/vehicle_part.dart';
-import 'package:frontend/features/parts/presentation/colors.dart';
 import 'package:frontend/features/parts/presentation/metrics.dart';
 import 'package:frontend/features/parts/presentation/utils/maintenance_forecast_utils.dart';
 import 'package:frontend/features/parts/presentation/widgets/forecast_summary.dart';
@@ -32,8 +32,8 @@ final class MaintenanceForecastCard extends StatelessWidget {
           key: const ValueKey('maintenance_forecast_card_body'),
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(PartsMetrics.cardRadius),
-            color: PartsColors.cardBackground,
-            border: Border.all(color: PartsColors.border),
+            color: context.appColors.cardBackground,
+            border: Border.all(color: context.appColors.border),
           ),
           child: Padding(
             padding: const EdgeInsets.fromLTRB(

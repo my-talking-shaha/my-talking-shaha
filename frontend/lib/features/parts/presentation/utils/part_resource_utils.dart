@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:frontend/app/theme/app_palette.dart';
 import 'package:frontend/features/parts/domain/entities/vehicle_part.dart';
-import 'package:frontend/features/parts/presentation/colors.dart';
 import 'package:frontend/features/parts/presentation/utils/parts_number_formatter.dart';
 import 'package:frontend/l10n/generated/app_localizations.dart';
 
@@ -26,11 +26,11 @@ String partResourceText(AppLocalizations l10n, VehiclePart part) {
   return '$displayPercent% · ${formatPartsInteger(displayRemainingKm)} km';
 }
 
-Color partStatusColor(PartResourceStatus status) {
+Color partStatusColor(AppPalette colors, PartResourceStatus status) {
   return switch (status) {
-    PartResourceStatus.ok => PartsColors.ok,
-    PartResourceStatus.warning => PartsColors.warning,
-    PartResourceStatus.critical => PartsColors.critical,
-    PartResourceStatus.unknown => PartsColors.unknown,
+    PartResourceStatus.ok => colors.ok,
+    PartResourceStatus.warning => colors.partsWarning,
+    PartResourceStatus.critical => colors.critical,
+    PartResourceStatus.unknown => colors.unknown,
   };
 }

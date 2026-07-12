@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:frontend/features/auth/presentation/colors.dart';
+import 'package:frontend/app/theme/app_palette.dart';
 
 final class AuthAccountPrompt extends StatelessWidget {
   const AuthAccountPrompt({
@@ -21,9 +21,9 @@ final class AuthAccountPrompt extends StatelessWidget {
       children: [
         Text(
           prompt,
-          style: Theme.of(
-            context,
-          ).textTheme.bodyLarge?.copyWith(color: AuthColors.textSecondary),
+          style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+            color: context.appColors.textSecondary,
+          ),
         ),
         TextButton(onPressed: onPressed, child: Text(actionLabel)),
       ],

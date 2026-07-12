@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
+import 'package:frontend/app/theme/app_palette.dart';
 import 'package:frontend/app/theme/app_theme.dart';
-import 'package:frontend/features/garage/presentation/garage_colors.dart';
 
 final class SwipeRevealAction {
   const SwipeRevealAction({
@@ -124,15 +124,15 @@ final class _SwipeActionButton extends StatelessWidget {
                 onPressed: action.onPressed,
                 style: IconButton.styleFrom(
                   backgroundColor: action.color,
-                  foregroundColor: GarageColors.white,
+                  foregroundColor: context.appColors.white,
                   shape: const CircleBorder(),
                 ),
                 icon: SvgPicture.asset(
                   action.iconPath,
                   width: 26,
                   height: 26,
-                  colorFilter: const ColorFilter.mode(
-                    GarageColors.white,
+                  colorFilter: ColorFilter.mode(
+                    context.appColors.white,
                     BlendMode.srcIn,
                   ),
                 ),
@@ -141,8 +141,8 @@ final class _SwipeActionButton extends StatelessWidget {
             const SizedBox(height: AppSpacing.xs),
             Text(
               action.label,
-              style: const TextStyle(
-                color: GarageColors.textPrimary,
+              style: TextStyle(
+                color: context.appColors.textPrimary,
                 fontSize: 12,
                 fontWeight: FontWeight.w800,
                 height: 1.35,

@@ -1,9 +1,9 @@
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
+import 'package:frontend/app/theme/app_palette.dart';
 import 'package:frontend/app/theme/app_theme.dart';
 import 'package:frontend/features/analytics/domain/entities/analytics_summary.dart';
-import 'package:frontend/features/analytics/presentation/colors.dart';
 import 'package:frontend/features/analytics/presentation/common/analytics_common_widgets.dart';
 import 'package:frontend/features/analytics/presentation/utils/analytics_chart_utils.dart';
 import 'package:frontend/features/analytics/presentation/utils/analytics_formatters.dart';
@@ -51,6 +51,8 @@ final class AnalyticsChartCard extends StatelessWidget {
                 type: chartType,
                 labelFormatter: labelFormatter,
                 valueFormatter: axisValueFormatter ?? valueFormatter,
+                borderColor: context.appColors.border,
+                labelColor: context.appColors.textSecondary,
               ),
             ),
           ),
@@ -77,7 +79,7 @@ final class AnalyticsChartCard extends StatelessWidget {
                   context,
                 ).averageLabel(valueFormatter(average)),
                 style: Theme.of(context).textTheme.labelMedium?.copyWith(
-                  color: AnalyticsColors.primaryLight,
+                  color: context.appColors.primaryLight,
                 ),
               ),
               if (trendPercent case final trend?) ...[
@@ -97,6 +99,8 @@ final class AnalyticsChartPainter extends CustomPainter {
     required this.points,
     required this.accentColor,
     required this.type,
+    required this.borderColor,
+    required this.labelColor,
     this.showLabels = true,
     this.labelFormatter,
     this.valueFormatter = formatAnalyticsCompactNumber,
@@ -105,6 +109,8 @@ final class AnalyticsChartPainter extends CustomPainter {
   final List<AnalyticsChartPoint> points;
   final Color accentColor;
   final AnalyticsChartType type;
+  final Color borderColor;
+  final Color labelColor;
   final bool showLabels;
   final String Function(String label)? labelFormatter;
   final String Function(double value) valueFormatter;
@@ -136,7 +142,7 @@ final class AnalyticsChartPainter extends CustomPainter {
     _drawValueAxis(canvas, plotRect, maxValue);
 
     final gridPaint = Paint()
-      ..color = AnalyticsColors.border.withValues(alpha: 0.6)
+      ..color = borderColor.withValues(alpha: 0.6)
       ..strokeWidth = 1;
     for (var index = 0; index <= 4; index++) {
       final y = plotRect.top + (plotRect.height * index / 4);
@@ -166,8 +172,8 @@ final class AnalyticsChartPainter extends CustomPainter {
       final painter = TextPainter(
         text: TextSpan(
           text: valueFormatter(value),
-          style: const TextStyle(
-            color: AnalyticsColors.textSecondary,
+          style: TextStyle(
+            color: labelColor,
             fontSize: 10,
             fontWeight: FontWeight.w600,
           ),
@@ -258,8 +264,8 @@ final class AnalyticsChartPainter extends CustomPainter {
           text:
               (labelFormatter?.call(points[index].label) ?? points[index].label)
                   .toUpperCase(),
-          style: const TextStyle(
-            color: AnalyticsColors.textSecondary,
+          style: TextStyle(
+            color: labelColor,
             fontSize: 10,
             fontWeight: FontWeight.w600,
           ),

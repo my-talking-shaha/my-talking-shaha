@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
+import 'package:frontend/app/theme/app_palette.dart';
 import 'package:frontend/app/theme/app_theme.dart';
-import 'package:frontend/features/auth/presentation/colors.dart';
 
 final class AuthScreenScaffold extends StatelessWidget {
   const AuthScreenScaffold({
@@ -19,7 +19,7 @@ final class AuthScreenScaffold extends StatelessWidget {
       body: Stack(
         fit: StackFit.expand,
         children: [
-          const ColoredBox(color: AuthColors.background),
+          ColoredBox(color: context.appColors.background),
           if (useLoginBackground)
             SvgPicture.asset('assets/images/auth_bg.svg', fit: BoxFit.cover),
           SafeArea(

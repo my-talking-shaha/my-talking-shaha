@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:frontend/app/theme/app_palette.dart';
 import 'package:frontend/app/theme/app_theme.dart';
 import 'package:frontend/features/chat/domain/entities/chat_message.dart';
-import 'package:frontend/features/chat/presentation/colors.dart';
 import 'package:frontend/features/chat/presentation/utils/chat_formatters.dart';
 import 'package:frontend/features/chat/presentation/utils/chat_message_presentation.dart';
 import 'package:frontend/features/chat/presentation/widgets/chat_action_pill.dart';
@@ -34,7 +34,9 @@ final class ChatBubble extends StatelessWidget {
             child: IntrinsicWidth(
               child: DecoratedBox(
                 decoration: BoxDecoration(
-                  color: isUser ? ChatColors.primary : ChatColors.surfaceHigh,
+                  color: isUser
+                      ? context.appColors.primary
+                      : context.appColors.surfaceHigh,
                   borderRadius: BorderRadius.only(
                     topLeft: const Radius.circular(AppRadius.lg),
                     topRight: const Radius.circular(AppRadius.lg),
@@ -47,8 +49,8 @@ final class ChatBubble extends StatelessWidget {
                   ),
                   border: Border.all(
                     color: isUser
-                        ? ChatColors.primaryPressed
-                        : ChatColors.border,
+                        ? context.appColors.primaryPressed
+                        : context.appColors.border,
                   ),
                 ),
                 child: Padding(
@@ -65,7 +67,7 @@ final class ChatBubble extends StatelessWidget {
                       Text(
                         text,
                         style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                          color: ChatColors.textPrimary,
+                          color: context.appColors.textPrimary,
                           fontSize: 15,
                           height: 1.42,
                         ),
@@ -85,8 +87,10 @@ final class ChatBubble extends StatelessWidget {
                           style: Theme.of(context).textTheme.bodySmall
                               ?.copyWith(
                                 color: isUser
-                                    ? ChatColors.white.withValues(alpha: 0.7)
-                                    : ChatColors.textMuted,
+                                    ? context.appColors.white.withValues(
+                                        alpha: 0.7,
+                                      )
+                                    : context.appColors.textMuted,
                                 height: 1,
                               ),
                         ),

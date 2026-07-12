@@ -3,11 +3,11 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
+import 'package:frontend/app/theme/app_palette.dart';
 import 'package:frontend/app/theme/app_theme.dart';
 import 'package:frontend/features/history/domain/entities/event_details.dart';
 import 'package:frontend/features/history/domain/entities/history_event.dart';
 import 'package:frontend/features/history/domain/entities/history_event_type.dart';
-import 'package:frontend/features/history/presentation/colors.dart';
 import 'package:frontend/l10n/generated/app_localizations.dart';
 
 part 'event_card_widgets.dart';
@@ -38,7 +38,7 @@ class _EventCardState extends State<EventCard> with TickerProviderStateMixin {
   Widget build(BuildContext context) {
     final event = widget.event;
     final details = event.details;
-    final presentation = _EventPresentation.from(event);
+    final presentation = _EventPresentation.from(context, event);
     final photoUrls = _photoUrls(details);
     final l10n = AppLocalizations.of(context);
 
@@ -49,7 +49,7 @@ class _EventCardState extends State<EventCard> with TickerProviderStateMixin {
             actionKey: 'edit',
             label: l10n.edit,
             iconPath: 'assets/icons/garage/edit.svg',
-            color: HistoryColors.warning,
+            color: context.appColors.warningStrong,
             onPressed: widget.onEdit!,
           ),
         if (widget.onDelete != null)
@@ -57,7 +57,7 @@ class _EventCardState extends State<EventCard> with TickerProviderStateMixin {
             actionKey: 'delete',
             label: l10n.delete,
             iconPath: 'assets/icons/garage/delete.svg',
-            color: HistoryColors.destructive,
+            color: context.appColors.destructive,
             onPressed: widget.onDelete!,
           ),
       ],
@@ -70,8 +70,8 @@ class _EventCardState extends State<EventCard> with TickerProviderStateMixin {
           width: double.infinity,
           padding: const EdgeInsets.all(AppSpacing.lg),
           decoration: BoxDecoration(
-            color: HistoryColors.surface,
-            border: Border.all(color: HistoryColors.border),
+            color: context.appColors.surface,
+            border: Border.all(color: context.appColors.border),
             borderRadius: AppRadius.card,
           ),
           child: Row(
@@ -98,7 +98,7 @@ class _EventCardState extends State<EventCard> with TickerProviderStateMixin {
                             metric,
                             textAlign: TextAlign.end,
                             style: Theme.of(context).textTheme.titleMedium
-                                ?.copyWith(color: HistoryColors.primary),
+                                ?.copyWith(color: context.appColors.primary),
                           ),
                         ],
                       ],

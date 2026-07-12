@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:frontend/app/theme/app_palette.dart';
 import 'package:frontend/app/theme/app_theme.dart';
-import 'package:frontend/features/auth/presentation/colors.dart';
 
 final class AuthTextField extends StatelessWidget {
   const AuthTextField({
@@ -40,7 +40,7 @@ final class AuthTextField extends StatelessWidget {
         Text(
           label.toUpperCase(),
           style: Theme.of(context).textTheme.labelMedium?.copyWith(
-            color: AuthColors.primaryLight,
+            color: context.appColors.primaryLight,
             letterSpacing: 0,
           ),
         ),
