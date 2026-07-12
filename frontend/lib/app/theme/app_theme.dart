@@ -227,7 +227,9 @@ abstract final class AppColors {
 
   static const success = Color(0xFF00DCE5);
   static const warning = Color(0xFFE8B950);
+  static const warningStrong = Color(0xFFDCA249);
   static const error = Color(0xFFE85D75);
+  static const destructive = Color(0xFFD4352F);
   static const info = Color(0xFF82A8BA);
 
   static const white = Color(0xFFFFFFFF);
