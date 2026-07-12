@@ -1,8 +1,8 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:frontend/features/analytics/di/analytics_providers.dart';
 import 'package:frontend/features/analytics/domain/entities/analytics_period.dart';
+import 'package:frontend/features/chat/di/chat_providers.dart';
 import 'package:frontend/features/chat/domain/entities/chat_message.dart';
-import 'package:frontend/features/chat/presentation/providers/chat_providers.dart';
 import 'package:frontend/features/chat/presentation/state/chat_screen_state.dart';
 import 'package:frontend/features/dashboard/di/dashboard_providers.dart';
 import 'package:frontend/features/history/di/history_providers.dart';
@@ -14,9 +14,8 @@ final class ChatController extends AsyncNotifier<ChatScreenState> {
 
   @override
   Future<ChatScreenState> build() async {
-    final chatState = await ref
-        .watch(chatRepositoryProvider)
-        .getState(vehicleId);
+    final chatState =
+        await ref.watch(chatRepositoryProvider).getState(vehicleId);
 
     return ChatScreenState(
       sessionId: chatState.sessionId,
@@ -28,9 +27,8 @@ final class ChatController extends AsyncNotifier<ChatScreenState> {
   Future<void> reload() async {
     state = const AsyncLoading<ChatScreenState>();
     state = await AsyncValue.guard(() async {
-      final chatState = await ref
-          .read(chatRepositoryProvider)
-          .getState(vehicleId);
+      final chatState =
+          await ref.read(chatRepositoryProvider).getState(vehicleId);
 
       return ChatScreenState(
         sessionId: chatState.sessionId,
