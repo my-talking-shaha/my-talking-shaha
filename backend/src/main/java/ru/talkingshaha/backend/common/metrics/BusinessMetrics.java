@@ -2,6 +2,7 @@ package ru.talkingshaha.backend.common.metrics;
 
 import io.micrometer.core.instrument.Counter;
 import io.micrometer.core.instrument.MeterRegistry;
+import java.util.List;
 import org.springframework.stereotype.Component;
 import ru.talkingshaha.backend.chat.repository.ChatMessageRepository;
 import ru.talkingshaha.backend.part.repository.PartRepository;
@@ -12,6 +13,10 @@ import ru.talkingshaha.backend.vehicle.repository.VehicleRepository;
 
 @Component
 public class BusinessMetrics {
+
+    private static final String DEMO_EMAIL = "demo@talkingshaha.local";
+    private static final String ANALYTICS_OVERVIEW = "overview";
+    private static final String ANALYTICS_MILEAGE_TREND = "mileage_trend";
 
     private final MeterRegistry registry;
     private final Counter registrations;
@@ -40,11 +45,22 @@ public class BusinessMetrics {
                 .description("Total user messages sent to the car chat")
                 .register(registry);
 
-        registry.gauge("talkingshaha_users", users, AppUserRepository::count);
-        registry.gauge("talkingshaha_vehicles", vehicles, VehicleRepository::count);
+        registry.gauge("talkingshaha_users", users, repository -> repository.countByEmailNot(DEMO_EMAIL));
+        registry.gauge("talkingshaha_vehicles", vehicles, repository -> repository.countByOwnerEmailNot(DEMO_EMAIL));
         registry.gauge("talkingshaha_timeline_events", timelineEvents, TimelineEventRepository::count);
         registry.gauge("talkingshaha_parts", parts, PartRepository::count);
         registry.gauge("talkingshaha_chat_messages", chatMessages, ChatMessageRepository::count);
+
+        for (TimelineEventType type : TimelineEventType.values()) {
+            registry.gauge(
+                    "talkingshaha_timeline_events_by_type",
+                    List.of(io.micrometer.core.instrument.Tag.of("type", type.name())),
+                    timelineEvents,
+                    repository -> repository.countByTypeAndVehicleOwnerEmailNot(type, DEMO_EMAIL));
+            timelineEventCreations(type);
+        }
+        analyticsViews(ANALYTICS_OVERVIEW);
+        analyticsViews(ANALYTICS_MILEAGE_TREND);
     }
 
     public void recordRegistration() {
@@ -56,11 +72,7 @@ public class BusinessMetrics {
     }
 
     public void recordTimelineEventCreated(TimelineEventType type) {
-        Counter.builder("talkingshaha_timeline_event_creations")
-                .description("Total timeline events created")
-                .tag("type", type.name())
-                .register(registry)
-                .increment();
+        timelineEventCreations(type).increment();
     }
 
     public void recordPartCreated() {
@@ -72,10 +84,20 @@ public class BusinessMetrics {
     }
 
     public void recordAnalyticsViewed(String view) {
-        Counter.builder("talkingshaha_analytics_views")
+        analyticsViews(view).increment();
+    }
+
+    private Counter timelineEventCreations(TimelineEventType type) {
+        return Counter.builder("talkingshaha_timeline_event_creations")
+                .description("Total timeline events created")
+                .tag("type", type.name())
+                .register(registry);
+    }
+
+    private Counter analyticsViews(String view) {
+        return Counter.builder("talkingshaha_analytics_views")
                 .description("Total analytics endpoint views")
                 .tag("view", view)
-                .register(registry)
-                .increment();
+                .register(registry);
     }
 }

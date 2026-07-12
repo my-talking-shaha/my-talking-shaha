@@ -2,7 +2,7 @@
   "uid": "talking-shaha-overview",
   "title": "My Talking Shaha Overview",
   "schemaVersion": 39,
-  "version": 3,
+  "version": 2,
   "refresh": "15s",
   "time": {
     "from": "now-6h",
@@ -53,29 +53,20 @@
     {
       "id": 4,
       "type": "timeseries",
-      "title": "JVM Memory Used",
+      "title": "Users Over Time",
       "gridPos": { "x": 12, "y": 8, "w": 12, "h": 8 },
       "targets": [
         {
-          "expr": "sum(jvm_memory_used_bytes{area=\"heap\"})",
-          "legendFormat": "heap"
-        },
-        {
-          "expr": "sum(jvm_memory_used_bytes{area=\"nonheap\"})",
-          "legendFormat": "nonheap"
+          "expr": "talkingshaha_users",
+          "legendFormat": "users"
         }
-      ],
-      "fieldConfig": {
-        "defaults": {
-          "unit": "bytes"
-        }
-      }
+      ]
     },
     {
       "id": 5,
       "type": "stat",
       "title": "Users",
-      "gridPos": { "x": 0, "y": 12, "w": 4, "h": 4 },
+      "gridPos": { "x": 0, "y": 12, "w": 6, "h": 4 },
       "targets": [
         {
           "expr": "talkingshaha_users",
@@ -87,7 +78,7 @@
       "id": 6,
       "type": "stat",
       "title": "Vehicles",
-      "gridPos": { "x": 4, "y": 12, "w": 4, "h": 4 },
+      "gridPos": { "x": 6, "y": 12, "w": 6, "h": 4 },
       "targets": [
         {
           "expr": "talkingshaha_vehicles",
@@ -97,30 +88,18 @@
     },
     {
       "id": 7,
-      "type": "stat",
-      "title": "Timeline Events",
-      "gridPos": { "x": 8, "y": 12, "w": 4, "h": 4 },
-      "targets": [
-        {
-          "expr": "talkingshaha_timeline_events",
-          "legendFormat": "events"
-        }
-      ]
-    },
-    {
-      "id": 8,
-      "type": "bargauge",
-      "title": "Created Timeline Events Since Start",
+      "type": "timeseries",
+      "title": "Timeline Events By Type",
       "gridPos": { "x": 0, "y": 16, "w": 12, "h": 8 },
       "targets": [
         {
-          "expr": "sum(talkingshaha_timeline_event_creations_total) by (type)",
+          "expr": "talkingshaha_timeline_events_by_type",
           "legendFormat": "{{type}}"
         }
       ]
     },
     {
-      "id": 9,
+      "id": 8,
       "type": "bargauge",
       "title": "Business Actions Since Start",
       "gridPos": { "x": 12, "y": 16, "w": 12, "h": 8 },
@@ -138,8 +117,56 @@
           "legendFormat": "chat messages"
         },
         {
-          "expr": "sum(talkingshaha_analytics_views_total) by (view)",
-          "legendFormat": "analytics {{view}}"
+          "expr": "sum(talkingshaha_analytics_views_total{view=\"overview\"}) or on() vector(0)",
+          "legendFormat": "analytics overview"
+        },
+        {
+          "expr": "sum(talkingshaha_analytics_views_total{view=\"mileage_trend\"}) or on() vector(0)",
+          "legendFormat": "analytics mileage trend"
+        }
+      ]
+    },
+    {
+      "id": 9,
+      "type": "timeseries",
+      "title": "Registrations Over Time",
+      "gridPos": { "x": 0, "y": 24, "w": 8, "h": 8 },
+      "targets": [
+        {
+          "expr": "clamp_min(round(increase(talkingshaha_users_registered_total[$__rate_interval])), 0)",
+          "legendFormat": "registrations"
+        }
+      ]
+    },
+    {
+      "id": 10,
+      "type": "timeseries",
+      "title": "Vehicles Created Over Time",
+      "gridPos": { "x": 8, "y": 24, "w": 8, "h": 8 },
+      "targets": [
+        {
+          "expr": "clamp_min(round(increase(talkingshaha_vehicle_creations_total[$__rate_interval])), 0)",
+          "legendFormat": "vehicles created"
+        }
+      ]
+    },
+    {
+      "id": 11,
+      "type": "timeseries",
+      "title": "Chat And Analytics Activity",
+      "gridPos": { "x": 16, "y": 24, "w": 8, "h": 8 },
+      "targets": [
+        {
+          "expr": "clamp_min(round(increase(talkingshaha_chat_user_messages_total[$__rate_interval])), 0)",
+          "legendFormat": "chat messages"
+        },
+        {
+          "expr": "clamp_min(round(sum(increase(talkingshaha_analytics_views_total{view=\"overview\"}[$__rate_interval]))), 0) or on() vector(0)",
+          "legendFormat": "analytics overview"
+        },
+        {
+          "expr": "clamp_min(round(sum(increase(talkingshaha_analytics_views_total{view=\"mileage_trend\"}[$__rate_interval]))), 0) or on() vector(0)",
+          "legendFormat": "analytics mileage trend"
         }
       ]
     }

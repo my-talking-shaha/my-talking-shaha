@@ -89,7 +89,9 @@ docker compose --env-file .env -f docker/docker-compose.yml logs -f frontend
 - **Health Check**: http://localhost/health
 - **Database**: postgres://localhost:5432/talking_shaha, bound to localhost only
 - **Prometheus**: http://localhost:9090, bound to localhost only
-- **Grafana**: http://localhost:3000, bound to localhost only.
+- **Grafana**: http://localhost:3000, bound to localhost only. The overview
+  dashboard is also available directly at
+  http://localhost:3000/d/talking-shaha-overview/my-talking-shaha-overview?orgId=1.
   Default local credentials are `admin` / `admin` unless `GRAFANA_ADMIN_USER`
   and `GRAFANA_ADMIN_PASSWORD` are set in `.env`.
 
@@ -103,19 +105,23 @@ The dashboard includes basic technical metrics from Spring Boot and Micrometer:
 
 - backend scrape health;
 - API request rate by method, path, and status;
-- API max latency;
-- JVM heap and non-heap memory usage.
+- API max latency.
 
 It also includes a small set of business-oriented metrics that are available
 from current backend flows without adding a separate event pipeline:
 
-- total registered users, vehicles, timeline events, parts, and chat messages;
+- total registered users and vehicles;
+- registered users over time;
 - successful registrations;
-- created vehicles;
-- created timeline events by type;
+- created vehicles over time;
+- timeline events by type over time;
 - created parts;
-- user chat messages;
-- analytics endpoint views.
+- user chat messages over time;
+- analytics endpoint views over time.
+
+The dashboard excludes the local `demo@talkingshaha.local` seed user from the
+user and vehicle totals. Action charts are rounded to whole events because these
+metrics represent discrete backend actions.
 
 In the blue-green deployment topology, only `talking-shaha-router` binds public
 port `80`. The blue and green frontend/backend app containers expose ports only
