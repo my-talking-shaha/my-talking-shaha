@@ -82,11 +82,7 @@ void main() {
   testWidgets('fuel type dropdown uses the light theme palette', (
     tester,
   ) async {
-    await _pumpScreen(
-      tester,
-      theme: AppTheme.light,
-      onSave: (_) async {},
-    );
+    await _pumpScreen(tester, theme: AppTheme.light, onSave: (_) async {});
 
     final dropdown = tester.widget<DropdownButton<String>>(
       find.byWidgetPredicate((widget) => widget is DropdownButton<String>),
@@ -228,14 +224,15 @@ void main() {
         XFile('/tmp/selected-photo-1.jpg'),
         XFile('/tmp/selected-photo-2.jpg'),
       ],
-      persistPhoto: ({
-        required sourcePath,
-        required originalName,
-        required eventId,
-      }) async {
-        persistedSourcePaths.add(sourcePath);
-        return '/documents/history_photos/$eventId/${sourcePath.split('/').last}';
-      },
+      persistPhoto:
+          ({
+            required sourcePath,
+            required originalName,
+            required eventId,
+          }) async {
+            persistedSourcePaths.add(sourcePath);
+            return '/documents/history_photos/$eventId/${sourcePath.split('/').last}';
+          },
     );
 
     await tester.tap(find.byKey(const ValueKey('event-type-maintenance')));
@@ -543,13 +540,13 @@ Future<void> _pumpScreen(
         onSave: onSave,
         pickPhoto: pickPhoto,
         pickPhotos: pickPhotos,
-        persistPhoto: persistPhoto ??
+        persistPhoto:
+            persistPhoto ??
             ({
               required sourcePath,
               required originalName,
               required eventId,
-            }) async =>
-                sourcePath,
+            }) async => sourcePath,
         deletePhoto: deletePhoto ?? (_) async {},
       ),
     ),

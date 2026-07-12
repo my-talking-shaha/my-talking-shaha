@@ -21,10 +21,7 @@ void main() {
     expect(DashboardColors.heroGradientMiddle, const Color(0xFF131B31));
     expect(DashboardColors.heroGradientEnd, const Color(0xFF10131A));
     expect(DashboardColors.fuelEventBackground, const Color(0xFF30291F));
-    expect(
-      DashboardColors.maintenanceEventBackground,
-      const Color(0xFF123138),
-    );
+    expect(DashboardColors.maintenanceEventBackground, const Color(0xFF123138));
     expect(DashboardColors.transparent, Colors.transparent);
   });
 }

@@ -13,11 +13,13 @@ class CarApp extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final router = ref.watch(routerProvider);
-    final themeMode = ref
+    final themeMode =
+        ref
             .watch(appThemeControllerProvider)
             .maybeWhen(data: (themeMode) => themeMode, orElse: () => null) ??
         ThemeMode.dark;
-    final locale = ref
+    final locale =
+        ref
             .watch(appLocaleControllerProvider)
             .maybeWhen(data: (locale) => locale, orElse: () => null) ??
         const Locale('en');
