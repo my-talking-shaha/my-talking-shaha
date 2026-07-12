@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:frontend/app/theme/app_theme.dart';
-import 'package:frontend/features/chat/presentation/widgets/chat_assistant_mark.dart';
+import 'package:frontend/features/chat/presentation/widgets/common/chat_assistant_mark.dart';
 import 'package:frontend/l10n/generated/app_localizations.dart';
 
 final class ChatTitle extends StatelessWidget {

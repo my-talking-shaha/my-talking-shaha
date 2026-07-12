@@ -82,3 +82,35 @@ Client should not duplicate complex analytics, prediction, or reliability rules 
 - User can see empty states when data is insufficient.
 - Data updates when new timeline records are added.
 - Parts feature widget can be reused inside analytics without moving parts logic into analytics.
+
+## Preserved Interaction Baseline
+
+This section records the behavior that must remain unchanged during UI-only
+refactoring.
+
+- The initial summary period is `YEAR`; no custom date range is selected.
+- The initial mileage filter is the current year with all months selected.
+- Selecting `MONTH`, `YEAR`, or `ALL_TIME` reloads the summary and clears an
+  active custom range. It does not change the mileage filters.
+- The custom range picker accepts dates from January 1 ten years before the
+  current year through today. Its initial range is the previous 30 days or the
+  currently selected range. Cancelling preserves the current state; confirming
+  reloads the summary; clearing restores the selected period request.
+- Mileage years include the current year and four previous years. Selecting a
+  month requests daily points; selecting all months requests monthly points.
+  Changing the year preserves the selected month.
+- Vertical swipes scroll the dashboard in both directions. Horizontal swipes
+  have no feature action and must not change period, filters, or navigation.
+- Summary loading and failure replace the dashboard. Retry refreshes both the
+  current summary and mileage requests. Mileage loading/failure/no-data states
+  remain local to the mileage card.
+- Analytics summary and mileage data are refreshed every 60 seconds while the
+  screen is mounted.
+- The parts forecast is rendered only when the parts provider has data;
+  loading and failure are hidden.
+- Insufficient data replaces the dashboard with actions: trip opens
+  `type=trip`, refueling uses the history form default, and repair opens
+  `type=maintenance`.
+- When opened from chat, the screen has an Analytics app bar whose back action
+  navigates to `/vehicle/:vehicleId/chat`. Otherwise analytics supplies no app
+  bar of its own.

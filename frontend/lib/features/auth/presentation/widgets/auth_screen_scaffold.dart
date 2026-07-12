@@ -1,9 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:frontend/app/theme/app_theme.dart';
-import 'package:frontend/l10n/generated/app_localizations.dart';
-
-enum AuthMode { login, register }
+import 'package:frontend/features/auth/presentation/colors.dart';
 
 final class AuthScreenScaffold extends StatelessWidget {
   const AuthScreenScaffold({
@@ -21,7 +19,7 @@ final class AuthScreenScaffold extends StatelessWidget {
       body: Stack(
         fit: StackFit.expand,
         children: [
-          const ColoredBox(color: AppColors.background),
+          const ColoredBox(color: AuthColors.background),
           if (useLoginBackground)
             SvgPicture.asset('assets/images/auth_bg.svg', fit: BoxFit.cover),
           SafeArea(
@@ -48,201 +46,6 @@ final class AuthScreenScaffold extends StatelessWidget {
             ),
           ),
         ],
-      ),
-    );
-  }
-}
-
-final class AuthModeSwitch extends StatelessWidget {
-  const AuthModeSwitch({
-    required this.selectedMode,
-    required this.onModeSelected,
-    super.key,
-  });
-
-  final AuthMode selectedMode;
-  final ValueChanged<AuthMode> onModeSelected;
-
-  @override
-  Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context);
-
-    return SegmentedButton<AuthMode>(
-      showSelectedIcon: false,
-      segments: [
-        ButtonSegment<AuthMode>(
-          value: AuthMode.login,
-          icon: const Icon(Icons.login_outlined),
-          label: Text(l10n.logIn),
-        ),
-        ButtonSegment<AuthMode>(
-          value: AuthMode.register,
-          icon: const Icon(Icons.person_add_alt_1_outlined),
-          label: Text(l10n.register),
-        ),
-      ],
-      selected: {selectedMode},
-      onSelectionChanged: (selection) {
-        onModeSelected(selection.first);
-      },
-      style: ButtonStyle(
-        visualDensity: VisualDensity.standard,
-        side: WidgetStateProperty.resolveWith((states) {
-          final color = states.contains(WidgetState.selected)
-              ? AppColors.primary
-              : AppColors.border;
-          return BorderSide(color: color);
-        }),
-        foregroundColor: WidgetStateProperty.resolveWith((states) {
-          return states.contains(WidgetState.selected)
-              ? AppColors.white
-              : AppColors.textSecondary;
-        }),
-        backgroundColor: WidgetStateProperty.resolveWith((states) {
-          return states.contains(WidgetState.selected)
-              ? AppColors.primary
-              : AppColors.surfaceHigh;
-        }),
-        textStyle: WidgetStateProperty.all(
-          const TextStyle(fontSize: 14, fontWeight: FontWeight.w700),
-        ),
-      ),
-    );
-  }
-}
-
-final class AuthFormCard extends StatelessWidget {
-  const AuthFormCard({required this.child, super.key});
-
-  final Widget child;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      width: double.infinity,
-      constraints: const BoxConstraints(maxWidth: 350),
-      padding: const EdgeInsets.fromLTRB(
-        AppSpacing.xxl,
-        AppSpacing.xxl,
-        AppSpacing.xxl,
-        AppSpacing.xxl,
-      ),
-      decoration: BoxDecoration(
-        color: AppColors.surface.withValues(alpha: 0.82),
-        borderRadius: BorderRadius.circular(AppRadius.md),
-        border: Border.all(color: const Color(0xFF3A4153)),
-        boxShadow: [
-          BoxShadow(
-            color: AppColors.black.withValues(alpha: 0.24),
-            blurRadius: 22,
-            offset: const Offset(0, 14),
-          ),
-        ],
-      ),
-      child: child,
-    );
-  }
-}
-
-final class AuthTextField extends StatelessWidget {
-  const AuthTextField({
-    required this.label,
-    required this.controller,
-    required this.enabled,
-    required this.validator,
-    this.hintText,
-    this.helperText,
-    this.prefixIcon,
-    this.suffixIcon,
-    this.obscureText = false,
-    this.textInputAction,
-    this.onChanged,
-    this.onFieldSubmitted,
-    super.key,
-  });
-
-  final String label;
-  final TextEditingController controller;
-  final bool enabled;
-  final FormFieldValidator<String> validator;
-  final String? hintText;
-  final String? helperText;
-  final Widget? prefixIcon;
-  final Widget? suffixIcon;
-  final bool obscureText;
-  final TextInputAction? textInputAction;
-  final ValueChanged<String>? onChanged;
-  final ValueChanged<String>? onFieldSubmitted;
-
-  @override
-  Widget build(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          label.toUpperCase(),
-          style: Theme.of(context).textTheme.labelMedium?.copyWith(
-            color: AppColors.primaryLight,
-            letterSpacing: 0,
-          ),
-        ),
-        const SizedBox(height: AppSpacing.sm),
-        TextFormField(
-          controller: controller,
-          enabled: enabled,
-          obscureText: obscureText,
-          textInputAction: textInputAction,
-          decoration: InputDecoration(
-            hintText: hintText,
-            helperText: helperText,
-            prefixIcon: prefixIcon,
-            suffixIcon: suffixIcon,
-          ),
-          validator: validator,
-          onChanged: onChanged,
-          onFieldSubmitted: onFieldSubmitted,
-        ),
-      ],
-    );
-  }
-}
-
-final class AuthPrimaryButton extends StatelessWidget {
-  const AuthPrimaryButton({
-    required this.label,
-    required this.isLoading,
-    required this.onPressed,
-    this.showArrow = false,
-    super.key,
-  });
-
-  final String label;
-  final bool isLoading;
-  final VoidCallback? onPressed;
-  final bool showArrow;
-
-  @override
-  Widget build(BuildContext context) {
-    return SizedBox(
-      height: 56,
-      child: ElevatedButton(
-        onPressed: isLoading ? null : onPressed,
-        child: isLoading
-            ? const SizedBox.square(
-                dimension: 20,
-                child: CircularProgressIndicator(strokeWidth: 2.4),
-              )
-            : Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Text(label),
-                  if (showArrow) ...[
-                    const SizedBox(width: AppSpacing.sm),
-                    const Icon(Icons.arrow_forward, size: 22),
-                  ],
-                ],
-              ),
       ),
     );
   }

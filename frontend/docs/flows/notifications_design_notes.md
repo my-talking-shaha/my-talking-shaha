@@ -2,7 +2,9 @@
 
 ## Screen From Design
 
-- Accord to `docs/design/screenshots/01_notifications.jpg` for design example
+- Refer to `docs/design/screenshots/01_notofications.jpg` for the design example.
+- The exact implemented pre-refactor baseline is recorded in
+  `notifications_current_baseline.md` and its golden snapshot.
 
 ## Visual Structure
 

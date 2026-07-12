@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:frontend/app/theme/app_theme.dart';
 import 'package:frontend/features/parts/domain/entities/vehicle_part.dart';
-import 'package:frontend/features/parts/presentation/widgets/parts_design_tokens.dart';
+import 'package:frontend/features/parts/presentation/colors.dart';
+import 'package:frontend/features/parts/presentation/metrics.dart';
+import 'package:frontend/features/parts/presentation/utils/part_resource_utils.dart';
 import 'package:frontend/l10n/generated/app_localizations.dart';
 
 final class PartResourceRow extends StatelessWidget {
@@ -11,11 +13,8 @@ final class PartResourceRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final remainingPercent = part.remainingPercent;
-    final progressValue = remainingPercent == null
-        ? null
-        : (remainingPercent / 100).clamp(0.0, 1.0).toDouble();
-    final statusColor = _statusColor(part.status);
+    final progressValue = partProgressValue(part);
+    final statusColor = partStatusColor(part.status);
 
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: AppSpacing.xs),
@@ -40,7 +39,7 @@ final class PartResourceRow extends StatelessWidget {
               ),
               const SizedBox(width: AppSpacing.md),
               Text(
-                _resourceText(AppLocalizations.of(context), part),
+                partResourceText(AppLocalizations.of(context), part),
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
                 textAlign: TextAlign.end,
@@ -56,61 +55,24 @@ final class PartResourceRow extends StatelessWidget {
           const SizedBox(height: AppSpacing.md),
           if (progressValue != null)
             ClipRRect(
-              borderRadius: BorderRadius.circular(
-                PartsDesignMetrics.progressHeight,
-              ),
+              borderRadius: BorderRadius.circular(PartsMetrics.progressHeight),
               child: LinearProgressIndicator(
                 value: progressValue,
-                minHeight: PartsDesignMetrics.progressHeight,
-                backgroundColor: PartsDesignColors.progressTrack,
+                minHeight: PartsMetrics.progressHeight,
+                backgroundColor: PartsColors.progressTrack,
                 color: statusColor,
               ),
             )
           else
             ClipRRect(
-              borderRadius: BorderRadius.circular(
-                PartsDesignMetrics.progressHeight,
-              ),
+              borderRadius: BorderRadius.circular(PartsMetrics.progressHeight),
               child: const SizedBox(
-                height: PartsDesignMetrics.progressHeight,
-                child: ColoredBox(color: PartsDesignColors.unknown),
+                height: PartsMetrics.progressHeight,
+                child: ColoredBox(color: PartsColors.unknown),
               ),
             ),
         ],
       ),
     );
   }
-}
-
-String _resourceText(AppLocalizations l10n, VehiclePart part) {
-  final remainingKm = part.remainingKm;
-  final remainingPercent = part.remainingPercent;
-
-  if (remainingKm == null || remainingPercent == null) {
-    return l10n.lifetimeNotSet;
-  }
-
-  final displayPercent = remainingPercent.clamp(0, 100);
-  final displayRemainingKm = remainingKm < 0 ? 0 : remainingKm;
-
-  return '$displayPercent% · ${_formatInt(displayRemainingKm)} km';
-}
-
-Color _statusColor(PartResourceStatus status) {
-  return switch (status) {
-    PartResourceStatus.ok => PartsDesignColors.ok,
-    PartResourceStatus.warning => PartsDesignColors.warning,
-    PartResourceStatus.critical => PartsDesignColors.critical,
-    PartResourceStatus.unknown => PartsDesignColors.unknown,
-  };
-}
-
-String _formatInt(int value) {
-  final prefix = value < 0 ? '-' : '';
-  final formatted = value.abs().toString().replaceAllMapped(
-    RegExp(r'\B(?=(\d{3})+(?!\d))'),
-    (_) => ' ',
-  );
-
-  return '$prefix$formatted';
 }

@@ -49,3 +49,34 @@ If not enough data exists, show a helpful empty state and suggest adding history
 - Use `AnalyticsSummaryCard`, `ChartCard`, `PeriodSelector`, `HistoryAnalysisCard`, and `MaintenanceForecastCard`.
 - Backend should be the source of truth for aggregates.
 - Client can format and visualize values.
+
+## Preserved Color Contract
+
+All analytics-owned color references live in
+`lib/features/analytics/presentation/colors.dart`. The refactoring baseline is:
+
+| Token | ARGB / hex |
+| --- | --- |
+| `background` | `#10131A` |
+| `backgroundDark` | `#0E1118` |
+| `surface` | `#191A21` |
+| `surfaceHigh` | `#1C1F25` |
+| `border` | `#2B303B` |
+| `primaryLight` | `#B8C3FF` |
+| `textPrimary` | `#F4F7FF` |
+| `textSecondary` | `#9AA3B2` |
+| `textMuted` | `#6F7788` |
+| `success` | `#00DCE5` |
+| `warning` | `#E8B950` |
+| `transparent` | `#00000000` |
+
+The trend badge and line fill use success at 10% opacity, chart grid lines use
+border at 60%, and chart bars use their accent at 72%. Dashboard cards preserve
+the `surfaceHigh -> surface -> backgroundDark` top-left to bottom-right
+gradient, a border, and a 12 px radius.
+
+Layout invariants: page padding is 20 px horizontally, 16 px at the top, and
+32 px at the bottom; standard charts are 160 px high and the history chart is
+128 px high. Expense categories switch to one column below 300 px, mileage
+filters stack below 360 px, and history metrics switch to one column below
+310 px.

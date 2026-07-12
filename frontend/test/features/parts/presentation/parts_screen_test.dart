@@ -4,9 +4,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:frontend/app/theme/app_theme.dart';
+import 'package:frontend/features/parts/di/parts_providers.dart';
 import 'package:frontend/features/parts/domain/entities/vehicle_part.dart';
 import 'package:frontend/features/parts/domain/repositories/parts_repository.dart';
-import 'package:frontend/features/parts/presentation/providers/parts_providers.dart';
+import 'package:frontend/features/parts/presentation/colors.dart';
 import 'package:frontend/features/parts/presentation/screens/parts_screen.dart';
 import 'package:frontend/features/parts/presentation/widgets/maintenance_forecast_card.dart';
 import 'package:frontend/l10n/generated/app_localizations.dart';
@@ -80,6 +81,42 @@ void main() {
     },
   );
 
+  testWidgets('maintenance forecast preserves the parts color palette', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      MaterialApp(
+        locale: const Locale('en'),
+        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        supportedLocales: AppLocalizations.supportedLocales,
+        theme: AppTheme.dark,
+        home: Scaffold(body: MaintenanceForecastCard(parts: _mockParts())),
+      ),
+    );
+
+    final card = tester.widget<DecoratedBox>(
+      find.byKey(const ValueKey('maintenance_forecast_card_body')),
+    );
+    final cardDecoration = card.decoration as BoxDecoration;
+    expect(cardDecoration.color, PartsColors.cardBackground);
+    expect(cardDecoration.border, Border.all(color: PartsColors.border));
+
+    final progressIndicators = tester
+        .widgetList<LinearProgressIndicator>(
+          find.byType(LinearProgressIndicator),
+        )
+        .toList(growable: false);
+    expect(progressIndicators.map((indicator) => indicator.color), [
+      PartsColors.ok,
+      PartsColors.warning,
+      PartsColors.critical,
+    ]);
+    expect(
+      progressIndicators.map((indicator) => indicator.backgroundColor),
+      everyElement(PartsColors.progressTrack),
+    );
+  });
+
   testWidgets('parts screen shows loading while parts are requested', (
     tester,
   ) async {
@@ -143,6 +180,66 @@ void main() {
 
     expect(find.byKey(const ValueKey('parts_error_state')), findsOneWidget);
     expect(find.byKey(const ValueKey('parts_retry_action')), findsOneWidget);
+  });
+
+  testWidgets('parts screen retry requests the same vehicle again', (
+    tester,
+  ) async {
+    final repository = _FakePartsRepository(error: Exception('boom'));
+
+    await _pumpPartsRoute(tester, repository);
+    await tester.pumpAndSettle();
+    expect(repository.requestedVehicleIds, isNotEmpty);
+    expect(repository.requestedVehicleIds, everyElement('vehicle_123'));
+    final requestsBeforeRetry = repository.requestedVehicleIds.length;
+
+    await tester.tap(find.byKey(const ValueKey('parts_retry_action')));
+    await tester.pumpAndSettle();
+
+    expect(
+      repository.requestedVehicleIds.length,
+      greaterThan(requestsBeforeRetry),
+    );
+    expect(repository.requestedVehicleIds, everyElement('vehicle_123'));
+  });
+
+  testWidgets('parts screen only reacts to vertical list scrolling', (
+    tester,
+  ) async {
+    final repository = _FakePartsRepository(
+      partsByVehicle: {
+        'vehicle_123': [
+          for (var index = 0; index < 12; index++)
+            VehiclePart(
+              id: 'part_$index',
+              vehicleId: 'vehicle_123',
+              name: 'Part $index',
+              catalogKey: null,
+              installedAt: DateTime.utc(2026, 6, 1),
+              installedAtMileageKm: 100000,
+              lifetimeKm: 10000,
+              remainingKm: 5000,
+              remainingPercent: 50,
+              status: PartResourceStatus.ok,
+            ),
+        ],
+      },
+    );
+
+    await _pumpPartsRoute(tester, repository);
+    await tester.pumpAndSettle();
+
+    final scrollable = tester.state<ScrollableState>(find.byType(Scrollable));
+    expect(scrollable.position.pixels, 0);
+    await tester.fling(find.byType(ListView), const Offset(0, -500), 1200);
+    await tester.pumpAndSettle();
+    final offsetAfterVerticalScroll = scrollable.position.pixels;
+    expect(offsetAfterVerticalScroll, greaterThan(0));
+
+    await tester.fling(find.byType(ListView), const Offset(300, 0), 1200);
+    await tester.pumpAndSettle();
+    expect(find.byType(PartsScreen), findsOneWidget);
+    expect(scrollable.position.pixels, offsetAfterVerticalScroll);
   });
 }
 

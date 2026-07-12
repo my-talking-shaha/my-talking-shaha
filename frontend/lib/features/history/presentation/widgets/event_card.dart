@@ -7,6 +7,7 @@ import 'package:frontend/app/theme/app_theme.dart';
 import 'package:frontend/features/history/domain/entities/event_details.dart';
 import 'package:frontend/features/history/domain/entities/history_event.dart';
 import 'package:frontend/features/history/domain/entities/history_event_type.dart';
+import 'package:frontend/features/history/presentation/colors.dart';
 import 'package:frontend/l10n/generated/app_localizations.dart';
 
 part 'event_card_widgets.dart';
@@ -48,7 +49,7 @@ class _EventCardState extends State<EventCard> with TickerProviderStateMixin {
             actionKey: 'edit',
             label: l10n.edit,
             iconPath: 'assets/icons/garage/edit.svg',
-            color: const Color(0xFFDCA249),
+            color: HistoryColors.warning,
             onPressed: widget.onEdit!,
           ),
         if (widget.onDelete != null)
@@ -56,7 +57,7 @@ class _EventCardState extends State<EventCard> with TickerProviderStateMixin {
             actionKey: 'delete',
             label: l10n.delete,
             iconPath: 'assets/icons/garage/delete.svg',
-            color: const Color(0xFFD4352F),
+            color: HistoryColors.destructive,
             onPressed: widget.onDelete!,
           ),
       ],
@@ -69,8 +70,8 @@ class _EventCardState extends State<EventCard> with TickerProviderStateMixin {
           width: double.infinity,
           padding: const EdgeInsets.all(AppSpacing.lg),
           decoration: BoxDecoration(
-            color: AppColors.surfaceHigh,
-            border: Border.all(color: AppColors.border),
+            color: HistoryColors.surface,
+            border: Border.all(color: HistoryColors.border),
             borderRadius: AppRadius.card,
           ),
           child: Row(
@@ -97,7 +98,7 @@ class _EventCardState extends State<EventCard> with TickerProviderStateMixin {
                             metric,
                             textAlign: TextAlign.end,
                             style: Theme.of(context).textTheme.titleMedium
-                                ?.copyWith(color: AppColors.primaryLight),
+                                ?.copyWith(color: HistoryColors.primary),
                           ),
                         ],
                       ],

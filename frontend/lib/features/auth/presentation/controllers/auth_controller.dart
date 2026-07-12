@@ -1,10 +1,10 @@
 import 'dart:async';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:frontend/features/auth/di/auth_dependencies.dart';
 import 'package:frontend/features/auth/domain/entities/auth_credentials.dart';
 import 'package:frontend/features/auth/domain/entities/auth_exception.dart';
 import 'package:frontend/features/auth/domain/entities/auth_session.dart';
-import 'package:frontend/features/auth/presentation/providers/auth_providers.dart';
 
 final class AuthController extends AsyncNotifier<AuthSession?> {
   static const restoreSessionTimeout = Duration(seconds: 3);

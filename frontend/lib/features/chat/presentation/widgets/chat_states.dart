@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:frontend/app/theme/app_theme.dart';
-import 'package:frontend/features/chat/presentation/widgets/chat_assistant_mark.dart';
+import 'package:frontend/features/chat/presentation/colors.dart';
+import 'package:frontend/features/chat/presentation/widgets/common/chat_assistant_mark.dart';
 import 'package:frontend/l10n/generated/app_localizations.dart';
 
 final class ChatWarmupState extends StatelessWidget {
@@ -53,7 +54,7 @@ final class ChatLoadError extends StatelessWidget {
           children: [
             const Icon(
               Icons.cloud_off_rounded,
-              color: AppColors.error,
+              color: ChatColors.error,
               size: 42,
             ),
             const SizedBox(height: AppSpacing.lg),

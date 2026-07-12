@@ -2,7 +2,8 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:frontend/features/chat/presentation/providers/chat_providers.dart';
+import 'package:frontend/features/chat/di/chat_providers.dart';
+import 'package:frontend/features/chat/presentation/utils/chat_screen_utils.dart';
 import 'package:frontend/features/chat/presentation/widgets/chat_loaded_body.dart';
 import 'package:frontend/features/chat/presentation/widgets/chat_states.dart';
 import 'package:frontend/features/chat/presentation/widgets/chat_title.dart';
@@ -39,7 +40,7 @@ final class _ChatScreenState extends ConsumerState<ChatScreen> {
       final previousCount = previous?.value?.messages.length ?? 0;
       final nextCount = next.value?.messages.length ?? 0;
       if (nextCount > previousCount) {
-        _scrollToLatest();
+        scrollChatToLatest(_scrollController);
       }
 
       final errorMessage = next.value?.errorMessage;
@@ -47,7 +48,7 @@ final class _ChatScreenState extends ConsumerState<ChatScreen> {
         ScaffoldMessenger.of(context)
           ..hideCurrentSnackBar()
           ..showSnackBar(
-            SnackBar(content: Text(_localizedChatError(context, errorMessage))),
+            SnackBar(content: Text(localizedChatError(l10n, errorMessage))),
           );
       }
     });
@@ -68,7 +69,12 @@ final class _ChatScreenState extends ConsumerState<ChatScreen> {
           state: state,
           controller: _messageController,
           scrollController: _scrollController,
-          onSend: _send,
+          onSend: (text) => sendChatMessage(
+            ref: ref,
+            vehicleId: widget.vehicleId,
+            messageController: _messageController,
+            text: text,
+          ),
         ),
         loading: () => const ChatWarmupState(),
         error: (error, stackTrace) => ChatLoadError(
@@ -77,38 +83,4 @@ final class _ChatScreenState extends ConsumerState<ChatScreen> {
       ),
     );
   }
-
-  void _send(String text) {
-    final trimmedText = text.trim();
-    if (trimmedText.isEmpty) return;
-
-    _messageController.clear();
-    unawaited(
-      ref
-          .read(chatControllerProvider(widget.vehicleId).notifier)
-          .send(trimmedText),
-    );
-  }
-
-  void _scrollToLatest() {
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (!_scrollController.hasClients) return;
-      unawaited(
-        _scrollController.animateTo(
-          _scrollController.position.maxScrollExtent,
-          duration: const Duration(milliseconds: 220),
-          curve: Curves.easeOutCubic,
-        ),
-      );
-    });
-  }
-}
-
-String _localizedChatError(BuildContext context, String message) {
-  final l10n = AppLocalizations.of(context);
-  return switch (message) {
-    'Could not get a reply. Check the backend and try again.' =>
-      l10n.couldNotGetReply,
-    _ => message,
-  };
 }
