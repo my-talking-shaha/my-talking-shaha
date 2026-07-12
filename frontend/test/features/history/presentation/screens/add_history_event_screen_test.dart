@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:frontend/app/theme/app_palette.dart';
 import 'package:frontend/app/theme/app_theme.dart';
 import 'package:frontend/features/history/domain/entities/event_details.dart';
 import 'package:frontend/features/history/domain/entities/history_event.dart';
@@ -76,6 +77,23 @@ void main() {
 
     final details = savedEvent?.details as FuelDetails;
     expect(details.liters, 42.5);
+  });
+
+  testWidgets('fuel type dropdown uses the light theme palette', (
+    tester,
+  ) async {
+    await _pumpScreen(
+      tester,
+      theme: AppTheme.light,
+      onSave: (_) async {},
+    );
+
+    final dropdown = tester.widget<DropdownButton<String>>(
+      find.byWidgetPredicate((widget) => widget is DropdownButton<String>),
+    );
+    expect(dropdown.dropdownColor, AppPalette.light.surfaceHigh);
+    expect(dropdown.iconEnabledColor, AppPalette.light.primaryLight);
+    expect(dropdown.style?.color, AppPalette.light.textPrimary);
   });
 
   testWidgets('uses recharge labels for electric vehicle fuel events', (
@@ -210,15 +228,14 @@ void main() {
         XFile('/tmp/selected-photo-1.jpg'),
         XFile('/tmp/selected-photo-2.jpg'),
       ],
-      persistPhoto:
-          ({
-            required sourcePath,
-            required originalName,
-            required eventId,
-          }) async {
-            persistedSourcePaths.add(sourcePath);
-            return '/documents/history_photos/$eventId/${sourcePath.split('/').last}';
-          },
+      persistPhoto: ({
+        required sourcePath,
+        required originalName,
+        required eventId,
+      }) async {
+        persistedSourcePaths.add(sourcePath);
+        return '/documents/history_photos/$eventId/${sourcePath.split('/').last}';
+      },
     );
 
     await tester.tap(find.byKey(const ValueKey('event-type-maintenance')));
@@ -509,13 +526,14 @@ Future<void> _pumpScreen(
   Locale locale = const Locale('en'),
   HistoryEvent? initialEvent,
   bool isElectricVehicle = false,
+  ThemeData? theme,
 }) async {
   await tester.pumpWidget(
     MaterialApp(
       locale: locale,
       localizationsDelegates: AppLocalizations.localizationsDelegates,
       supportedLocales: AppLocalizations.supportedLocales,
-      theme: AppTheme.dark,
+      theme: theme ?? AppTheme.dark,
       home: AddHistoryEventScreen(
         vehicleId: 'vehicle_1',
         initialEvent: initialEvent,
@@ -525,13 +543,13 @@ Future<void> _pumpScreen(
         onSave: onSave,
         pickPhoto: pickPhoto,
         pickPhotos: pickPhotos,
-        persistPhoto:
-            persistPhoto ??
+        persistPhoto: persistPhoto ??
             ({
               required sourcePath,
               required originalName,
               required eventId,
-            }) async => sourcePath,
+            }) async =>
+                sourcePath,
         deletePhoto: deletePhoto ?? (_) async {},
       ),
     ),
