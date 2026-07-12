@@ -16,10 +16,7 @@ String? chatActionDestination(String vehicleId, ChatAction action) {
     };
     if (path == null) return null;
 
-    return Uri(
-      path: path,
-      queryParameters: const {'from': 'chat'},
-    ).toString();
+    return Uri(path: path, queryParameters: const {'from': 'chat'}).toString();
   }
 
   if (type == 'OPEN_FORM') {

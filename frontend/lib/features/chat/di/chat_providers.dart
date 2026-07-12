@@ -21,6 +21,6 @@ final chatRepositoryProvider = Provider<ChatRepository>((ref) {
 
 final chatControllerProvider =
     AsyncNotifierProvider.family<ChatController, ChatScreenState, String>(
-  ChatController.new,
-  retry: (_, _) => null,
-);
+      ChatController.new,
+      retry: (_, _) => null,
+    );

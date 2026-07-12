@@ -71,9 +71,9 @@ extension _AddHistoryEventActions on _AddHistoryEventScreenState {
                       suffixText: '₽',
                       validator: (value) =>
                           HistoryEventFormUtils.validateStoredCost(
-                        value,
-                        l10n: l10n,
-                      ),
+                            value,
+                            l10n: l10n,
+                          ),
                     ),
                   ),
                 ),
@@ -81,8 +81,9 @@ extension _AddHistoryEventActions on _AddHistoryEventScreenState {
             ),
             const SizedBox(height: AppSpacing.md),
             _LabeledField(
-              label:
-                  widget.isElectricVehicle ? l10n.chargerType : l10n.fuelType,
+              label: widget.isElectricVehicle
+                  ? l10n.chargerType
+                  : l10n.fuelType,
               child: DropdownButtonFormField<String>(
                 key: const ValueKey('fuel-type'),
                 initialValue: _fuelType,
@@ -269,7 +270,8 @@ extension _AddHistoryEventActions on _AddHistoryEventScreenState {
     _update(() => _isSaving = true);
     final persistedPhotoPaths = <String>[];
     try {
-      final eventId = widget.initialEvent?.id ??
+      final eventId =
+          widget.initialEvent?.id ??
           'local-${DateTime.now().microsecondsSinceEpoch}';
       final eventWithoutPhotos = _createEvent(
         id: eventId,
@@ -320,11 +322,11 @@ extension _AddHistoryEventActions on _AddHistoryEventScreenState {
         _fuelCostController.text = cost.toString();
         _fuelType = fuelType;
       case MaintenanceDetails(
-          :final description,
-          :final cost,
-          :final replacedParts,
-          :final photoUrls,
-        ):
+        :final description,
+        :final cost,
+        :final replacedParts,
+        :final photoUrls,
+      ):
         _mileageController.text = event.currentMileageKm.toString();
         _maintenanceDescriptionController.text = description;
         _maintenanceCostController.text = cost?.toString() ?? '';
@@ -333,11 +335,11 @@ extension _AddHistoryEventActions on _AddHistoryEventScreenState {
             ?.where((url) => url.trim().isNotEmpty)
             .toList(growable: false);
       case TripDetails(
-          :final startKm,
-          :final endKm,
-          :final route,
-          :final duration,
-        ):
+        :final startKm,
+        :final endKm,
+        :final route,
+        :final duration,
+      ):
         _tripStartController.text = startKm.toString();
         _tripEndController.text = endKm.toString();
         _tripRouteController.text = route ?? '';
@@ -462,52 +464,51 @@ extension _AddHistoryEventActions on _AddHistoryEventScreenState {
   }) {
     return switch (_type) {
       HistoryEventType.fuel => HistoryEvent(
-          id: id,
-          carId: widget.vehicleId,
-          type: _type,
-          occurredAt: _occurredAt,
-          title: _titleController.text.trim(),
-          currentMileageKm: int.parse(_mileageController.text),
-          details: FuelDetails(
-            cost: int.parse(_fuelCostController.text),
-            liters: HistoryEventFormUtils.parseDecimal(
-              _fuelLitersController.text,
-            )!,
-            fuelType: _fuelType,
-            isRecharge: widget.isElectricVehicle,
-          ),
+        id: id,
+        carId: widget.vehicleId,
+        type: _type,
+        occurredAt: _occurredAt,
+        title: _titleController.text.trim(),
+        currentMileageKm: int.parse(_mileageController.text),
+        details: FuelDetails(
+          cost: int.parse(_fuelCostController.text),
+          liters: HistoryEventFormUtils.parseDecimal(
+            _fuelLitersController.text,
+          )!,
+          fuelType: _fuelType,
+          isRecharge: widget.isElectricVehicle,
         ),
+      ),
       HistoryEventType.maintenance => HistoryEvent(
-          id: id,
-          carId: widget.vehicleId,
-          type: _type,
-          occurredAt: _occurredAt,
-          title: _titleController.text.trim(),
-          currentMileageKm: int.parse(_mileageController.text),
-          details: MaintenanceDetails(
-            description: _maintenanceDescriptionController.text.trim(),
-            cost: int.tryParse(_maintenanceCostController.text),
-            replacedParts: HistoryEventFormUtils.parseCommaSeparated(
-              _replacedPartsController.text,
-            ),
-            photoUrls: _maintenancePhotoUrls(photoPaths),
+        id: id,
+        carId: widget.vehicleId,
+        type: _type,
+        occurredAt: _occurredAt,
+        title: _titleController.text.trim(),
+        currentMileageKm: int.parse(_mileageController.text),
+        details: MaintenanceDetails(
+          description: _maintenanceDescriptionController.text.trim(),
+          cost: int.tryParse(_maintenanceCostController.text),
+          replacedParts: HistoryEventFormUtils.parseCommaSeparated(
+            _replacedPartsController.text,
           ),
+          photoUrls: _maintenancePhotoUrls(photoPaths),
         ),
+      ),
       HistoryEventType.trip => HistoryEvent(
-          id: id,
-          carId: widget.vehicleId,
-          type: _type,
-          occurredAt: _occurredAt,
-          title: _titleController.text.trim(),
-          currentMileageKm: int.parse(_tripEndController.text),
-          details: TripDetails(
-            startKm: int.parse(_tripStartController.text),
-            endKm: int.parse(_tripEndController.text),
-            route: HistoryEventFormUtils.trimToNull(_tripRouteController.text),
-            duration:
-                Duration(minutes: int.parse(_tripDurationController.text)),
-          ),
+        id: id,
+        carId: widget.vehicleId,
+        type: _type,
+        occurredAt: _occurredAt,
+        title: _titleController.text.trim(),
+        currentMileageKm: int.parse(_tripEndController.text),
+        details: TripDetails(
+          startKm: int.parse(_tripStartController.text),
+          endKm: int.parse(_tripEndController.text),
+          route: HistoryEventFormUtils.trimToNull(_tripRouteController.text),
+          duration: Duration(minutes: int.parse(_tripDurationController.text)),
         ),
+      ),
     };
   }
 

@@ -2,8 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:frontend/features/chat/presentation/colors.dart';
 
 final class ChatAssistantMark extends StatelessWidget {
-  const ChatAssistantMark(
-      {required this.size, required this.iconSize, super.key});
+  const ChatAssistantMark({
+    required this.size,
+    required this.iconSize,
+    super.key,
+  });
 
   final double size;
   final double iconSize;

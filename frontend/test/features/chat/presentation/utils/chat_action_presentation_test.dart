@@ -9,11 +9,7 @@ void main() {
     expect(
       chatActionDestination(
         vehicleId,
-        const ChatAction(
-          type: 'OPEN_SCREEN',
-          screen: 'ANALYTICS',
-          prefill: {},
-        ),
+        const ChatAction(type: 'OPEN_SCREEN', screen: 'ANALYTICS', prefill: {}),
       ),
       '/vehicle/vehicle-1/analytics?from=chat',
     );

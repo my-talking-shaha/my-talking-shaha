@@ -373,13 +373,13 @@ final class _PhotoCard extends StatelessWidget {
                           fit: BoxFit.cover,
                           errorBuilder: (context, error, stackTrace) =>
                               Container(
-                            color: HistoryColors.surfaceElevated,
-                            alignment: Alignment.center,
-                            child: const Icon(
-                              Icons.broken_image_outlined,
-                              color: HistoryColors.textMuted,
-                            ),
-                          ),
+                                color: HistoryColors.surfaceElevated,
+                                alignment: Alignment.center,
+                                child: const Icon(
+                                  Icons.broken_image_outlined,
+                                  color: HistoryColors.textMuted,
+                                ),
+                              ),
                         ),
                       );
                     },
@@ -463,8 +463,9 @@ final class _ExistingHistoryPhoto extends StatelessWidget {
   Widget build(BuildContext context) {
     final uri = Uri.tryParse(url);
     final isRemote = uri?.scheme == 'http' || uri?.scheme == 'https';
-    final imageProvider =
-        isRemote ? NetworkImage(url) as ImageProvider : FileImage(File(url));
+    final imageProvider = isRemote
+        ? NetworkImage(url) as ImageProvider
+        : FileImage(File(url));
 
     return Image(
       image: imageProvider,

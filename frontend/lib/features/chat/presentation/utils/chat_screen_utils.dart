@@ -16,7 +16,8 @@ void sendChatMessage({
 
   messageController.clear();
   unawaited(
-      ref.read(chatControllerProvider(vehicleId).notifier).send(trimmedText));
+    ref.read(chatControllerProvider(vehicleId).notifier).send(trimmedText),
+  );
 }
 
 void scrollChatToLatest(ScrollController controller) {

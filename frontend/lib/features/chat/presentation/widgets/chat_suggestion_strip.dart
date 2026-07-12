@@ -43,11 +43,11 @@ final class ChatSuggestionStrip extends StatelessWidget {
                 color: ChatColors.primaryLight.withValues(alpha: 0.18),
               ),
               labelStyle: Theme.of(context).textTheme.labelMedium?.copyWith(
-                    color: ChatColors.textSecondary,
-                    fontSize: 12.5,
-                    fontWeight: FontWeight.w600,
-                    height: 1,
-                  ),
+                color: ChatColors.textSecondary,
+                fontSize: 12.5,
+                fontWeight: FontWeight.w600,
+                height: 1,
+              ),
               shape: const StadiumBorder(),
             );
           },

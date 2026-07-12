@@ -7,8 +7,9 @@ import 'package:frontend/features/chat/presentation/widgets/chat_suggestion_stri
 import 'package:frontend/l10n/generated/app_localizations.dart';
 
 void main() {
-  testWidgets('quick-question tap sends the unchanged question',
-      (tester) async {
+  testWidgets('quick-question tap sends the unchanged question', (
+    tester,
+  ) async {
     String? selected;
     await _pump(
       tester,
@@ -23,8 +24,9 @@ void main() {
     expect(selected, 'Vehicle status');
   });
 
-  testWidgets('input enables for text and sends from the arrow',
-      (tester) async {
+  testWidgets('input enables for text and sends from the arrow', (
+    tester,
+  ) async {
     final controller = TextEditingController();
     addTearDown(controller.dispose);
     String? sent;
@@ -38,7 +40,9 @@ void main() {
     );
 
     expect(
-        tester.widget<IconButton>(find.byType(IconButton)).onPressed, isNull);
+      tester.widget<IconButton>(find.byType(IconButton)).onPressed,
+      isNull,
+    );
     await tester.enterText(find.byType(TextField), '  hello  ');
     await tester.pump();
     await tester.tap(find.byType(IconButton));
@@ -46,8 +50,9 @@ void main() {
     expect(sent, '  hello  ');
   });
 
-  testWidgets('suggestions preserve horizontal swipe scrolling',
-      (tester) async {
+  testWidgets('suggestions preserve horizontal swipe scrolling', (
+    tester,
+  ) async {
     await _pump(
       tester,
       ChatSuggestionStrip(

@@ -25,11 +25,8 @@ final class ChatActionPill extends StatelessWidget {
         color: ChatColors.transparent,
         child: InkWell(
           key: const ValueKey('chat_message_action'),
-          onTap: () => openChatAction(
-            context,
-            action: action,
-            destination: destination,
-          ),
+          onTap: () =>
+              openChatAction(context, action: action, destination: destination),
           borderRadius: BorderRadius.circular(18),
           child: Ink(
             padding: const EdgeInsets.fromLTRB(7, 5, 12, 5),
@@ -60,10 +57,10 @@ final class ChatActionPill extends StatelessWidget {
                 Text(
                   chatActionLabel(AppLocalizations.of(context), action),
                   style: Theme.of(context).textTheme.labelMedium?.copyWith(
-                        color: ChatColors.primaryLight,
-                        fontWeight: FontWeight.w700,
-                        height: 1,
-                      ),
+                    color: ChatColors.primaryLight,
+                    fontWeight: FontWeight.w700,
+                    height: 1,
+                  ),
                 ),
               ],
             ),

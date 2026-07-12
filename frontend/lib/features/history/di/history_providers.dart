@@ -32,8 +32,8 @@ final historyRepositoryProvider = Provider<HistoryRepository>((ref) {
 
 final historyEventsProvider = FutureProvider.autoDispose
     .family<List<HistoryEvent>, String>((ref, vehicleId) {
-  return ref.watch(historyRepositoryProvider).getEvents(vehicleId);
-});
+      return ref.watch(historyRepositoryProvider).getEvents(vehicleId);
+    });
 
 typedef AddHistoryEvent = Future<void> Function(HistoryEvent event);
 
@@ -47,8 +47,8 @@ final updateHistoryEventProvider = Provider<UpdateHistoryEvent>((ref) {
   return ref.watch(historyRepositoryProvider).updateEvent;
 });
 
-typedef DeleteHistoryEvent = Future<void> Function(
-    String vehicleId, String eventId);
+typedef DeleteHistoryEvent =
+    Future<void> Function(String vehicleId, String eventId);
 
 final deleteHistoryEventProvider = Provider<DeleteHistoryEvent>((ref) {
   return ref.watch(historyRepositoryProvider).deleteEvent;

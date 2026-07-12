@@ -143,12 +143,16 @@ final class _HistoryScreenState extends ConsumerState<HistoryScreen> {
   bool get _hasFilters => _query.isNotEmpty || _selectedType != null;
 
   List<HistoryEvent> _filterEvents(List<HistoryEvent> events) {
-    return events.where((event) {
-      final matchesType = _selectedType == null || event.type == _selectedType;
-      final matchesQuery = _query.isEmpty ||
-          HistoryTimelineUtils.searchableText(event).contains(_query);
-      return matchesType && matchesQuery;
-    }).toList(growable: false);
+    return events
+        .where((event) {
+          final matchesType =
+              _selectedType == null || event.type == _selectedType;
+          final matchesQuery =
+              _query.isEmpty ||
+              HistoryTimelineUtils.searchableText(event).contains(_query);
+          return matchesType && matchesQuery;
+        })
+        .toList(growable: false);
   }
 
   Future<void> _editEvent(HistoryEvent event) async {

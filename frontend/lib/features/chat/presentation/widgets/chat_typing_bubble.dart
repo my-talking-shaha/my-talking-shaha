@@ -59,9 +59,8 @@ final class _ChatTypingBubbleState extends State<ChatTypingBubble>
                 label: l10n.assistantThinking,
                 child: AnimatedBuilder(
                   animation: _controller,
-                  builder: (context, _) => _ThinkingWaveText(
-                    progress: _controller.value,
-                  ),
+                  builder: (context, _) =>
+                      _ThinkingWaveText(progress: _controller.value),
                 ),
               ),
             ),
@@ -98,10 +97,10 @@ final class _ThinkingWaveText extends StatelessWidget {
       child: Text(
         AppLocalizations.of(context).shahaThinking,
         style: Theme.of(context).textTheme.titleMedium?.copyWith(
-              color: ChatColors.textSecondary,
-              fontWeight: FontWeight.w500,
-              height: 1.1,
-            ),
+          color: ChatColors.textSecondary,
+          fontWeight: FontWeight.w500,
+          height: 1.1,
+        ),
       ),
     );
   }

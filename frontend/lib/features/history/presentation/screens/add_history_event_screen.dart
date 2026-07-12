@@ -20,11 +20,12 @@ part '../widgets/add_history_event_widgets.dart';
 typedef SaveHistoryEvent = Future<void> Function(HistoryEvent event);
 typedef PickHistoryPhoto = Future<XFile?> Function();
 typedef PickHistoryPhotos = Future<List<XFile>> Function();
-typedef PersistHistoryPhoto = Future<String> Function({
-  required String sourcePath,
-  required String originalName,
-  required String eventId,
-});
+typedef PersistHistoryPhoto =
+    Future<String> Function({
+      required String sourcePath,
+      required String originalName,
+      required String eventId,
+    });
 typedef DeleteHistoryPhoto = Future<void> Function(String path);
 
 const _defaultFuelTypes = ['92 octane', '95 octane', '98 octane', 'Diesel'];

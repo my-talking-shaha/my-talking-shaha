@@ -9,11 +9,7 @@ import 'package:frontend/features/chat/presentation/widgets/common/chat_assistan
 import 'package:frontend/l10n/generated/app_localizations.dart';
 
 final class ChatBubble extends StatelessWidget {
-  const ChatBubble({
-    required this.vehicleId,
-    required this.message,
-    super.key,
-  });
+  const ChatBubble({required this.vehicleId, required this.message, super.key});
 
   final String vehicleId;
   final ChatMessage message;
@@ -50,8 +46,9 @@ final class ChatBubble extends StatelessWidget {
                     ),
                   ),
                   border: Border.all(
-                    color:
-                        isUser ? ChatColors.primaryPressed : ChatColors.border,
+                    color: isUser
+                        ? ChatColors.primaryPressed
+                        : ChatColors.border,
                   ),
                 ),
                 child: Padding(
@@ -68,10 +65,10 @@ final class ChatBubble extends StatelessWidget {
                       Text(
                         text,
                         style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                              color: ChatColors.textPrimary,
-                              fontSize: 15,
-                              height: 1.42,
-                            ),
+                          color: ChatColors.textPrimary,
+                          fontSize: 15,
+                          height: 1.42,
+                        ),
                       ),
                       if (!isUser && message.action != null) ...[
                         const SizedBox(height: AppSpacing.sm),
@@ -85,9 +82,7 @@ final class ChatBubble extends StatelessWidget {
                         alignment: Alignment.centerRight,
                         child: Text(
                           formatChatTime(message.createdAt),
-                          style: Theme.of(context)
-                              .textTheme
-                              .bodySmall
+                          style: Theme.of(context).textTheme.bodySmall
                               ?.copyWith(
                                 color: isUser
                                     ? ChatColors.white.withValues(alpha: 0.7)
@@ -107,8 +102,9 @@ final class ChatBubble extends StatelessWidget {
         return Padding(
           padding: const EdgeInsets.only(bottom: AppSpacing.md),
           child: Row(
-            mainAxisAlignment:
-                isUser ? MainAxisAlignment.end : MainAxisAlignment.start,
+            mainAxisAlignment: isUser
+                ? MainAxisAlignment.end
+                : MainAxisAlignment.start,
             crossAxisAlignment: CrossAxisAlignment.end,
             children: [
               if (!isUser) ...[

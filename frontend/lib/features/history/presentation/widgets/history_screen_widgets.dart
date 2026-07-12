@@ -76,9 +76,9 @@ final class _TypeFilters extends StatelessWidget {
                 animationDuration: Duration.zero,
                 splashFactory: NoSplash.splashFactory,
                 textStyle: Theme.of(context).textTheme.labelMedium?.copyWith(
-                      fontWeight: FontWeight.w700,
-                      letterSpacing: 0.5,
-                    ),
+                  fontWeight: FontWeight.w700,
+                  letterSpacing: 0.5,
+                ),
               ),
               child: Text(label),
             ),
@@ -132,9 +132,9 @@ final class _HistoryEventsList extends StatelessWidget {
                 child: Text(
                   HistoryTimelineUtils.monthTitle(context, group.month),
                   style: Theme.of(context).textTheme.labelMedium?.copyWith(
-                        color: HistoryColors.textSecondary,
-                        letterSpacing: 1.1,
-                      ),
+                    color: HistoryColors.textSecondary,
+                    letterSpacing: 1.1,
+                  ),
                 ),
               ),
               for (var index = 0; index < group.events.length; index++) ...[

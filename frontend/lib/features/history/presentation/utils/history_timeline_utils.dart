@@ -11,9 +11,9 @@ abstract final class HistoryTimelineUtils {
     final details = switch (event.details) {
       FuelDetails(:final fuelType, :final liters) => '$fuelType $liters',
       MaintenanceDetails(:final description, :final replacedParts) => [
-          description,
-          ...?replacedParts,
-        ].join(' '),
+        description,
+        ...?replacedParts,
+      ].join(' '),
       TripDetails(:final route) => route ?? '',
     };
 

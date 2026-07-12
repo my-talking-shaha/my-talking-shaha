@@ -30,12 +30,9 @@ class _PhotoToggle extends StatelessWidget {
           Expanded(
             child: Text(
               '${l10n.partPhotoLabel} $count',
-              style: Theme.of(
-                context,
-              )
-                  .textTheme
-                  .bodySmall
-                  ?.copyWith(color: HistoryColors.textSecondary),
+              style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                color: HistoryColors.textSecondary,
+              ),
             ),
           ),
           AnimatedRotation(
@@ -91,8 +88,9 @@ final class _HistorySwipeRevealActionsState
       },
       onHorizontalDragEnd: (_) {
         setState(() {
-          _dragOffset =
-              _dragOffset.abs() > _actionWidth * 0.38 ? -_actionWidth : 0;
+          _dragOffset = _dragOffset.abs() > _actionWidth * 0.38
+              ? -_actionWidth
+              : 0;
         });
       },
       child: Stack(
@@ -106,9 +104,11 @@ final class _HistorySwipeRevealActionsState
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.end,
                   children: [
-                    for (var index = 0;
-                        index < widget.actions.length;
-                        index++) ...[
+                    for (
+                      var index = 0;
+                      index < widget.actions.length;
+                      index++
+                    ) ...[
                       widget.actions[index],
                       if (index < widget.actions.length - 1)
                         const SizedBox(width: AppSpacing.sm),
@@ -327,8 +327,8 @@ class _EventPhotoPreviewState extends State<_EventPhotoPreview> {
                       child: Text(
                         '${_currentIndex + 1}/${widget.urls.length}',
                         style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                              color: HistoryColors.textPrimary,
-                            ),
+                          color: HistoryColors.textPrimary,
+                        ),
                       ),
                     ),
                   ),
@@ -438,32 +438,32 @@ class _EventPresentation {
   factory _EventPresentation.from(HistoryEvent event) {
     return switch (event.type) {
       HistoryEventType.fuel => _EventPresentation(
-          iconAsset: _isChargeFuelDetails(event.details)
-              ? 'assets/icons/events/charge.svg'
-              : 'assets/icons/events/gas.svg',
-          iconColor: HistoryColors.primary,
-          iconBackground: HistoryColors.primarySoft,
-          metric: event.details is FuelDetails
-              ? '${_formatNumber((event.details as FuelDetails).cost)} ₽'
-              : null,
-        ),
+        iconAsset: _isChargeFuelDetails(event.details)
+            ? 'assets/icons/events/charge.svg'
+            : 'assets/icons/events/gas.svg',
+        iconColor: HistoryColors.primary,
+        iconBackground: HistoryColors.primarySoft,
+        metric: event.details is FuelDetails
+            ? '${_formatNumber((event.details as FuelDetails).cost)} ₽'
+            : null,
+      ),
       HistoryEventType.maintenance => _EventPresentation(
-          iconAsset: 'assets/icons/events/spanner.svg',
-          iconColor: HistoryColors.error,
-          iconBackground: HistoryColors.error.withValues(alpha: 0.14),
-          metric: switch (event.details) {
-            MaintenanceDetails(cost: final cost?) => '${_formatNumber(cost)} ₽',
-            _ => null,
-          },
-        ),
+        iconAsset: 'assets/icons/events/spanner.svg',
+        iconColor: HistoryColors.error,
+        iconBackground: HistoryColors.error.withValues(alpha: 0.14),
+        metric: switch (event.details) {
+          MaintenanceDetails(cost: final cost?) => '${_formatNumber(cost)} ₽',
+          _ => null,
+        },
+      ),
       HistoryEventType.trip => _EventPresentation(
-          iconAsset: 'assets/icons/events/trip.svg',
-          iconColor: HistoryColors.textSecondary,
-          iconBackground: HistoryColors.surfaceElevated,
-          metric: event.details is TripDetails
-              ? '${_formatNumber((event.details as TripDetails).distanceKm)} km'
-              : null,
-        ),
+        iconAsset: 'assets/icons/events/trip.svg',
+        iconColor: HistoryColors.textSecondary,
+        iconBackground: HistoryColors.surfaceElevated,
+        metric: event.details is TripDetails
+            ? '${_formatNumber((event.details as TripDetails).distanceKm)} km'
+            : null,
+      ),
     };
   }
 }
