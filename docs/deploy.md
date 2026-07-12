@@ -80,6 +80,11 @@ build fails and the GitHub Release is not published. Pull requests without
 access to repository secrets retain debug signing so their APK build can still
 be validated; these artifacts are not published as GitHub Releases.
 
+The Android build also requires the GitHub Actions variable
+`ANDROID_API_BASE_URL`. Set it to the public API base URL, including the API
+version path; for the development server this is
+`http://135.106.161.10/api/v1`.
+
 ## One-time server setup
 
 1. Install Docker and Docker Compose on the server. Git is not required.

@@ -159,10 +159,12 @@ jobs:
         run: |
           if [ -n "${ANDROID_BUILD_NAME:-}" ]; then
             flutter build apk --release \
+              --dart-define=API_BASE_URL="${{ vars.ANDROID_API_BASE_URL }}" \
               --build-name="$ANDROID_BUILD_NAME" \
               --build-number="$ANDROID_BUILD_NUMBER"
           else
-            flutter build apk --release
+            flutter build apk --release \
+              --dart-define=API_BASE_URL="${{ vars.ANDROID_API_BASE_URL }}"
           fi
 
       - name: Remove Android release signing key
