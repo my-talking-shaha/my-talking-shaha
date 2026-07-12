@@ -1,11 +1,14 @@
-"""Maintenance prediction: models, CSV loader, predict()."""
+"""Maintenance prediction: CSV loader, predict()."""
 
-from dataclasses import dataclass
 from datetime import datetime
 from pathlib import Path
 from typing import Any, Dict, List, Optional
 
 import pandas as pd
+
+from ml.coefficients import load_coefficients, need_score as coefficient_need_score
+from ml.models import CarSpec, MaintenanceNeed, Usage
+from ml.spec_utils import normalize_displacement_cc
 
 COMPONENT_INTERVALS = {
     'Engine Oil': (3000, 6),
@@ -21,33 +24,6 @@ COMPONENT_INTERVALS = {
     'Tire Rotation': (10000, 6),
     'Suspension': (20000, 12),
 }
-
-
-@dataclass
-class CarSpec:
-    engine_type: str
-    displacement: Optional[float]
-    transmission: str
-    weight: float
-
-
-@dataclass
-class Usage:
-    total_distance_km: float
-    average_speed: float
-    altitude_gain: float
-    total_trips: int
-    median_trip_duration: float
-    last_maintenance_date: datetime
-
-
-@dataclass
-class MaintenanceNeed:
-    name: str
-    needed: bool
-    reason: str
-    km_remaining: Optional[int]
-    days_remaining: Optional[int]
 
 
 def load_car_spec(modification_id: str, csv_dir: Optional[str] = None) -> CarSpec:
@@ -96,79 +72,27 @@ def _ratio_to_score(ratio: float) -> float:
     return (ratio - 0.6) / 0.6
 
 
-def _need_score(mileage: int, target_mileage: int, *, engine_type: str | None = None, displacement: int | None = None, transmission: str | None = None, weight: int | None = None, part: str | None = None) -> float:
-    effective_target = float(target_mileage)
-    if engine_type == "Дизельный":
-        if part in {"fuel_filter", "injectors"}:
-            # У дизелей топливная система чувствительнее
-            effective_target *= 0.8
-    elif engine_type == "Гибридный":
-        if part in {"brake_pads", "brake_discs"}:
-            # Рекуперация снижает износ тормозов
-            effective_target *= 1.5
-        if part in {"engine_oil", "oil_filter"}:
-            # ДВС работает меньше времени
-            effective_target *= 1.15
-    elif engine_type == "Электро":
-        if part in {
-            "engine_oil",
-            "oil_filter",
-            "spark_plugs",
-            "fuel_filter",
-            "injectors",
-            "timing_belt",
-        }:
-            return 0.0
-        if part in {"brake_pads", "brake_discs"}:
-            effective_target *= 1.6
-        if part in {"tires", "suspension"}:
-            # EV обычно тяжелее
-            effective_target *= 0.9
-    elif engine_type == "Бензиновый":
-        if part == "spark_plugs":
-            # Малолитражные турбированные моторы обычно требуют
-            # более частой замены свечей
-            if displacement is not None and displacement <= 1600:
-                effective_target *= 0.8
-            elif displacement >= 3000:
-                effective_target *= 1.1
-    if transmission == "Автомат":
-        if part in {"transmission_oil", "transmission_filter"}:
-            effective_target *= 0.85
-
-    elif transmission == "Механика":
-        if part in {"clutch"}:
-            effective_target *= 0.9
-
-        if part in {"transmission_oil", "transmission_filter"}:
-            effective_target *= 1.15
-    if weight is not None:
-        if weight > 2200:
-            if part in {
-                "brake_pads",
-                "brake_discs",
-                "tires",
-                "suspension",
-                "wheel_bearing",
-            }:
-                effective_target *= 0.85
-
-        elif weight < 1300:
-            if part in {
-                "brake_pads",
-                "brake_discs",
-                "tires",
-                "suspension",
-            }:
-                effective_target *= 1.1
-    ratio = mileage / max(effective_target, 1)
-
-    if ratio >= 1.2:
-        return 1.0
-    if ratio <= 0.6:
-        return 0.0
-
-    return (ratio - 0.6) / 0.6
+def _need_score(
+    mileage: int,
+    target_mileage: int,
+    *,
+    engine_type: str | None = None,
+    displacement: int | None = None,
+    transmission: str | None = None,
+    weight: int | None = None,
+    part: str | None = None,
+    coefficients: dict[str, float] | None = None,
+) -> float:
+    return coefficient_need_score(
+        mileage,
+        target_mileage,
+        engine_type=engine_type,
+        displacement=displacement,
+        transmission=transmission,
+        weight=weight,
+        part=part,
+        coefficients=coefficients or load_coefficients(),
+    )
 
 
 def predict(spec: CarSpec, usage: Usage) -> Dict[str, Any]:
@@ -202,12 +126,14 @@ def predict(spec: CarSpec, usage: Usage) -> Dict[str, Any]:
 
 def predict_maintenance(spec: CarSpec, usage: Usage) -> List[Dict[str, Any]]:
     days_since = (datetime.now() - usage.last_maintenance_date).days
-    displacement = int(spec.displacement) if spec.displacement is not None else None
+    displacement = normalize_displacement_cc(spec.displacement)
+    coefficients = load_coefficients()
     spec_kwargs = {
         "engine_type": spec.engine_type,
         "displacement": displacement,
         "transmission": spec.transmission,
         "weight": int(spec.weight),
+        "coefficients": coefficients,
     }
 
     return [
