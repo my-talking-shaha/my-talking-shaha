@@ -9,12 +9,12 @@ final appThemeControllerProvider =
 );
 
 final class AppThemeController extends AsyncNotifier<ThemeMode> {
-  static const _themeModeKey = 'app_theme_mode';
+  static const storageKey = 'app_theme_mode';
 
   @override
   Future<ThemeMode> build() async {
     final savedTheme =
-        await ref.watch(sharedPreferencesProvider).getString(_themeModeKey);
+        await ref.watch(sharedPreferencesProvider).getString(storageKey);
     return _themeModeFromName(savedTheme);
   }
 
@@ -24,7 +24,7 @@ final class AppThemeController extends AsyncNotifier<ThemeMode> {
     state = AsyncData(normalizedMode);
     await ref
         .read(sharedPreferencesProvider)
-        .setString(_themeModeKey, normalizedMode.name);
+        .setString(storageKey, normalizedMode.name);
   }
 
   ThemeMode _themeModeFromName(String? name) {
