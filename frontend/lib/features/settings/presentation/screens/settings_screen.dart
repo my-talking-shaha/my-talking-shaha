@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:frontend/app/localization/app_locale_controller.dart';
 import 'package:frontend/app/theme/app_theme.dart';
+import 'package:frontend/app/theme/app_theme_controller.dart';
 import 'package:frontend/features/auth/di/auth_providers.dart';
 import 'package:frontend/features/settings/presentation/colors.dart';
 import 'package:frontend/features/settings/presentation/common/settings_section.dart';
@@ -22,15 +23,17 @@ final class SettingsScreen extends ConsumerStatefulWidget {
 }
 
 final class _SettingsScreenState extends ConsumerState<SettingsScreen> {
-  String _theme = 'dark';
   bool _notificationsEnabled = true;
 
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
     final authState = ref.watch(authControllerProvider);
-    final locale =
-        ref
+    final themeMode = ref
+            .watch(appThemeControllerProvider)
+            .maybeWhen(data: (themeMode) => themeMode, orElse: () => null) ??
+        ThemeMode.dark;
+    final locale = ref
             .watch(appLocaleControllerProvider)
             .maybeWhen(data: (locale) => locale, orElse: () => null) ??
         const Locale('en');
@@ -68,13 +71,16 @@ final class _SettingsScreenState extends ConsumerState<SettingsScreen> {
             ProfileHeaderCard(fullName: profileName, login: profileLogin),
             const SizedBox(height: AppSpacing.xxxl),
             SettingsThemeSection(
-              selectedTheme: _theme,
+              selectedTheme: themeMode.name,
               lightLabel: l10n.light,
               darkLabel: l10n.dark,
               title: l10n.theme,
-              onChanged: (value) {
-                setState(() => _theme = value);
-              },
+              onChanged: (value) =>
+                  ref.read(appThemeControllerProvider.notifier).setThemeMode(
+                        value == ThemeMode.light.name
+                            ? ThemeMode.light
+                            : ThemeMode.dark,
+                      ),
             ),
             const SizedBox(height: AppSpacing.xxl),
             SettingsSection(
@@ -83,9 +89,8 @@ final class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                 SettingsTile(
                   icon: Icons.language_rounded,
                   title: l10n.appLanguage,
-                  subtitle: locale.languageCode == 'ru'
-                      ? l10n.russian
-                      : l10n.english,
+                  subtitle:
+                      locale.languageCode == 'ru' ? l10n.russian : l10n.english,
                   trailing: SettingsLanguageChoice(
                     selectedLocale: locale,
                     englishLabel: l10n.english,

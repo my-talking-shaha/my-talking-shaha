@@ -63,7 +63,8 @@ void main() {
     expect(find.text('Выйти'), findsOneWidget);
   });
 
-  testWidgets('theme and notifications controls keep local visual state', (
+  testWidgets(
+      'theme control changes the app theme and notifications stay local', (
     tester,
   ) async {
     await _pumpApp(tester);
@@ -80,6 +81,8 @@ void main() {
 
     expect(segmentColor('Dark'), AppColors.primary);
     expect(segmentColor('Light'), Colors.transparent);
+    expect(tester.widget<MaterialApp>(find.byType(MaterialApp)).themeMode,
+        ThemeMode.dark);
     expect(tester.widget<Switch>(find.byType(Switch)).value, isTrue);
 
     await tester.tap(find.text('Light'));
@@ -89,7 +92,25 @@ void main() {
 
     expect(segmentColor('Light'), AppColors.primary);
     expect(segmentColor('Dark'), Colors.transparent);
+    expect(tester.widget<MaterialApp>(find.byType(MaterialApp)).themeMode,
+        ThemeMode.light);
     expect(tester.widget<Switch>(find.byType(Switch)).value, isFalse);
+  });
+
+  testWidgets('profile restores selected theme on next launch', (tester) async {
+    await _pumpApp(tester);
+
+    await tester.tap(find.text('Light'));
+    await tester.pumpAndSettle();
+    expect(tester.widget<MaterialApp>(find.byType(MaterialApp)).themeMode,
+        ThemeMode.light);
+
+    await tester.pumpWidget(const SizedBox.shrink());
+    await tester.pump();
+    await _pumpApp(tester);
+
+    expect(tester.widget<MaterialApp>(find.byType(MaterialApp)).themeMode,
+        ThemeMode.light);
   });
 
   testWidgets('settings list responds only to vertical scrolling', (

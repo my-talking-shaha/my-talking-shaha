@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:frontend/app/localization/app_locale_controller.dart';
 import 'package:frontend/app/router.dart';
 import 'package:frontend/app/theme/app_theme.dart';
+import 'package:frontend/app/theme/app_theme_controller.dart';
 import 'package:frontend/l10n/generated/app_localizations.dart';
 
 class CarApp extends ConsumerWidget {
@@ -12,8 +13,11 @@ class CarApp extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final router = ref.watch(routerProvider);
-    final locale =
-        ref
+    final themeMode = ref
+            .watch(appThemeControllerProvider)
+            .maybeWhen(data: (themeMode) => themeMode, orElse: () => null) ??
+        ThemeMode.dark;
+    final locale = ref
             .watch(appLocaleControllerProvider)
             .maybeWhen(data: (locale) => locale, orElse: () => null) ??
         const Locale('en');
@@ -28,9 +32,9 @@ class CarApp extends ConsumerWidget {
         GlobalCupertinoLocalizations.delegate,
         GlobalWidgetsLocalizations.delegate,
       ],
-      theme: AppTheme.dark,
+      theme: AppTheme.light,
       darkTheme: AppTheme.dark,
-      themeMode: ThemeMode.dark,
+      themeMode: themeMode,
       routerConfig: router,
     );
   }
