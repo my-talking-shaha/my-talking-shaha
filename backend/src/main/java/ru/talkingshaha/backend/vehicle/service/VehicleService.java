@@ -10,6 +10,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import ru.talkingshaha.backend.common.error.ForbiddenException;
 import ru.talkingshaha.backend.common.error.ResourceNotFoundException;
+import ru.talkingshaha.backend.common.metrics.BusinessMetrics;
 import ru.talkingshaha.backend.common.model.BaseEvent;
 import ru.talkingshaha.backend.common.storage.PhotoStorageService;
 import ru.talkingshaha.backend.chat.repository.ChatMessageRepository;
@@ -48,6 +49,7 @@ public class VehicleService {
     private final ChatSessionRepository chatSessions;
     private final ChatMessageRepository chatMessages;
     private final CurrentUserService currentUserService;
+    private final BusinessMetrics metrics;
 
     public VehicleService(
             VehicleRepository vehicles,
@@ -57,7 +59,8 @@ public class VehicleService {
             TimelineEventRepository events,
             ChatSessionRepository chatSessions,
             ChatMessageRepository chatMessages,
-            CurrentUserService currentUserService) {
+            CurrentUserService currentUserService,
+            BusinessMetrics metrics) {
         this.vehicles = vehicles;
         this.photos = photos;
         this.photoStorage = photoStorage;
@@ -66,6 +69,7 @@ public class VehicleService {
         this.chatSessions = chatSessions;
         this.chatMessages = chatMessages;
         this.currentUserService = currentUserService;
+        this.metrics = metrics;
     }
 
     @Transactional(readOnly = true)
@@ -87,7 +91,9 @@ public class VehicleService {
         vehicle.setFuelType(request.fuelType());
         vehicle.setEngineDescription(request.engineDescription());
         vehicle.setVin(request.vin());
-        return toResponse(vehicles.save(vehicle));
+        VehicleResponse response = toResponse(vehicles.save(vehicle));
+        metrics.recordVehicleCreated();
+        return response;
     }
 
     @Transactional

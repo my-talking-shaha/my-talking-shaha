@@ -8,4 +8,6 @@ import java.util.UUID;
 
 public interface AppUserRepository extends JpaRepository<AppUser, UUID> {
     Optional<AppUser> findByEmail(String email);
+
+    long countByEmailNot(String email);
 }

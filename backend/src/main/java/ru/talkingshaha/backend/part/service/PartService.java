@@ -7,6 +7,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 import ru.talkingshaha.backend.common.error.ResourceNotFoundException;
+import ru.talkingshaha.backend.common.metrics.BusinessMetrics;
 import ru.talkingshaha.backend.part.dto.CreatePartRequest;
 import ru.talkingshaha.backend.part.dto.PartListResponse;
 import ru.talkingshaha.backend.part.dto.PartResponse;
@@ -24,11 +25,17 @@ public class PartService {
     private final PartRepository parts;
     private final VehicleService vehicles;
     private final PartLifetimeService lifetimeService;
+    private final BusinessMetrics metrics;
 
-    public PartService(PartRepository parts, VehicleService vehicles, PartLifetimeService lifetimeService) {
+    public PartService(
+            PartRepository parts,
+            VehicleService vehicles,
+            PartLifetimeService lifetimeService,
+            BusinessMetrics metrics) {
         this.parts = parts;
         this.vehicles = vehicles;
         this.lifetimeService = lifetimeService;
+        this.metrics = metrics;
     }
 
     @Transactional(readOnly = true)
@@ -55,7 +62,9 @@ public class PartService {
             part.getPhotoUrls().addAll(request.photoUrls());
         }
         refreshLifetime(vehicle, part);
-        return toResponse(parts.save(part));
+        PartResponse response = toResponse(parts.save(part));
+        metrics.recordPartCreated();
+        return response;
     }
 
     @Transactional
