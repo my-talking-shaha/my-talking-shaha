@@ -551,9 +551,10 @@ final class _MileageUpdatingHistoryDatasource implements HistoryDatasource {
   }
 
   @override
-  Future<void> addEvent(HistoryEvent event) async {
+  Future<String> addEvent(HistoryEvent event) async {
     _events.add(event);
     garageDatasource.mileageKm = event.currentMileageKm;
+    return event.id;
   }
 
   @override

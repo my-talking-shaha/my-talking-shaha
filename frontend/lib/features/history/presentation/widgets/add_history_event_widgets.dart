@@ -294,6 +294,7 @@ final class _PhotoCard extends StatelessWidget {
     required this.existingPhotoUrls,
     required this.photos,
     required this.isPicking,
+    required this.readOnly,
     required this.onPick,
     required this.onRemove,
     required this.onRemoveExisting,
@@ -302,6 +303,7 @@ final class _PhotoCard extends StatelessWidget {
   final List<String> existingPhotoUrls;
   final List<XFile> photos;
   final bool isPicking;
+  final bool readOnly;
   final VoidCallback onPick;
   final ValueChanged<XFile> onRemove;
   final ValueChanged<String> onRemoveExisting;
@@ -316,7 +318,7 @@ final class _PhotoCard extends StatelessWidget {
       child: existingPhotoUrls.isEmpty && photos.isEmpty
           ? OutlinedButton.icon(
               key: const ValueKey('maintenance-photo-add'),
-              onPressed: isPicking ? null : onPick,
+              onPressed: isPicking || readOnly ? null : onPick,
               icon: isPicking
                   ? const SizedBox.square(
                       dimension: 18,
@@ -346,7 +348,9 @@ final class _PhotoCard extends StatelessWidget {
                           removeKey: ValueKey(
                             'maintenance-existing-photo-remove-$index',
                           ),
-                          onRemove: () => onRemoveExisting(url),
+                          onRemove: readOnly
+                              ? null
+                              : () => onRemoveExisting(url),
                           child: _ExistingHistoryPhoto(
                             url: url,
                             key: ValueKey(
@@ -364,7 +368,7 @@ final class _PhotoCard extends StatelessWidget {
                         removeKey: ValueKey(
                           'maintenance-photo-remove-$photoIndex',
                         ),
-                        onRemove: () => onRemove(photo),
+                        onRemove: readOnly ? null : () => onRemove(photo),
                         child: Image.file(
                           File(photo.path),
                           key: ValueKey(
@@ -385,21 +389,23 @@ final class _PhotoCard extends StatelessWidget {
                     },
                   ),
                 ),
-                const SizedBox(height: AppSpacing.sm),
-                OutlinedButton.icon(
-                  key: const ValueKey('maintenance-photo-add-more'),
-                  onPressed: isPicking ? null : onPick,
-                  icon: isPicking
-                      ? const SizedBox.square(
-                          dimension: 18,
-                          child: CircularProgressIndicator(strokeWidth: 2),
-                        )
-                      : const Icon(
-                          Icons.add_photo_alternate_outlined,
-                          size: 18,
-                        ),
-                  label: Text(l10n.addPhoto),
-                ),
+                if (!readOnly) ...[
+                  const SizedBox(height: AppSpacing.sm),
+                  OutlinedButton.icon(
+                    key: const ValueKey('maintenance-photo-add-more'),
+                    onPressed: isPicking ? null : onPick,
+                    icon: isPicking
+                        ? const SizedBox.square(
+                            dimension: 18,
+                            child: CircularProgressIndicator(strokeWidth: 2),
+                          )
+                        : const Icon(
+                            Icons.add_photo_alternate_outlined,
+                            size: 18,
+                          ),
+                    label: Text(l10n.addPhoto),
+                  ),
+                ],
               ],
             ),
     );
@@ -416,7 +422,7 @@ final class _PhotoPreviewTile extends StatelessWidget {
 
   final Widget child;
   final Key removeKey;
-  final VoidCallback onRemove;
+  final VoidCallback? onRemove;
 
   @override
   Widget build(BuildContext context) {
@@ -428,26 +434,27 @@ final class _PhotoPreviewTile extends StatelessWidget {
         fit: StackFit.expand,
         children: [
           ClipRRect(borderRadius: AppRadius.input, child: child),
-          Positioned(
-            top: AppSpacing.xs,
-            right: AppSpacing.xs,
-            child: IconButton.filled(
-              key: removeKey,
-              onPressed: onRemove,
-              tooltip: l10n.removePhoto,
-              style: IconButton.styleFrom(
-                backgroundColor: HistoryColors.background.withValues(
-                  alpha: 0.82,
+          if (onRemove != null)
+            Positioned(
+              top: AppSpacing.xs,
+              right: AppSpacing.xs,
+              child: IconButton.filled(
+                key: removeKey,
+                onPressed: onRemove,
+                tooltip: l10n.removePhoto,
+                style: IconButton.styleFrom(
+                  backgroundColor: HistoryColors.background.withValues(
+                    alpha: 0.82,
+                  ),
+                  foregroundColor: HistoryColors.textPrimary,
+                  minimumSize: const Size.square(32),
+                  fixedSize: const Size.square(32),
+                  padding: EdgeInsets.zero,
+                  tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                 ),
-                foregroundColor: HistoryColors.textPrimary,
-                minimumSize: const Size.square(32),
-                fixedSize: const Size.square(32),
-                padding: EdgeInsets.zero,
-                tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                icon: const Icon(Icons.close, size: 18),
               ),
-              icon: const Icon(Icons.close, size: 18),
             ),
-          ),
         ],
       ),
     );

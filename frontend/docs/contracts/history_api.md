@@ -111,16 +111,26 @@ Trip response includes `distanceKm` and `averageFuelConsumptionLitersPerKm`.
 
 `POST /api/v1/vehicles/{vehicleId}/timeline/maintenance`
 
+Content-Type: `multipart/form-data` with:
+
+- one `event` part using `application/json`;
+- zero or more `photos` parts containing JPG/PNG files.
+
+The `event` part:
+
 ```json
 {
   "eventDateTime": "2026-06-12T16:30:00Z",
   "mileageKm": 10000,
   "name": "Oil change",
   "description": "Oil and filter replacement",
-  "cost": 3000,
-  "photoUrls": ["https://example.com/event-photo.jpg"]
+  "cost": 3000
 }
 ```
+
+Response `201` contains the created timeline event. Its `photoUrls` field holds
+absolute backend URLs for the stored photos. Invalid or unsupported files return
+`400 VALIDATION_ERROR`.
 
 Validation: `name` is required, `mileageKm >= previous mileage`, optional `cost > 0`,
 `eventDateTime <= now`.
@@ -156,7 +166,7 @@ Request body uses the same event-specific fields as add endpoints:
 - trip: `eventDateTime`, `startMileageKm`, `endMileageKm`, optional `route`,
   `durationMinutes`;
 - maintenance/part: `eventDateTime`, `mileageKm`, `name`, `description`,
-  optional `cost`, optional `photoUrls`.
+  optional `cost`. Photo attachments are not changed by this endpoint.
 
 Validation is the same as the matching add event endpoint. Event type is not
 changed by this endpoint.
@@ -165,7 +175,9 @@ changed by this endpoint.
 
 `DELETE /api/v1/vehicles/{vehicleId}/timeline/{eventId}`
 
-Response: empty body or success envelope.
+Response: empty body or success envelope. Deleting a maintenance event also
+deletes its stored backend photo attachments; after success, the client clears
+the matching local photo cache.
 
 ## Errors
 

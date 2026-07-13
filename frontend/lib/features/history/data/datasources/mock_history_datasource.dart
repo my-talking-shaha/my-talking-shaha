@@ -19,7 +19,7 @@ final class MockHistoryDatasource implements HistoryDatasource {
   }
 
   @override
-  Future<void> addEvent(HistoryEvent event) async {
+  Future<String> addEvent(HistoryEvent event) async {
     await Future<void>.delayed(delay);
 
     final events = _eventsFor(event.carId);
@@ -35,6 +35,7 @@ final class MockHistoryDatasource implements HistoryDatasource {
     _validateTripMileage(event);
 
     events.add(event);
+    return event.id;
   }
 
   @override

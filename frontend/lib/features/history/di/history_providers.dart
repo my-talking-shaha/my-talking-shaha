@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:frontend/core/network/api_client.dart';
 import 'package:frontend/features/history/data/datasources/history_api_datasource.dart';
@@ -19,7 +20,8 @@ final historyPhotoStorageProvider = Provider<HistoryPhotoStorage>((ref) {
   return const HistoryPhotoStorage();
 });
 
-final historyPhotoReaderProvider = Provider<HistoryPhotoReader?>((ref) {
+final historyPhotoReaderProvider = Provider<HistoryPhotoCache?>((ref) {
+  if (kIsWeb) return null;
   return ref.watch(historyPhotoStorageProvider);
 });
 
@@ -59,5 +61,6 @@ typedef DeleteHistoryPhotoCache = Future<void> Function(HistoryEvent event);
 final deleteHistoryPhotoCacheProvider = Provider<DeleteHistoryPhotoCache>((
   ref,
 ) {
+  if (kIsWeb) return (_) async {};
   return ref.watch(historyPhotoStorageProvider).deleteCachedPhotosForEvent;
 });
