@@ -1,5 +1,5 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:frontend/features/garage/presentation/providers/garage_providers.dart';
+import 'package:frontend/features/garage/di/garage_providers.dart';
 
 final vehicleMileageProvider = FutureProvider.autoDispose.family<int, String>((
   ref,

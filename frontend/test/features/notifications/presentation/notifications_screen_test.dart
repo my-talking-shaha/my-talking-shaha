@@ -2,9 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:frontend/app/theme/app_theme.dart';
+import 'package:frontend/features/notifications/di/notifications_providers.dart';
 import 'package:frontend/features/notifications/domain/entities/app_notification.dart';
 import 'package:frontend/features/notifications/domain/repositories/notifications_repository.dart';
-import 'package:frontend/features/notifications/presentation/providers/notifications_providers.dart';
 import 'package:frontend/features/notifications/presentation/screens/notifications_screen.dart';
 import 'package:frontend/l10n/generated/app_localizations.dart';
 

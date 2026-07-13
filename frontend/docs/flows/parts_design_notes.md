@@ -2,8 +2,13 @@
 
 ## Screen/Widget From Design
 
-- Accord to `docs/design/screenshots/01_parts.jpg` for design example
+- Accord to `docs/design/screenshots/01_parts.png` for a historical design
+  example.
 - same widget is also visible inside `01_vehicle.jpg` and `01_analytics.jpg`.
+
+For structure-only refactors, the current runtime baseline in
+`docs/flows/parts_behavior_and_design_baseline.md` is the source of truth for
+behavior, colors, spacing, and typography.
 
 ## Feature Meaning
 

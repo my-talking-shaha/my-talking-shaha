@@ -8,6 +8,83 @@ deploy, so Flyway applies new migrations to the existing database. Do not use
 this flow for staging or production data without reviewing the runtime settings
 and migration policy.
 
+## Android APK releases
+
+CI builds an Android release APK for every pull request, push to `main`, and
+push of a tag. Builds from pull requests and `main` are kept as GitHub Actions
+artifacts for 14 days. Only a tag in the strict `vX.Y.Z` format publishes the
+APK in GitHub Releases after all CI checks finish successfully.
+
+Publishing an APK release does not deploy the backend or web application to the
+development server. The development deploy workflow still runs only for pushes
+to `main`.
+
+### Create a release
+
+1. Commit and push the release changes to `main`. The release version does not
+   need a manual edit in `frontend/pubspec.yaml`; the tag overrides it for the
+   release build.
+
+2. Create an annotated tag on the exact commit to release, then push the tag:
+
+   ```bash
+   git switch main
+   git pull --ff-only origin main
+   git tag -a v1.2.3 -m "Release v1.2.3"
+   git push origin v1.2.3
+   ```
+
+3. Open the matching `CI` run in GitHub Actions. It runs the backend and
+   frontend checks, Docker smoke test, runtime validation, and Android APK
+   build. If every required job succeeds, `Publish Android APK to GitHub
+   Releases` creates the release and attaches `app-release.apk`.
+
+4. Download the APK from the repository's **Releases** page. While CI is still
+   running, the same file is also available in the
+   `my-talking-shaha-release-apk-<commit-sha>` Actions artifact.
+
+### Release behavior and troubleshooting
+
+- The tag is the source of the release version: `v1.2.3` sets Android
+  `versionName` to `1.2.3`. CI sets Android `versionCode` to
+  `GITHUB_RUN_NUMBER`, an increasing counter for this workflow. Re-running the
+  same workflow preserves that number, while a new workflow run receives the
+  next one.
+- `frontend/pubspec.yaml` remains the version source for local builds and CI
+  artifacts from pull requests and `main`.
+- Re-running a successful tag workflow replaces the APK asset in the existing
+  GitHub Release; release notes are generated only when the release is first
+  created.
+- If CI fails, no release is published. Fix the failure, commit the fix, and
+  create a new version tag instead of moving an existing release tag.
+- The release job needs the repository setting **Settings → Actions → General
+  → Workflow permissions → Read and write permissions**, or an organization
+  policy that permits `contents: write`. Without it, GitHub cannot create the
+  Release.
+
+### Android signing
+
+The CI job receives the following GitHub Actions secrets:
+
+- `ANDROID_KEYSTORE_BASE64` - Base64-encoded contents of the release keystore.
+- `ANDROID_KEYSTORE_PASSWORD` - keystore password.
+- `ANDROID_KEY_ALIAS` - release key alias.
+- `ANDROID_KEY_PASSWORD` - password for that key.
+
+The keystore is decoded to a temporary file on the GitHub runner, used only for
+the APK build, and removed before the artifact is uploaded. Its contents and
+passwords are never written to the repository or workflow logs.
+
+All four secrets are required for a tag release. If any are missing, the APK
+build fails and the GitHub Release is not published. Pull requests without
+access to repository secrets retain debug signing so their APK build can still
+be validated; these artifacts are not published as GitHub Releases.
+
+The Android build also requires the GitHub Actions variable
+`ANDROID_API_BASE_URL`. Set it to the public API base URL, including the API
+version path; for the development server this is
+`http://135.106.161.10/api/v1`.
+
 ## One-time server setup
 
 1. Install Docker and Docker Compose on the server. Git is not required.

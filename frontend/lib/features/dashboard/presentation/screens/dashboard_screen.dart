@@ -1,12 +1,10 @@
-import 'dart:async';
-
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:frontend/features/dashboard/presentation/providers/dashboard_providers.dart';
+import 'package:frontend/features/dashboard/di/dashboard_providers.dart';
+import 'package:frontend/features/dashboard/presentation/utils/dashboard_actions.dart';
 import 'package:frontend/features/dashboard/presentation/widgets/dashboard_content.dart';
 import 'package:frontend/features/dashboard/presentation/widgets/dashboard_unavailable.dart';
 import 'package:frontend/l10n/generated/app_localizations.dart';
-import 'package:go_router/go_router.dart';
 
 final class DashboardScreen extends ConsumerWidget {
   const DashboardScreen({
@@ -26,8 +24,10 @@ final class DashboardScreen extends ConsumerWidget {
     return Scaffold(
       appBar: AppBar(
         leading: IconButton(
-          onPressed: () => context.go(
-            launchedFromChat ? '/vehicle/$vehicleId/chat' : '/garage',
+          onPressed: () => DashboardActions.goBack(
+            context,
+            vehicleId: vehicleId,
+            launchedFromChat: launchedFromChat,
           ),
           tooltip: launchedFromChat ? 'Back to chat' : l10n.openGarage,
           icon: const Icon(Icons.chevron_left_rounded, size: 32),
@@ -39,9 +39,7 @@ final class DashboardScreen extends ConsumerWidget {
         loading: () => const Center(child: CircularProgressIndicator()),
         error: (error, stackTrace) => DashboardUnavailable(
           message: l10n.couldNotLoadDashboard,
-          onAction: () {
-            unawaited(ref.refresh(vehicleDashboardProvider(vehicleId).future));
-          },
+          onAction: () => DashboardActions.retry(ref, vehicleId),
           actionLabel: l10n.retry,
         ),
       ),
