@@ -6,7 +6,8 @@ from typing import Any
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel, ConfigDict, Field
 
-from ml.predict import CarSpec, Usage, load_car_spec, predict_maintenance
+from ml.models import CarSpec, Usage
+from ml.predict import load_car_spec, predict_maintenance
 
 app = FastAPI(title="Maintenance Prediction API", version="1.0.0")
 

@@ -11,6 +11,8 @@ The goal of the maintenance prediction model is to estimate the probability that
 
 The model intentionally produces a **maintenance need score** rather than a binary decision. This allows downstream systems to rank recommendations and define their own thresholds.
 
+> **Coefficients are not fixed forever.** At runtime the service reads the current values from [`coefficients.json`](coefficients.json). After retraining on new NHTSA data, the numbers below may change — always treat the JSON file as the source of truth.
+
 ---
 
 # Core Principle
@@ -166,7 +168,7 @@ displacement <= 1600 cc
 ```
 
 ```python
-spark_plug_interval *= 0.8
+spark_plug_interval *= 0.80
 ```
 
 Reason:
@@ -293,7 +295,7 @@ Automatic transmissions contain hydraulic systems, clutches, valve bodies and to
 Rule:
 
 ```python
-transmission_oil *= 0.85
+transmission_oil *= 0.78
 transmission_filter *= 0.85
 ```
 
@@ -310,7 +312,7 @@ Manual transmissions are mechanically simpler.
 Rule:
 
 ```python
-transmission_oil *= 1.15
+transmission_oil *= 1.14
 ```
 
 Reason:
@@ -322,5 +324,5 @@ Lower thermal load and simpler lubrication requirements.
 Rule:
 
 ```python
-clutch *= 0.9
+clutch *= 0.90
 ```
