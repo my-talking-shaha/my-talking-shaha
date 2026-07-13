@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:frontend/app/theme/app_palette.dart';
 import 'package:frontend/app/theme/app_theme.dart';
-import 'package:frontend/features/settings/presentation/colors.dart';
 
 final class SettingsTile extends StatelessWidget {
   const SettingsTile({
@@ -33,7 +33,7 @@ final class SettingsTile extends StatelessWidget {
         ),
         child: Row(
           children: [
-            Icon(icon, color: SettingsColors.textPrimary, size: 24),
+            Icon(icon, color: context.appColors.textPrimary, size: 24),
             const SizedBox(width: AppSpacing.md),
             Expanded(
               child: Column(

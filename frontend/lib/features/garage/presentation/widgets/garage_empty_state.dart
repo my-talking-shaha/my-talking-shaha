@@ -2,8 +2,8 @@ import 'dart:math' as math;
 import 'dart:ui' as ui;
 
 import 'package:flutter/material.dart';
+import 'package:frontend/app/theme/app_palette.dart';
 import 'package:frontend/app/theme/app_theme.dart';
-import 'package:frontend/features/garage/presentation/garage_colors.dart';
 import 'package:frontend/l10n/generated/app_localizations.dart';
 
 final class GarageEmptyState extends StatelessWidget {
@@ -32,7 +32,7 @@ final class GarageEmptyState extends StatelessWidget {
               Text(
                 l10n.brandName,
                 style: Theme.of(context).textTheme.headlineLarge?.copyWith(
-                  color: GarageColors.primaryLight,
+                  color: context.appColors.primaryLight,
                   fontSize: 31,
                   fontWeight: FontWeight.w800,
                   height: 1.08,
@@ -60,7 +60,7 @@ final class GarageEmptyState extends StatelessWidget {
                         l10n.garageEmptyDescription,
                         textAlign: TextAlign.center,
                         style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                          color: GarageColors.textSecondary,
+                          color: context.appColors.textSecondary,
                           height: 1.35,
                         ),
                       ),
@@ -97,7 +97,7 @@ final class _GarageEmptyBackground extends StatelessWidget {
   Widget build(BuildContext context) {
     return IgnorePointer(
       child: ColoredBox(
-        color: GarageColors.background,
+        color: context.appColors.background,
         child: LayoutBuilder(
           builder: (context, constraints) {
             final screenSize = MediaQuery.sizeOf(context);
@@ -119,7 +119,7 @@ final class _GarageEmptyBackground extends StatelessWidget {
                   size: 496 * scale,
                   circleSize: 256 * scale,
                   blurSigma: 60 * scale,
-                  color: GarageColors.primaryLight.withValues(alpha: 0.20),
+                  color: context.appColors.primaryLight.withValues(alpha: 0.20),
                 ),
                 _GarageBlurredGlow(
                   left: dx + (94 * scale),
@@ -127,7 +127,7 @@ final class _GarageEmptyBackground extends StatelessWidget {
                   size: 496 * scale,
                   circleSize: 256 * scale,
                   blurSigma: 60 * scale,
-                  color: GarageColors.success.withValues(alpha: 0.20),
+                  color: context.appColors.success.withValues(alpha: 0.20),
                 ),
                 DecoratedBox(
                   decoration: BoxDecoration(
@@ -135,9 +135,9 @@ final class _GarageEmptyBackground extends StatelessWidget {
                       begin: Alignment.topCenter,
                       end: Alignment.bottomCenter,
                       colors: [
-                        GarageColors.background.withValues(alpha: 0),
-                        GarageColors.background.withValues(alpha: 0.34),
-                        GarageColors.background.withValues(alpha: 0.64),
+                        context.appColors.background.withValues(alpha: 0),
+                        context.appColors.background.withValues(alpha: 0.34),
+                        context.appColors.background.withValues(alpha: 0.64),
                       ],
                       stops: const [0, 0.72, 1],
                     ),

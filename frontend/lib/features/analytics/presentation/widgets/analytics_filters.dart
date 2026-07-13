@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:frontend/app/theme/app_palette.dart';
 import 'package:frontend/app/theme/app_theme.dart';
 import 'package:frontend/features/analytics/domain/entities/analytics_period.dart';
-import 'package:frontend/features/analytics/presentation/colors.dart';
 import 'package:frontend/features/analytics/presentation/utils/analytics_formatters.dart';
 import 'package:frontend/features/analytics/presentation/utils/analytics_labels.dart';
 import 'package:frontend/l10n/generated/app_localizations.dart';
@@ -29,16 +29,16 @@ final class AnalyticsPeriodSelector extends StatelessWidget {
                 onPressed: () => onSelected(period),
                 style: TextButton.styleFrom(
                   foregroundColor: selectedPeriod == period
-                      ? AnalyticsColors.background
-                      : AnalyticsColors.textSecondary,
+                      ? context.appColors.background
+                      : context.appColors.textSecondary,
                   backgroundColor: selectedPeriod == period
-                      ? AnalyticsColors.primaryLight
-                      : AnalyticsColors.surfaceHigh,
-                  overlayColor: AnalyticsColors.transparent,
+                      ? context.appColors.primaryLight
+                      : context.appColors.surfaceHigh,
+                  overlayColor: context.appColors.transparent,
                   side: BorderSide(
                     color: selectedPeriod == period
-                        ? AnalyticsColors.primaryLight
-                        : AnalyticsColors.border,
+                        ? context.appColors.primaryLight
+                        : context.appColors.border,
                   ),
                   shape: const RoundedRectangleBorder(
                     borderRadius: AppRadius.input,
@@ -99,12 +99,12 @@ final class AnalyticsDateRangeSelector extends StatelessWidget {
             ),
             style: OutlinedButton.styleFrom(
               foregroundColor: dateRange == null
-                  ? AnalyticsColors.textSecondary
-                  : AnalyticsColors.primaryLight,
+                  ? context.appColors.textSecondary
+                  : context.appColors.primaryLight,
               side: BorderSide(
                 color: dateRange == null
-                    ? AnalyticsColors.border
-                    : AnalyticsColors.primaryLight,
+                    ? context.appColors.border
+                    : context.appColors.primaryLight,
               ),
               shape: const RoundedRectangleBorder(
                 borderRadius: AppRadius.input,
@@ -125,8 +125,8 @@ final class AnalyticsDateRangeSelector extends StatelessWidget {
             onPressed: onClear,
             icon: const Icon(Icons.close),
             style: IconButton.styleFrom(
-              foregroundColor: AnalyticsColors.textSecondary,
-              backgroundColor: AnalyticsColors.surfaceHigh,
+              foregroundColor: context.appColors.textSecondary,
+              backgroundColor: context.appColors.surfaceHigh,
               shape: const RoundedRectangleBorder(
                 borderRadius: AppRadius.input,
               ),
@@ -156,24 +156,24 @@ final class AnalyticsMileageFilterDropdown<T> extends StatelessWidget {
       initialValue: value,
       items: items,
       onChanged: onChanged,
-      dropdownColor: AnalyticsColors.surfaceHigh,
-      decoration: const InputDecoration(
+      dropdownColor: context.appColors.surfaceHigh,
+      decoration: InputDecoration(
         isDense: true,
-        contentPadding: EdgeInsets.symmetric(
+        contentPadding: const EdgeInsets.symmetric(
           horizontal: AppSpacing.md,
           vertical: AppSpacing.sm,
         ),
         enabledBorder: OutlineInputBorder(
           borderRadius: AppRadius.input,
-          borderSide: BorderSide(color: AnalyticsColors.border),
+          borderSide: BorderSide(color: context.appColors.border),
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: AppRadius.input,
-          borderSide: BorderSide(color: AnalyticsColors.primaryLight),
+          borderSide: BorderSide(color: context.appColors.primaryLight),
         ),
       ),
       style: Theme.of(context).textTheme.labelMedium,
-      iconEnabledColor: AnalyticsColors.textSecondary,
+      iconEnabledColor: context.appColors.textSecondary,
     );
   }
 }

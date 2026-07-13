@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:frontend/app/theme/app_palette.dart';
 import 'package:frontend/features/garage/presentation/controllers/power_output_unit_controller.dart';
-import 'package:frontend/features/garage/presentation/garage_colors.dart';
 import 'package:frontend/features/garage/presentation/utils/garage_input_decoration.dart';
 import 'package:frontend/features/garage/presentation/widgets/common/garage_field_label.dart';
 import 'package:frontend/l10n/generated/app_localizations.dart';
@@ -33,14 +33,15 @@ final class GaragePowerOutputField extends StatelessWidget {
         const SizedBox(height: 10),
         TextField(
           controller: controller,
-          style: const TextStyle(color: GarageColors.white, fontSize: 16),
-          cursorColor: GarageColors.primaryLight,
+          style: TextStyle(color: context.appColors.textPrimary, fontSize: 16),
+          cursorColor: context.appColors.primaryLight,
           keyboardType: const TextInputType.numberWithOptions(decimal: true),
           inputFormatters: [
             FilteringTextInputFormatter.allow(RegExp('[0-9,.]')),
           ],
           textInputAction: TextInputAction.done,
           decoration: garageInputDecoration(
+            context: context,
             hintText: selectedUnit == PowerOutputUnit.kw ? '211' : '283',
             errorText: errorText,
             suffixIcon: Padding(
@@ -79,8 +80,8 @@ final class _PowerOutputUnitToggle extends StatelessWidget {
       height: 40,
       child: DecoratedBox(
         decoration: BoxDecoration(
-          color: GarageColors.formField,
-          border: Border.all(color: GarageColors.formPrimary, width: 1.5),
+          color: context.appColors.formField,
+          border: Border.all(color: context.appColors.formPrimary, width: 1.5),
           borderRadius: BorderRadius.circular(20),
         ),
         child: ClipRRect(
@@ -124,7 +125,9 @@ final class _PowerOutputUnitOption extends StatelessWidget {
   Widget build(BuildContext context) {
     return Expanded(
       child: Material(
-        color: isSelected ? GarageColors.formPrimary : GarageColors.transparent,
+        color: isSelected
+            ? context.appColors.formPrimary
+            : context.appColors.transparent,
         child: InkWell(
           onTap: isSelected ? null : () => onChanged(unit),
           child: Center(
@@ -132,8 +135,8 @@ final class _PowerOutputUnitOption extends StatelessWidget {
               label,
               style: TextStyle(
                 color: isSelected
-                    ? GarageColors.white
-                    : GarageColors.primaryLight,
+                    ? context.appColors.white
+                    : context.appColors.primaryLight,
                 fontSize: 14,
                 fontWeight: FontWeight.w700,
               ),

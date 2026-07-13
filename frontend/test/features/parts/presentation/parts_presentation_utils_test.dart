@@ -1,4 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
+import 'package:frontend/app/theme/app_palette.dart';
 import 'package:frontend/features/parts/domain/entities/vehicle_part.dart';
 import 'package:frontend/features/parts/presentation/colors.dart';
 import 'package:frontend/features/parts/presentation/utils/maintenance_forecast_utils.dart';
@@ -102,10 +103,22 @@ void main() {
     expect(partProgressValue(_part(percent: -10)), 0);
     expect(partProgressValue(_part(percent: 120)), 1);
     expect(partProgressValue(_part()), isNull);
-    expect(partStatusColor(PartResourceStatus.ok), PartsColors.ok);
-    expect(partStatusColor(PartResourceStatus.warning), PartsColors.warning);
-    expect(partStatusColor(PartResourceStatus.critical), PartsColors.critical);
-    expect(partStatusColor(PartResourceStatus.unknown), PartsColors.unknown);
+    expect(
+      partStatusColor(AppPalette.dark, PartResourceStatus.ok),
+      PartsColors.ok,
+    );
+    expect(
+      partStatusColor(AppPalette.dark, PartResourceStatus.warning),
+      PartsColors.warning,
+    );
+    expect(
+      partStatusColor(AppPalette.dark, PartResourceStatus.critical),
+      PartsColors.critical,
+    );
+    expect(
+      partStatusColor(AppPalette.dark, PartResourceStatus.unknown),
+      PartsColors.unknown,
+    );
   });
 }
 

@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:frontend/features/garage/presentation/garage_colors.dart';
+import 'package:frontend/app/theme/app_palette.dart';
 import 'package:frontend/features/garage/presentation/utils/garage_input_decoration.dart';
 import 'package:frontend/features/garage/presentation/widgets/common/garage_field_label.dart';
 import 'package:frontend/l10n/generated/app_localizations.dart';
@@ -51,14 +51,15 @@ final class GarageBrandField extends StatelessWidget {
                 return TextField(
                   controller: textEditingController,
                   focusNode: focusNode,
-                  style: const TextStyle(
-                    color: GarageColors.white,
+                  style: TextStyle(
+                    color: context.appColors.textPrimary,
                     fontSize: 16,
                   ),
-                  cursorColor: GarageColors.primaryLight,
+                  cursorColor: context.appColors.primaryLight,
                   textInputAction: TextInputAction.next,
                   textCapitalization: TextCapitalization.words,
                   decoration: garageInputDecoration(
+                    context: context,
                     hintText: 'Lada',
                     errorText: errorText,
                     suffixIcon: _GarageBrandSuffixIcon(
@@ -111,11 +112,11 @@ final class _GarageBrandSuffixIcon extends StatelessWidget {
     if (hasLoadError) {
       return IconButton(
         onPressed: onRetry,
-        icon: const Icon(Icons.refresh, color: GarageColors.primaryLight),
+        icon: Icon(Icons.refresh, color: context.appColors.primaryLight),
       );
     }
 
-    return const Icon(Icons.search, color: GarageColors.primaryLight);
+    return Icon(Icons.search, color: context.appColors.primaryLight);
   }
 }
 
@@ -133,7 +134,7 @@ final class _GarageAutocompleteOptions extends StatelessWidget {
     return Align(
       alignment: Alignment.topLeft,
       child: Material(
-        color: GarageColors.formField,
+        color: context.appColors.formField,
         elevation: 8,
         borderRadius: BorderRadius.circular(8),
         child: ConstrainedBox(
@@ -153,8 +154,8 @@ final class _GarageAutocompleteOptions extends StatelessWidget {
                   ),
                   child: Text(
                     brand,
-                    style: const TextStyle(
-                      color: GarageColors.white,
+                    style: TextStyle(
+                      color: context.appColors.textPrimary,
                       fontSize: 16,
                     ),
                   ),

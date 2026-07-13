@@ -1,22 +1,23 @@
 import 'package:flutter/material.dart';
+import 'package:frontend/app/theme/app_theme.dart';
 
 /// Colors owned and used directly by the dashboard presentation layer.
 ///
 /// Keep these aliases and feature-specific values stable: they form the
 /// dashboard's visual regression contract independently of widget structure.
 abstract final class DashboardColors {
-  static const Color background = Color(0xFF10131A);
-  static const Color primary = Color(0xFF2E5BFF);
-  static const Color primaryLight = Color(0xFFB8C3FF);
-  static const Color surface = Color(0xFF1C1F25);
-  static const Color surfaceHighest = Color(0xFF232731);
-  static const Color border = Color(0xFF2B303B);
-  static const Color textPrimary = Color(0xFFF4F7FF);
-  static const Color textSecondary = Color(0xFF9AA3B2);
-  static const Color textMuted = Color(0xFF6F7788);
-  static const Color textDisabled = Color(0xFF4B5263);
-  static const Color success = Color(0xFF00DCE5);
-  static const Color warning = Color(0xFFE8B950);
+  static const Color background = AppColors.background;
+  static const Color primary = AppColors.primary;
+  static const Color primaryLight = AppColors.primaryLight;
+  static const Color surface = AppColors.surfaceHigh;
+  static const Color surfaceHighest = AppColors.surfaceHighest;
+  static const Color border = AppColors.border;
+  static const Color textPrimary = AppColors.textPrimary;
+  static const Color textSecondary = AppColors.textSecondary;
+  static const Color textMuted = AppColors.textMuted;
+  static const Color textDisabled = AppColors.textDisabled;
+  static const Color success = AppColors.success;
+  static const Color warning = AppColors.warning;
 
   static const Color transparent = Color(0x00000000);
   static const Color heroOverlay = Color(0xE610131A);

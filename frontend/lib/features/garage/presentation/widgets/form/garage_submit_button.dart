@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
-import 'package:frontend/features/garage/presentation/garage_colors.dart';
+import 'package:frontend/app/theme/app_palette.dart';
 
 final class GarageSubmitButton extends StatelessWidget {
   const GarageSubmitButton({
@@ -21,16 +21,16 @@ final class GarageSubmitButton extends StatelessWidget {
       height: 64,
       child: ElevatedButton(
         style: ElevatedButton.styleFrom(
-          backgroundColor: GarageColors.formPrimary,
-          foregroundColor: GarageColors.white,
-          disabledBackgroundColor: GarageColors.formPrimary.withValues(
+          backgroundColor: context.appColors.formPrimary,
+          foregroundColor: context.appColors.white,
+          disabledBackgroundColor: context.appColors.formPrimary.withValues(
             alpha: 0.5,
           ),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(10),
           ),
           elevation: 12,
-          shadowColor: GarageColors.formPrimary,
+          shadowColor: context.appColors.formPrimary,
         ),
         onPressed: isSubmitting ? null : onPressed,
         child: isSubmitting

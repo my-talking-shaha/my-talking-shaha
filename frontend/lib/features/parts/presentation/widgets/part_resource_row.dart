@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:frontend/app/theme/app_palette.dart';
 import 'package:frontend/app/theme/app_theme.dart';
 import 'package:frontend/features/parts/domain/entities/vehicle_part.dart';
-import 'package:frontend/features/parts/presentation/colors.dart';
 import 'package:frontend/features/parts/presentation/metrics.dart';
 import 'package:frontend/features/parts/presentation/utils/part_resource_utils.dart';
 import 'package:frontend/l10n/generated/app_localizations.dart';
@@ -14,7 +14,7 @@ final class PartResourceRow extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final progressValue = partProgressValue(part);
-    final statusColor = partStatusColor(part.status);
+    final statusColor = partStatusColor(context.appColors, part.status);
 
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: AppSpacing.xs),
@@ -59,16 +59,16 @@ final class PartResourceRow extends StatelessWidget {
               child: LinearProgressIndicator(
                 value: progressValue,
                 minHeight: PartsMetrics.progressHeight,
-                backgroundColor: PartsColors.progressTrack,
+                backgroundColor: context.appColors.progressTrack,
                 color: statusColor,
               ),
             )
           else
             ClipRRect(
               borderRadius: BorderRadius.circular(PartsMetrics.progressHeight),
-              child: const SizedBox(
+              child: SizedBox(
                 height: PartsMetrics.progressHeight,
-                child: ColoredBox(color: PartsColors.unknown),
+                child: ColoredBox(color: context.appColors.unknown),
               ),
             ),
         ],

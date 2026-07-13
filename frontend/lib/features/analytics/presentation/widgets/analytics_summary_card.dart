@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:frontend/app/theme/app_palette.dart';
 import 'package:frontend/app/theme/app_theme.dart';
 import 'package:frontend/features/analytics/domain/entities/analytics_summary.dart';
-import 'package:frontend/features/analytics/presentation/colors.dart';
 import 'package:frontend/features/analytics/presentation/common/analytics_common_widgets.dart';
 import 'package:frontend/features/analytics/presentation/utils/analytics_formatters.dart';
 import 'package:frontend/features/analytics/presentation/utils/analytics_labels.dart';
@@ -26,7 +26,7 @@ final class AnalyticsSummaryCard extends StatelessWidget {
           Text(
             l10n.expensesLabel(analyticsPeriodAdjective(l10n, summary.period)),
             style: Theme.of(context).textTheme.labelMedium?.copyWith(
-              color: AnalyticsColors.textSecondary,
+              color: context.appColors.textSecondary,
               letterSpacing: 1.2,
             ),
           ),
@@ -37,7 +37,7 @@ final class AnalyticsSummaryCard extends StatelessWidget {
             child: Text(
               formatAnalyticsMoney(totalExpenses.amount),
               style: Theme.of(context).textTheme.headlineLarge?.copyWith(
-                color: AnalyticsColors.primaryLight,
+                color: context.appColors.primaryLight,
                 fontSize: 46,
                 height: 1.05,
               ),
@@ -57,7 +57,7 @@ final class AnalyticsSummaryCard extends StatelessWidget {
                     Text(
                       l10n.costPerKm,
                       style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                        color: AnalyticsColors.success,
+                        color: context.appColors.success,
                         letterSpacing: 0.7,
                       ),
                     ),
@@ -65,7 +65,7 @@ final class AnalyticsSummaryCard extends StatelessWidget {
                     Text(
                       '${formatAnalyticsDecimal(mileage.costPerKm)} ₽',
                       style: Theme.of(context).textTheme.headlineMedium
-                          ?.copyWith(color: AnalyticsColors.success),
+                          ?.copyWith(color: context.appColors.success),
                     ),
                   ],
                 ),

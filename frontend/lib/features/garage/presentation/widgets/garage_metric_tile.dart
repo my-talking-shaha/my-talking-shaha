@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
+import 'package:frontend/app/theme/app_palette.dart';
 import 'package:frontend/app/theme/app_theme.dart';
-import 'package:frontend/features/garage/presentation/garage_colors.dart';
 
 final class GarageMetricTile extends StatelessWidget {
   const GarageMetricTile({
@@ -26,10 +26,10 @@ final class GarageMetricTile extends StatelessWidget {
           vertical: AppSpacing.xs,
         ),
         decoration: BoxDecoration(
-          color: GarageColors.backgroundDark.withValues(alpha: 0.7),
+          color: context.appColors.backgroundDark.withValues(alpha: 0.7),
           borderRadius: BorderRadius.circular(AppRadius.sm),
           border: Border.all(
-            color: GarageColors.border.withValues(alpha: 0.32),
+            color: context.appColors.border.withValues(alpha: 0.32),
           ),
         ),
         child: Column(
@@ -43,7 +43,7 @@ final class GarageMetricTile extends StatelessWidget {
               textAlign: TextAlign.center,
               overflow: TextOverflow.ellipsis,
               style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                color: GarageColors.textPrimary,
+                color: context.appColors.textPrimary,
                 fontSize: 10,
                 height: 1.1,
               ),

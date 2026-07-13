@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:frontend/app/theme/app_palette.dart';
 import 'package:frontend/app/theme/app_theme.dart';
-import 'package:frontend/features/dashboard/presentation/colors.dart';
 import 'package:frontend/features/dashboard/presentation/common/dashboard_card.dart';
 import 'package:frontend/features/dashboard/presentation/utils/dashboard_actions.dart';
 import 'package:frontend/features/dashboard/presentation/utils/dashboard_text_style_utils.dart';
@@ -33,7 +33,7 @@ final class VinCard extends StatelessWidget {
                 Text(
                   hasVin ? value : l10n.vinUnavailable,
                   style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                    color: DashboardColors.textMuted,
+                    color: context.appColors.textMuted,
                   ),
                 ),
               ],
@@ -42,8 +42,8 @@ final class VinCard extends StatelessWidget {
           IconButton(
             tooltip: hasVin ? l10n.copyVin : l10n.vinUnavailable,
             style: IconButton.styleFrom(
-              foregroundColor: DashboardColors.primaryLight,
-              disabledForegroundColor: DashboardColors.textDisabled,
+              foregroundColor: context.appColors.primaryLight,
+              disabledForegroundColor: context.appColors.textDisabled,
             ),
             onPressed: hasVin
                 ? () => DashboardActions.copyVin(context, value)

@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:frontend/app/theme/app_palette.dart';
 import 'package:frontend/app/theme/app_theme.dart';
-import 'package:frontend/features/settings/presentation/colors.dart';
 import 'package:frontend/features/settings/presentation/utils/settings_localization_utils.dart';
 
 final class SettingsLanguageChoice extends StatelessWidget {
@@ -21,7 +21,7 @@ final class SettingsLanguageChoice extends StatelessWidget {
   Widget build(BuildContext context) {
     return PopupMenuButton<Locale>(
       initialValue: selectedLocale,
-      color: SettingsColors.surfaceHighest,
+      color: context.appColors.surfaceHighest,
       shape: const RoundedRectangleBorder(borderRadius: AppRadius.input),
       onSelected: onChanged,
       itemBuilder: (context) => [
@@ -42,10 +42,7 @@ final class SettingsLanguageChoice extends StatelessWidget {
             style: Theme.of(context).textTheme.labelLarge,
           ),
           const SizedBox(width: AppSpacing.xs),
-          const Icon(
-            Icons.chevron_right_rounded,
-            color: SettingsColors.textMuted,
-          ),
+          Icon(Icons.chevron_right_rounded, color: context.appColors.textMuted),
         ],
       ),
     );

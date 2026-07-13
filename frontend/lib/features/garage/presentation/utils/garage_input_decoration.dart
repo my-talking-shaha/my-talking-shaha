@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:frontend/features/garage/presentation/garage_colors.dart';
+import 'package:frontend/app/theme/app_palette.dart';
 
 InputDecoration garageInputDecoration({
+  required BuildContext context,
   required String hintText,
   String? errorText,
   Widget? suffixIcon,
@@ -10,27 +11,27 @@ InputDecoration garageInputDecoration({
   return InputDecoration(
     hintText: hintText,
     errorText: errorText,
-    hintStyle: const TextStyle(color: GarageColors.hint),
+    hintStyle: TextStyle(color: context.appColors.hint),
     suffixIcon: suffixIcon,
     suffixIconConstraints: suffixIconConstraints,
     filled: true,
-    fillColor: GarageColors.formField,
+    fillColor: context.appColors.formField,
     contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 18),
     enabledBorder: OutlineInputBorder(
       borderRadius: BorderRadius.circular(8),
-      borderSide: const BorderSide(color: GarageColors.formBorder),
+      borderSide: BorderSide(color: context.appColors.formBorder),
     ),
     focusedBorder: OutlineInputBorder(
       borderRadius: BorderRadius.circular(8),
-      borderSide: const BorderSide(color: GarageColors.primaryLight),
+      borderSide: BorderSide(color: context.appColors.primaryLight),
     ),
     errorBorder: OutlineInputBorder(
       borderRadius: BorderRadius.circular(8),
-      borderSide: const BorderSide(color: GarageColors.error),
+      borderSide: BorderSide(color: context.appColors.error),
     ),
     focusedErrorBorder: OutlineInputBorder(
       borderRadius: BorderRadius.circular(8),
-      borderSide: const BorderSide(color: GarageColors.error),
+      borderSide: BorderSide(color: context.appColors.error),
     ),
   );
 }

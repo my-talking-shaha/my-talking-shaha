@@ -1,8 +1,8 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:frontend/app/theme/app_palette.dart';
 import 'package:frontend/app/theme/app_theme.dart';
-import 'package:frontend/features/chat/presentation/colors.dart';
 import 'package:frontend/features/chat/presentation/widgets/common/chat_assistant_mark.dart';
 import 'package:frontend/l10n/generated/app_localizations.dart';
 
@@ -46,9 +46,9 @@ final class _ChatTypingBubbleState extends State<ChatTypingBubble>
           const SizedBox(width: AppSpacing.sm),
           DecoratedBox(
             decoration: BoxDecoration(
-              color: ChatColors.surfaceHigh,
+              color: context.appColors.surfaceHigh,
               borderRadius: BorderRadius.circular(AppRadius.lg),
-              border: Border.all(color: ChatColors.border),
+              border: Border.all(color: context.appColors.border),
             ),
             child: Padding(
               padding: const EdgeInsets.symmetric(
@@ -85,19 +85,19 @@ final class _ThinkingWaveText extends StatelessWidget {
       shaderCallback: (bounds) => LinearGradient(
         begin: Alignment(waveStart, 0),
         end: Alignment(waveStart + 1.1, 0),
-        colors: const [
-          ChatColors.textSecondary,
-          ChatColors.primaryLight,
-          ChatColors.textPrimary,
-          ChatColors.primaryLight,
-          ChatColors.textSecondary,
+        colors: [
+          context.appColors.textSecondary,
+          context.appColors.primaryLight,
+          context.appColors.textPrimary,
+          context.appColors.primaryLight,
+          context.appColors.textSecondary,
         ],
         stops: const [0, 0.28, 0.5, 0.72, 1],
       ).createShader(bounds),
       child: Text(
         AppLocalizations.of(context).shahaThinking,
         style: Theme.of(context).textTheme.titleMedium?.copyWith(
-          color: ChatColors.textSecondary,
+          color: context.appColors.textSecondary,
           fontWeight: FontWeight.w500,
           height: 1.1,
         ),

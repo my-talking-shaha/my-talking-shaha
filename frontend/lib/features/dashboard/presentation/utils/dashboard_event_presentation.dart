@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:frontend/features/dashboard/presentation/colors.dart';
+import 'package:frontend/app/theme/app_palette.dart';
 import 'package:frontend/features/history/domain/entities/history_event_type.dart';
 
 final class DashboardEventPresentation {
@@ -13,22 +13,25 @@ final class DashboardEventPresentation {
   final Color iconColor;
   final Color backgroundColor;
 
-  static DashboardEventPresentation from(HistoryEventType type) {
+  static DashboardEventPresentation from(
+    HistoryEventType type, {
+    AppPalette colors = AppPalette.dark,
+  }) {
     return switch (type) {
-      HistoryEventType.fuel => const DashboardEventPresentation(
+      HistoryEventType.fuel => DashboardEventPresentation(
         assetPath: 'assets/icons/events/gas.svg',
-        iconColor: DashboardColors.warning,
-        backgroundColor: DashboardColors.fuelEventBackground,
+        iconColor: colors.warning,
+        backgroundColor: colors.fuelEventBackground,
       ),
-      HistoryEventType.maintenance => const DashboardEventPresentation(
+      HistoryEventType.maintenance => DashboardEventPresentation(
         assetPath: 'assets/icons/events/spanner.svg',
-        iconColor: DashboardColors.success,
-        backgroundColor: DashboardColors.maintenanceEventBackground,
+        iconColor: colors.success,
+        backgroundColor: colors.maintenanceEventBackground,
       ),
-      HistoryEventType.trip => const DashboardEventPresentation(
+      HistoryEventType.trip => DashboardEventPresentation(
         assetPath: 'assets/icons/events/trip.svg',
-        iconColor: DashboardColors.primaryLight,
-        backgroundColor: DashboardColors.surfaceHighest,
+        iconColor: colors.primaryLight,
+        backgroundColor: colors.surfaceHighest,
       ),
     };
   }

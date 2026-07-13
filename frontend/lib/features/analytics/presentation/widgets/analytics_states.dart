@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:frontend/app/theme/app_palette.dart';
 import 'package:frontend/app/theme/app_theme.dart';
 import 'package:frontend/features/analytics/domain/entities/analytics_summary.dart';
-import 'package:frontend/features/analytics/presentation/colors.dart';
 import 'package:frontend/features/analytics/presentation/utils/analytics_interactions.dart';
 import 'package:frontend/l10n/generated/app_localizations.dart';
 
@@ -24,9 +24,9 @@ final class AnalyticsEmptyState extends StatelessWidget {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            const Icon(
+            Icon(
               Icons.analytics_outlined,
-              color: AnalyticsColors.primaryLight,
+              color: context.appColors.primaryLight,
               size: 48,
             ),
             const SizedBox(height: AppSpacing.lg),
@@ -92,8 +92,8 @@ final class AnalyticsSuggestionChip extends StatelessWidget {
     return ActionChip(
       onPressed: onPressed,
       label: Text(label),
-      backgroundColor: AnalyticsColors.surfaceHigh,
-      side: const BorderSide(color: AnalyticsColors.border),
+      backgroundColor: context.appColors.surfaceHigh,
+      side: BorderSide(color: context.appColors.border),
       labelStyle: Theme.of(context).textTheme.labelMedium,
       shape: const StadiumBorder(),
     );

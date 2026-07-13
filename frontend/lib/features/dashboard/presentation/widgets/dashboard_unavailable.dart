@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:frontend/app/theme/app_palette.dart';
 import 'package:frontend/app/theme/app_theme.dart';
-import 'package:frontend/features/dashboard/presentation/colors.dart';
 
 final class DashboardUnavailable extends StatelessWidget {
   const DashboardUnavailable({
@@ -22,9 +22,9 @@ final class DashboardUnavailable extends StatelessWidget {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            const Icon(
+            Icon(
               Icons.directions_car_outlined,
-              color: DashboardColors.primaryLight,
+              color: context.appColors.primaryLight,
               size: 48,
             ),
             const SizedBox(height: AppSpacing.lg),

@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:frontend/app/theme/app_palette.dart';
 import 'package:frontend/app/theme/app_theme.dart';
-import 'package:frontend/features/settings/presentation/colors.dart';
 import 'package:frontend/features/settings/presentation/common/settings_surface_card.dart';
 
 final class SettingsSection extends StatelessWidget {
@@ -39,7 +39,7 @@ final class SettingsSectionLabel extends StatelessWidget {
         title.toUpperCase(),
         style: Theme.of(context).textTheme.labelMedium?.copyWith(
           letterSpacing: 1.8,
-          color: SettingsColors.textSecondary,
+          color: context.appColors.textSecondary,
         ),
       ),
     );

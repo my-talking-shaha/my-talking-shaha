@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:frontend/app/theme/app_palette.dart';
 import 'package:frontend/app/theme/app_theme.dart';
-import 'package:frontend/features/chat/presentation/colors.dart';
 
 final class ChatSuggestionStrip extends StatelessWidget {
   const ChatSuggestionStrip({
@@ -15,7 +15,7 @@ final class ChatSuggestionStrip extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return DecoratedBox(
-      decoration: const BoxDecoration(color: ChatColors.background),
+      decoration: BoxDecoration(color: context.appColors.background),
       child: SizedBox(
         height: 44,
         child: ListView.separated(
@@ -38,12 +38,14 @@ final class ChatSuggestionStrip extends StatelessWidget {
               labelPadding: const EdgeInsets.symmetric(horizontal: 13),
               visualDensity: VisualDensity.compact,
               materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
-              backgroundColor: ChatColors.surfaceHigh.withValues(alpha: 0.72),
+              backgroundColor: context.appColors.surfaceHigh.withValues(
+                alpha: 0.72,
+              ),
               side: BorderSide(
-                color: ChatColors.primaryLight.withValues(alpha: 0.18),
+                color: context.appColors.primaryLight.withValues(alpha: 0.18),
               ),
               labelStyle: Theme.of(context).textTheme.labelMedium?.copyWith(
-                color: ChatColors.textSecondary,
+                color: context.appColors.textSecondary,
                 fontSize: 12.5,
                 fontWeight: FontWeight.w600,
                 height: 1,

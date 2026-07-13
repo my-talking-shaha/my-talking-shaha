@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:frontend/app/theme/app_palette.dart';
 import 'package:frontend/app/theme/app_theme.dart';
 import 'package:frontend/features/analytics/domain/entities/analytics_summary.dart';
-import 'package:frontend/features/analytics/presentation/colors.dart';
 import 'package:frontend/features/analytics/presentation/common/analytics_common_widgets.dart';
 import 'package:frontend/features/analytics/presentation/utils/analytics_formatters.dart';
 import 'package:frontend/features/analytics/presentation/utils/analytics_labels.dart';
@@ -26,7 +26,7 @@ final class HistoryAnalysisCard extends StatelessWidget {
           Text(
             AppLocalizations.of(context).performanceTrendOverTime,
             style: Theme.of(context).textTheme.bodySmall?.copyWith(
-              color: AnalyticsColors.textSecondary,
+              color: context.appColors.textSecondary,
               letterSpacing: 0.8,
             ),
           ),
@@ -36,8 +36,10 @@ final class HistoryAnalysisCard extends StatelessWidget {
             width: double.infinity,
             child: CustomPaint(
               painter: AnalyticsChartPainter(
+                borderColor: context.appColors.border,
+                labelColor: context.appColors.textSecondary,
                 points: charts.mileageByMonth,
-                accentColor: AnalyticsColors.success,
+                accentColor: context.appColors.success,
                 type: AnalyticsChartType.bar,
                 showLabels: false,
                 valueFormatter: formatAnalyticsCompactKilometers,
@@ -99,7 +101,7 @@ final class AnalyticsCompanyMetrics extends StatelessWidget {
         Text(
           AppLocalizations.of(context).companyMetrics,
           style: Theme.of(context).textTheme.bodySmall?.copyWith(
-            color: AnalyticsColors.textSecondary,
+            color: context.appColors.textSecondary,
             letterSpacing: 0.7,
           ),
         ),
@@ -133,7 +135,7 @@ final class AnalyticsHistoryCounts extends StatelessWidget {
         Text(
           AppLocalizations.of(context).keyCounts,
           style: Theme.of(context).textTheme.bodySmall?.copyWith(
-            color: AnalyticsColors.textSecondary,
+            color: context.appColors.textSecondary,
             letterSpacing: 0.7,
           ),
         ),
