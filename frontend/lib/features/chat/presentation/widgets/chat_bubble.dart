@@ -67,7 +67,9 @@ final class ChatBubble extends StatelessWidget {
                       Text(
                         text,
                         style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                          color: context.appColors.textPrimary,
+                          color: isUser
+                              ? context.appColors.onPrimary
+                              : context.appColors.textPrimary,
                           fontSize: 15,
                           height: 1.42,
                         ),
