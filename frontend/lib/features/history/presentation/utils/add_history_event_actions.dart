@@ -84,18 +84,20 @@ extension _AddHistoryEventActions on _AddHistoryEventScreenState {
               label: widget.isElectricVehicle
                   ? l10n.chargerType
                   : l10n.fuelType,
-              child: DropdownButtonFormField<String>(
+              child: NativeDropdownFormField<String>(
                 key: const ValueKey('fuel-type'),
-                initialValue: _fuelType,
-                dropdownColor: context.appColors.surfaceHigh,
-                iconEnabledColor: context.appColors.primaryLight,
+                value: _fuelType,
+                title: widget.isElectricVehicle
+                    ? l10n.chargerType
+                    : l10n.fuelType,
+                iconColor: context.appColors.primaryLight,
                 style: Theme.of(context).textTheme.bodyLarge?.copyWith(
                   color: context.appColors.textPrimary,
                 ),
                 decoration: const InputDecoration(),
                 items: [
                   for (final value in fuelTypeItems)
-                    DropdownMenuItem(value: value, child: Text(value)),
+                    NativePickerItem(value: value, label: value),
                 ],
                 onChanged: (value) {
                   if (value != null) _fuelType = value;
@@ -246,13 +248,15 @@ extension _AddHistoryEventActions on _AddHistoryEventScreenState {
             ),
           ),
         ),
-      ],
-      if (!kIsWeb) ...[
+      ),
+      if (!kIsWeb &&
+          (!_isEditing || (_existingPhotoUrls?.isNotEmpty ?? false))) ...[
         const SizedBox(height: AppSpacing.md),
         _PhotoCard(
           existingPhotoUrls: _existingPhotoUrls ?? const [],
           photos: _selectedPhotos,
           isPicking: _isPickingPhoto,
+          readOnly: _isEditing,
           onPick: _pickPhotos,
           onRemove: _removePhoto,
           onRemoveExisting: _removeExistingPhoto,
@@ -442,8 +446,9 @@ extension _AddHistoryEventActions on _AddHistoryEventScreenState {
         }
       }
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(AppLocalizations.of(context).couldNotSaveEvent)),
+      showNativeMessage(
+        context,
+        AppLocalizations.of(context).couldNotSaveEvent,
       );
     } finally {
       if (mounted) _update(() => _isSaving = false);
@@ -543,9 +548,7 @@ extension _AddHistoryEventActions on _AddHistoryEventScreenState {
 
   void _showPhotoError(String message) {
     if (!mounted) return;
-    ScaffoldMessenger.maybeOf(
-      context,
-    )?.showSnackBar(SnackBar(content: Text(message)));
+    showNativeMessage(context, message);
   }
 
   void _removePhoto(XFile photo) {
@@ -574,7 +577,7 @@ extension _AddHistoryEventActions on _AddHistoryEventScreenState {
   }
 
   Future<void> _selectOccurredAt() async {
-    final date = await showDatePicker(
+    final date = await showNativeDatePicker(
       context: context,
       initialDate: _occurredAt,
       firstDate: DateTime(2000),
@@ -582,7 +585,7 @@ extension _AddHistoryEventActions on _AddHistoryEventScreenState {
     );
     if (date == null || !mounted) return;
 
-    final time = await showTimePicker(
+    final time = await showNativeTimePicker(
       context: context,
       initialTime: TimeOfDay.fromDateTime(_occurredAt),
     );

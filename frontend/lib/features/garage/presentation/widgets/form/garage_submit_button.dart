@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:frontend/app/theme/app_palette.dart';
+import 'package:frontend/core/ui/native_ui.dart';
 
 final class GarageSubmitButton extends StatelessWidget {
   const GarageSubmitButton({
@@ -37,7 +38,7 @@ final class GarageSubmitButton extends StatelessWidget {
             ? const SizedBox(
                 width: 20,
                 height: 20,
-                child: CircularProgressIndicator(strokeWidth: 2),
+                child: NativeActivityIndicator(strokeWidth: 2, radius: 9),
               )
             : Row(
                 mainAxisSize: MainAxisSize.min,

@@ -2,7 +2,6 @@ package ru.talkingshaha.backend.timeline.dto;
 
 import java.math.BigDecimal;
 import java.time.OffsetDateTime;
-import java.util.List;
 
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
@@ -33,8 +32,6 @@ public record CreateMaintenanceEventRequest(
         @Schema(example = "3000")
         @Positive(message = "must be greater than 0")
         BigDecimal cost,
-        @Schema(example = "[\"https://example.com/event-photo.jpg\"]")
-        List<String> photoUrls,
         @Schema(example = "[\"Engine oil\", \"Oil filter\"]")
         List<@Size(max = 255, message = "must contain at most 255 characters") String> replacedParts) {
 }

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:frontend/core/ui/native_ui.dart';
 import 'package:frontend/features/garage/domain/entities/vehicle.dart';
 import 'package:frontend/l10n/generated/app_localizations.dart';
 
@@ -9,27 +10,16 @@ Future<void> confirmAndDeleteGarageVehicle({
 }) async {
   final l10n = AppLocalizations.of(context);
   final vehicleName = '${vehicle.brand} ${vehicle.model}';
-  final confirmed = await showDialog<bool>(
+  final confirmed = await showNativeConfirmDialog(
     context: context,
-    builder: (context) {
-      return AlertDialog(
-        title: Text(l10n.deleteVehicleQuestion),
-        content: Text(l10n.deleteVehicleConfirmation(vehicleName)),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(false),
-            child: Text(l10n.cancel),
-          ),
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(true),
-            child: Text(l10n.delete),
-          ),
-        ],
-      );
-    },
+    title: l10n.deleteVehicleQuestion,
+    message: l10n.deleteVehicleConfirmation(vehicleName),
+    cancelLabel: l10n.cancel,
+    confirmLabel: l10n.delete,
+    isDestructive: true,
   );
 
-  if (confirmed == true) {
+  if (confirmed) {
     await onDelete(vehicle.id);
   }
 }

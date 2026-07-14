@@ -6,11 +6,11 @@ import 'package:frontend/features/history/domain/entities/history_event.dart';
 import 'package:frontend/features/history/domain/repositories/history_repository.dart';
 
 final class HistoryRepositoryImpl implements HistoryRepository {
-  const HistoryRepositoryImpl(this._datasource, {HistoryPhotoReader? photos})
+  const HistoryRepositoryImpl(this._datasource, {HistoryPhotoCache? photos})
     : _photos = photos;
 
   final HistoryDatasource _datasource;
-  final HistoryPhotoReader? _photos;
+  final HistoryPhotoCache? _photos;
 
   @override
   Future<List<HistoryEvent>> getEvents(String vehicleId) async {
@@ -26,8 +26,24 @@ final class HistoryRepositoryImpl implements HistoryRepository {
   }
 
   @override
-  Future<void> addEvent(HistoryEvent event) {
-    return _datasource.addEvent(event);
+  Future<void> addEvent(HistoryEvent event) async {
+    final eventId = await _datasource.addEvent(event);
+    final details = event.details;
+    if (_photos == null ||
+        details is! MaintenanceDetails ||
+        (details.photoUrls?.isEmpty ?? true)) {
+      return;
+    }
+
+    try {
+      await _photos.bindPhotosToEvent(
+        temporaryEventId: _photoCacheKey(event),
+        eventId: eventId,
+      );
+    } catch (_) {
+      // The backend event is already created. The temporary cache key remains
+      // available as a fallback, so a cache move must not cause a duplicate retry.
+    }
   }
 
   @override
@@ -44,9 +60,12 @@ final class HistoryRepositoryImpl implements HistoryRepository {
     final details = event.details;
     if (details is! MaintenanceDetails) return event;
 
-    final cachedPhotoPaths = await _cachedPhotoPaths(event).catchError(
-      (_) => const <String>[],
-    );
+    List<String> cachedPhotoPaths;
+    try {
+      cachedPhotoPaths = await _cachedPhotoPaths(event);
+    } catch (_) {
+      return event;
+    }
     if (cachedPhotoPaths.isEmpty) return event;
 
     return HistoryEvent(

@@ -2,7 +2,6 @@ package ru.talkingshaha.backend.timeline.dto;
 
 import java.math.BigDecimal;
 import java.time.OffsetDateTime;
-import java.util.List;
 
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
@@ -32,7 +31,5 @@ public record CreatePartEventRequest(
         String description,
         @Schema(example = "4200")
         @Positive(message = "must be greater than 0")
-        BigDecimal cost,
-        @Schema(example = "[\"https://example.com/brake-pads.jpg\"]")
-        List<String> photoUrls) {
+        BigDecimal cost) {
 }

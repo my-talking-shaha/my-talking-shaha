@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:frontend/core/ui/native_ui.dart';
 import 'package:frontend/features/notifications/di/notifications_providers.dart';
 import 'package:frontend/features/notifications/presentation/common/notification_centered_text.dart';
 import 'package:frontend/features/notifications/presentation/common/notification_error_state.dart';
@@ -32,7 +33,7 @@ final class NotificationsScreen extends ConsumerWidget {
             );
           },
           loading: () => const Center(
-            child: CircularProgressIndicator(
+            child: NativeActivityIndicator(
               key: ValueKey('notifications_loading_state'),
             ),
           ),

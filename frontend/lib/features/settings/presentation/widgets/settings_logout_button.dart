@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:frontend/core/ui/native_ui.dart';
 
 final class SettingsLogoutButton extends StatelessWidget {
   const SettingsLogoutButton({
@@ -21,7 +22,7 @@ final class SettingsLogoutButton extends StatelessWidget {
         icon: isLoggingOut
             ? const SizedBox.square(
                 dimension: 18,
-                child: CircularProgressIndicator(strokeWidth: 2),
+                child: NativeActivityIndicator(strokeWidth: 2, radius: 9),
               )
             : const Icon(Icons.logout),
         label: Text(label),

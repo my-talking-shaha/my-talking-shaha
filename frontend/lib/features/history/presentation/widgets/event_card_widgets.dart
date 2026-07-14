@@ -221,12 +221,11 @@ class _EventPhotoList extends StatelessWidget {
     int initialIndex,
   ) {
     unawaited(
-      showDialog<void>(
+      showNativeFullscreenModal<void>(
         context: context,
-        barrierColor: context.appColors.background.withValues(alpha: 0.96),
-        builder: (context) {
-          return _EventPhotoPreview(urls: urls, initialIndex: initialIndex);
-        },
+        backgroundColor: context.appColors.background,
+        builder: (context) =>
+            _EventPhotoPreview(urls: urls, initialIndex: initialIndex),
       ),
     );
   }
@@ -261,81 +260,78 @@ class _EventPhotoPreviewState extends State<_EventPhotoPreview> {
 
   @override
   Widget build(BuildContext context) {
-    return Dialog.fullscreen(
+    return SafeArea(
       key: const ValueKey('event-photo-preview'),
-      backgroundColor: context.appColors.background,
-      child: SafeArea(
-        child: Stack(
-          children: [
-            PageView.builder(
-              controller: _pageController,
-              itemCount: widget.urls.length,
-              onPageChanged: (index) {
-                setState(() => _currentIndex = index);
-              },
-              itemBuilder: (context, index) {
-                return Center(
-                  child: InteractiveViewer(
-                    minScale: 1,
-                    maxScale: 4,
-                    child: Image(
-                      image: _eventPhotoImageProvider(widget.urls[index]),
-                      fit: BoxFit.contain,
-                      errorBuilder: (context, error, stackTrace) => Icon(
-                        Icons.broken_image_outlined,
-                        color: context.appColors.textMuted,
-                        size: 48,
-                      ),
+      child: Stack(
+        children: [
+          PageView.builder(
+            controller: _pageController,
+            itemCount: widget.urls.length,
+            onPageChanged: (index) {
+              setState(() => _currentIndex = index);
+            },
+            itemBuilder: (context, index) {
+              return Center(
+                child: InteractiveViewer(
+                  minScale: 1,
+                  maxScale: 4,
+                  child: Image(
+                    image: _eventPhotoImageProvider(widget.urls[index]),
+                    fit: BoxFit.contain,
+                    errorBuilder: (context, error, stackTrace) => Icon(
+                      Icons.broken_image_outlined,
+                      color: context.appColors.textMuted,
+                      size: 48,
                     ),
                   ),
-                );
-              },
+                ),
+              );
+            },
+          ),
+          Positioned(
+            top: AppSpacing.sm,
+            right: AppSpacing.sm,
+            child: IconButton.filled(
+              key: const ValueKey('event-photo-preview-close'),
+              onPressed: () => Navigator.of(context).pop(),
+              style: IconButton.styleFrom(
+                backgroundColor: context.appColors.surface.withValues(
+                  alpha: 0.88,
+                ),
+                foregroundColor: context.appColors.textPrimary,
+              ),
+              icon: const Icon(Icons.close),
             ),
+          ),
+          if (widget.urls.length > 1)
             Positioned(
-              top: AppSpacing.sm,
-              right: AppSpacing.sm,
-              child: IconButton.filled(
-                key: const ValueKey('event-photo-preview-close'),
-                onPressed: () => Navigator.of(context).pop(),
-                style: IconButton.styleFrom(
-                  backgroundColor: context.appColors.surface.withValues(
-                    alpha: 0.88,
+              left: AppSpacing.lg,
+              right: AppSpacing.lg,
+              bottom: AppSpacing.lg,
+              child: Center(
+                child: DecoratedBox(
+                  decoration: BoxDecoration(
+                    color: context.appColors.surface.withValues(alpha: 0.88),
+                    borderRadius: const BorderRadius.all(
+                      Radius.circular(AppRadius.sm),
+                    ),
                   ),
-                  foregroundColor: context.appColors.textPrimary,
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: AppSpacing.md,
+                      vertical: AppSpacing.xs,
+                    ),
+                    child: Text(
+                      '${_currentIndex + 1}/${widget.urls.length}',
+                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                        color: context.appColors.textPrimary,
+                      ),
+                    ),
+                  ),
                 ),
-                icon: const Icon(Icons.close),
               ),
             ),
-            if (widget.urls.length > 1)
-              Positioned(
-                left: AppSpacing.lg,
-                right: AppSpacing.lg,
-                bottom: AppSpacing.lg,
-                child: Center(
-                  child: DecoratedBox(
-                    decoration: BoxDecoration(
-                      color: context.appColors.surface.withValues(alpha: 0.88),
-                      borderRadius: const BorderRadius.all(
-                        Radius.circular(AppRadius.sm),
-                      ),
-                    ),
-                    child: Padding(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: AppSpacing.md,
-                        vertical: AppSpacing.xs,
-                      ),
-                      child: Text(
-                        '${_currentIndex + 1}/${widget.urls.length}',
-                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                          color: context.appColors.textPrimary,
-                        ),
-                      ),
-                    ),
-                  ),
-                ),
-              ),
-          ],
-        ),
+        ],
       ),
     );
   }

@@ -4,16 +4,18 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.UncheckedIOException;
 import java.time.OffsetDateTime;
-import java.util.Arrays;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
-import org.springframework.core.io.Resource;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 import ru.talkingshaha.backend.common.error.ResourceNotFoundException;
+import ru.talkingshaha.backend.common.storage.ImageValidator;
+import ru.talkingshaha.backend.common.storage.ImageValidator.ValidatedImage;
+import ru.talkingshaha.backend.common.storage.PhotoContent;
 import ru.talkingshaha.backend.common.storage.PhotoStorageService;
 import ru.talkingshaha.backend.vehicle.dto.VehiclePhotoListResponse;
 import ru.talkingshaha.backend.vehicle.dto.VehiclePhotoResponse;
@@ -38,13 +40,13 @@ public class VehiclePhotoService {
     @Transactional
     public VehiclePhotoResponse uploadPhoto(UUID vehicleId, MultipartFile file) {
         Vehicle vehicle = vehicles.requireOwnedVehicle(vehicleId);
-        ImageFormat format = requireSupportedImage(file);
+        ValidatedImage image = ImageValidator.validate(file);
 
         VehiclePhoto photo = new VehiclePhoto();
         photo.setVehicle(vehicle);
-        photo.setContentType(format.contentType());
+        photo.setContentType(image.contentType());
         photo.setCreatedAt(OffsetDateTime.now());
-        photo.setFileName(UUID.randomUUID() + format.extension());
+        photo.setFileName(UUID.randomUUID() + image.extension());
         photo = photos.save(photo);
 
         try (InputStream content = file.getInputStream()) {
@@ -74,76 +76,14 @@ public class VehiclePhotoService {
     }
 
     @Transactional(readOnly = true)
-    public PhotoContent photoContent(UUID photoId) {
-        VehiclePhoto photo = photos.findById(photoId)
-                .orElseThrow(() -> new ResourceNotFoundException("Photo not found"));
-        Resource resource = storage.load(photo.getFileName())
-                .orElseThrow(() -> new ResourceNotFoundException("Photo not found"));
-        return new PhotoContent(MediaType.parseMediaType(photo.getContentType()), resource);
+    public Optional<PhotoContent> photoContent(UUID photoId) {
+        return photos.findById(photoId)
+                .flatMap(photo -> storage.load(photo.getFileName())
+                        .map(resource -> new PhotoContent(
+                                MediaType.parseMediaType(photo.getContentType()), resource)));
     }
 
     private VehiclePhotoResponse toResponse(VehiclePhoto photo) {
         return new VehiclePhotoResponse(photo.getId(), PhotoUrls.publicUrl(photo.getId()));
-    }
-
-    private ImageFormat requireSupportedImage(MultipartFile file) {
-        if (file == null || file.isEmpty()) {
-            throw new IllegalArgumentException("Photo file must not be empty");
-        }
-        byte[] header = readHeader(file);
-        ImageFormat format = ImageFormat.fromHeader(header);
-        if (format == null || !format.contentType().equals(file.getContentType())) {
-            throw new IllegalArgumentException("Only JPG and PNG images are supported");
-        }
-        return format;
-    }
-
-    private byte[] readHeader(MultipartFile file) {
-        try (InputStream content = file.getInputStream()) {
-            return content.readNBytes(8);
-        } catch (IOException e) {
-            throw new UncheckedIOException("Failed to read uploaded photo", e);
-        }
-    }
-
-    public record PhotoContent(MediaType contentType, Resource resource) {
-    }
-
-    private enum ImageFormat {
-        JPEG(MediaType.IMAGE_JPEG_VALUE, ".jpg", new byte[] {(byte) 0xFF, (byte) 0xD8, (byte) 0xFF}),
-        PNG(MediaType.IMAGE_PNG_VALUE, ".png",
-                new byte[] {(byte) 0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A});
-
-        private final String contentType;
-        private final String extension;
-        private final byte[] magicBytes;
-
-        ImageFormat(String contentType, String extension, byte[] magicBytes) {
-            this.contentType = contentType;
-            this.extension = extension;
-            this.magicBytes = magicBytes;
-        }
-
-        String contentType() {
-            return contentType;
-        }
-
-        String extension() {
-            return extension;
-        }
-
-        static ImageFormat fromHeader(byte[] header) {
-            return Arrays.stream(values())
-                    .filter(format -> startsWith(header, format.magicBytes))
-                    .findFirst()
-                    .orElse(null);
-        }
-
-        private static boolean startsWith(byte[] header, byte[] prefix) {
-            if (header.length < prefix.length) {
-                return false;
-            }
-            return Arrays.equals(Arrays.copyOf(header, prefix.length), prefix);
-        }
     }
 }

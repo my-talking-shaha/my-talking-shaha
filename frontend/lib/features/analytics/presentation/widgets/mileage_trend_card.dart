@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:frontend/app/theme/app_palette.dart';
 import 'package:frontend/app/theme/app_theme.dart';
+import 'package:frontend/core/ui/native_ui.dart';
 import 'package:frontend/features/analytics/domain/entities/analytics_summary.dart';
 import 'package:frontend/features/analytics/domain/entities/mileage_trend.dart';
 import 'package:frontend/features/analytics/presentation/common/analytics_common_widgets.dart';
@@ -44,9 +45,10 @@ final class MileageTrendCard extends StatelessWidget {
                 AnalyticsMileageFilterDropdown<int>(
                   key: const ValueKey('analytics-mileage-year-filter'),
                   value: selectedYear,
+                  title: l10n.year,
                   items: [
                     for (final year in analyticsMileageYearOptions())
-                      DropdownMenuItem(value: year, child: Text('$year')),
+                      NativePickerItem(value: year, label: '$year'),
                   ],
                   onChanged: (year) {
                     if (year != null) {
@@ -57,12 +59,13 @@ final class MileageTrendCard extends StatelessWidget {
                 AnalyticsMileageFilterDropdown<int>(
                   key: const ValueKey('analytics-mileage-month-filter'),
                   value: selectedMonth ?? 0,
+                  title: l10n.month,
                   items: [
-                    DropdownMenuItem(value: 0, child: Text(l10n.allMonths)),
+                    NativePickerItem(value: 0, label: l10n.allMonths),
                     for (var month = 1; month <= 12; month++)
-                      DropdownMenuItem(
+                      NativePickerItem(
                         value: month,
-                        child: Text(analyticsMonthName(l10n, month)),
+                        label: analyticsMonthName(l10n, month),
                       ),
                   ],
                   onChanged: (month) {
@@ -159,7 +162,7 @@ final class MileageTrendCard extends StatelessWidget {
             },
             loading: () => const SizedBox(
               height: 160,
-              child: Center(child: CircularProgressIndicator()),
+              child: Center(child: NativeActivityIndicator()),
             ),
             error: (error, stackTrace) => AnalyticsUnavailableText(
               message: l10n.couldNotLoadMileageTrend,

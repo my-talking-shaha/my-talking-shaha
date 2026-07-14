@@ -411,6 +411,10 @@ event `type` are populated; the rest are `null`.
 `PART_REPLACEMENT`, `WARNING`. Events are returned most recent first. Pagination is not
 implemented yet.
 
+Maintenance events carry a `photoUrls` array holding absolute URLs to their stored photos
+(the same public content endpoint as vehicle photos, see "Get photo content"); it is empty
+when the event has no photos.
+
 Response `200`:
 
 ```json
@@ -499,7 +503,12 @@ cost. Response `201`: timeline event.
 
 `POST /api/v1/vehicles/{vehicleId}/timeline/maintenance`
 
-Request:
+Content-Type: `multipart/form-data` with two kinds of parts:
+
+- `event`  a single `application/json` part with the event fields;
+- `photos`  zero or more JPG/PNG image parts to attach to the event (optional).
+
+The `event` part:
 
 ```json
 {
@@ -508,9 +517,6 @@ Request:
   "name": "Oil change",
   "description": "Oil and filter replacement",
   "cost": 3000,
-  "photoUrls": [
-    "https://example.com/event-photo.jpg"
-  ],
   "replacedParts": [
     "Engine oil",
     "Oil filter"
@@ -518,11 +524,18 @@ Request:
 }
 ```
 
-`cost`, when provided, must be greater than `0`. Response `201`: timeline event.
-When `replacedParts` is provided, backend creates matching vehicle part records
+Uploaded photos are stored server-side (the bytes on the file system, metadata in the
+database) exactly like vehicle photos; each photo part must be a JPG or PNG image within the
+upload size limit. `cost`, when provided, must be greater than `0`. Response `201`: timeline
+event whose `photoUrls` are absolute URLs to the stored images (see "Get photo content").
+When replacedParts is provided, backend creates matching vehicle part records
 for maintenance forecast calculation. For backwards compatibility, backend also
-extracts comma-separated part names from a legacy `Replaced parts:` line inside
-`description`.
+extracts comma-separated part names from a legacy "Replaced parts": line inside
+description.
+
+Errors:
+
+- `400 VALIDATION_ERROR` if a photo part is empty, not a JPG/PNG image, or exceeds the size limit.
 
 ### Add part event
 
@@ -536,15 +549,12 @@ Request:
   "mileageKm": 10400,
   "name": "Brake pads",
   "description": "Front axle replacement",
-  "cost": 4200,
-  "photoUrls": [
-    "https://example.com/brake-pads.jpg"
-  ]
+  "cost": 4200
 }
 ```
 
-`name`, `eventDateTime`, and `mileageKm` are required. `description`, `cost`, and
-`photoUrls` are optional. `cost`, when provided, must be greater than `0`.
+`name`, `eventDateTime`, and `mileageKm` are required. `description` and `cost` are optional. 
+`cost`, when provided, must be greater than `0`. Part events do not accept photo uploads yet.
 Response `201`: timeline event with `type = PART_REPLACEMENT`. `mileageKm` is
 the part installation mileage and may be lower than the vehicle's current
 mileage; if it is higher, the vehicle mileage advances.
@@ -564,8 +574,9 @@ Request body uses the same event-specific fields as the matching add endpoint:
   `fuelName`, optional `stationName`. `liters` is accepted as a legacy alias for `kwh`;
 - trip: `eventDateTime`, `endMileageKm`, `durationMinutes`, optional
   `startMileageKm`, optional `route`;
-- maintenance/part: `eventDateTime`, `mileageKm`, `name`, optional `description`,
-  optional `cost`, optional `photoUrls`, optional `replacedParts` for maintenance.
+- maintenance/part: `eventDateTime`, `mileageKm`, `name`, optional `currentMileageKm`,
+optional `description`, optional `cost`, optional `replacedParts` for maintenance.
+This endpoint is JSON-only and does not modify attached photos.
 
 Field validation is the same as the matching add endpoint. The event type is
 determined by the stored event and is not changed by this endpoint.

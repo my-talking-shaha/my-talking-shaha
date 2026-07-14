@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:dio/dio.dart';
 import 'package:frontend/features/history/data/datasources/history_datasource.dart';
 import 'package:frontend/features/history/domain/entities/event_details.dart';
@@ -26,12 +28,23 @@ final class HistoryApiDatasource implements HistoryDatasource {
   }
 
   @override
-  Future<void> addEvent(HistoryEvent event) async {
-    await _dio.post<Map<String, dynamic>>(
+  Future<String> addEvent(HistoryEvent event) async {
+    final payload = HistoryApiEventMapper.createPayload(event);
+    final response = await _dio.post<Map<String, dynamic>>(
       '/vehicles/${event.carId}/timeline/'
       '${HistoryApiEventMapper.createEndpoint(event)}',
-      data: HistoryApiEventMapper.createPayload(event),
+      data: event.type == HistoryEventType.maintenance
+          ? await HistoryApiEventMapper.createMaintenanceFormData(
+              event,
+              payload,
+            )
+          : payload,
     );
+    final eventId = response.data?['id']?.toString().trim() ?? '';
+    if (eventId.isEmpty) {
+      throw const FormatException('Created timeline event has no id');
+    }
+    return eventId;
   }
 
   @override
@@ -144,6 +157,32 @@ abstract final class HistoryApiEventMapper {
         'durationMinutes': details.duration.inMinutes,
       },
     };
+  }
+
+  static Future<FormData> createMaintenanceFormData(
+    HistoryEvent event,
+    Map<String, dynamic> payload,
+  ) async {
+    final details = event.details;
+    final localPhotoPaths = details is MaintenanceDetails
+        ? (details.photoUrls ?? const <String>[])
+              .where((path) => !_isRemoteUrl(path))
+              .where((path) => path.trim().isNotEmpty)
+        : const Iterable<String>.empty();
+    final photos = <MultipartFile>[];
+
+    for (final path in localPhotoPaths) {
+      photos.add(await MultipartFile.fromFile(path, filename: _fileName(path)));
+    }
+
+    return FormData.fromMap({
+      'event': MultipartFile.fromString(
+        jsonEncode(payload),
+        filename: 'event.json',
+        contentType: DioMediaType('application', 'json'),
+      ),
+      if (photos.isNotEmpty) 'photos': photos,
+    });
   }
 
   static HistoryEventType _eventType(String value) {
@@ -294,43 +333,34 @@ abstract final class HistoryApiEventMapper {
   }
 
   static Map<String, dynamic> _maintenancePayload(
-    HistoryEvent event,
-    MaintenanceDetails details,
-  ) {
-    return {
-      'eventDateTime': _dateTimePayload(event.occurredAt),
-      'mileageKm': event.currentMileageKm,
-      if (details.currentMileageKm != null)
-        'currentMileageKm': details.currentMileageKm,
-      'name': event.title,
-      'description': event.type == HistoryEventType.part
-          ? details.description
-          : _maintenanceDescription(details),
-      if (details.cost != null) 'cost': details.cost,
-      if (event.type == HistoryEventType.maintenance &&
-          details.replacedParts != null &&
-          details.replacedParts!.isNotEmpty)
-        'replacedParts': details.replacedParts,
-      ..._remotePhotoUrlsPayload(details),
-    };
-  }
-
-  static List<String> _remotePhotoUrls(MaintenanceDetails details) {
-    return (details.photoUrls ?? const <String>[])
-        .where(_isRemoteUrl)
-        .toList(growable: false);
-  }
-
-  static Map<String, dynamic> _remotePhotoUrlsPayload(
-    MaintenanceDetails details,
-  ) {
-    final urls = _remotePhotoUrls(details);
-    return urls.isEmpty ? const {} : {'photoUrls': urls};
-  }
-
+  HistoryEvent event,
+  MaintenanceDetails details,
+) {
+  return {
+    'eventDateTime': _dateTimePayload(event.occurredAt),
+    'mileageKm': event.currentMileageKm,
+    if (details.currentMileageKm != null)
+      'currentMileageKm': details.currentMileageKm,
+    'name': event.title,
+    'description': event.type == HistoryEventType.part
+        ? details.description
+        : _maintenanceDescription(details),
+    if (details.cost != null) 'cost': details.cost,
+    if (event.type == HistoryEventType.maintenance &&
+        details.replacedParts != null &&
+        details.replacedParts!.isNotEmpty)
+      'replacedParts': details.replacedParts,
+  };
+}
   static bool _isRemoteUrl(String value) {
     final uri = Uri.tryParse(value);
     return uri != null && (uri.scheme == 'http' || uri.scheme == 'https');
+  }
+
+  static String _fileName(String path) {
+    final segments = path.split(RegExp(r'[/\\]'));
+    final fileName = segments.isEmpty ? '' : segments.last.trim();
+    return fileName.isEmpty ? 'photo.jpg' : fileName;
   }
 
   static ({String description, List<String>? replacedParts})

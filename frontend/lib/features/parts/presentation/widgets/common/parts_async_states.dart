@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:frontend/app/theme/app_palette.dart';
 import 'package:frontend/app/theme/app_theme.dart';
+import 'package:frontend/core/ui/native_ui.dart';
 import 'package:frontend/l10n/generated/app_localizations.dart';
 
 final class PartsLoadingState extends StatelessWidget {
@@ -10,7 +11,7 @@ final class PartsLoadingState extends StatelessWidget {
   Widget build(BuildContext context) {
     return Center(
       key: const ValueKey('parts_loading_state'),
-      child: CircularProgressIndicator(color: context.appColors.accent),
+      child: NativeActivityIndicator(color: context.appColors.accent),
     );
   }
 }

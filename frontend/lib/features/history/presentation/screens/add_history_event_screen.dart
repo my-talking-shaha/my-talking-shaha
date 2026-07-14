@@ -7,6 +7,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:frontend/app/theme/app_palette.dart';
 import 'package:frontend/app/theme/app_theme.dart';
+import 'package:frontend/core/ui/native_ui.dart';
 import 'package:frontend/features/history/domain/entities/event_details.dart';
 import 'package:frontend/features/history/domain/entities/history_event.dart';
 import 'package:frontend/features/history/domain/entities/history_event_type.dart';
@@ -225,7 +226,10 @@ final class _AddHistoryEventScreenState extends State<AddHistoryEventScreen> {
                 child: _isSaving
                     ? const SizedBox.square(
                         dimension: 20,
-                        child: CircularProgressIndicator(strokeWidth: 2),
+                        child: NativeActivityIndicator(
+                          strokeWidth: 2,
+                          radius: 9,
+                        ),
                       )
                     : Text(_isEditing ? l10n.saveChanges : l10n.save),
               ),

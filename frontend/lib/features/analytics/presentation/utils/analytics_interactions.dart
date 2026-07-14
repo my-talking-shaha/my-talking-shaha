@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:frontend/core/ui/native_ui.dart';
 import 'package:frontend/features/analytics/domain/entities/analytics_period.dart';
 import 'package:go_router/go_router.dart';
 
@@ -15,7 +16,8 @@ Future<AnalyticsDateRange?> selectAnalyticsDateRange(
   DateTime? now,
 }) async {
   final currentDate = now ?? DateTime.now();
-  final pickedRange = await showDateRangePicker(
+  final materialLocalizations = MaterialLocalizations.of(context);
+  final pickedRange = await showNativeDateRangePicker(
     context: context,
     firstDate: DateTime(currentDate.year - 10),
     lastDate: currentDate,
@@ -25,9 +27,8 @@ Future<AnalyticsDateRange?> selectAnalyticsDateRange(
           currentDate.subtract(const Duration(days: 30)),
       end: initialRange?.endDate ?? currentDate,
     ),
-    builder: (context, child) {
-      return Theme(data: Theme.of(context), child: child!);
-    },
+    startTitle: materialLocalizations.dateRangeStartLabel,
+    endTitle: materialLocalizations.dateRangeEndLabel,
   );
 
   if (pickedRange == null || !context.mounted) {
