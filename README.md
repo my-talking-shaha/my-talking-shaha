@@ -180,6 +180,8 @@ Full procedure: [docs/deploy.md](docs/deploy.md).
 
 ## Team and contribution 
 
+Our track: startup
+
 | Member | Email | Assigned role | Github |
 |---|---|---|---|
 | Adeliya Nagimova | ad.nagimova@innopolis.university | Team-lead, backend developer | nalemian |
