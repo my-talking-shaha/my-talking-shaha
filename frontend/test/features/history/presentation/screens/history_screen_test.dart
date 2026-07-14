@@ -7,6 +7,7 @@ import 'package:frontend/app/theme/app_theme.dart';
 import 'package:frontend/features/garage/data/datasources/in_memory_garage_datasource.dart';
 import 'package:frontend/features/garage/di/garage_providers.dart';
 import 'package:frontend/features/garage/domain/entities/vehicle_draft.dart';
+import 'package:frontend/features/history/data/datasources/history_datasource.dart';
 import 'package:frontend/features/history/data/datasources/mock_history_datasource.dart';
 import 'package:frontend/features/history/di/history_providers.dart';
 import 'package:frontend/features/history/di/live_trip_providers.dart';
@@ -224,8 +225,14 @@ void main() {
     expect(liveTripRepository.session?.startMileageKm, 12300);
   });
 
-  testWidgets('deleting an event clears its cached photos', (tester) async {
-    final datasource = MockHistoryDatasource(delay: Duration.zero);
+  testWidgets('deleting an event clears backend event then cached photos', (
+    tester,
+  ) async {
+    final deletionSteps = <String>[];
+    final datasource = _TrackingHistoryDatasource(
+      MockHistoryDatasource(delay: Duration.zero),
+      deletionSteps,
+    );
     HistoryEvent? cacheDeletedFor;
 
     await tester.pumpWidget(
@@ -234,6 +241,7 @@ void main() {
           historyDatasourceProvider.overrideWithValue(datasource),
           historyPhotoReaderProvider.overrideWithValue(null),
           deleteHistoryPhotoCacheProvider.overrideWithValue((event) async {
+            deletionSteps.add('cache:${event.id}');
             cacheDeletedFor = event;
           }),
           vehicleEngineTypeProvider.overrideWith(
@@ -271,6 +279,10 @@ void main() {
     await tester.pump(const Duration(milliseconds: 250));
 
     expect(cacheDeletedFor?.id, 'maintenance_1');
+    expect(deletionSteps, const [
+      'backend:vehicle_1:maintenance_1',
+      'cache:maintenance_1',
+    ]);
     expect(find.text('Oil and filter change'), findsNothing);
     await tester.pumpWidget(const SizedBox.shrink());
   });
@@ -364,5 +376,33 @@ final class _RecordingLiveTripRepository implements LiveTripRepository {
   @override
   Future<void> end() async {
     session = null;
+  }
+}
+
+final class _TrackingHistoryDatasource implements HistoryDatasource {
+  _TrackingHistoryDatasource(this.delegate, this.deletionSteps);
+
+  final HistoryDatasource delegate;
+  final List<String> deletionSteps;
+
+  @override
+  Future<List<HistoryEvent>> getEvents(String vehicleId) {
+    return delegate.getEvents(vehicleId);
+  }
+
+  @override
+  Future<String> addEvent(HistoryEvent event) {
+    return delegate.addEvent(event);
+  }
+
+  @override
+  Future<void> updateEvent(HistoryEvent event) {
+    return delegate.updateEvent(event);
+  }
+
+  @override
+  Future<void> deleteEvent(String vehicleId, String eventId) async {
+    deletionSteps.add('backend:$vehicleId:$eventId');
+    await delegate.deleteEvent(vehicleId, eventId);
   }
 }

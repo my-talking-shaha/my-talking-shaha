@@ -172,12 +172,14 @@ extension _AddHistoryEventActions on _AddHistoryEventScreenState {
           ),
         ),
       ),
-      if (!kIsWeb) ...[
+      if (!kIsWeb &&
+          (!_isEditing || (_existingPhotoUrls?.isNotEmpty ?? false))) ...[
         const SizedBox(height: AppSpacing.md),
         _PhotoCard(
           existingPhotoUrls: _existingPhotoUrls ?? const [],
           photos: _selectedPhotos,
           isPicking: _isPickingPhoto,
+          readOnly: _isEditing,
           onPick: _pickPhotos,
           onRemove: _removePhoto,
           onRemoveExisting: _removeExistingPhoto,

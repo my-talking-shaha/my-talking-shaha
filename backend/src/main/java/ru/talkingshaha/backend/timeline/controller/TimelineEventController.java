@@ -1,5 +1,6 @@
 package ru.talkingshaha.backend.timeline.controller;
 
+import java.util.List;
 import java.util.UUID;
 
 import com.fasterxml.jackson.databind.JsonNode;
@@ -9,6 +10,7 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
@@ -17,8 +19,10 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RequestPart;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.multipart.MultipartFile;
 import ru.talkingshaha.backend.common.error.ApiError;
 import ru.talkingshaha.backend.timeline.dto.CreateMaintenanceEventRequest;
 import ru.talkingshaha.backend.timeline.dto.CreatePartEventRequest;
@@ -84,12 +88,13 @@ public class TimelineEventController {
         return service.createTripEvent(vehicleId, request);
     }
 
-    @PostMapping("/maintenance")
+    @PostMapping(path = "/maintenance", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     @ResponseStatus(HttpStatus.CREATED)
     public TimelineEventResponse createMaintenanceEvent(
             @PathVariable UUID vehicleId,
-            @Valid @RequestBody CreateMaintenanceEventRequest request) {
-        return service.createMaintenanceEvent(vehicleId, request);
+            @Valid @RequestPart("event") CreateMaintenanceEventRequest request,
+            @RequestPart(value = "photos", required = false) List<MultipartFile> photos) {
+        return service.createMaintenanceEvent(vehicleId, request, photos);
     }
 
     @PostMapping("/part")

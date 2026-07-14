@@ -463,7 +463,7 @@ void main() {
     expect(details.photoUrls, const ['/tmp/existing-maintenance-photo.jpg']);
   });
 
-  testWidgets('removes existing maintenance photos from an edited draft', (
+  testWidgets('keeps maintenance photos read-only while editing', (
     tester,
   ) async {
     HistoryEvent? savedEvent;
@@ -492,24 +492,33 @@ void main() {
       deletePhoto: (path) async => deletedPhotoPaths.add(path),
     );
 
-    final removePhoto = find.byKey(
-      const ValueKey('maintenance-existing-photo-remove-0'),
+    final existingPhoto = find.byKey(
+      const ValueKey('maintenance-existing-photo-preview-0'),
     );
     await tester.dragUntilVisible(
-      removePhoto,
+      existingPhoto,
       find.byType(ListView).first,
       const Offset(0, -300),
     );
-    await tester.tap(removePhoto);
-    await tester.pump();
+
+    expect(existingPhoto, findsOneWidget);
+    expect(
+      find.byKey(const ValueKey('maintenance-existing-photo-remove-0')),
+      findsNothing,
+    );
+    expect(
+      find.byKey(const ValueKey('maintenance-photo-add-more')),
+      findsNothing,
+    );
 
     await _tapSave(tester, label: 'Save changes');
 
     final details = savedEvent?.details as MaintenanceDetails;
     expect(details.photoUrls, const [
+      '/tmp/existing-maintenance-photo.jpg',
       'https://example.invalid/remote-photo.jpg',
     ]);
-    expect(deletedPhotoPaths, const ['/tmp/existing-maintenance-photo.jpg']);
+    expect(deletedPhotoPaths, isEmpty);
   });
 }
 

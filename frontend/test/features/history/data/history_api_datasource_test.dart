@@ -1,3 +1,5 @@
+import 'dart:convert';
+import 'dart:io';
 import 'dart:typed_data';
 
 import 'package:dio/dio.dart';
@@ -37,7 +39,7 @@ void main() {
         ..httpClientAdapter = adapter;
       final datasource = HistoryApiDatasource(dio);
 
-      await datasource.addEvent(
+      final createdEventId = await datasource.addEvent(
         HistoryEvent(
           id: 'local-recharge',
           carId: 'vehicle_1',
@@ -54,6 +56,7 @@ void main() {
         ),
       );
 
+      expect(createdEventId, 'server-event-id');
       expect(adapter.lastOptions?.method, 'POST');
       expect(
         adapter.lastOptions?.path,
@@ -63,6 +66,142 @@ void main() {
       expect(data, containsPair('kwh', 37.5));
       expect(data.containsKey('liters'), isFalse);
       expect(data, containsPair('fuelType', 'ELECTRIC'));
+    });
+
+    test('uploads maintenance event and local photos as multipart', () async {
+      final photosDirectory = await Directory.systemTemp.createTemp(
+        'history_api_photos_',
+      );
+      addTearDown(() => photosDirectory.delete(recursive: true));
+      final jpeg = File('${photosDirectory.path}/repair.jpg');
+      final png = File('${photosDirectory.path}/invoice.png');
+      await jpeg.writeAsBytes(const [0xFF, 0xD8, 0xFF, 0xD9]);
+      await png.writeAsBytes(const [0x89, 0x50, 0x4E, 0x47]);
+
+      final adapter = _CapturingAdapter();
+      final dio = Dio(BaseOptions(baseUrl: 'http://localhost:8080/api/v1'))
+        ..httpClientAdapter = adapter;
+      final datasource = HistoryApiDatasource(dio);
+
+      await datasource.addEvent(
+        HistoryEvent(
+          id: 'local-maintenance',
+          carId: 'vehicle_1',
+          type: HistoryEventType.maintenance,
+          occurredAt: DateTime.utc(2026, 6, 12, 16, 30),
+          title: 'Oil change',
+          currentMileageKm: 10000,
+          details: MaintenanceDetails(
+            description: 'Oil and filter replacement',
+            cost: 3000,
+            photoUrls: [
+              jpeg.path,
+              png.path,
+              'https://api.example.com/api/v1/photos/already-remote',
+            ],
+          ),
+        ),
+      );
+
+      expect(adapter.lastOptions?.method, 'POST');
+      expect(
+        adapter.lastOptions?.path,
+        '/vehicles/vehicle_1/timeline/maintenance',
+      );
+      final formData = adapter.lastOptions?.data as FormData;
+      final eventParts = formData.files
+          .where((entry) => entry.key == 'event')
+          .toList();
+      final photoParts = formData.files
+          .where((entry) => entry.key == 'photos')
+          .toList();
+      expect(eventParts, hasLength(1));
+      expect(
+        eventParts.single.value.contentType?.toString(),
+        startsWith('application/json'),
+      );
+      expect(photoParts, hasLength(2));
+      expect(
+        photoParts.map((entry) => entry.value.filename),
+        containsAll(['repair.jpg', 'invoice.png']),
+      );
+      expect(
+        photoParts.map((entry) => entry.value.contentType?.toString()),
+        containsAll(['image/jpeg', 'image/png']),
+      );
+
+      final requestBody = latin1.decode(adapter.requestBodyBytes);
+      expect(requestBody, contains('name="event"'));
+      expect(requestBody, contains('"name":"Oil change"'));
+      expect(requestBody, contains('"mileageKm":10000'));
+      expect(requestBody, contains('"cost":3000'));
+      expect(requestBody, isNot(contains('photoUrls')));
+      expect(requestBody, isNot(contains('already-remote')));
+    });
+
+    test('adds maintenance without photos as event-only multipart', () async {
+      final adapter = _CapturingAdapter();
+      final dio = Dio(BaseOptions(baseUrl: 'http://localhost:8080/api/v1'))
+        ..httpClientAdapter = adapter;
+      final datasource = HistoryApiDatasource(dio);
+
+      await datasource.addEvent(
+        HistoryEvent(
+          id: 'local-maintenance',
+          carId: 'vehicle_1',
+          type: HistoryEventType.maintenance,
+          occurredAt: DateTime.utc(2026, 6, 12, 16, 30),
+          title: 'Inspection',
+          currentMileageKm: 10000,
+          details: MaintenanceDetails(description: 'Routine inspection'),
+        ),
+      );
+
+      final formData = adapter.lastOptions?.data as FormData;
+      expect(
+        formData.files.where((entry) => entry.key == 'event'),
+        hasLength(1),
+      );
+      expect(formData.files.where((entry) => entry.key == 'photos'), isEmpty);
+      expect(
+        latin1.decode(adapter.requestBodyBytes),
+        contains('"name":"Inspection"'),
+      );
+    });
+
+    test('updates maintenance as JSON without changing photos', () async {
+      final adapter = _CapturingAdapter();
+      final dio = Dio(BaseOptions(baseUrl: 'http://localhost:8080/api/v1'))
+        ..httpClientAdapter = adapter;
+      final datasource = HistoryApiDatasource(dio);
+
+      await datasource.updateEvent(
+        HistoryEvent(
+          id: 'maintenance_1',
+          carId: 'vehicle_1',
+          type: HistoryEventType.maintenance,
+          occurredAt: DateTime.utc(2026, 6, 12, 16, 30),
+          title: 'Updated inspection',
+          currentMileageKm: 10000,
+          details: MaintenanceDetails(
+            description: 'Updated description',
+            photoUrls: const [
+              '/documents/history_photos/maintenance_1/repair.jpg',
+              'https://api.example.com/api/v1/photos/photo_1',
+            ],
+          ),
+        ),
+      );
+
+      expect(adapter.lastOptions?.method, 'PATCH');
+      expect(
+        adapter.lastOptions?.path,
+        '/vehicles/vehicle_1/timeline/maintenance_1',
+      );
+      expect(adapter.lastOptions?.data, isA<Map<String, dynamic>>());
+      final payload = adapter.lastOptions?.data as Map<String, dynamic>;
+      expect(payload['name'], 'Updated inspection');
+      expect(payload.containsKey('photoUrls'), isFalse);
     });
   });
 
@@ -219,7 +358,7 @@ void main() {
       expect(tripPayload['title'], 'Morning commute');
     });
 
-    test('builds backend maintenance payload from history event', () {
+    test('builds JSON maintenance fields without photo URLs', () {
       final payload = HistoryApiEventMapper.createPayload(
         HistoryEvent(
           id: 'local-maintenance',
@@ -243,7 +382,6 @@ void main() {
         'name': 'Oil change',
         'description': 'Oil and filter replacement\nReplaced parts: Oil filter',
         'cost': 3000,
-        'photoUrls': ['https://example.com/event-photo.jpg'],
       });
     });
 
@@ -340,6 +478,7 @@ void main() {
 
 final class _CapturingAdapter implements HttpClientAdapter {
   RequestOptions? lastOptions;
+  List<int> requestBodyBytes = const [];
 
   @override
   Future<ResponseBody> fetch(
@@ -348,7 +487,23 @@ final class _CapturingAdapter implements HttpClientAdapter {
     Future<void>? cancelFuture,
   ) async {
     lastOptions = options;
-    return ResponseBody.fromString('', 204);
+    final bytes = <int>[];
+    if (requestStream != null) {
+      await for (final chunk in requestStream) {
+        bytes.addAll(chunk);
+      }
+    }
+    requestBodyBytes = bytes;
+    if (options.method == 'DELETE') {
+      return ResponseBody.fromString('', 204);
+    }
+    return ResponseBody.fromString(
+      '{"id":"server-event-id"}',
+      201,
+      headers: {
+        Headers.contentTypeHeader: [Headers.jsonContentType],
+      },
+    );
   }
 
   @override

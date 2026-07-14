@@ -17,6 +17,7 @@ import jakarta.validation.Validator;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
+import org.springframework.web.multipart.MultipartFile;
 import ru.talkingshaha.backend.common.error.FieldValidationException;
 import ru.talkingshaha.backend.common.error.ResourceNotFoundException;
 import ru.talkingshaha.backend.common.metrics.BusinessMetrics;
@@ -28,6 +29,7 @@ import ru.talkingshaha.backend.timeline.dto.CreateRefuelEventRequest;
 import ru.talkingshaha.backend.timeline.dto.CreateTripEventRequest;
 import ru.talkingshaha.backend.timeline.dto.TimelineEventListResponse;
 import ru.talkingshaha.backend.timeline.dto.TimelineEventResponse;
+import ru.talkingshaha.backend.timeline.model.EventPhoto;
 import ru.talkingshaha.backend.timeline.model.MaintenanceEvent;
 import ru.talkingshaha.backend.timeline.model.RefuelEvent;
 import ru.talkingshaha.backend.timeline.model.TimelineEventType;
@@ -40,6 +42,7 @@ import ru.talkingshaha.backend.timeline.repository.TripEventRepository;
 import ru.talkingshaha.backend.part.service.PartService;
 import ru.talkingshaha.backend.vehicle.model.FuelType;
 import ru.talkingshaha.backend.vehicle.model.Vehicle;
+import ru.talkingshaha.backend.vehicle.service.PhotoUrls;
 import ru.talkingshaha.backend.vehicle.service.VehicleService;
 
 @Service
@@ -54,6 +57,7 @@ public class TimelineEventService {
     private final MaintenanceEventRepository maintenances;
     private final VehicleService vehicles;
     private final PartService parts;
+    private final EventPhotoService eventPhotos;
     private final ObjectMapper objectMapper;
     private final Validator validator;
     private final BusinessMetrics metrics;
@@ -65,6 +69,7 @@ public class TimelineEventService {
             MaintenanceEventRepository maintenances,
             VehicleService vehicles,
             PartService parts,
+            EventPhotoService eventPhotos,
             ObjectMapper objectMapper,
             Validator validator,
             BusinessMetrics metrics) {
@@ -74,6 +79,7 @@ public class TimelineEventService {
         this.maintenances = maintenances;
         this.vehicles = vehicles;
         this.parts = parts;
+        this.eventPhotos = eventPhotos;
         this.objectMapper = objectMapper;
         this.validator = validator;
         this.metrics = metrics;
@@ -269,7 +275,8 @@ public class TimelineEventService {
     }
 
     @Transactional
-    public TimelineEventResponse createMaintenanceEvent(UUID vehicleId, CreateMaintenanceEventRequest request) {
+    public TimelineEventResponse createMaintenanceEvent(
+            UUID vehicleId, CreateMaintenanceEventRequest request, List<MultipartFile> photos) {
         Vehicle vehicle = vehicles.requireOwnedVehicle(vehicleId);
         validateMileage(vehicle, request.mileageKm());
         MaintenanceEvent event = new MaintenanceEvent();
@@ -280,9 +287,7 @@ public class TimelineEventService {
         event.setDescription(request.description());
         event.setMileageKm(request.mileageKm());
         event.setCost(request.cost());
-        if (request.photoUrls() != null) {
-            event.getPhotoUrls().addAll(request.photoUrls());
-        }
+        eventPhotos.attachPhotos(event, photos);
         updateVehicleMileage(vehicle, request.mileageKm());
         TimelineEventResponse response = toResponse(maintenances.save(event));
         metrics.recordTimelineEventCreated(TimelineEventType.MAINTENANCE);
@@ -301,9 +306,6 @@ public class TimelineEventService {
         event.setDescription(request.description());
         event.setMileageKm(request.mileageKm());
         event.setCost(request.cost());
-        if (request.photoUrls() != null) {
-            event.getPhotoUrls().addAll(request.photoUrls());
-        }
         updateVehicleMileage(vehicle, request.mileageKm());
         TimelineEventResponse response = toResponse(maintenances.save(event));
         metrics.recordTimelineEventCreated(TimelineEventType.PART_REPLACEMENT);
@@ -331,7 +333,11 @@ public class TimelineEventService {
         Vehicle vehicle = vehicles.requireOwnedVehicle(vehicleId);
         BaseEvent event = events.findByIdAndVehicle(eventId, vehicle)
                 .orElseThrow(() -> new ResourceNotFoundException("Timeline event not found"));
+        List<EventPhoto> photos = event instanceof MaintenanceEvent maintenance
+                ? List.copyOf(maintenance.getPhotos())
+                : List.of();
         events.delete(event);
+        eventPhotos.deleteFiles(photos);
     }
 
     private <T> T convertAndValidate(JsonNode body, Class<T> requestType) {
@@ -379,10 +385,6 @@ public class TimelineEventService {
         event.setName(request.name());
         event.setDescription(request.description());
         event.setCost(request.cost());
-        if (request.photoUrls() != null) {
-            event.getPhotoUrls().clear();
-            event.getPhotoUrls().addAll(request.photoUrls());
-        }
     }
 
     private Integer eventMileage(BaseEvent event) {
@@ -474,7 +476,7 @@ public class TimelineEventService {
                     null,
                     m.getName(),
                     m.getDescription(),
-                    List.copyOf(m.getPhotoUrls()),
+                    m.getPhotos().stream().map(photo -> PhotoUrls.publicUrl(photo.getId())).toList(),
                     null, null, null, null);
             default -> throw new IllegalStateException("Unknown event type: " + event.getClass());
         };

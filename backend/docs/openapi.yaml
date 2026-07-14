@@ -485,15 +485,33 @@ paths:
   /vehicles/{vehicleId}/timeline/maintenance:
     post:
       summary: Add maintenance event
+      description: >
+        Multipart request. The event fields go in a JSON part named `event`; optional JPG/PNG
+        image parts named `photos` are stored server-side and returned as content URLs in the
+        event's `photoUrls`.
       tags: [ Timeline ]
       parameters:
         - $ref: '#/components/parameters/VehicleId'
       requestBody:
         required: true
         content:
-          application/json:
+          multipart/form-data:
             schema:
-              $ref: '#/components/schemas/CreateMaintenanceEventRequest'
+              type: object
+              required: [ event ]
+              properties:
+                event:
+                  $ref: '#/components/schemas/CreateMaintenanceEventRequest'
+                photos:
+                  type: array
+                  items:
+                    type: string
+                    format: binary
+            encoding:
+              event:
+                contentType: application/json
+              photos:
+                contentType: image/jpeg, image/png
       responses:
         '201':
           description: Created maintenance event
@@ -1267,11 +1285,6 @@ components:
           minimum: 0
           exclusiveMinimum: true
           nullable: true
-        photoUrls:
-          type: array
-          nullable: true
-          items:
-            type: string
     CreatePartEventRequest:
       type: object
       required: [ eventDateTime, mileageKm, name ]
@@ -1293,11 +1306,6 @@ components:
           minimum: 0
           exclusiveMinimum: true
           nullable: true
-        photoUrls:
-          type: array
-          nullable: true
-          items:
-            type: string
     TimelineEventList:
       type: object
       required: [ events ]

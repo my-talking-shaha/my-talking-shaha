@@ -110,6 +110,15 @@ Fields:
 7. Timeline updates without app restart.
 8. Vehicle dashboard and analytics may refresh/invalidate.
 
+For service/repair photos on native platforms, the client first persists the
+selected files in the device cache and then uploads those cached files with the
+multipart create request. After creation, the temporary cache is bound to the
+server event id. Photo controls are unavailable on web and read-only while an
+existing event is edited because the backend PATCH contract does not change
+attachments. Timeline photo rendering prefers cached files and falls back to
+backend `photoUrls`; deleting an event removes its backend photos and the
+matching local cache.
+
 ## Mileage Validation
 
 - New mileage cannot be lower than previous known vehicle mileage unless backend explicitly supports corrections.
