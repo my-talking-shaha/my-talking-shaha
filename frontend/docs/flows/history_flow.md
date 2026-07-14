@@ -66,21 +66,24 @@ Fields:
 ## Live Trip Flow
 
 1. User taps the live-trip FAB next to the add-event FAB in vehicle history.
-2. Client starts one local active trip with the selected `vehicleId`, current
+2. Client asks the user to confirm the start. Cancelling leaves the active-trip
+   state unchanged.
+3. After confirmation, the client starts one local active trip with the
+   selected `vehicleId`, current
    mileage, and start timestamp.
-3. Client persists the active trip locally so the timer can be restored after
+4. Client persists the active trip locally so the timer can be restored after
    an app restart. Elapsed time is derived from the timestamp rather than from
    a background Dart timer.
-4. On iOS 16.1 and newer, the client also starts a Live Activity showing the
+5. On iOS 16.1 and newer, the client also starts a Live Activity showing the
    vehicle name, elapsed time, and start mileage. The Flutter live-trip screen
    remains the fallback on unsupported platforms or when Live Activities are
    disabled.
-5. User finishes the trip and enters the final odometer reading and an optional
+6. User finishes the trip and enters the final odometer reading and an optional
    route. GPS and automatic route collection are not used.
-6. Client validates that final mileage is not below start mileage and sends the
+7. Client validates that final mileage is not below start mileage and sends the
    existing add-trip request. Durations shorter than one minute are stored as
    one minute to satisfy the API contract.
-7. Only after the trip is stored does the client clear the local active trip
+8. Only after the trip is stored does the client clear the local active trip
    and end the Live Activity.
 
 Only one active trip may exist on the device at a time. An active trip is

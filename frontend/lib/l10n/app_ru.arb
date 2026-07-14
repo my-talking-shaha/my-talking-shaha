@@ -165,6 +165,8 @@
   "maintenanceHistory": "История обслуживания",
   "addEvent": "Добавить событие",
   "startLiveTrip": "Начать поездку",
+  "startTripQuestion": "Начать поездку?",
+  "startTripConfirmation": "Таймер начнет отсчет и продолжит идти в фоне.",
   "resumeLiveTrip": "Вернуться к поездке",
   "liveTrip": "Поездка в эфире",
   "tripInProgress": "Поездка продолжается",

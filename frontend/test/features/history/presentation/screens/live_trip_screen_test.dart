@@ -168,6 +168,7 @@ void main() {
 
     await tester.tap(find.byTooltip('Resume live trip'));
     await tester.pumpAndSettle();
+    expect(find.byType(AlertDialog), findsNothing);
     await tester.tap(find.byKey(const ValueKey('finish-live-trip')));
     await tester.pumpAndSettle();
     await tester.enterText(

@@ -165,6 +165,8 @@
   "maintenanceHistory": "Maintenance History",
   "addEvent": "Add event",
   "startLiveTrip": "Start live trip",
+  "startTripQuestion": "Start trip?",
+  "startTripConfirmation": "The timer will start now and continue while the app is in the background.",
   "resumeLiveTrip": "Resume live trip",
   "liveTrip": "Live trip",
   "tripInProgress": "Trip in progress",

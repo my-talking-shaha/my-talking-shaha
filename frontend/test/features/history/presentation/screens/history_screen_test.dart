@@ -4,9 +4,15 @@ import 'package:flutter_svg/flutter_svg.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:frontend/app/providers/vehicle_mileage_provider.dart';
 import 'package:frontend/app/theme/app_theme.dart';
+import 'package:frontend/features/garage/data/datasources/in_memory_garage_datasource.dart';
+import 'package:frontend/features/garage/di/garage_providers.dart';
+import 'package:frontend/features/garage/domain/entities/vehicle_draft.dart';
 import 'package:frontend/features/history/data/datasources/mock_history_datasource.dart';
 import 'package:frontend/features/history/di/history_providers.dart';
+import 'package:frontend/features/history/di/live_trip_providers.dart';
 import 'package:frontend/features/history/domain/entities/history_event.dart';
+import 'package:frontend/features/history/domain/entities/live_trip_session.dart';
+import 'package:frontend/features/history/domain/repositories/live_trip_repository.dart';
 import 'package:frontend/features/history/presentation/screens/history_screen.dart';
 import 'package:frontend/features/history/presentation/widgets/event_card.dart';
 import 'package:frontend/l10n/generated/app_localizations.dart';
@@ -139,6 +145,85 @@ void main() {
     expect(find.text('Oil and filter change'), findsNothing);
   });
 
+  testWidgets('confirms before starting a live trip', (tester) async {
+    final garageDatasource = InMemoryGarageDatasource();
+    await garageDatasource.addVehicle(
+      const VehicleDraft(
+        brand: 'Lada',
+        model: '2107',
+        year: 2008,
+        currentMileageKm: 12300,
+        engineType: 'gasoline',
+        engineVolumeLiters: 1.6,
+        enginePowerHp: 74,
+      ),
+    );
+    final liveTripRepository = _RecordingLiveTripRepository();
+    final router = GoRouter(
+      initialLocation: '/history',
+      routes: [
+        GoRoute(
+          path: '/history',
+          builder: (context, state) =>
+              const HistoryScreen(vehicleId: 'vehicle_1'),
+        ),
+        GoRoute(
+          path: '/vehicle/:vehicleId/history/live',
+          builder: (context, state) =>
+              const Scaffold(body: Text('Live trip opened')),
+        ),
+      ],
+    );
+    addTearDown(router.dispose);
+
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [
+          garageDatasourceProvider.overrideWithValue(garageDatasource),
+          historyDatasourceProvider.overrideWithValue(
+            MockHistoryDatasource(delay: Duration.zero),
+          ),
+          historyPhotoReaderProvider.overrideWithValue(null),
+          vehicleEngineTypeProvider.overrideWith(
+            (ref, vehicleId) async => 'gasoline',
+          ),
+          liveTripRepositoryProvider.overrideWithValue(liveTripRepository),
+        ],
+        child: MaterialApp.router(
+          locale: const Locale('en'),
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
+          theme: AppTheme.dark,
+          routerConfig: router,
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.byKey(const ValueKey('live-trip-fab')));
+    await tester.pumpAndSettle();
+
+    expect(find.byType(AlertDialog), findsOneWidget);
+    expect(find.text('Start trip?'), findsOneWidget);
+    expect(liveTripRepository.session, isNull);
+
+    await tester.tap(find.widgetWithText(TextButton, 'Cancel'));
+    await tester.pumpAndSettle();
+
+    expect(find.byType(AlertDialog), findsNothing);
+    expect(liveTripRepository.session, isNull);
+
+    await tester.tap(find.byKey(const ValueKey('live-trip-fab')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.widgetWithText(TextButton, 'Start live trip'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Live trip opened'), findsOneWidget);
+    expect(liveTripRepository.session?.vehicleId, 'vehicle_1');
+    expect(liveTripRepository.session?.vehicleName, 'Lada 2107');
+    expect(liveTripRepository.session?.startMileageKm, 12300);
+  });
+
   testWidgets('deleting an event clears its cached photos', (tester) async {
     final datasource = MockHistoryDatasource(delay: Duration.zero);
     HistoryEvent? cacheDeletedFor;
@@ -263,4 +348,21 @@ void main() {
       findsOneWidget,
     );
   });
+}
+
+final class _RecordingLiveTripRepository implements LiveTripRepository {
+  LiveTripSession? session;
+
+  @override
+  Future<LiveTripSession?> restore() async => session;
+
+  @override
+  Future<void> start(LiveTripSession session) async {
+    this.session = session;
+  }
+
+  @override
+  Future<void> end() async {
+    session = null;
+  }
 }

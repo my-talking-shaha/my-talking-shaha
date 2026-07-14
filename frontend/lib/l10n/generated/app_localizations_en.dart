@@ -435,6 +435,13 @@ class AppLocalizationsEn extends AppLocalizations {
   String get startLiveTrip => 'Start live trip';
 
   @override
+  String get startTripQuestion => 'Start trip?';
+
+  @override
+  String get startTripConfirmation =>
+      'The timer will start now and continue while the app is in the background.';
+
+  @override
   String get resumeLiveTrip => 'Resume live trip';
 
   @override

@@ -926,6 +926,18 @@ abstract class AppLocalizations {
   /// **'Start live trip'**
   String get startLiveTrip;
 
+  /// No description provided for @startTripQuestion.
+  ///
+  /// In en, this message translates to:
+  /// **'Start trip?'**
+  String get startTripQuestion;
+
+  /// No description provided for @startTripConfirmation.
+  ///
+  /// In en, this message translates to:
+  /// **'The timer will start now and continue while the app is in the background.'**
+  String get startTripConfirmation;
+
   /// No description provided for @resumeLiveTrip.
   ///
   /// In en, this message translates to:

@@ -200,6 +200,9 @@ final class _HistoryScreenState extends ConsumerState<HistoryScreen> {
       }
 
       if (activeTrip == null) {
+        final confirmed = await _confirmStartLiveTrip();
+        if (!confirmed || !mounted) return;
+
         final vehicles = await ref.read(garageControllerProvider.future);
         final vehicle = vehicles.firstWhere(
           (candidate) => candidate.id == widget.vehicleId,
@@ -228,6 +231,31 @@ final class _HistoryScreenState extends ConsumerState<HistoryScreen> {
     } catch (_) {
       _showSuccessMessage(l10n.couldNotStartTrip);
     }
+  }
+
+  Future<bool> _confirmStartLiveTrip() async {
+    final l10n = AppLocalizations.of(context);
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: Text(l10n.startTripQuestion),
+          content: Text(l10n.startTripConfirmation),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(false),
+              child: Text(l10n.cancel),
+            ),
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(true),
+              child: Text(l10n.startLiveTrip),
+            ),
+          ],
+        );
+      },
+    );
+
+    return confirmed ?? false;
   }
 
   bool get _hasFilters => _query.isNotEmpty || _selectedType != null;

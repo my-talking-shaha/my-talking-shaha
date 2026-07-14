@@ -433,6 +433,13 @@ class AppLocalizationsRu extends AppLocalizations {
   String get startLiveTrip => 'Начать поездку';
 
   @override
+  String get startTripQuestion => 'Начать поездку?';
+
+  @override
+  String get startTripConfirmation =>
+      'Таймер начнет отсчет и продолжит идти в фоне.';
+
+  @override
   String get resumeLiveTrip => 'Вернуться к поездке';
 
   @override
