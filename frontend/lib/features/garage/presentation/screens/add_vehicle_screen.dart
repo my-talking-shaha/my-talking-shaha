@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:frontend/app/theme/app_palette.dart';
+import 'package:frontend/core/ui/native_ui.dart';
 import 'package:frontend/features/garage/di/garage_providers.dart';
 import 'package:frontend/features/garage/presentation/controllers/add_vehicle_controller.dart';
 import 'package:frontend/features/garage/presentation/controllers/power_output_unit_controller.dart';
@@ -89,9 +90,7 @@ final class _AddVehicleScreenState extends ConsumerState<AddVehicleScreen> {
         return;
       }
 
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(AppLocalizations.of(context).vehicleNotFound)),
-      );
+      showNativeMessage(context, AppLocalizations.of(context).vehicleNotFound);
       context.go('/garage');
       return;
     } finally {
@@ -156,7 +155,7 @@ final class _AddVehicleScreenState extends ConsumerState<AddVehicleScreen> {
         onTap: _dismissKeyboard,
         child: SafeArea(
           child: _isLoadingVehicle
-              ? const Center(child: CircularProgressIndicator())
+              ? const Center(child: NativeActivityIndicator())
               : SingleChildScrollView(
                   keyboardDismissBehavior:
                       ScrollViewKeyboardDismissBehavior.onDrag,
@@ -421,10 +420,9 @@ final class _AddVehicleScreenState extends ConsumerState<AddVehicleScreen> {
     }
 
     ref.invalidate(garageControllerProvider);
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(isEditing ? l10n.vehicleUpdated : l10n.vehicleAdded),
-      ),
+    showNativeMessage(
+      context,
+      isEditing ? l10n.vehicleUpdated : l10n.vehicleAdded,
     );
     context.go('/garage');
   }

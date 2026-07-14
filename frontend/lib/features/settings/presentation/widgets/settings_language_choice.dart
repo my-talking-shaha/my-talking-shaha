@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:frontend/app/theme/app_palette.dart';
 import 'package:frontend/app/theme/app_theme.dart';
+import 'package:frontend/core/ui/native_ui.dart';
 import 'package:frontend/features/settings/presentation/utils/settings_localization_utils.dart';
 
 final class SettingsLanguageChoice extends StatelessWidget {
@@ -19,19 +20,19 @@ final class SettingsLanguageChoice extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return PopupMenuButton<Locale>(
-      initialValue: selectedLocale,
+    return NativePopupMenuButton<Locale>(
+      selectedValue: selectedLocale,
       color: context.appColors.surfaceHighest,
       shape: const RoundedRectangleBorder(borderRadius: AppRadius.input),
       onSelected: onChanged,
-      itemBuilder: (context) => [
-        PopupMenuItem(
+      items: [
+        NativePickerItem(
           value: const Locale('en'),
-          child: Text('$englishLabel (EN)'),
+          label: '$englishLabel (EN)',
         ),
-        PopupMenuItem(
+        NativePickerItem(
           value: const Locale('ru'),
-          child: Text('$russianLabel (RU)'),
+          label: '$russianLabel (RU)',
         ),
       ],
       child: Row(

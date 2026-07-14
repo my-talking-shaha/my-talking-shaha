@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:frontend/app/providers/vehicle_mileage_provider.dart';
+import 'package:frontend/core/ui/native_ui.dart';
 import 'package:frontend/core/ui/navigation_shell.dart';
 import 'package:frontend/core/utils/uuid_format.dart';
 import 'package:frontend/features/analytics/di/analytics_providers.dart';
@@ -119,7 +120,7 @@ final routerProvider = Provider<GoRouter>((ref) {
                       );
                     },
                     loading: () => const Scaffold(
-                      body: Center(child: CircularProgressIndicator()),
+                      body: Center(child: NativeActivityIndicator()),
                     ),
                     error: (error, stackTrace) => Scaffold(
                       appBar: AppBar(),
@@ -137,7 +138,7 @@ final routerProvider = Provider<GoRouter>((ref) {
                   );
                 },
                 loading: () => const Scaffold(
-                  body: Center(child: CircularProgressIndicator()),
+                  body: Center(child: NativeActivityIndicator()),
                 ),
                 error: (error, stackTrace) => Scaffold(
                   appBar: AppBar(),
@@ -186,7 +187,7 @@ final routerProvider = Provider<GoRouter>((ref) {
                         .deletePhoto,
                   ),
                   loading: () => const Scaffold(
-                    body: Center(child: CircularProgressIndicator()),
+                    body: Center(child: NativeActivityIndicator()),
                   ),
                   error: (error, stackTrace) => Scaffold(
                     appBar: AppBar(),
@@ -220,7 +221,7 @@ final routerProvider = Provider<GoRouter>((ref) {
                   return screenFor(event);
                 },
                 loading: () => const Scaffold(
-                  body: Center(child: CircularProgressIndicator()),
+                  body: Center(child: NativeActivityIndicator()),
                 ),
                 error: (error, stackTrace) => Scaffold(
                   appBar: AppBar(),
@@ -378,7 +379,7 @@ final class _AuthLoadingScreen extends ConsumerWidget {
     });
     _leaveAuthLoadingScreen(context, authState);
 
-    return const Scaffold(body: Center(child: CircularProgressIndicator()));
+    return const Scaffold(body: Center(child: NativeActivityIndicator()));
   }
 }
 

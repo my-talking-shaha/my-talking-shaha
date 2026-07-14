@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:frontend/app/theme/app_palette.dart';
-import 'package:frontend/features/garage/presentation/utils/garage_engine_type_utils.dart';
+import 'package:frontend/core/ui/native_ui.dart';
 import 'package:frontend/features/garage/presentation/utils/garage_form_utils.dart';
 import 'package:frontend/features/garage/presentation/widgets/common/garage_field_label.dart';
 import 'package:frontend/l10n/generated/app_localizations.dart';
@@ -30,7 +30,7 @@ final class GarageEngineTypeField extends StatelessWidget {
       children: [
         GarageFieldLabel(label: l10n.engineType),
         const SizedBox(height: 10),
-        PopupMenuButton<String>(
+        NativePopupMenuButton<String>(
           enabled: onChanged != null,
           color: context.appColors.formField,
           elevation: 8,
@@ -40,13 +40,22 @@ final class GarageEngineTypeField extends StatelessWidget {
             borderRadius: BorderRadius.circular(8),
             side: BorderSide(color: context.appColors.formBorder),
           ),
-          onSelected: onChanged,
-          itemBuilder: (context) => [
-            garageEngineTypeMenuItem(context, l10n, 'gasoline'),
-            garageEngineTypeMenuItem(context, l10n, 'diesel'),
-            garageEngineTypeMenuItem(context, l10n, 'hybrid'),
-            garageEngineTypeMenuItem(context, l10n, 'phev'),
-            garageEngineTypeMenuItem(context, l10n, 'electric'),
+          selectedValue: selectedValue.isEmpty ? null : selectedValue,
+          title: l10n.engineType,
+          textStyle: TextStyle(color: context.appColors.textPrimary),
+          onSelected: (value) => onChanged?.call(value),
+          items: [
+            for (final value in const [
+              'gasoline',
+              'diesel',
+              'hybrid',
+              'phev',
+              'electric',
+            ])
+              NativePickerItem(
+                value: value,
+                label: localizedGarageEngineType(l10n, value),
+              ),
           ],
           child: InputDecorator(
             decoration: InputDecoration(

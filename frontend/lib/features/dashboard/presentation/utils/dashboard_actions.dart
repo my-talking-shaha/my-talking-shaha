@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:frontend/core/ui/native_ui.dart';
 import 'package:frontend/features/dashboard/di/dashboard_providers.dart';
 import 'package:frontend/l10n/generated/app_localizations.dart';
 import 'package:go_router/go_router.dart';
@@ -28,10 +29,6 @@ abstract final class DashboardActions {
     await Clipboard.setData(ClipboardData(text: value));
     if (!context.mounted) return;
 
-    ScaffoldMessenger.of(context)
-      ..hideCurrentSnackBar()
-      ..showSnackBar(
-        SnackBar(content: Text(AppLocalizations.of(context).vinCopied)),
-      );
+    showNativeMessage(context, AppLocalizations.of(context).vinCopied);
   }
 }

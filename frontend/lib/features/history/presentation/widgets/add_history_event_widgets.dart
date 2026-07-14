@@ -318,7 +318,7 @@ final class _PhotoCard extends StatelessWidget {
               icon: isPicking
                   ? const SizedBox.square(
                       dimension: 18,
-                      child: CircularProgressIndicator(strokeWidth: 2),
+                      child: NativeActivityIndicator(strokeWidth: 2, radius: 9),
                     )
                   : const Icon(Icons.add_circle_outline, size: 18),
               label: Text(isPicking ? l10n.openingGallery : l10n.addPhoto),
@@ -390,7 +390,10 @@ final class _PhotoCard extends StatelessWidget {
                   icon: isPicking
                       ? const SizedBox.square(
                           dimension: 18,
-                          child: CircularProgressIndicator(strokeWidth: 2),
+                          child: NativeActivityIndicator(
+                            strokeWidth: 2,
+                            radius: 9,
+                          ),
                         )
                       : const Icon(
                           Icons.add_photo_alternate_outlined,

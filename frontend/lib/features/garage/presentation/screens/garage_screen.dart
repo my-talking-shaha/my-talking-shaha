@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:frontend/core/ui/native_ui.dart';
 import 'package:frontend/features/garage/di/garage_providers.dart';
 import 'package:frontend/features/garage/presentation/utils/garage_dialog_utils.dart';
 import 'package:frontend/features/garage/presentation/widgets/garage_empty_state.dart';
@@ -47,7 +48,7 @@ final class GarageScreen extends ConsumerWidget {
             },
           );
         },
-        loading: () => const Center(child: CircularProgressIndicator()),
+        loading: () => const Center(child: NativeActivityIndicator()),
         error: (error, _) => GarageErrorState(
           onRetry: () {
             unawaited(ref.read(garageControllerProvider.notifier).reload());

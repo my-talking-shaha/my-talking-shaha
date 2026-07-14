@@ -4,6 +4,7 @@ import 'package:frontend/app/localization/app_locale_controller.dart';
 import 'package:frontend/app/theme/app_palette.dart';
 import 'package:frontend/app/theme/app_theme.dart';
 import 'package:frontend/app/theme/app_theme_controller.dart';
+import 'package:frontend/core/ui/native_ui.dart';
 import 'package:frontend/features/auth/di/auth_providers.dart';
 import 'package:frontend/features/settings/presentation/common/settings_section.dart';
 import 'package:frontend/features/settings/presentation/common/settings_tile.dart';
@@ -105,7 +106,7 @@ final class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                 SettingsTile(
                   icon: Icons.notifications_none_rounded,
                   title: l10n.notifications,
-                  trailing: Switch(
+                  trailing: NativeSwitch(
                     value: _notificationsEnabled,
                     onChanged: (value) {
                       setState(() => _notificationsEnabled = value);

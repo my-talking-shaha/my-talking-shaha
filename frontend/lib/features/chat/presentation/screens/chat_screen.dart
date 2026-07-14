@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:frontend/core/ui/native_ui.dart';
 import 'package:frontend/features/chat/di/chat_providers.dart';
 import 'package:frontend/features/chat/presentation/utils/chat_screen_utils.dart';
 import 'package:frontend/features/chat/presentation/widgets/chat_loaded_body.dart';
@@ -45,11 +46,7 @@ final class _ChatScreenState extends ConsumerState<ChatScreen> {
 
       final errorMessage = next.value?.errorMessage;
       if (errorMessage != null && errorMessage.isNotEmpty) {
-        ScaffoldMessenger.of(context)
-          ..hideCurrentSnackBar()
-          ..showSnackBar(
-            SnackBar(content: Text(localizedChatError(l10n, errorMessage))),
-          );
+        showNativeMessage(context, localizedChatError(l10n, errorMessage));
       }
     });
 
