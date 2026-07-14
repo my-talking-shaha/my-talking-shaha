@@ -68,6 +68,16 @@ void main() {
             .dy,
       ),
     );
+    for (final key in ['live-trip-fab', 'add-history-event-fab']) {
+      final fab = tester.widget<FloatingActionButton>(
+        find.byKey(ValueKey(key)),
+      );
+      expect(fab.elevation, 0);
+      expect(fab.focusElevation, 0);
+      expect(fab.hoverElevation, 0);
+      expect(fab.highlightElevation, 0);
+      expect(fab.disabledElevation, 0);
+    }
     expect(find.byIcon(Icons.tune), findsNothing);
     expect(find.text('FUEL'), findsOneWidget);
     expect(find.text('CHARGE'), findsNothing);

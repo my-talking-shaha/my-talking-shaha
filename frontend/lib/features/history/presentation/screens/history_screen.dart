@@ -80,7 +80,11 @@ final class _HistoryScreenState extends ConsumerState<HistoryScreen> {
                 : l10n.startLiveTrip,
             backgroundColor: context.appColors.surfaceHighest,
             foregroundColor: context.appColors.primaryLight,
-            elevation: 8,
+            elevation: 0,
+            focusElevation: 0,
+            hoverElevation: 0,
+            highlightElevation: 0,
+            disabledElevation: 0,
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(AppRadius.lg),
               side: BorderSide(color: context.appColors.border),
@@ -106,7 +110,11 @@ final class _HistoryScreenState extends ConsumerState<HistoryScreen> {
             tooltip: l10n.addEvent,
             backgroundColor: context.appColors.primary,
             foregroundColor: context.appColors.onPrimary,
-            elevation: 8,
+            elevation: 0,
+            focusElevation: 0,
+            hoverElevation: 0,
+            highlightElevation: 0,
+            disabledElevation: 0,
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(AppRadius.lg),
             ),
@@ -211,6 +219,8 @@ final class _HistoryScreenState extends ConsumerState<HistoryScreen> {
         '/vehicle/${widget.vehicleId}/history/live',
       );
       if (!mounted || event == null) return;
+      await WidgetsBinding.instance.endOfFrame;
+      if (!mounted) return;
       _invalidateAfterHistoryMutation(affectsMileage: true);
       _showSuccessMessage(AppLocalizations.of(context).tripSaved);
     } on LiveTripAlreadyActiveException {

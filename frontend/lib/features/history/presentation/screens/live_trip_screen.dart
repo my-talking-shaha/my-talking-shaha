@@ -3,18 +3,13 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:frontend/app/providers/vehicle_mileage_provider.dart';
 import 'package:frontend/app/theme/app_palette.dart';
 import 'package:frontend/app/theme/app_theme.dart';
-import 'package:frontend/features/analytics/di/analytics_providers.dart';
-import 'package:frontend/features/dashboard/di/dashboard_providers.dart';
-import 'package:frontend/features/garage/di/garage_providers.dart';
 import 'package:frontend/features/history/di/history_providers.dart';
 import 'package:frontend/features/history/di/live_trip_providers.dart';
 import 'package:frontend/features/history/domain/entities/live_trip_session.dart';
 import 'package:frontend/features/history/domain/use_cases/create_live_trip_event.dart';
 import 'package:frontend/features/history/presentation/utils/history_event_form_utils.dart';
-import 'package:frontend/features/parts/di/parts_providers.dart';
 import 'package:frontend/l10n/generated/app_localizations.dart';
 import 'package:go_router/go_router.dart';
 
@@ -100,7 +95,6 @@ final class _LiveTripScreenState extends ConsumerState<LiveTripScreen> {
       } catch (_) {
         // The trip is already stored remotely; do not invite a duplicate save.
       }
-      _invalidateAfterTripSaved();
       if (mounted) context.pop(event);
     } on LiveTripMileageException {
       _showError(l10n.mileageAtLeastKm(session.startMileageKm));
@@ -109,16 +103,6 @@ final class _LiveTripScreenState extends ConsumerState<LiveTripScreen> {
     } finally {
       if (mounted) setState(() => _isFinishing = false);
     }
-  }
-
-  void _invalidateAfterTripSaved() {
-    final vehicleId = widget.vehicleId;
-    ref.invalidate(historyEventsProvider(vehicleId));
-    ref.invalidate(garageControllerProvider);
-    ref.invalidate(vehicleMileageProvider(vehicleId));
-    ref.invalidate(vehicleDashboardProvider(vehicleId));
-    ref.invalidate(vehiclePartsProvider(vehicleId));
-    ref.invalidate(analyticsSummaryProvider);
   }
 
   void _showError(String message) {
@@ -151,7 +135,7 @@ final class _LiveTripContent extends StatelessWidget {
     return ListView(
       padding: const EdgeInsets.fromLTRB(
         AppSpacing.xl,
-        AppSpacing.lg,
+        AppSpacing.xxxl,
         AppSpacing.xl,
         AppSpacing.xxl,
       ),
@@ -212,7 +196,12 @@ final class _LiveTripContent extends StatelessWidget {
                     session.startedAt,
                   ),
                 ),
-                const Divider(height: AppSpacing.xl),
+                Divider(
+                  height: AppSpacing.xl,
+                  thickness: 1,
+                  indent: 24 + AppSpacing.md,
+                  color: colors.border.withValues(alpha: 0.72),
+                ),
                 _TripMetricRow(
                   icon: Icons.speed_rounded,
                   label: l10n.startMileageLabel,
@@ -231,20 +220,19 @@ final class _LiveTripContent extends StatelessWidget {
           ).textTheme.bodySmall?.copyWith(color: colors.textMuted),
         ),
         const SizedBox(height: AppSpacing.xxl),
-        ElevatedButton.icon(
+        ElevatedButton(
           key: const ValueKey('finish-live-trip'),
           onPressed: isFinishing ? null : onFinish,
-          icon: isFinishing
-              ? const SizedBox.square(
-                  dimension: 18,
-                  child: CircularProgressIndicator(strokeWidth: 2),
-                )
-              : const Icon(Icons.stop_circle_outlined),
-          label: Text(l10n.finishTrip),
           style: ElevatedButton.styleFrom(
             backgroundColor: colors.error,
             foregroundColor: Colors.white,
           ),
+          child: isFinishing
+              ? const SizedBox.square(
+                  dimension: 18,
+                  child: CircularProgressIndicator(strokeWidth: 2),
+                )
+              : Text(l10n.finishTrip),
         ),
       ],
     );
