@@ -33,7 +33,7 @@ public class ChatIntentResolver {
         if (isAnalyticsQuestion(text)) {
             return decision(ChatIntent.ASK_ANALYTICS, language);
         }
-        if (matches(text, "fuel", "refuel", "gas", "petrol", "заправ", "бенз", "топлив", "залил", "залила")) {
+        if (isRefuelRecordingIntent(text)) {
             return decision(ChatIntent.OPEN_REFUEL_FORM, language);
         }
         if (matches(text, "trip", "drive", "drove", "route",
@@ -95,6 +95,15 @@ public class ChatIntentResolver {
                 || text.contains("аналит")
                 || text.contains("пробег");
         return asksQuestion && asksAnalytics;
+    }
+
+    private boolean isRefuelRecordingIntent(String text) {
+        return matches(text,
+                "add refuel", "record refuel", "new refuel", "i refueled", "refueled", "refuled",
+                "filled up", "filled the tank", "bought gas", "bought petrol",
+                "добавить заправку", "записать заправку", "новая заправка",
+                "заправил", "заправила", "заправился", "заправилась", "заправлял", "заправляла",
+                "залил", "залила", "залился", "залилась");
     }
 
     private boolean isHighPriorityLocalIntent(ChatIntent intent) {
