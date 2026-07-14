@@ -30,8 +30,6 @@ public class MaintenanceEvent extends BaseEvent {
     @Column(precision = 10, scale = 2)
     private BigDecimal cost;
 
-    @ElementCollection(fetch = FetchType.LAZY)
-    @CollectionTable(name = "event_photos", joinColumns = @JoinColumn(name = "event_id"))
-    @Column(name = "photo_url", nullable = false, length = 500)
-    private List<String> photoUrls = new ArrayList<>();
+    @OneToMany(mappedBy = "event", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
+    private List<EventPhoto> photos = new ArrayList<>();
 }

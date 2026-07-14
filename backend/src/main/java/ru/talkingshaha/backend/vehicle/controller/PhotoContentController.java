@@ -15,16 +15,21 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import ru.talkingshaha.backend.common.error.ApiError;
+import ru.talkingshaha.backend.common.error.ResourceNotFoundException;
+import ru.talkingshaha.backend.common.storage.PhotoContent;
+import ru.talkingshaha.backend.timeline.service.EventPhotoService;
 import ru.talkingshaha.backend.vehicle.service.VehiclePhotoService;
 
 @RestController
 @RequestMapping("/api/v1/photos")
 public class PhotoContentController {
 
-    private final VehiclePhotoService photos;
+    private final VehiclePhotoService vehiclePhotos;
+    private final EventPhotoService eventPhotos;
 
-    public PhotoContentController(VehiclePhotoService photos) {
-        this.photos = photos;
+    public PhotoContentController(VehiclePhotoService vehiclePhotos, EventPhotoService eventPhotos) {
+        this.vehiclePhotos = vehiclePhotos;
+        this.eventPhotos = eventPhotos;
     }
 
     @Operation(summary = "Get photo content", security = {})
@@ -34,7 +39,9 @@ public class PhotoContentController {
             content = @Content(schema = @Schema(implementation = ApiError.class)))
     @GetMapping("/{photoId}")
     public ResponseEntity<Resource> photoContent(@PathVariable UUID photoId) {
-        VehiclePhotoService.PhotoContent content = photos.photoContent(photoId);
+        PhotoContent content = vehiclePhotos.photoContent(photoId)
+                .or(() -> eventPhotos.photoContent(photoId))
+                .orElseThrow(() -> new ResourceNotFoundException("Photo not found"));
         return ResponseEntity.ok()
                 .contentType(content.contentType())
                 .cacheControl(CacheControl.maxAge(365, TimeUnit.DAYS).cachePublic().immutable())

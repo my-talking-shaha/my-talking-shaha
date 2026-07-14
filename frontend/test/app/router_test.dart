@@ -31,8 +31,11 @@ import 'package:frontend/features/garage/domain/entities/vehicle_draft.dart';
 import 'package:frontend/features/history/data/datasources/history_datasource.dart';
 import 'package:frontend/features/history/data/datasources/mock_history_datasource.dart';
 import 'package:frontend/features/history/di/history_providers.dart';
+import 'package:frontend/features/history/di/live_trip_providers.dart';
 import 'package:frontend/features/history/domain/entities/history_event.dart';
 import 'package:frontend/features/history/domain/entities/history_event_type.dart';
+import 'package:frontend/features/history/domain/entities/live_trip_session.dart';
+import 'package:frontend/features/history/domain/repositories/live_trip_repository.dart';
 import 'package:frontend/features/history/presentation/screens/add_history_event_screen.dart';
 import 'package:frontend/features/parts/di/parts_providers.dart';
 import 'package:frontend/features/parts/domain/entities/vehicle_part.dart';
@@ -40,6 +43,15 @@ import 'package:frontend/l10n/generated/app_localizations.dart';
 import 'package:go_router/go_router.dart';
 
 void main() {
+  testWidgets('restores an active trip from the app root', (tester) async {
+    final liveTripRepository = _RecordingLiveTripRepository();
+
+    await _pumpApp(tester, liveTripRepository: liveTripRepository);
+
+    expect(liveTripRepository.restoreCalls, 1);
+    expect(tester.takeException(), isNull);
+  });
+
   testWidgets('auth loading route times out to login when restore hangs', (
     tester,
   ) async {
@@ -307,7 +319,8 @@ void main() {
       initialLocation: '/vehicle/096c10bb-13d1-4599-9109-e9e79789ea88/history',
     );
 
-    await tester.tap(find.byType(FloatingActionButton));
+    final fabFinder = find.widgetWithIcon(FloatingActionButton, Icons.add);
+    tester.widget<FloatingActionButton>(fabFinder).onPressed?.call();
     await tester.pump();
     await tester.pumpAndSettle();
 
@@ -361,7 +374,7 @@ void main() {
       historyDatasource: historyDatasource,
     );
 
-    await tester.tap(find.byType(FloatingActionButton));
+    await tester.tap(find.byTooltip('Add event'));
     await tester.pumpAndSettle();
 
     await tester.enterText(
@@ -383,8 +396,8 @@ void main() {
     tester.widget<ElevatedButton>(saveButton).onPressed?.call();
     await tester.pumpAndSettle();
 
-    final fabFinder = find.byType(FloatingActionButton);
-    tester.widget<FloatingActionButton>(fabFinder).onPressed?.call();
+    final addEventFab = find.widgetWithIcon(FloatingActionButton, Icons.add);
+    tester.widget<FloatingActionButton>(addEventFab).onPressed?.call();
     await tester.pumpAndSettle();
 
     final screen = tester.widget<AddHistoryEventScreen>(
@@ -408,6 +421,7 @@ Future<_TestApp> _pumpApp(
   ChatRepository? chatRepository,
   GarageDatasource? garageDatasource,
   HistoryDatasource? historyDatasource,
+  LiveTripRepository liveTripRepository = const _EmptyLiveTripRepository(),
   bool settle = true,
 }) async {
   final resolvedGarageDatasource =
@@ -421,6 +435,7 @@ Future<_TestApp> _pumpApp(
         chatRepositoryProvider.overrideWithValue(chatRepository),
       garageDatasourceProvider.overrideWithValue(resolvedGarageDatasource),
       historyDatasourceProvider.overrideWithValue(resolvedHistoryDatasource),
+      liveTripRepositoryProvider.overrideWithValue(liveTripRepository),
       historyPhotoReaderProvider.overrideWithValue(null),
       vehicleDashboardProvider.overrideWith((ref, vehicleId) {
         return _dashboardData(vehicleId);
@@ -470,6 +485,29 @@ final class _TestApp {
 
   final GoRouter router;
   final ProviderContainer container;
+}
+
+base class _EmptyLiveTripRepository implements LiveTripRepository {
+  const _EmptyLiveTripRepository();
+
+  @override
+  Future<void> end() async {}
+
+  @override
+  Future<LiveTripSession?> restore() async => null;
+
+  @override
+  Future<void> start(LiveTripSession session) async {}
+}
+
+final class _RecordingLiveTripRepository extends _EmptyLiveTripRepository {
+  int restoreCalls = 0;
+
+  @override
+  Future<LiveTripSession?> restore() async {
+    restoreCalls++;
+    return null;
+  }
 }
 
 final class _ActionChatRepository implements ChatRepository {
@@ -551,9 +589,10 @@ final class _MileageUpdatingHistoryDatasource implements HistoryDatasource {
   }
 
   @override
-  Future<void> addEvent(HistoryEvent event) async {
+  Future<String> addEvent(HistoryEvent event) async {
     _events.add(event);
     garageDatasource.mileageKm = event.currentMileageKm;
+    return event.id;
   }
 
   @override

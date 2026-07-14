@@ -18,10 +18,12 @@ import ru.talkingshaha.backend.chat.repository.ChatSessionRepository;
 import ru.talkingshaha.backend.part.dto.PartResponse;
 import ru.talkingshaha.backend.part.model.PartStatus;
 import ru.talkingshaha.backend.part.repository.PartRepository;
+import ru.talkingshaha.backend.timeline.model.EventPhoto;
 import ru.talkingshaha.backend.timeline.model.MaintenanceEvent;
 import ru.talkingshaha.backend.timeline.model.RefuelEvent;
 import ru.talkingshaha.backend.timeline.model.TimelineEventType;
 import ru.talkingshaha.backend.timeline.model.TripEvent;
+import ru.talkingshaha.backend.timeline.service.EventPhotoService;
 import ru.talkingshaha.backend.user.model.AppUser;
 import ru.talkingshaha.backend.user.service.CurrentUserService;
 import org.springframework.util.StringUtils;
@@ -44,6 +46,7 @@ public class VehicleService {
     private final VehicleRepository vehicles;
     private final VehiclePhotoRepository photos;
     private final PhotoStorageService photoStorage;
+    private final EventPhotoService eventPhotoService;
     private final PartRepository parts;
     private final TimelineEventRepository events;
     private final ChatSessionRepository chatSessions;
@@ -55,6 +58,7 @@ public class VehicleService {
             VehicleRepository vehicles,
             VehiclePhotoRepository photos,
             PhotoStorageService photoStorage,
+            EventPhotoService eventPhotoService,
             PartRepository parts,
             TimelineEventRepository events,
             ChatSessionRepository chatSessions,
@@ -64,6 +68,7 @@ public class VehicleService {
         this.vehicles = vehicles;
         this.photos = photos;
         this.photoStorage = photoStorage;
+        this.eventPhotoService = eventPhotoService;
         this.parts = parts;
         this.events = events;
         this.chatSessions = chatSessions;
@@ -116,7 +121,13 @@ public class VehicleService {
     @Transactional
     public void deleteVehicle(UUID vehicleId) {
         Vehicle vehicle = requireOwnedVehicle(vehicleId);
-        events.deleteAll(events.findAllByVehicleOrderByEventDateTimeDesc(vehicle));
+        List<BaseEvent> vehicleEvents = events.findAllByVehicleOrderByEventDateTimeDesc(vehicle);
+        List<EventPhoto> eventPhotoRows = vehicleEvents.stream()
+                .filter(MaintenanceEvent.class::isInstance)
+                .map(MaintenanceEvent.class::cast)
+                .flatMap(maintenance -> maintenance.getPhotos().stream())
+                .toList();
+        events.deleteAll(vehicleEvents);
         chatSessions.findByVehicle(vehicle).ifPresent(session -> {
             chatMessages.deleteAll(chatMessages.findAllBySessionOrderByCreatedAtAsc(session));
             chatSessions.delete(session);
@@ -125,6 +136,7 @@ public class VehicleService {
         List<VehiclePhoto> vehiclePhotos = photos.findAllByVehicleOrderByCreatedAtAscIdAsc(vehicle);
         photos.deleteAll(vehiclePhotos);
         vehiclePhotos.forEach(photo -> photoStorage.delete(photo.getFileName()));
+        eventPhotoService.deleteFiles(eventPhotoRows);
         vehicles.delete(vehicle);
     }
 

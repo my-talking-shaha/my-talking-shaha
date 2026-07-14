@@ -5,6 +5,7 @@ import 'package:frontend/app/localization/app_locale_controller.dart';
 import 'package:frontend/app/router.dart';
 import 'package:frontend/app/theme/app_theme.dart';
 import 'package:frontend/app/theme/app_theme_controller.dart';
+import 'package:frontend/features/history/di/live_trip_providers.dart';
 import 'package:frontend/l10n/generated/app_localizations.dart';
 
 class CarApp extends ConsumerWidget {
@@ -12,6 +13,10 @@ class CarApp extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    // Keep restoration subscribed above route TickerModes. Riverpod 3.3.2 can
+    // otherwise resume this async provider chain while a route is building.
+    ref.listen(liveTripControllerProvider, (_, _) {});
+
     final router = ref.watch(routerProvider);
     final themeMode =
         ref
