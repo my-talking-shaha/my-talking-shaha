@@ -432,6 +432,64 @@ class AppLocalizationsEn extends AppLocalizations {
   String get addEvent => 'Add event';
 
   @override
+  String get startLiveTrip => 'Start live trip';
+
+  @override
+  String get resumeLiveTrip => 'Resume live trip';
+
+  @override
+  String get liveTrip => 'Live trip';
+
+  @override
+  String get tripInProgress => 'Trip in progress';
+
+  @override
+  String get startedAtLabel => 'Started';
+
+  @override
+  String get startMileageLabel => 'Start mileage';
+
+  @override
+  String get liveTripHint =>
+      'The timer continues while the app is in the background. Enter the final odometer reading when you finish.';
+
+  @override
+  String get finishTrip => 'Finish trip';
+
+  @override
+  String get finishTripDescription =>
+      'Check the final odometer reading before saving the trip.';
+
+  @override
+  String get endMileageLabel => 'End mileage';
+
+  @override
+  String get routeOptional => 'Route (optional)';
+
+  @override
+  String get finishAndSaveTrip => 'Finish and save';
+
+  @override
+  String get activeTripForAnotherVehicle =>
+      'A trip is already active for another vehicle.';
+
+  @override
+  String get couldNotStartTrip => 'Could not start the trip. Try again.';
+
+  @override
+  String get couldNotFinishTrip =>
+      'Could not save the trip. Check the connection and try again.';
+
+  @override
+  String get noActiveTrip => 'There is no active trip.';
+
+  @override
+  String get backToHistory => 'Back to history';
+
+  @override
+  String get tripSaved => 'Trip saved.';
+
+  @override
   String get searchHistory => 'Search history…';
 
   @override

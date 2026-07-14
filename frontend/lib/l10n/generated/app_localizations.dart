@@ -920,6 +920,114 @@ abstract class AppLocalizations {
   /// **'Add event'**
   String get addEvent;
 
+  /// No description provided for @startLiveTrip.
+  ///
+  /// In en, this message translates to:
+  /// **'Start live trip'**
+  String get startLiveTrip;
+
+  /// No description provided for @resumeLiveTrip.
+  ///
+  /// In en, this message translates to:
+  /// **'Resume live trip'**
+  String get resumeLiveTrip;
+
+  /// No description provided for @liveTrip.
+  ///
+  /// In en, this message translates to:
+  /// **'Live trip'**
+  String get liveTrip;
+
+  /// No description provided for @tripInProgress.
+  ///
+  /// In en, this message translates to:
+  /// **'Trip in progress'**
+  String get tripInProgress;
+
+  /// No description provided for @startedAtLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Started'**
+  String get startedAtLabel;
+
+  /// No description provided for @startMileageLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Start mileage'**
+  String get startMileageLabel;
+
+  /// No description provided for @liveTripHint.
+  ///
+  /// In en, this message translates to:
+  /// **'The timer continues while the app is in the background. Enter the final odometer reading when you finish.'**
+  String get liveTripHint;
+
+  /// No description provided for @finishTrip.
+  ///
+  /// In en, this message translates to:
+  /// **'Finish trip'**
+  String get finishTrip;
+
+  /// No description provided for @finishTripDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Check the final odometer reading before saving the trip.'**
+  String get finishTripDescription;
+
+  /// No description provided for @endMileageLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'End mileage'**
+  String get endMileageLabel;
+
+  /// No description provided for @routeOptional.
+  ///
+  /// In en, this message translates to:
+  /// **'Route (optional)'**
+  String get routeOptional;
+
+  /// No description provided for @finishAndSaveTrip.
+  ///
+  /// In en, this message translates to:
+  /// **'Finish and save'**
+  String get finishAndSaveTrip;
+
+  /// No description provided for @activeTripForAnotherVehicle.
+  ///
+  /// In en, this message translates to:
+  /// **'A trip is already active for another vehicle.'**
+  String get activeTripForAnotherVehicle;
+
+  /// No description provided for @couldNotStartTrip.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not start the trip. Try again.'**
+  String get couldNotStartTrip;
+
+  /// No description provided for @couldNotFinishTrip.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not save the trip. Check the connection and try again.'**
+  String get couldNotFinishTrip;
+
+  /// No description provided for @noActiveTrip.
+  ///
+  /// In en, this message translates to:
+  /// **'There is no active trip.'**
+  String get noActiveTrip;
+
+  /// No description provided for @backToHistory.
+  ///
+  /// In en, this message translates to:
+  /// **'Back to history'**
+  String get backToHistory;
+
+  /// No description provided for @tripSaved.
+  ///
+  /// In en, this message translates to:
+  /// **'Trip saved.'**
+  String get tripSaved;
+
   /// No description provided for @searchHistory.
   ///
   /// In en, this message translates to:

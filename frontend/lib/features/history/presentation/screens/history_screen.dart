@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import 'package:frontend/app/providers/vehicle_mileage_provider.dart';
 import 'package:frontend/app/theme/app_palette.dart';
 import 'package:frontend/app/theme/app_theme.dart';
@@ -10,8 +11,10 @@ import 'package:frontend/features/analytics/domain/entities/analytics_period.dar
 import 'package:frontend/features/dashboard/di/dashboard_providers.dart';
 import 'package:frontend/features/garage/di/garage_providers.dart';
 import 'package:frontend/features/history/di/history_providers.dart';
+import 'package:frontend/features/history/di/live_trip_providers.dart';
 import 'package:frontend/features/history/domain/entities/history_event.dart';
 import 'package:frontend/features/history/domain/entities/history_event_type.dart';
+import 'package:frontend/features/history/presentation/controllers/live_trip_controller.dart';
 import 'package:frontend/features/history/presentation/utils/history_timeline_utils.dart';
 import 'package:frontend/features/history/presentation/widgets/event_card.dart';
 import 'package:frontend/features/parts/di/parts_providers.dart';
@@ -50,6 +53,8 @@ final class _HistoryScreenState extends ConsumerState<HistoryScreen> {
       data: HistoryTimelineUtils.isElectricEngine,
       orElse: () => false,
     );
+    final liveTripState = ref.watch(liveTripControllerProvider);
+    final activeTrip = liveTripState.value;
 
     return Scaffold(
       appBar: AppBar(
@@ -63,25 +68,51 @@ final class _HistoryScreenState extends ConsumerState<HistoryScreen> {
             : null,
         title: Text(l10n.maintenanceHistory),
       ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () async {
-          final event = await context.push<HistoryEvent>(
-            '/vehicle/${widget.vehicleId}/history/add',
-          );
-          if (!mounted) return;
-          if (event != null) {
-            _invalidateAfterHistoryMutation(affectsMileage: true);
-            _showSuccessMessage(l10n.eventAdded);
-          }
-        },
-        tooltip: l10n.addEvent,
-        backgroundColor: context.appColors.primary,
-        foregroundColor: context.appColors.onPrimary,
-        elevation: 8,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(AppRadius.lg),
-        ),
-        child: const Icon(Icons.add, size: 30),
+      floatingActionButton: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          FloatingActionButton(
+            key: const ValueKey('live-trip-fab'),
+            heroTag: 'live-trip-${widget.vehicleId}',
+            onPressed: liveTripState.isLoading ? null : _openLiveTrip,
+            tooltip: activeTrip?.vehicleId == widget.vehicleId
+                ? l10n.resumeLiveTrip
+                : l10n.startLiveTrip,
+            backgroundColor: context.appColors.surfaceHighest,
+            foregroundColor: context.appColors.primaryLight,
+            elevation: 8,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(AppRadius.lg),
+              side: BorderSide(color: context.appColors.border),
+            ),
+            child: SvgPicture.asset(
+              'assets/icons/events/trip.svg',
+              key: const ValueKey('live-trip-fab-icon'),
+              width: 25,
+              height: 25,
+              colorFilter: ColorFilter.mode(
+                activeTrip?.vehicleId == widget.vehicleId
+                    ? context.appColors.success
+                    : context.appColors.primaryLight,
+                BlendMode.srcIn,
+              ),
+            ),
+          ),
+          const SizedBox(height: AppSpacing.md),
+          FloatingActionButton(
+            key: const ValueKey('add-history-event-fab'),
+            heroTag: 'add-history-event-${widget.vehicleId}',
+            onPressed: _addEvent,
+            tooltip: l10n.addEvent,
+            backgroundColor: context.appColors.primary,
+            foregroundColor: context.appColors.onPrimary,
+            elevation: 8,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(AppRadius.lg),
+            ),
+            child: const Icon(Icons.add, size: 30),
+          ),
+        ],
       ),
       body: SafeArea(
         top: false,
@@ -138,6 +169,55 @@ final class _HistoryScreenState extends ConsumerState<HistoryScreen> {
         ),
       ),
     );
+  }
+
+  Future<void> _addEvent() async {
+    final event = await context.push<HistoryEvent>(
+      '/vehicle/${widget.vehicleId}/history/add',
+    );
+    if (!mounted) return;
+    if (event != null) {
+      _invalidateAfterHistoryMutation(affectsMileage: true);
+      _showSuccessMessage(AppLocalizations.of(context).eventAdded);
+    }
+  }
+
+  Future<void> _openLiveTrip() async {
+    final l10n = AppLocalizations.of(context);
+    try {
+      final activeTrip = ref.read(liveTripControllerProvider).value;
+      if (activeTrip != null && activeTrip.vehicleId != widget.vehicleId) {
+        _showSuccessMessage(l10n.activeTripForAnotherVehicle);
+        return;
+      }
+
+      if (activeTrip == null) {
+        final vehicles = await ref.read(garageControllerProvider.future);
+        final vehicle = vehicles.firstWhere(
+          (candidate) => candidate.id == widget.vehicleId,
+        );
+        final vehicleName = '${vehicle.brand} ${vehicle.model}'.trim();
+        await ref
+            .read(liveTripControllerProvider.notifier)
+            .start(
+              vehicleId: widget.vehicleId,
+              vehicleName: vehicleName,
+              startMileageKm: vehicle.currentMileageKm,
+            );
+      }
+
+      if (!mounted) return;
+      final event = await context.push<HistoryEvent>(
+        '/vehicle/${widget.vehicleId}/history/live',
+      );
+      if (!mounted || event == null) return;
+      _invalidateAfterHistoryMutation(affectsMileage: true);
+      _showSuccessMessage(AppLocalizations.of(context).tripSaved);
+    } on LiveTripAlreadyActiveException {
+      _showSuccessMessage(l10n.activeTripForAnotherVehicle);
+    } catch (_) {
+      _showSuccessMessage(l10n.couldNotStartTrip);
+    }
   }
 
   bool get _hasFilters => _query.isNotEmpty || _selectedType != null;

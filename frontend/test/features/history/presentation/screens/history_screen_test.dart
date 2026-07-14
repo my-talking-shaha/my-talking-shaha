@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:frontend/app/providers/vehicle_mileage_provider.dart';
 import 'package:frontend/app/theme/app_theme.dart';
@@ -41,6 +42,32 @@ void main() {
     expect(find.text('Refueling AI-95'), findsOneWidget);
     expect(find.text('Oil and filter change'), findsOneWidget);
     expect(find.byTooltip('Add event'), findsOneWidget);
+    expect(find.byTooltip('Start live trip'), findsOneWidget);
+    final fabColumn = tester.widget<Column>(
+      find
+          .ancestor(
+            of: find.byKey(const ValueKey('live-trip-fab-icon')),
+            matching: find.byType(Column),
+          )
+          .first,
+    );
+    expect(fabColumn.mainAxisSize, MainAxisSize.min);
+    final tripIcon = tester.widget<SvgPicture>(
+      find.byKey(const ValueKey('live-trip-fab-icon')),
+    );
+    expect(tripIcon.bytesLoader, isA<SvgAssetLoader>());
+    expect(
+      (tripIcon.bytesLoader as SvgAssetLoader).assetName,
+      'assets/icons/events/trip.svg',
+    );
+    expect(
+      tester.getTopLeft(find.byKey(const ValueKey('live-trip-fab'))).dy,
+      lessThan(
+        tester
+            .getTopLeft(find.byKey(const ValueKey('add-history-event-fab')))
+            .dy,
+      ),
+    );
     expect(find.byIcon(Icons.tune), findsNothing);
     expect(find.text('FUEL'), findsOneWidget);
     expect(find.text('CHARGE'), findsNothing);

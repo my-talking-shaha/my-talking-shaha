@@ -430,6 +430,65 @@ class AppLocalizationsRu extends AppLocalizations {
   String get addEvent => 'Добавить событие';
 
   @override
+  String get startLiveTrip => 'Начать поездку';
+
+  @override
+  String get resumeLiveTrip => 'Вернуться к поездке';
+
+  @override
+  String get liveTrip => 'Поездка в эфире';
+
+  @override
+  String get tripInProgress => 'Поездка продолжается';
+
+  @override
+  String get startedAtLabel => 'Начало';
+
+  @override
+  String get startMileageLabel => 'Пробег на старте';
+
+  @override
+  String get liveTripHint =>
+      'Таймер продолжит идти в фоне. После поездки укажите итоговый пробег одометра.';
+
+  @override
+  String get finishTrip => 'Завершить поездку';
+
+  @override
+  String get finishTripDescription =>
+      'Проверьте итоговый пробег перед сохранением поездки.';
+
+  @override
+  String get endMileageLabel => 'Пробег на финише';
+
+  @override
+  String get routeOptional => 'Маршрут (необязательно)';
+
+  @override
+  String get finishAndSaveTrip => 'Завершить и сохранить';
+
+  @override
+  String get activeTripForAnotherVehicle =>
+      'Для другого автомобиля уже идёт поездка.';
+
+  @override
+  String get couldNotStartTrip =>
+      'Не удалось начать поездку. Попробуйте снова.';
+
+  @override
+  String get couldNotFinishTrip =>
+      'Не удалось сохранить поездку. Проверьте соединение и попробуйте снова.';
+
+  @override
+  String get noActiveTrip => 'Активной поездки нет.';
+
+  @override
+  String get backToHistory => 'Вернуться в историю';
+
+  @override
+  String get tripSaved => 'Поездка сохранена.';
+
+  @override
   String get searchHistory => 'Поиск по истории…';
 
   @override
