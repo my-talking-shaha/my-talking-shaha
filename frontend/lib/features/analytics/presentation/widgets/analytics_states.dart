@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:frontend/app/theme/app_palette.dart';
 import 'package:frontend/app/theme/app_theme.dart';
+import 'package:frontend/core/ui/native_ui.dart';
 import 'package:frontend/features/analytics/domain/entities/analytics_summary.dart';
 import 'package:frontend/features/analytics/presentation/utils/analytics_interactions.dart';
 import 'package:frontend/l10n/generated/app_localizations.dart';
@@ -105,7 +106,7 @@ final class AnalyticsLoadingState extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const Center(child: CircularProgressIndicator());
+    return const Center(child: NativeActivityIndicator());
   }
 }
 

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:frontend/core/ui/native_ui.dart';
 import 'package:frontend/features/dashboard/di/dashboard_providers.dart';
 import 'package:frontend/features/dashboard/presentation/utils/dashboard_actions.dart';
 import 'package:frontend/features/dashboard/presentation/widgets/dashboard_content.dart';
@@ -36,7 +37,7 @@ final class DashboardScreen extends ConsumerWidget {
       ),
       body: dashboardState.when(
         data: (dashboard) => DashboardContent(dashboard: dashboard),
-        loading: () => const Center(child: CircularProgressIndicator()),
+        loading: () => const Center(child: NativeActivityIndicator()),
         error: (error, stackTrace) => DashboardUnavailable(
           message: l10n.couldNotLoadDashboard,
           onAction: () => DashboardActions.retry(ref, vehicleId),

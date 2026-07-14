@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:frontend/app/theme/app_theme.dart';
+import 'package:frontend/core/ui/native_ui.dart';
 
 final class AuthPrimaryButton extends StatelessWidget {
   const AuthPrimaryButton({
@@ -24,7 +25,7 @@ final class AuthPrimaryButton extends StatelessWidget {
         child: isLoading
             ? const SizedBox.square(
                 dimension: 20,
-                child: CircularProgressIndicator(strokeWidth: 2.4),
+                child: NativeActivityIndicator(strokeWidth: 2.4),
               )
             : Row(
                 mainAxisAlignment: MainAxisAlignment.center,

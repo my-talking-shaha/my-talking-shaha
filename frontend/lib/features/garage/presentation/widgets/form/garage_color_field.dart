@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:frontend/app/theme/app_palette.dart';
+import 'package:frontend/core/ui/native_ui.dart';
 import 'package:frontend/features/garage/presentation/utils/garage_form_utils.dart';
 import 'package:frontend/features/garage/presentation/utils/garage_input_decoration.dart';
 import 'package:frontend/features/garage/presentation/widgets/common/garage_field_label.dart';
@@ -78,42 +79,14 @@ final class GarageColorField extends StatelessWidget {
                 );
               },
           optionsViewBuilder: (context, onSelected, options) {
-            return Align(
-              alignment: Alignment.topLeft,
-              child: Material(
-                color: context.appColors.formField,
-                elevation: 8,
-                borderRadius: BorderRadius.circular(8),
-                child: ConstrainedBox(
-                  constraints: const BoxConstraints(
-                    maxHeight: 220,
-                    maxWidth: 480,
-                  ),
-                  child: ListView.builder(
-                    padding: EdgeInsets.zero,
-                    shrinkWrap: true,
-                    itemCount: options.length,
-                    itemBuilder: (context, index) {
-                      final color = options.elementAt(index);
-                      return InkWell(
-                        onTap: () => onSelected(color),
-                        child: Padding(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 16,
-                            vertical: 14,
-                          ),
-                          child: Text(
-                            localizedGarageVehicleColor(l10n, color),
-                            style: TextStyle(
-                              color: context.appColors.textPrimary,
-                              fontSize: 16,
-                            ),
-                          ),
-                        ),
-                      );
-                    },
-                  ),
-                ),
+            return NativeAutocompleteOptions<String>(
+              options: options,
+              labelBuilder: (color) => localizedGarageVehicleColor(l10n, color),
+              onSelected: onSelected,
+              backgroundColor: context.appColors.formField,
+              textStyle: TextStyle(
+                color: context.appColors.textPrimary,
+                fontSize: 16,
               ),
             );
           },

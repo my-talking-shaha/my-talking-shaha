@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:frontend/core/ui/native_ui.dart';
 import 'package:frontend/features/notifications/di/notifications_providers.dart';
 import 'package:frontend/features/notifications/presentation/common/notification_centered_text.dart';
 import 'package:frontend/features/notifications/presentation/common/notification_error_state.dart';
@@ -29,7 +30,7 @@ final class NotificationDetailsScreen extends ConsumerWidget {
 
             return NotificationDetailsContent(notification: notification);
           },
-          loading: () => const Center(child: CircularProgressIndicator()),
+          loading: () => const Center(child: NativeActivityIndicator()),
           error: (error, stackTrace) => NotificationErrorState(
             title: l10n.networkError,
             retryLabel: l10n.retry,

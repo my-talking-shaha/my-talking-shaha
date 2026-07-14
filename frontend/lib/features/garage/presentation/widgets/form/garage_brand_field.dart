@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:frontend/app/theme/app_palette.dart';
+import 'package:frontend/core/ui/native_ui.dart';
 import 'package:frontend/features/garage/presentation/utils/garage_input_decoration.dart';
 import 'package:frontend/features/garage/presentation/widgets/common/garage_field_label.dart';
 import 'package:frontend/l10n/generated/app_localizations.dart';
@@ -74,9 +75,15 @@ final class GarageBrandField extends StatelessWidget {
                 );
               },
           optionsViewBuilder: (context, onSelected, options) {
-            return _GarageAutocompleteOptions(
+            return NativeAutocompleteOptions<String>(
               options: options,
+              labelBuilder: (brand) => brand,
               onSelected: onSelected,
+              backgroundColor: context.appColors.formField,
+              textStyle: TextStyle(
+                color: context.appColors.textPrimary,
+                fontSize: 16,
+              ),
             );
           },
         ),
@@ -104,7 +111,7 @@ final class _GarageBrandSuffixIcon extends StatelessWidget {
         child: SizedBox(
           width: 18,
           height: 18,
-          child: CircularProgressIndicator(strokeWidth: 2),
+          child: NativeActivityIndicator(strokeWidth: 2, radius: 9),
         ),
       );
     }
@@ -117,54 +124,5 @@ final class _GarageBrandSuffixIcon extends StatelessWidget {
     }
 
     return Icon(Icons.search, color: context.appColors.primaryLight);
-  }
-}
-
-final class _GarageAutocompleteOptions extends StatelessWidget {
-  const _GarageAutocompleteOptions({
-    required this.options,
-    required this.onSelected,
-  });
-
-  final Iterable<String> options;
-  final AutocompleteOnSelected<String> onSelected;
-
-  @override
-  Widget build(BuildContext context) {
-    return Align(
-      alignment: Alignment.topLeft,
-      child: Material(
-        color: context.appColors.formField,
-        elevation: 8,
-        borderRadius: BorderRadius.circular(8),
-        child: ConstrainedBox(
-          constraints: const BoxConstraints(maxHeight: 220, maxWidth: 480),
-          child: ListView.builder(
-            padding: EdgeInsets.zero,
-            shrinkWrap: true,
-            itemCount: options.length,
-            itemBuilder: (context, index) {
-              final brand = options.elementAt(index);
-              return InkWell(
-                onTap: () => onSelected(brand),
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 16,
-                    vertical: 14,
-                  ),
-                  child: Text(
-                    brand,
-                    style: TextStyle(
-                      color: context.appColors.textPrimary,
-                      fontSize: 16,
-                    ),
-                  ),
-                ),
-              );
-            },
-          ),
-        ),
-      ),
-    );
   }
 }

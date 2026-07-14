@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:frontend/app/theme/app_palette.dart';
 import 'package:frontend/app/theme/app_theme.dart';
+import 'package:frontend/core/ui/native_ui.dart';
 import 'package:frontend/features/analytics/domain/entities/analytics_period.dart';
 import 'package:frontend/features/analytics/presentation/utils/analytics_formatters.dart';
 import 'package:frontend/features/analytics/presentation/utils/analytics_labels.dart';
@@ -143,19 +144,22 @@ final class AnalyticsMileageFilterDropdown<T> extends StatelessWidget {
     required this.value,
     required this.items,
     required this.onChanged,
+    this.title,
     super.key,
   });
 
   final T value;
-  final List<DropdownMenuItem<T>> items;
+  final List<NativePickerItem<T>> items;
   final ValueChanged<T?> onChanged;
+  final String? title;
 
   @override
   Widget build(BuildContext context) {
-    return DropdownButtonFormField<T>(
-      initialValue: value,
+    return NativeDropdownFormField<T>(
+      value: value,
       items: items,
       onChanged: onChanged,
+      title: title,
       dropdownColor: context.appColors.surfaceHigh,
       decoration: InputDecoration(
         isDense: true,
@@ -173,7 +177,7 @@ final class AnalyticsMileageFilterDropdown<T> extends StatelessWidget {
         ),
       ),
       style: Theme.of(context).textTheme.labelMedium,
-      iconEnabledColor: context.appColors.textSecondary,
+      iconColor: context.appColors.textSecondary,
     );
   }
 }

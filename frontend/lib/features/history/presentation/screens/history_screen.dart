@@ -6,6 +6,7 @@ import 'package:flutter_svg/flutter_svg.dart';
 import 'package:frontend/app/providers/vehicle_mileage_provider.dart';
 import 'package:frontend/app/theme/app_palette.dart';
 import 'package:frontend/app/theme/app_theme.dart';
+import 'package:frontend/core/ui/native_ui.dart';
 import 'package:frontend/features/analytics/di/analytics_providers.dart';
 import 'package:frontend/features/analytics/domain/entities/analytics_period.dart';
 import 'package:frontend/features/dashboard/di/dashboard_providers.dart';
@@ -165,7 +166,7 @@ final class _HistoryScreenState extends ConsumerState<HistoryScreen> {
                     },
                   );
                 },
-                loading: () => const Center(child: CircularProgressIndicator()),
+                loading: () => const Center(child: NativeActivityIndicator()),
                 error: (error, stackTrace) => _HistoryErrorState(
                   onRetry: () {
                     ref.invalidate(historyEventsProvider(widget.vehicleId));
@@ -288,27 +289,16 @@ final class _HistoryScreenState extends ConsumerState<HistoryScreen> {
 
   Future<void> _confirmDelete(HistoryEvent event) async {
     final l10n = AppLocalizations.of(context);
-    final confirmed = await showDialog<bool>(
+    final confirmed = await showNativeConfirmDialog(
       context: context,
-      builder: (context) {
-        return AlertDialog(
-          title: Text(l10n.deleteEventQuestion),
-          content: Text(l10n.deleteEventConfirmation(event.title)),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.of(context).pop(false),
-              child: Text(l10n.cancel),
-            ),
-            TextButton(
-              onPressed: () => Navigator.of(context).pop(true),
-              child: Text(l10n.delete),
-            ),
-          ],
-        );
-      },
+      title: l10n.deleteEventQuestion,
+      message: l10n.deleteEventConfirmation(event.title),
+      cancelLabel: l10n.cancel,
+      confirmLabel: l10n.delete,
+      isDestructive: true,
     );
 
-    if (confirmed != true || !mounted) {
+    if (!confirmed || !mounted) {
       return;
     }
 
@@ -323,16 +313,12 @@ final class _HistoryScreenState extends ConsumerState<HistoryScreen> {
       _showSuccessMessage(l10n.eventDeleted);
     } catch (_) {
       if (!mounted) return;
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text(l10n.couldNotDeleteEvent)));
+      showNativeMessage(context, l10n.couldNotDeleteEvent);
     }
   }
 
   void _showSuccessMessage(String message) {
-    ScaffoldMessenger.of(
-      context,
-    ).showSnackBar(SnackBar(content: Text(message)));
+    showNativeMessage(context, message);
   }
 
   void _invalidateAfterHistoryMutation({required bool affectsMileage}) {
