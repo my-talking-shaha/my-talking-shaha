@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:frontend/features/history/data/datasources/history_datasource.dart';
 import 'package:frontend/features/history/data/datasources/history_photo_storage.dart';
 import 'package:frontend/features/history/domain/entities/event_details.dart';
@@ -14,7 +15,7 @@ final class HistoryRepositoryImpl implements HistoryRepository {
   @override
   Future<List<HistoryEvent>> getEvents(String vehicleId) async {
     final events = await _datasource.getEvents(vehicleId);
-    if (_photos == null) return events;
+    if (_photos == null || kIsWeb) return events;
 
     final hydratedEvents = <HistoryEvent>[];
     for (final event in events) {
@@ -43,7 +44,9 @@ final class HistoryRepositoryImpl implements HistoryRepository {
     final details = event.details;
     if (details is! MaintenanceDetails) return event;
 
-    final cachedPhotoPaths = await _cachedPhotoPaths(event);
+    final cachedPhotoPaths = await _cachedPhotoPaths(event).catchError(
+      (_) => const <String>[],
+    );
     if (cachedPhotoPaths.isEmpty) return event;
 
     return HistoryEvent(
@@ -57,6 +60,7 @@ final class HistoryRepositoryImpl implements HistoryRepository {
         cost: details.cost,
         replacedParts: details.replacedParts,
         photoUrls: cachedPhotoPaths,
+        currentMileageKm: details.currentMileageKm,
       ),
       currentMileageKm: event.currentMileageKm,
     );

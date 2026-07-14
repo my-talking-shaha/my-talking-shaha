@@ -5,7 +5,6 @@ import 'package:frontend/features/analytics/domain/entities/analytics_summary.da
 import 'package:frontend/features/analytics/presentation/common/analytics_common_widgets.dart';
 import 'package:frontend/features/analytics/presentation/utils/analytics_formatters.dart';
 import 'package:frontend/features/analytics/presentation/utils/analytics_labels.dart';
-import 'package:frontend/features/analytics/presentation/widgets/analytics_chart.dart';
 import 'package:frontend/l10n/generated/app_localizations.dart';
 
 final class HistoryAnalysisCard extends StatelessWidget {
@@ -15,7 +14,6 @@ final class HistoryAnalysisCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final charts = summary.charts!;
     final history = summary.history;
 
     return AnalyticsDashboardCard(
@@ -24,28 +22,14 @@ final class HistoryAnalysisCard extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            AppLocalizations.of(context).performanceTrendOverTime,
+            _historyCompositionTitle(context),
             style: Theme.of(context).textTheme.bodySmall?.copyWith(
               color: context.appColors.textSecondary,
               letterSpacing: 0.8,
             ),
           ),
           const SizedBox(height: AppSpacing.md),
-          SizedBox(
-            height: 128,
-            width: double.infinity,
-            child: CustomPaint(
-              painter: AnalyticsChartPainter(
-                borderColor: context.appColors.border,
-                labelColor: context.appColors.textSecondary,
-                points: charts.mileageByMonth,
-                accentColor: context.appColors.success,
-                type: AnalyticsChartType.bar,
-                showLabels: false,
-                valueFormatter: formatAnalyticsCompactKilometers,
-              ),
-            ),
-          ),
+          _HistoryCompositionGrid(summary: summary),
           const SizedBox(height: AppSpacing.xl),
           LayoutBuilder(
             builder: (context, constraints) {
@@ -86,6 +70,125 @@ final class HistoryAnalysisCard extends StatelessWidget {
       ),
     );
   }
+}
+
+final class _HistoryCompositionGrid extends StatelessWidget {
+  const _HistoryCompositionGrid({required this.summary});
+
+  final AnalyticsSummary summary;
+
+  @override
+  Widget build(BuildContext context) {
+    final repairs = summary.repairs;
+    final mileage = summary.mileage;
+    final fuel = summary.fuel;
+    final items = [
+      (
+        _historyEventsLabel(context),
+        _eventCount(summary.history),
+      ),
+      (_historyTripsLabel(context), mileage?.monthlyDeltaKm ?? 0),
+      (_historyRepairsLabel(context), repairs?.mostFrequentTypes.first.count ?? 0),
+      (_historyPartsLabel(context), repairs?.mostFrequentTypes.last.count ?? 0),
+      (_historyFuelLabel(context), fuel?.totalLiters.round() ?? 0),
+    ];
+
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final columns = constraints.maxWidth < 560 ? 2 : 5;
+        final spacing = AppSpacing.sm;
+        final itemWidth =
+            (constraints.maxWidth - spacing * (columns - 1)) / columns;
+
+        return Wrap(
+          spacing: spacing,
+          runSpacing: spacing,
+          children: [
+            for (final (label, value) in items)
+              SizedBox(
+                width: itemWidth,
+                child: _HistoryMetricTile(label: label, value: value),
+              ),
+          ],
+        );
+      },
+    );
+  }
+}
+
+final class _HistoryMetricTile extends StatelessWidget {
+  const _HistoryMetricTile({required this.label, required this.value});
+
+  final String label;
+  final int value;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(AppSpacing.md),
+      decoration: BoxDecoration(
+        color: context.appColors.surface.withValues(alpha: 0.55),
+        border: Border.all(color: context.appColors.border),
+        borderRadius: AppRadius.input,
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            label,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: Theme.of(context).textTheme.labelSmall?.copyWith(
+              color: context.appColors.textSecondary,
+              letterSpacing: 0.6,
+            ),
+          ),
+          const SizedBox(height: AppSpacing.xs),
+          Text(
+            formatAnalyticsCompactNumber(value.toDouble()),
+            style: Theme.of(context).textTheme.titleMedium?.copyWith(
+              color: context.appColors.primaryLight,
+              fontWeight: FontWeight.w800,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+int _eventCount(HistoryAnalytics? history) {
+  final metrics = history?.companyMetrics;
+  if (metrics == null || metrics.isEmpty) return 0;
+  return metrics.first.value;
+}
+
+bool _analyticsIsRussian(BuildContext context) {
+  return Localizations.localeOf(context).languageCode == 'ru';
+}
+
+String _historyCompositionTitle(BuildContext context) {
+  return _analyticsIsRussian(context) ? 'СОСТАВ ИСТОРИИ' : 'HISTORY COMPOSITION';
+}
+
+String _historyEventsLabel(BuildContext context) {
+  return _analyticsIsRussian(context) ? 'СОБЫТИЯ' : 'EVENTS';
+}
+
+String _historyTripsLabel(BuildContext context) {
+  return _analyticsIsRussian(context) ? 'КМ ПОЕЗДОК' : 'TRIP KM';
+}
+
+String _historyRepairsLabel(BuildContext context) {
+  return _analyticsIsRussian(context) ? 'РЕМОНТЫ' : 'REPAIRS';
+}
+
+String _historyPartsLabel(BuildContext context) {
+  return _analyticsIsRussian(context) ? 'ДЕТАЛИ' : 'PARTS';
+}
+
+String _historyFuelLabel(BuildContext context) {
+  return _analyticsIsRussian(context) ? 'ТОПЛИВО, Л' : 'FUEL, L';
 }
 
 final class AnalyticsCompanyMetrics extends StatelessWidget {

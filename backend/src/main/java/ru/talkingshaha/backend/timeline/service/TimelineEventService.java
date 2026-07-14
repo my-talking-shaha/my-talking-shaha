@@ -271,7 +271,8 @@ public class TimelineEventService {
     @Transactional
     public TimelineEventResponse createMaintenanceEvent(UUID vehicleId, CreateMaintenanceEventRequest request) {
         Vehicle vehicle = vehicles.requireOwnedVehicle(vehicleId);
-        validateMileage(vehicle, request.mileageKm());
+        int currentMileageKm = currentMileageKm(request.mileageKm(), request.currentMileageKm());
+        validateMileage(vehicle, currentMileageKm);
         MaintenanceEvent event = new MaintenanceEvent();
         event.setVehicle(vehicle);
         event.setType(TimelineEventType.MAINTENANCE);
@@ -283,7 +284,7 @@ public class TimelineEventService {
         if (request.photoUrls() != null) {
             event.getPhotoUrls().addAll(request.photoUrls());
         }
-        updateVehicleMileage(vehicle, request.mileageKm());
+        updateVehicleMileage(vehicle, currentMileageKm);
         TimelineEventResponse response = toResponse(maintenances.save(event));
         parts.createPartsFromMaintenance(
                 vehicle, request.eventDateTime(), request.mileageKm(), request.description(), request.replacedParts());
@@ -294,6 +295,8 @@ public class TimelineEventService {
     @Transactional
     public TimelineEventResponse createPartEvent(UUID vehicleId, CreatePartEventRequest request) {
         Vehicle vehicle = vehicles.requireOwnedVehicle(vehicleId);
+        int currentMileageKm = currentMileageKm(request.mileageKm(), request.currentMileageKm());
+        validateMileage(vehicle, currentMileageKm);
         MaintenanceEvent event = new MaintenanceEvent();
         event.setVehicle(vehicle);
         event.setType(TimelineEventType.PART_REPLACEMENT);
@@ -305,12 +308,22 @@ public class TimelineEventService {
         if (request.photoUrls() != null) {
             event.getPhotoUrls().addAll(request.photoUrls());
         }
-        updateVehicleMileage(vehicle, request.mileageKm());
+        updateVehicleMileage(vehicle, currentMileageKm);
         TimelineEventResponse response = toResponse(maintenances.save(event));
         parts.createPartsFromMaintenance(
                 vehicle, request.eventDateTime(), request.mileageKm(), request.description(), List.of(request.name()));
         metrics.recordTimelineEventCreated(TimelineEventType.PART_REPLACEMENT);
         return response;
+    }
+
+    private int currentMileageKm(Integer eventMileageKm, Integer currentMileageKm) {
+        if (currentMileageKm == null) {
+            return eventMileageKm;
+        }
+        if (currentMileageKm < eventMileageKm) {
+            throw new FieldValidationException(Map.of("currentMileageKm", "must be greater than or equal to mileageKm"));
+        }
+        return currentMileageKm;
     }
 
     @Transactional

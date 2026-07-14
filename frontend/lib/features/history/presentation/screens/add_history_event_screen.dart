@@ -83,6 +83,7 @@ final class _AddHistoryEventScreenState extends State<AddHistoryEventScreen> {
 
   final _titleController = TextEditingController();
   final _mileageController = TextEditingController();
+  final _currentMileageController = TextEditingController();
   final _fuelLitersController = TextEditingController();
   final _fuelCostController = TextEditingController();
   final _maintenanceDescriptionController = TextEditingController();
@@ -122,6 +123,7 @@ final class _AddHistoryEventScreenState extends State<AddHistoryEventScreen> {
       _populateFromEvent(initialEvent);
     } else if (widget.initialMileageKm > 0) {
       _mileageController.text = widget.initialMileageKm.toString();
+      _currentMileageController.text = widget.initialMileageKm.toString();
       _tripStartController.text = widget.initialMileageKm.toString();
     }
     if (initialEvent == null && widget.isElectricVehicle) {
@@ -139,6 +141,7 @@ final class _AddHistoryEventScreenState extends State<AddHistoryEventScreen> {
   void dispose() {
     _titleController.dispose();
     _mileageController.dispose();
+    _currentMileageController.dispose();
     _fuelLitersController.dispose();
     _fuelCostController.dispose();
     _maintenanceDescriptionController.dispose();
@@ -204,21 +207,11 @@ final class _AddHistoryEventScreenState extends State<AddHistoryEventScreen> {
                   onTap: _selectOccurredAt,
                 ),
               ),
-              const SizedBox(height: AppSpacing.md),
-              _FormCard(
-                label: l10n.title,
-                child: TextFormField(
-                  key: const ValueKey('event-title'),
-                  controller: _titleController,
-                  decoration: InputDecoration(hintText: l10n.enterEventTitle),
-                  textInputAction: TextInputAction.next,
-                  validator: (value) => HistoryEventFormUtils.validateRequired(
-                    value,
-                    label: l10n.title,
-                    l10n: l10n,
-                  ),
-                ),
-              ),
+              if (_type != HistoryEventType.maintenance &&
+                  _type != HistoryEventType.part) ...[
+                const SizedBox(height: AppSpacing.md),
+                _titleField(),
+              ],
               const SizedBox(height: AppSpacing.md),
               ...switch (_type) {
                 HistoryEventType.fuel => _fuelFields(),

@@ -21,6 +21,9 @@ public record CreateMaintenanceEventRequest(
         @NotNull(message = "must be provided")
         @PositiveOrZero(message = "must be greater than or equal to 0")
         Integer mileageKm,
+        @Schema(example = "12000")
+        @PositiveOrZero(message = "must be greater than or equal to 0")
+        Integer currentMileageKm,
         @Schema(example = "Oil change")
         @NotBlank(message = "must not be blank")
         @Size(max = 255, message = "must contain at most 255 characters")

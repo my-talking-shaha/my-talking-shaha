@@ -233,6 +233,7 @@ void main() {
             cost: 3000,
             replacedParts: const ['Oil filter'],
             photoUrls: const ['https://example.com/event-photo.jpg'],
+            currentMileageKm: 12000,
           ),
         ),
       );
@@ -240,6 +241,7 @@ void main() {
       expect(payload, {
         'eventDateTime': '2026-06-12T16:30:00.000Z',
         'mileageKm': 10000,
+        'currentMileageKm': 12000,
         'name': 'Oil change',
         'description': 'Oil and filter replacement\nReplaced parts: Oil filter',
         'cost': 3000,
@@ -261,6 +263,7 @@ void main() {
           cost: 12000,
           replacedParts: ['Should not be sent'],
           photoUrls: ['https://example.com/part-photo.jpg'],
+          currentMileageKm: 120000,
         ),
       );
 
@@ -268,6 +271,7 @@ void main() {
       expect(HistoryApiEventMapper.createPayload(event), {
         'eventDateTime': '2026-06-12T16:30:00.000Z',
         'mileageKm': 80000,
+        'currentMileageKm': 120000,
         'name': 'Battery',
         'description': 'Installed before I started using the app',
         'cost': 12000,

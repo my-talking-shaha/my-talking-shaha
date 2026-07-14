@@ -20,7 +20,8 @@ final class HistoryApiDatasource implements HistoryDatasource {
 
     return events
         .whereType<Map<String, dynamic>>()
-        .map((json) => HistoryApiEventMapper.fromJson(json, vehicleId))
+        .map((json) => HistoryApiEventMapper.tryFromJson(json, vehicleId))
+        .whereType<HistoryEvent>()
         .toList(growable: false);
   }
 
@@ -48,6 +49,14 @@ final class HistoryApiDatasource implements HistoryDatasource {
 }
 
 abstract final class HistoryApiEventMapper {
+  static HistoryEvent? tryFromJson(Map<String, dynamic> json, String vehicleId) {
+    try {
+      return fromJson(json, vehicleId);
+    } catch (_) {
+      return null;
+    }
+  }
+
   static String createEndpoint(HistoryEvent event) {
     return switch (event.type) {
       HistoryEventType.fuel =>
@@ -291,6 +300,8 @@ abstract final class HistoryApiEventMapper {
     return {
       'eventDateTime': _dateTimePayload(event.occurredAt),
       'mileageKm': event.currentMileageKm,
+      if (details.currentMileageKm != null)
+        'currentMileageKm': details.currentMileageKm,
       'name': event.title,
       'description': event.type == HistoryEventType.part
           ? details.description

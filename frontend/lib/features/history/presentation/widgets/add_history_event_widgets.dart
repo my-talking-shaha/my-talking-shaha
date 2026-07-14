@@ -1,5 +1,17 @@
 part of '../screens/add_history_event_screen.dart';
 
+bool _isRussian(BuildContext context) {
+  return Localizations.localeOf(context).languageCode == 'ru';
+}
+
+String _serviceModeRepairLabel(BuildContext context) {
+  return _isRussian(context) ? 'Ремонт' : 'Repair';
+}
+
+String _serviceModePartLabel(BuildContext context) {
+  return _isRussian(context) ? 'Деталь' : 'Part';
+}
+
 final class _EventTypeSelector extends StatelessWidget {
   const _EventTypeSelector({
     required this.selectedType,
@@ -125,10 +137,9 @@ final class _ServiceTypeSelector extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context);
     final options = <(HistoryEventType, String)>[
-      (HistoryEventType.maintenance, l10n.repairs),
-      (HistoryEventType.part, l10n.partsCategory),
+      (HistoryEventType.maintenance, _serviceModeRepairLabel(context)),
+      (HistoryEventType.part, _serviceModePartLabel(context)),
     ];
     final selectedIndex = selectedType == HistoryEventType.part ? 1 : 0;
 

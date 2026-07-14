@@ -393,6 +393,7 @@ public class ChatService {
                 new CreateMaintenanceEventRequest(
                         eventDateTime(userText),
                         integerField(fields, "mileageKm").orElseThrow(),
+                        null,
                         stringField(fields, "name").orElseThrow(),
                         description,
                         decimalField(fields, "cost").orElse(null),
