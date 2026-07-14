@@ -10,6 +10,7 @@ Covers:
 - History timeline.
 - Add event type selector.
 - Add trip form.
+- Live trip screen.
 - Add refueling form.
 - Add recharge form for electric vehicles.
 - Add service form.
@@ -62,6 +63,33 @@ Fields:
 - route optional.
 - duration.
 
+## Live Trip Flow
+
+1. User taps the live-trip FAB next to the add-event FAB in vehicle history.
+2. Client asks the user to confirm the start. Cancelling leaves the active-trip
+   state unchanged.
+3. After confirmation, the client starts one local active trip with the
+   selected `vehicleId`, current
+   mileage, and start timestamp.
+4. Client persists the active trip locally so the timer can be restored after
+   an app restart. Elapsed time is derived from the timestamp rather than from
+   a background Dart timer.
+5. On iOS 16.1 and newer, the client also starts a Live Activity showing the
+   vehicle name, elapsed time, and start mileage. The Flutter live-trip screen
+   remains the fallback on unsupported platforms or when Live Activities are
+   disabled.
+6. User finishes the trip and enters the final odometer reading and an optional
+   route. GPS and automatic route collection are not used.
+7. Client validates that final mileage is not below start mileage and sends the
+   existing add-trip request. Durations shorter than one minute are stored as
+   one minute to satisfy the API contract.
+8. Only after the trip is stored does the client clear the local active trip
+   and end the Live Activity.
+
+Only one active trip may exist on the device at a time. An active trip is
+always tied to its route `vehicleId`; opening another vehicle must not silently
+move or replace it.
+
 ### Service
 Fields:
 - date and time;
@@ -106,3 +134,6 @@ matching local cache.
 - Records are shown in chronological timeline.
 - Timeline updates after adding without app restart.
 - Mileage fields are validated.
+- User can start a timer-based live trip from history and finish it as a normal
+  trip event without GPS access.
+- An active trip survives an app restart and resumes for the same vehicle.

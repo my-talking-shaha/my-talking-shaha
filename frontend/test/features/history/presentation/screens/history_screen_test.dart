@@ -1,12 +1,19 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:frontend/app/providers/vehicle_mileage_provider.dart';
 import 'package:frontend/app/theme/app_theme.dart';
+import 'package:frontend/features/garage/data/datasources/in_memory_garage_datasource.dart';
+import 'package:frontend/features/garage/di/garage_providers.dart';
+import 'package:frontend/features/garage/domain/entities/vehicle_draft.dart';
 import 'package:frontend/features/history/data/datasources/history_datasource.dart';
 import 'package:frontend/features/history/data/datasources/mock_history_datasource.dart';
 import 'package:frontend/features/history/di/history_providers.dart';
+import 'package:frontend/features/history/di/live_trip_providers.dart';
 import 'package:frontend/features/history/domain/entities/history_event.dart';
+import 'package:frontend/features/history/domain/entities/live_trip_session.dart';
+import 'package:frontend/features/history/domain/repositories/live_trip_repository.dart';
 import 'package:frontend/features/history/presentation/screens/history_screen.dart';
 import 'package:frontend/features/history/presentation/widgets/event_card.dart';
 import 'package:frontend/l10n/generated/app_localizations.dart';
@@ -42,6 +49,42 @@ void main() {
     expect(find.text('Refueling AI-95'), findsOneWidget);
     expect(find.text('Oil and filter change'), findsOneWidget);
     expect(find.byTooltip('Add event'), findsOneWidget);
+    expect(find.byTooltip('Start live trip'), findsOneWidget);
+    final fabColumn = tester.widget<Column>(
+      find
+          .ancestor(
+            of: find.byKey(const ValueKey('live-trip-fab-icon')),
+            matching: find.byType(Column),
+          )
+          .first,
+    );
+    expect(fabColumn.mainAxisSize, MainAxisSize.min);
+    final tripIcon = tester.widget<SvgPicture>(
+      find.byKey(const ValueKey('live-trip-fab-icon')),
+    );
+    expect(tripIcon.bytesLoader, isA<SvgAssetLoader>());
+    expect(
+      (tripIcon.bytesLoader as SvgAssetLoader).assetName,
+      'assets/icons/events/trip.svg',
+    );
+    expect(
+      tester.getTopLeft(find.byKey(const ValueKey('live-trip-fab'))).dy,
+      lessThan(
+        tester
+            .getTopLeft(find.byKey(const ValueKey('add-history-event-fab')))
+            .dy,
+      ),
+    );
+    for (final key in ['live-trip-fab', 'add-history-event-fab']) {
+      final fab = tester.widget<FloatingActionButton>(
+        find.byKey(ValueKey(key)),
+      );
+      expect(fab.elevation, 0);
+      expect(fab.focusElevation, 0);
+      expect(fab.hoverElevation, 0);
+      expect(fab.highlightElevation, 0);
+      expect(fab.disabledElevation, 0);
+    }
     expect(find.byIcon(Icons.tune), findsNothing);
     expect(find.text('FUEL'), findsOneWidget);
     expect(find.text('CHARGE'), findsNothing);
@@ -101,6 +144,85 @@ void main() {
 
     expect(find.text('Refueling AI-95'), findsOneWidget);
     expect(find.text('Oil and filter change'), findsNothing);
+  });
+
+  testWidgets('confirms before starting a live trip', (tester) async {
+    final garageDatasource = InMemoryGarageDatasource();
+    await garageDatasource.addVehicle(
+      const VehicleDraft(
+        brand: 'Lada',
+        model: '2107',
+        year: 2008,
+        currentMileageKm: 12300,
+        engineType: 'gasoline',
+        engineVolumeLiters: 1.6,
+        enginePowerHp: 74,
+      ),
+    );
+    final liveTripRepository = _RecordingLiveTripRepository();
+    final router = GoRouter(
+      initialLocation: '/history',
+      routes: [
+        GoRoute(
+          path: '/history',
+          builder: (context, state) =>
+              const HistoryScreen(vehicleId: 'vehicle_1'),
+        ),
+        GoRoute(
+          path: '/vehicle/:vehicleId/history/live',
+          builder: (context, state) =>
+              const Scaffold(body: Text('Live trip opened')),
+        ),
+      ],
+    );
+    addTearDown(router.dispose);
+
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [
+          garageDatasourceProvider.overrideWithValue(garageDatasource),
+          historyDatasourceProvider.overrideWithValue(
+            MockHistoryDatasource(delay: Duration.zero),
+          ),
+          historyPhotoReaderProvider.overrideWithValue(null),
+          vehicleEngineTypeProvider.overrideWith(
+            (ref, vehicleId) async => 'gasoline',
+          ),
+          liveTripRepositoryProvider.overrideWithValue(liveTripRepository),
+        ],
+        child: MaterialApp.router(
+          locale: const Locale('en'),
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
+          theme: AppTheme.dark,
+          routerConfig: router,
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.byKey(const ValueKey('live-trip-fab')));
+    await tester.pumpAndSettle();
+
+    expect(find.byType(AlertDialog), findsOneWidget);
+    expect(find.text('Start trip?'), findsOneWidget);
+    expect(liveTripRepository.session, isNull);
+
+    await tester.tap(find.widgetWithText(TextButton, 'Cancel'));
+    await tester.pumpAndSettle();
+
+    expect(find.byType(AlertDialog), findsNothing);
+    expect(liveTripRepository.session, isNull);
+
+    await tester.tap(find.byKey(const ValueKey('live-trip-fab')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.widgetWithText(TextButton, 'Start live trip'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Live trip opened'), findsOneWidget);
+    expect(liveTripRepository.session?.vehicleId, 'vehicle_1');
+    expect(liveTripRepository.session?.vehicleName, 'Lada 2107');
+    expect(liveTripRepository.session?.startMileageKm, 12300);
   });
 
   testWidgets('deleting an event clears backend event then cached photos', (
@@ -238,6 +360,23 @@ void main() {
       findsOneWidget,
     );
   });
+}
+
+final class _RecordingLiveTripRepository implements LiveTripRepository {
+  LiveTripSession? session;
+
+  @override
+  Future<LiveTripSession?> restore() async => session;
+
+  @override
+  Future<void> start(LiveTripSession session) async {
+    this.session = session;
+  }
+
+  @override
+  Future<void> end() async {
+    session = null;
+  }
 }
 
 final class _TrackingHistoryDatasource implements HistoryDatasource {

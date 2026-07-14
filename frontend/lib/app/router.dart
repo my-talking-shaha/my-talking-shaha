@@ -20,6 +20,7 @@ import 'package:frontend/features/history/domain/entities/history_event.dart';
 import 'package:frontend/features/history/domain/entities/history_event_type.dart';
 import 'package:frontend/features/history/presentation/screens/add_history_event_screen.dart';
 import 'package:frontend/features/history/presentation/screens/history_screen.dart';
+import 'package:frontend/features/history/presentation/screens/live_trip_screen.dart';
 import 'package:frontend/features/notifications/presentation/screens/notification_details_screen.dart';
 import 'package:frontend/features/notifications/presentation/screens/notifications_screen.dart';
 import 'package:frontend/features/parts/di/parts_providers.dart';
@@ -153,6 +154,13 @@ final routerProvider = Provider<GoRouter>((ref) {
               );
             },
           );
+        },
+      ),
+      GoRoute(
+        path: '/vehicle/:vehicleId/history/live',
+        builder: (context, state) {
+          final vehicleId = state.pathParameters['vehicleId'] ?? '';
+          return LiveTripScreen(vehicleId: vehicleId);
         },
       ),
       GoRoute(
