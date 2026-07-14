@@ -8,7 +8,14 @@ abstract interface class HistoryPhotoReader {
   Future<List<String>> photoPathsForEvent(String eventId);
 }
 
-final class HistoryPhotoStorage implements HistoryPhotoReader {
+abstract interface class HistoryPhotoCache implements HistoryPhotoReader {
+  Future<void> bindPhotosToEvent({
+    required String temporaryEventId,
+    required String eventId,
+  });
+}
+
+final class HistoryPhotoStorage implements HistoryPhotoCache {
   const HistoryPhotoStorage();
 
   @override
@@ -58,6 +65,30 @@ final class HistoryPhotoStorage implements HistoryPhotoReader {
     );
     await File(sourcePath).copy(destination.path);
     return destination.path;
+  }
+
+  @override
+  Future<void> bindPhotosToEvent({
+    required String temporaryEventId,
+    required String eventId,
+  }) async {
+    final photosDirectory = await _photosDirectory();
+    final sourceDirectory = Directory(
+      '${photosDirectory.path}/${_safePathSegment(temporaryEventId)}',
+    );
+    if (!await sourceDirectory.exists()) return;
+
+    final targetDirectory = Directory(
+      '${photosDirectory.path}/${_safePathSegment(eventId)}',
+    );
+    await targetDirectory.create(recursive: true);
+
+    await for (final entity in sourceDirectory.list()) {
+      if (entity is! File) continue;
+      final fileName = entity.uri.pathSegments.last;
+      await entity.rename('${targetDirectory.path}/$fileName');
+    }
+    await sourceDirectory.delete(recursive: true);
   }
 
   Future<void> deletePhoto(String path) async {
