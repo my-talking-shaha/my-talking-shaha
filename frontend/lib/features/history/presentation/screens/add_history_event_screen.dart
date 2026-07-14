@@ -222,7 +222,8 @@ final class _AddHistoryEventScreenState extends State<AddHistoryEventScreen> {
               const SizedBox(height: AppSpacing.md),
               ...switch (_type) {
                 HistoryEventType.fuel => _fuelFields(),
-                HistoryEventType.maintenance => _maintenanceFields(),
+                HistoryEventType.maintenance || HistoryEventType.part =>
+                  _serviceFields(),
                 HistoryEventType.trip => _tripFields(),
               },
               const SizedBox(height: AppSpacing.xxl),

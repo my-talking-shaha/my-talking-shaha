@@ -15,6 +15,7 @@ abstract final class HistoryEventFormUtils {
         HistoryEventType.fuel =>
           isElectricVehicle ? 'New recharge' : 'New refueling',
         HistoryEventType.maintenance => 'New maintenance',
+        HistoryEventType.part => 'New part record',
         HistoryEventType.trip => 'New trip',
       };
     }
@@ -23,6 +24,7 @@ abstract final class HistoryEventFormUtils {
       HistoryEventType.fuel =>
         isElectricVehicle ? l10n.newRecharge : l10n.newRefueling,
       HistoryEventType.maintenance => l10n.newMaintenance,
+      HistoryEventType.part => l10n.addPartRecord,
       HistoryEventType.trip => l10n.newTrip,
     };
   }
@@ -37,6 +39,7 @@ abstract final class HistoryEventFormUtils {
         HistoryEventType.fuel =>
           isElectricVehicle ? 'Edit recharge' : 'Edit refueling',
         HistoryEventType.maintenance => 'Edit maintenance',
+        HistoryEventType.part => 'Edit part record',
         HistoryEventType.trip => 'Edit trip',
       };
     }
@@ -45,6 +48,7 @@ abstract final class HistoryEventFormUtils {
       HistoryEventType.fuel =>
         isElectricVehicle ? l10n.editRecharge : l10n.editRefueling,
       HistoryEventType.maintenance => l10n.editMaintenance,
+      HistoryEventType.part => l10n.addPartRecord,
       HistoryEventType.trip => l10n.editTrip,
     };
   }
@@ -58,8 +62,25 @@ abstract final class HistoryEventFormUtils {
   static String? validateMileage(
     String? value, {
     required int minimumMileageKm,
+    bool allowZero = false,
     AppLocalizations? l10n,
   }) {
+    if (allowZero) {
+      final number = int.tryParse(value ?? '');
+      if (number == null) {
+        final label = l10n?.mileage ?? 'Mileage';
+        return l10n?.fieldMustBePositive(label) ?? '$label must be positive';
+      }
+      if (number < 0) {
+        return l10n?.mileageCannotBeNegative ?? 'Mileage cannot be negative';
+      }
+      if (number < minimumMileageKm) {
+        return l10n?.mileageAtLeastKm(minimumMileageKm) ??
+            'Must be at least $minimumMileageKm km';
+      }
+      return null;
+    }
+
     final positiveError = validatePositiveInt(
       value,
       label: l10n?.mileage ?? 'Mileage',

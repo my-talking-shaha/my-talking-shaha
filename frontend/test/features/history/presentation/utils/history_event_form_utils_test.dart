@@ -13,6 +13,14 @@ void main() {
       isNull,
     );
     expect(
+      HistoryEventFormUtils.validateMileage(
+        '0',
+        minimumMileageKm: 0,
+        allowZero: true,
+      ),
+      isNull,
+    );
+    expect(
       HistoryEventFormUtils.validateTripEnd('124580', startMileage: '124580'),
       'Must exceed start',
     );
@@ -36,6 +44,10 @@ void main() {
       'belt',
     ]);
     expect(HistoryEventFormUtils.trimToNull('   '), isNull);
+    expect(
+      HistoryEventFormUtils.titleFor(HistoryEventType.part),
+      'New part record',
+    );
     expect(HistoryEventFormUtils.titleFor(HistoryEventType.trip), 'New trip');
   });
 }

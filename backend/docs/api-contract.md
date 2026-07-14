@@ -510,11 +510,19 @@ Request:
   "cost": 3000,
   "photoUrls": [
     "https://example.com/event-photo.jpg"
+  ],
+  "replacedParts": [
+    "Engine oil",
+    "Oil filter"
   ]
 }
 ```
 
 `cost`, when provided, must be greater than `0`. Response `201`: timeline event.
+When `replacedParts` is provided, backend creates matching vehicle part records
+for maintenance forecast calculation. For backwards compatibility, backend also
+extracts comma-separated part names from a legacy `Replaced parts:` line inside
+`description`.
 
 ### Add part event
 
@@ -537,7 +545,9 @@ Request:
 
 `name`, `eventDateTime`, and `mileageKm` are required. `description`, `cost`, and
 `photoUrls` are optional. `cost`, when provided, must be greater than `0`.
-Response `201`: timeline event with `type = PART_REPLACEMENT`.
+Response `201`: timeline event with `type = PART_REPLACEMENT`. `mileageKm` is
+the part installation mileage and may be lower than the vehicle's current
+mileage; if it is higher, the vehicle mileage advances.
 
 Creating any event with a `mileageKm`/`endMileageKm` higher than the vehicle's current
 mileage advances the vehicle mileage and recalculates its parts.
@@ -555,7 +565,7 @@ Request body uses the same event-specific fields as the matching add endpoint:
 - trip: `eventDateTime`, `endMileageKm`, `durationMinutes`, optional
   `startMileageKm`, optional `route`;
 - maintenance/part: `eventDateTime`, `mileageKm`, `name`, optional `description`,
-  optional `cost`, optional `photoUrls`.
+  optional `cost`, optional `photoUrls`, optional `replacedParts` for maintenance.
 
 Field validation is the same as the matching add endpoint. The event type is
 determined by the stored event and is not changed by this endpoint.

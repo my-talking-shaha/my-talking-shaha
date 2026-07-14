@@ -28,6 +28,11 @@ final class DashboardEventPresentation {
         iconColor: colors.success,
         backgroundColor: colors.maintenanceEventBackground,
       ),
+      HistoryEventType.part => DashboardEventPresentation(
+        assetPath: 'assets/icons/parts/maintenance.svg',
+        iconColor: colors.success,
+        backgroundColor: colors.maintenanceEventBackground,
+      ),
       HistoryEventType.trip => DashboardEventPresentation(
         assetPath: 'assets/icons/events/trip.svg',
         iconColor: colors.primaryLight,

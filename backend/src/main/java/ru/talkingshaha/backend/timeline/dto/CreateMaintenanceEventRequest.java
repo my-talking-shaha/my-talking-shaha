@@ -31,5 +31,7 @@ public record CreateMaintenanceEventRequest(
         @Positive(message = "must be greater than 0")
         BigDecimal cost,
         @Schema(example = "[\"https://example.com/event-photo.jpg\"]")
-        List<String> photoUrls) {
+        List<String> photoUrls,
+        @Schema(example = "[\"Engine oil\", \"Oil filter\"]")
+        List<@Size(max = 255, message = "must contain at most 255 characters") String> replacedParts) {
 }

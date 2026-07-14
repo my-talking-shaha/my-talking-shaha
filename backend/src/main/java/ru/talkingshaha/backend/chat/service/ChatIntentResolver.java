@@ -40,15 +40,14 @@ public class ChatIntentResolver {
                 "поезд", "маршрут", "ехал", "ехала", "проех", "дорог")) {
             return decision(ChatIntent.OPEN_TRIP_FORM, language);
         }
+        if (isPartRecordingIntent(text)) {
+            return decision(ChatIntent.OPEN_PART_FORM, language);
+        }
         if (matches(text, "add repair", "record repair", "new repair", "repair record",
                 "добавить ремонт", "записать ремонт", "новый ремонт", "запись ремонта",
                 "ремонт", "сервис", "починил", "починила", "чинил", "чинила",
                 "поменял", "поменяла", "менял", "меняла", "двигатель")) {
             return decision(ChatIntent.OPEN_REPAIR_FORM, language);
-        }
-        if (matches(text, "changed", "replace", "part", "oil", "filter", "pads", "belt", "battery",
-                "замен", "детал", "масл", "фильтр", "колод", "ремен", "аккумулятор")) {
-            return decision(ChatIntent.OPEN_PART_FORM, language);
         }
         if (matches(text, "urgent", "soon", "break soon", "condition", "maintenance", "forecast", "repair need",
                 "сроч", "состоя", "сломается", "сломаться", "то", "обслуж", "прогноз", "починить")) {
@@ -104,6 +103,29 @@ public class ChatIntentResolver {
                 "добавить заправку", "записать заправку", "новая заправка",
                 "заправил", "заправила", "заправился", "заправилась", "заправлял", "заправляла",
                 "залил", "залила", "залился", "залилась");
+    }
+
+    private boolean isPartRecordingIntent(String text) {
+        return matches(text,
+                "add part", "record part", "new part", "part record",
+                "changed oil", "changed filter", "changed pads", "changed belt", "changed battery",
+                "changed the oil", "changed the filter", "changed the pads", "changed the belt",
+                "changed the battery",
+                "replaced oil", "replaced filter", "replaced pads", "replaced belt", "replaced battery",
+                "replaced the oil", "replaced the filter", "replaced the pads", "replaced the belt",
+                "replaced the battery",
+                "installed oil", "installed filter", "installed pads", "installed belt", "installed battery",
+                "installed the oil", "installed the filter", "installed the pads", "installed the belt",
+                "installed the battery",
+                "добавить деталь", "записать деталь", "новая деталь", "запись детали",
+                "заменила масло", "заменил масло", "замена масла", "поменяла масло", "поменял масло",
+                "заменила фильтр", "заменил фильтр", "замена фильтра", "поменяла фильтр", "поменял фильтр",
+                "заменила колодки", "заменил колодки", "замена колодок", "поменяла колодки",
+                "поменял колодки",
+                "заменила ремень", "заменил ремень", "замена ремня", "поменяла ремень", "поменял ремень",
+                "заменила аккумулятор", "заменил аккумулятор",
+                "замена аккумулятора",
+                "поставила аккумулятор", "поставил аккумулятор");
     }
 
     private boolean isHighPriorityLocalIntent(ChatIntent intent) {

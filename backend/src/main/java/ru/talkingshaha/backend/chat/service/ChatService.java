@@ -396,7 +396,8 @@ public class ChatService {
                         stringField(fields, "name").orElseThrow(),
                         description,
                         decimalField(fields, "cost").orElse(null),
-                        List.of()));
+                        List.of(),
+                        null));
         return Optional.of(new AssistantDraft(maintenanceCreatedAnswer(event), editEventAction(event), event));
     }
 

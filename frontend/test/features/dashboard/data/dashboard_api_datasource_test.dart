@@ -19,5 +19,18 @@ void main() {
       expect(event.subtitle, '32 L at 128,430 km');
       expect(event.occurredAt.toUtc(), DateTime.utc(2026, 6, 22, 10, 15));
     });
+
+    test('maps backend part replacement response to dashboard part event', () {
+      final event = DashboardApiEventMapper.fromJson(const {
+        'id': 'event_2',
+        'type': 'PART_REPLACEMENT',
+        'title': 'Battery',
+        'subtitle': 'Installed at 80,000 km',
+        'eventDateTime': '2026-06-22T10:15:00Z',
+      });
+
+      expect(event.type, HistoryEventType.part);
+      expect(event.title, 'Battery');
+    });
   });
 }

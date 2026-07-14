@@ -243,7 +243,35 @@ void main() {
         'name': 'Oil change',
         'description': 'Oil and filter replacement\nReplaced parts: Oil filter',
         'cost': 3000,
+        'replacedParts': ['Oil filter'],
         'photoUrls': ['https://example.com/event-photo.jpg'],
+      });
+    });
+
+    test('builds backend part replacement payload from history event', () {
+      final event = HistoryEvent(
+        id: 'local-part',
+        carId: 'vehicle_1',
+        type: HistoryEventType.part,
+        occurredAt: DateTime.utc(2026, 6, 12, 16, 30),
+        title: 'Battery',
+        currentMileageKm: 80000,
+        details: const MaintenanceDetails(
+          description: 'Installed before I started using the app',
+          cost: 12000,
+          replacedParts: ['Should not be sent'],
+          photoUrls: ['https://example.com/part-photo.jpg'],
+        ),
+      );
+
+      expect(HistoryApiEventMapper.createEndpoint(event), 'part');
+      expect(HistoryApiEventMapper.createPayload(event), {
+        'eventDateTime': '2026-06-12T16:30:00.000Z',
+        'mileageKm': 80000,
+        'name': 'Battery',
+        'description': 'Installed before I started using the app',
+        'cost': 12000,
+        'photoUrls': ['https://example.com/part-photo.jpg'],
       });
     });
 
@@ -282,6 +310,26 @@ void main() {
       final details = event.details as MaintenanceDetails;
       expect(details.description, 'Changed engine');
       expect(details.replacedParts, const ['engine']);
+    });
+
+    test('maps backend part replacement to separate history type', () {
+      final event = HistoryApiEventMapper.fromJson(const {
+        'id': 'part_1',
+        'type': 'PART_REPLACEMENT',
+        'name': 'Battery',
+        'eventDateTime': '2026-06-12T16:30:00Z',
+        'mileageKm': 80000,
+        'description': 'Installed at purchase',
+        'cost': 12000,
+      }, 'vehicle_1');
+
+      expect(event.type, HistoryEventType.part);
+      expect(event.title, 'Battery');
+      expect(event.currentMileageKm, 80000);
+      final details = event.details as MaintenanceDetails;
+      expect(details.description, 'Installed at purchase');
+      expect(details.cost, 12000);
+      expect(details.replacedParts, isNull);
     });
 
     test('builds backend trip payload from history event', () {

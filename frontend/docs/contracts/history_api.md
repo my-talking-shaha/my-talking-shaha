@@ -14,6 +14,9 @@ MAINTENANCE
 PART_REPLACEMENT
 ```
 
+Mobile mapping: `PART_REPLACEMENT` must be shown as a separate part event, not
+as a maintenance/service event, so part costs stay separated in analytics.
+
 ## List Events
 
 `GET /api/v1/vehicles/{vehicleId}/timeline?type=REFUEL`
@@ -118,12 +121,18 @@ Trip response includes `distanceKm` and `averageFuelConsumptionLitersPerKm`.
   "name": "Oil change",
   "description": "Oil and filter replacement",
   "cost": 3000,
-  "photoUrls": ["https://example.com/event-photo.jpg"]
+  "photoUrls": ["https://example.com/event-photo.jpg"],
+  "replacedParts": ["Engine oil", "Oil filter"]
 }
 ```
 
 Validation: `name` is required, `mileageKm >= previous mileage`, optional `cost > 0`,
 `eventDateTime <= now`.
+
+When `replacedParts` is provided, backend creates matching vehicle part records
+for the maintenance forecast. For backwards compatibility, backend also accepts
+legacy descriptions containing a `Replaced parts:` line with comma-separated
+part names.
 
 ## Add Part Event
 
@@ -140,8 +149,9 @@ Validation: `name` is required, `mileageKm >= previous mileage`, optional `cost 
 }
 ```
 
-Validation: `name` is required, `mileageKm >= previous mileage`, optional `cost > 0`,
-`eventDateTime <= now`. Response has `type = PART_REPLACEMENT`.
+Validation: `name` is required, `mileageKm >= 0`, optional `cost > 0`,
+`eventDateTime <= now`. `mileageKm` is the part installation mileage and may be
+lower than the vehicle's current mileage. Response has `type = PART_REPLACEMENT`.
 
 ## Update Event
 
@@ -156,7 +166,8 @@ Request body uses the same event-specific fields as add endpoints:
 - trip: `eventDateTime`, `startMileageKm`, `endMileageKm`, optional `route`,
   `durationMinutes`;
 - maintenance/part: `eventDateTime`, `mileageKm`, `name`, `description`,
-  optional `cost`, optional `photoUrls`.
+  optional `cost`, optional `photoUrls`, optional `replacedParts` for
+  maintenance.
 
 Validation is the same as the matching add event endpoint. Event type is not
 changed by this endpoint.

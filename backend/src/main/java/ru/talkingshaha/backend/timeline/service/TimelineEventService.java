@@ -285,6 +285,8 @@ public class TimelineEventService {
         }
         updateVehicleMileage(vehicle, request.mileageKm());
         TimelineEventResponse response = toResponse(maintenances.save(event));
+        parts.createPartsFromMaintenance(
+                vehicle, request.eventDateTime(), request.mileageKm(), request.description(), request.replacedParts());
         metrics.recordTimelineEventCreated(TimelineEventType.MAINTENANCE);
         return response;
     }
@@ -292,7 +294,6 @@ public class TimelineEventService {
     @Transactional
     public TimelineEventResponse createPartEvent(UUID vehicleId, CreatePartEventRequest request) {
         Vehicle vehicle = vehicles.requireOwnedVehicle(vehicleId);
-        validateMileage(vehicle, request.mileageKm());
         MaintenanceEvent event = new MaintenanceEvent();
         event.setVehicle(vehicle);
         event.setType(TimelineEventType.PART_REPLACEMENT);
@@ -306,6 +307,8 @@ public class TimelineEventService {
         }
         updateVehicleMileage(vehicle, request.mileageKm());
         TimelineEventResponse response = toResponse(maintenances.save(event));
+        parts.createPartsFromMaintenance(
+                vehicle, request.eventDateTime(), request.mileageKm(), request.description(), List.of(request.name()));
         metrics.recordTimelineEventCreated(TimelineEventType.PART_REPLACEMENT);
         return response;
     }

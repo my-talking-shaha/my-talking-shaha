@@ -31,6 +31,7 @@ void main() {
     final maintenance = DashboardEventPresentation.from(
       HistoryEventType.maintenance,
     );
+    final part = DashboardEventPresentation.from(HistoryEventType.part);
     final trip = DashboardEventPresentation.from(HistoryEventType.trip);
 
     expect(fuel.assetPath, 'assets/icons/events/gas.svg');
@@ -42,6 +43,9 @@ void main() {
       maintenance.backgroundColor,
       DashboardColors.maintenanceEventBackground,
     );
+    expect(part.assetPath, 'assets/icons/parts/maintenance.svg');
+    expect(part.iconColor, DashboardColors.success);
+    expect(part.backgroundColor, DashboardColors.maintenanceEventBackground);
     expect(trip.assetPath, 'assets/icons/events/trip.svg');
     expect(trip.iconColor, DashboardColors.primaryLight);
     expect(trip.backgroundColor, DashboardColors.surfaceHighest);

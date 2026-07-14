@@ -299,6 +299,19 @@ void main() {
     expect(find.text('New maintenance'), findsOneWidget);
   });
 
+  testWidgets('history add route accepts part query parameter', (tester) async {
+    await _pumpApp(
+      tester,
+      initialLocation:
+          '/vehicle/096c10bb-13d1-4599-9109-e9e79789ea88/history/add?type=part_replacement',
+    );
+
+    final screen = tester.widget<AddHistoryEventScreen>(
+      find.byType(AddHistoryEventScreen),
+    );
+    expect(screen.initialType, HistoryEventType.part);
+  });
+
   testWidgets('history add button opens the form and saves an event', (
     tester,
   ) async {

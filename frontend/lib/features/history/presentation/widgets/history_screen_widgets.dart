@@ -38,6 +38,7 @@ final class _TypeFilters extends StatelessWidget {
       (l10n.all, null),
       (isElectricVehicle ? l10n.charge : l10n.fuel, HistoryEventType.fuel),
       (l10n.repairs, HistoryEventType.maintenance),
+      (l10n.partsCategory, HistoryEventType.part),
       (l10n.trips, HistoryEventType.trip),
     ];
 

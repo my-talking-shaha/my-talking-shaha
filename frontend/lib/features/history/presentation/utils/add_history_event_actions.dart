@@ -110,10 +110,35 @@ extension _AddHistoryEventActions on _AddHistoryEventScreenState {
     ];
   }
 
-  List<Widget> _maintenanceFields() {
+  List<Widget> _serviceFields() {
+    return [
+      _ServiceTypeSelector(
+        selectedType: _type,
+        enabled: !_isEditing,
+        onSelected: (type) {
+          if (type == _type) return;
+          setState(() => _type = type);
+          _formKey.currentState?.reset();
+        },
+      ),
+      const SizedBox(height: AppSpacing.md),
+      ...switch (_type) {
+        HistoryEventType.part => _partFields(),
+        _ => _maintenanceFields(),
+      },
+    ];
+  }
+
+  List<Widget> _maintenanceFields({
+    bool includeReplacedParts = true,
+    bool allowZeroMileage = false,
+    int? minimumMileageKm,
+  }) {
+    final l10n = AppLocalizations.of(context);
+
     return [
       _FormCard(
-        label: AppLocalizations.of(context).currentMileageLabel,
+        label: allowZeroMileage ? l10n.mileage : l10n.currentMileageLabel,
         child: _NumberField(
           key: const ValueKey('maintenance-mileage'),
           controller: _mileageController,
@@ -122,33 +147,34 @@ extension _AddHistoryEventActions on _AddHistoryEventScreenState {
           icon: Icons.speed_outlined,
           validator: (value) => HistoryEventFormUtils.validateMileage(
             value,
-            minimumMileageKm: _minimumMileageKm,
-            l10n: AppLocalizations.of(context),
+            minimumMileageKm: minimumMileageKm ?? _minimumMileageKm,
+            allowZero: allowZeroMileage,
+            l10n: l10n,
           ),
         ),
       ),
       const SizedBox(height: AppSpacing.md),
       _FormCard(
-        label: AppLocalizations.of(context).workDescription,
+        label: l10n.workDescription,
         child: TextFormField(
           key: const ValueKey('maintenance-description'),
           controller: _maintenanceDescriptionController,
           minLines: 4,
           maxLines: 6,
           decoration: InputDecoration(
-            hintText: AppLocalizations.of(context).describeWorkPerformed,
+            hintText: l10n.describeWorkPerformed,
             alignLabelWithHint: true,
           ),
           validator: (value) => HistoryEventFormUtils.validateRequired(
             value,
-            label: AppLocalizations.of(context).workDescription,
-            l10n: AppLocalizations.of(context),
+            label: l10n.workDescription,
+            l10n: l10n,
           ),
         ),
       ),
       const SizedBox(height: AppSpacing.md),
       _FormCard(
-        label: AppLocalizations.of(context).cost,
+        label: l10n.cost,
         optional: true,
         child: _NumberField(
           key: const ValueKey('maintenance-cost'),
@@ -158,20 +184,22 @@ extension _AddHistoryEventActions on _AddHistoryEventScreenState {
           icon: Icons.payments_outlined,
         ),
       ),
-      const SizedBox(height: AppSpacing.md),
-      _FormCard(
-        label: AppLocalizations.of(context).replacedParts,
-        optional: true,
-        child: TextFormField(
-          key: const ValueKey('maintenance-parts'),
-          controller: _replacedPartsController,
-          minLines: 3,
-          maxLines: 5,
-          decoration: InputDecoration(
-            hintText: AppLocalizations.of(context).enterPartsSeparated,
+      if (includeReplacedParts) ...[
+        const SizedBox(height: AppSpacing.md),
+        _FormCard(
+          label: l10n.replacedParts,
+          optional: true,
+          child: TextFormField(
+            key: const ValueKey('maintenance-parts'),
+            controller: _replacedPartsController,
+            minLines: 3,
+            maxLines: 5,
+            decoration: InputDecoration(
+              hintText: l10n.enterPartsSeparated,
+            ),
           ),
         ),
-      ),
+      ],
       if (!kIsWeb) ...[
         const SizedBox(height: AppSpacing.md),
         _PhotoCard(
@@ -185,6 +213,12 @@ extension _AddHistoryEventActions on _AddHistoryEventScreenState {
       ],
     ];
   }
+
+  List<Widget> _partFields() => _maintenanceFields(
+    includeReplacedParts: false,
+    allowZeroMileage: true,
+    minimumMileageKm: 0,
+  );
 
   List<Widget> _tripFields() {
     return [
@@ -283,7 +317,9 @@ extension _AddHistoryEventActions on _AddHistoryEventScreenState {
         photoPaths: const [],
       );
       final photoCacheKey = _photoCacheKey(eventWithoutPhotos);
-      final photos = _type == HistoryEventType.maintenance
+      final photos =
+          (_type == HistoryEventType.maintenance ||
+              _type == HistoryEventType.part)
           ? List<XFile>.of(_selectedPhotos)
           : const <XFile>[];
       for (final photo in photos) {
@@ -497,6 +533,19 @@ extension _AddHistoryEventActions on _AddHistoryEventScreenState {
           replacedParts: HistoryEventFormUtils.parseCommaSeparated(
             _replacedPartsController.text,
           ),
+          photoUrls: _maintenancePhotoUrls(photoPaths),
+        ),
+      ),
+      HistoryEventType.part => HistoryEvent(
+        id: id,
+        carId: widget.vehicleId,
+        type: _type,
+        occurredAt: _occurredAt,
+        title: _titleController.text.trim(),
+        currentMileageKm: int.parse(_mileageController.text),
+        details: MaintenanceDetails(
+          description: _maintenanceDescriptionController.text.trim(),
+          cost: int.tryParse(_maintenanceCostController.text),
           photoUrls: _maintenancePhotoUrls(photoPaths),
         ),
       ),

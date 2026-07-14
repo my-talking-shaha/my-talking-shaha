@@ -16,6 +16,9 @@ final class _EventTypeSelector extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
+    final selectedTopType = selectedType == HistoryEventType.part
+        ? HistoryEventType.maintenance
+        : selectedType;
     final options = [
       (
         HistoryEventType.fuel,
@@ -31,6 +34,15 @@ final class _EventTypeSelector extends StatelessWidget {
       ),
       (HistoryEventType.trip, l10n.tripEvent, 'assets/icons/events/trip.svg'),
     ];
+    final selectedIndex = options.indexWhere(
+      (option) => option.$1 == selectedTopType,
+    );
+    final selectedOffset = selectedIndex
+        .clamp(0, options.length - 1)
+        .toDouble();
+    final alignmentX = options.length == 1
+        ? 0.0
+        : -1.0 + (2.0 * selectedOffset) / (options.length - 1);
 
     return Container(
       height: 58,
@@ -45,11 +57,7 @@ final class _EventTypeSelector extends StatelessWidget {
           IgnorePointer(
             child: AnimatedAlign(
               key: const ValueKey('event-type-selection'),
-              alignment: switch (selectedType) {
-                HistoryEventType.fuel => Alignment.centerLeft,
-                HistoryEventType.maintenance => Alignment.center,
-                HistoryEventType.trip => Alignment.centerRight,
-              },
+              alignment: Alignment(alignmentX, 0),
               duration: const Duration(milliseconds: 320),
               curve: Curves.easeOutCubic,
               child: FractionallySizedBox(
@@ -76,7 +84,9 @@ final class _EventTypeSelector extends StatelessWidget {
                     label: label,
                     child: InkWell(
                       key: ValueKey('event-type-${type.name}'),
-                      onTap: enabled ? () => onSelected(type) : null,
+                      onTap: enabled && type != selectedTopType
+                          ? () => onSelected(type)
+                          : null,
                       borderRadius: AppRadius.input,
                       child: Center(
                         child: SvgPicture.asset(
@@ -84,11 +94,101 @@ final class _EventTypeSelector extends StatelessWidget {
                           width: 22,
                           height: 22,
                           colorFilter: ColorFilter.mode(
-                            type == selectedType
+                            type == selectedTopType
                                 ? context.appColors.primary
                                 : context.appColors.textSecondary,
                             BlendMode.srcIn,
                           ),
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+final class _ServiceTypeSelector extends StatelessWidget {
+  const _ServiceTypeSelector({
+    required this.selectedType,
+    required this.onSelected,
+    this.enabled = true,
+  });
+
+  final HistoryEventType selectedType;
+  final ValueChanged<HistoryEventType> onSelected;
+  final bool enabled;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+    final options = <(HistoryEventType, String)>[
+      (HistoryEventType.maintenance, l10n.repairs),
+      (HistoryEventType.part, l10n.partsCategory),
+    ];
+    final selectedIndex = selectedType == HistoryEventType.part ? 1 : 0;
+
+    return Container(
+      height: 48,
+      padding: const EdgeInsets.all(AppSpacing.xs),
+      decoration: BoxDecoration(
+        color: context.appColors.surface,
+        border: Border.all(color: context.appColors.border),
+        borderRadius: AppRadius.card,
+      ),
+      child: Stack(
+        fit: StackFit.expand,
+        children: [
+          IgnorePointer(
+            child: AnimatedAlign(
+              alignment: Alignment(selectedIndex == 0 ? -1 : 1, 0),
+              duration: const Duration(milliseconds: 240),
+              curve: Curves.easeOutCubic,
+              child: FractionallySizedBox(
+                widthFactor: 1 / options.length,
+                heightFactor: 1,
+                child: DecoratedBox(
+                  decoration: BoxDecoration(
+                    color: context.appColors.primaryPressed.withValues(
+                      alpha: 0.45,
+                    ),
+                    borderRadius: AppRadius.input,
+                  ),
+                ),
+              ),
+            ),
+          ),
+          Row(
+            children: [
+              for (final (type, label) in options)
+                Expanded(
+                  child: Semantics(
+                    button: true,
+                    selected: type == selectedType,
+                    label: label,
+                    child: InkWell(
+                      key: ValueKey('service-type-${type.name}'),
+                      onTap: enabled && type != selectedType
+                          ? () => onSelected(type)
+                          : null,
+                      borderRadius: AppRadius.input,
+                      child: Center(
+                        child: Text(
+                          label,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: Theme.of(context).textTheme.labelMedium
+                              ?.copyWith(
+                                color: type == selectedType
+                                    ? context.appColors.primary
+                                    : context.appColors.textSecondary,
+                                fontWeight: FontWeight.w800,
+                                letterSpacing: 0.4,
+                              ),
                         ),
                       ),
                     ),
