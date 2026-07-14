@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
+import 'package:frontend/app/theme/app_palette.dart';
 import 'package:frontend/app/theme/app_theme.dart';
 import 'package:frontend/features/dashboard/domain/entities/dashboard_data.dart';
-import 'package:frontend/features/dashboard/presentation/colors.dart';
 import 'package:frontend/features/dashboard/presentation/common/dashboard_card.dart';
 import 'package:frontend/features/dashboard/presentation/utils/dashboard_event_presentation.dart';
 import 'package:frontend/features/dashboard/presentation/utils/dashboard_formatters.dart';
@@ -14,7 +14,10 @@ final class RecentEventTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final presentation = DashboardEventPresentation.from(event.type);
+    final presentation = DashboardEventPresentation.from(
+      event.type,
+      colors: context.appColors,
+    );
 
     return DashboardCard(
       padding: const EdgeInsets.all(AppSpacing.lg),
@@ -55,7 +58,7 @@ final class RecentEventTile extends StatelessWidget {
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                   style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                    color: DashboardColors.textSecondary,
+                    color: context.appColors.textSecondary,
                   ),
                 ),
               ],

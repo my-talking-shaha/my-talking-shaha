@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:frontend/app/theme/app_palette.dart';
 import 'package:frontend/app/theme/app_theme.dart';
 import 'package:frontend/features/analytics/domain/entities/analytics_summary.dart';
 import 'package:frontend/features/analytics/domain/entities/mileage_trend.dart';
-import 'package:frontend/features/analytics/presentation/colors.dart';
 import 'package:frontend/features/analytics/presentation/common/analytics_common_widgets.dart';
 import 'package:frontend/features/analytics/presentation/utils/analytics_formatters.dart';
 import 'package:frontend/features/analytics/presentation/utils/analytics_interactions.dart';
@@ -116,8 +116,10 @@ final class MileageTrendCard extends StatelessWidget {
                     width: double.infinity,
                     child: CustomPaint(
                       painter: AnalyticsChartPainter(
+                        borderColor: context.appColors.border,
+                        labelColor: context.appColors.textSecondary,
                         points: chartPoints,
-                        accentColor: AnalyticsColors.success,
+                        accentColor: context.appColors.success,
                         type: AnalyticsChartType.line,
                         labelFormatter: (label) =>
                             analyticsLocalizedChartLabel(l10n, label),
@@ -131,8 +133,8 @@ final class MileageTrendCard extends StatelessWidget {
                       Container(
                         width: 12,
                         height: 12,
-                        decoration: const BoxDecoration(
-                          color: AnalyticsColors.success,
+                        decoration: BoxDecoration(
+                          color: context.appColors.success,
                           shape: BoxShape.circle,
                         ),
                       ),
@@ -148,7 +150,7 @@ final class MileageTrendCard extends StatelessWidget {
                       Text(
                         '${formatAnalyticsNumber(trend.points.last.mileageKm)} km',
                         style: Theme.of(context).textTheme.labelMedium
-                            ?.copyWith(color: AnalyticsColors.primaryLight),
+                            ?.copyWith(color: context.appColors.primaryLight),
                       ),
                     ],
                   ),

@@ -5,7 +5,8 @@ from datetime import datetime, timedelta
 from fastapi.testclient import TestClient
 
 from ml.api import app
-from ml.predict import CarSpec, Usage, predict_maintenance
+from ml.models import CarSpec, Usage
+from ml.predict import predict_maintenance
 
 client = TestClient(app)
 USAGE = {

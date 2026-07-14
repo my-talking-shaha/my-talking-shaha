@@ -27,6 +27,7 @@ The backend stores user accounts, garage vehicles, car history, parts, analytics
 
 - [architecture.md](architecture.md) - backend architecture, API rules, validation rules, and error format.
 - [api-contract.md](api-contract.md) - one API contract for the mobile application.
+- [monitoring.md](monitoring.md) - Prometheus metrics, local Grafana dashboard, and current business counters.
 - [prediction.md](prediction.md) - how the backend supports the AI chat, quick questions, intent flow, and maintenance prediction.
 
 ## MVP
@@ -43,4 +44,3 @@ The MVP foundation includes:
 - push notifications.
 
 Yandex ID, voice input, 3D model generation, and external car catalogs are planned as extensions after the basic MVP.
-

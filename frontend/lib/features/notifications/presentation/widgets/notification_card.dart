@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:frontend/app/theme/app_palette.dart';
 import 'package:frontend/app/theme/app_theme.dart';
 import 'package:frontend/features/notifications/domain/entities/app_notification.dart';
-import 'package:frontend/features/notifications/presentation/colors.dart';
 import 'package:frontend/features/notifications/presentation/utils/notification_presentation_utils.dart';
 
 final class NotificationCard extends StatelessWidget {
@@ -16,7 +16,10 @@ final class NotificationCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final accentColor = notificationAccentColor(notification.type);
+    final accentColor = notificationAccentColor(
+      notification.type,
+      colors: context.appColors,
+    );
 
     return Card(
       child: InkWell(
@@ -73,8 +76,8 @@ final class NotificationCard extends StatelessWidget {
                       Container(
                         width: 8,
                         height: 8,
-                        decoration: const BoxDecoration(
-                          color: NotificationsColors.unread,
+                        decoration: BoxDecoration(
+                          color: context.appColors.unread,
                           shape: BoxShape.circle,
                         ),
                       ),

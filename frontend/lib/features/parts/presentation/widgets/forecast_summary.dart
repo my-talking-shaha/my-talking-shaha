@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
+import 'package:frontend/app/theme/app_palette.dart';
 import 'package:frontend/app/theme/app_theme.dart';
 import 'package:frontend/features/parts/domain/entities/vehicle_part.dart';
-import 'package:frontend/features/parts/presentation/colors.dart';
 import 'package:frontend/features/parts/presentation/utils/maintenance_forecast_utils.dart';
 import 'package:frontend/l10n/generated/app_localizations.dart';
 
@@ -37,8 +37,8 @@ final class ForecastSummary extends StatelessWidget {
               'assets/icons/parts/maintenance.svg',
               width: 24,
               height: 24,
-              colorFilter: const ColorFilter.mode(
-                PartsColors.warning,
+              colorFilter: ColorFilter.mode(
+                context.appColors.partsWarning,
                 BlendMode.srcIn,
               ),
             ),
@@ -49,7 +49,7 @@ final class ForecastSummary extends StatelessWidget {
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
                 style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                  color: PartsColors.bodyText,
+                  color: context.appColors.bodyText,
                   fontSize: 14,
                   fontWeight: FontWeight.w700,
                   letterSpacing: 0.6,
@@ -65,7 +65,7 @@ final class ForecastSummary extends StatelessWidget {
           maxLines: 2,
           overflow: TextOverflow.ellipsis,
           style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-            color: PartsColors.bodyText,
+            color: context.appColors.bodyText,
             fontSize: 30,
             fontWeight: FontWeight.w700,
             height: 1.25,
@@ -77,7 +77,7 @@ final class ForecastSummary extends StatelessWidget {
           maxLines: 2,
           overflow: TextOverflow.ellipsis,
           style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-            color: PartsColors.bodyTextMuted,
+            color: context.appColors.bodyTextMuted,
             fontSize: 16,
             fontWeight: FontWeight.w400,
             height: 1.45,

@@ -1,0 +1,174 @@
+{
+  "uid": "talking-shaha-overview",
+  "title": "My Talking Shaha Overview",
+  "schemaVersion": 39,
+  "version": 2,
+  "refresh": "15s",
+  "time": {
+    "from": "now-6h",
+    "to": "now"
+  },
+  "panels": [
+    {
+      "id": 1,
+      "type": "stat",
+      "title": "Backend Health",
+      "gridPos": { "x": 0, "y": 0, "w": 6, "h": 4 },
+      "targets": [
+        {
+          "expr": "up{job=\"talking-shaha-backend\"}",
+          "legendFormat": "up"
+        }
+      ]
+    },
+    {
+      "id": 2,
+      "type": "timeseries",
+      "title": "API Requests",
+      "gridPos": { "x": 6, "y": 0, "w": 18, "h": 8 },
+      "targets": [
+        {
+          "expr": "sum(rate(http_server_requests_seconds_count{uri!~\"/actuator.*\"}[5m])) by (method, uri, status)",
+          "legendFormat": "{{method}} {{uri}} {{status}}"
+        }
+      ]
+    },
+    {
+      "id": 3,
+      "type": "timeseries",
+      "title": "API Max Latency",
+      "gridPos": { "x": 0, "y": 4, "w": 12, "h": 8 },
+      "targets": [
+        {
+          "expr": "http_server_requests_seconds_max{uri!~\"/actuator.*\"}",
+          "legendFormat": "{{uri}}"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "s"
+        }
+      }
+    },
+    {
+      "id": 4,
+      "type": "timeseries",
+      "title": "Users Over Time",
+      "gridPos": { "x": 12, "y": 8, "w": 12, "h": 8 },
+      "targets": [
+        {
+          "expr": "talkingshaha_users",
+          "legendFormat": "users"
+        }
+      ]
+    },
+    {
+      "id": 5,
+      "type": "stat",
+      "title": "Users",
+      "gridPos": { "x": 0, "y": 12, "w": 6, "h": 4 },
+      "targets": [
+        {
+          "expr": "talkingshaha_users",
+          "legendFormat": "users"
+        }
+      ]
+    },
+    {
+      "id": 6,
+      "type": "stat",
+      "title": "Vehicles",
+      "gridPos": { "x": 6, "y": 12, "w": 6, "h": 4 },
+      "targets": [
+        {
+          "expr": "talkingshaha_vehicles",
+          "legendFormat": "vehicles"
+        }
+      ]
+    },
+    {
+      "id": 7,
+      "type": "timeseries",
+      "title": "Timeline Events By Type",
+      "gridPos": { "x": 0, "y": 16, "w": 12, "h": 8 },
+      "targets": [
+        {
+          "expr": "talkingshaha_timeline_events_by_type",
+          "legendFormat": "{{type}}"
+        }
+      ]
+    },
+    {
+      "id": 8,
+      "type": "bargauge",
+      "title": "Business Actions Since Start",
+      "gridPos": { "x": 12, "y": 16, "w": 12, "h": 8 },
+      "targets": [
+        {
+          "expr": "talkingshaha_users_registered_total",
+          "legendFormat": "registrations"
+        },
+        {
+          "expr": "talkingshaha_vehicle_creations_total",
+          "legendFormat": "vehicles created"
+        },
+        {
+          "expr": "talkingshaha_chat_user_messages_total",
+          "legendFormat": "chat messages"
+        },
+        {
+          "expr": "sum(talkingshaha_analytics_views_total{view=\"overview\"}) or on() vector(0)",
+          "legendFormat": "analytics overview"
+        },
+        {
+          "expr": "sum(talkingshaha_analytics_views_total{view=\"mileage_trend\"}) or on() vector(0)",
+          "legendFormat": "analytics mileage trend"
+        }
+      ]
+    },
+    {
+      "id": 9,
+      "type": "timeseries",
+      "title": "Registrations Over Time",
+      "gridPos": { "x": 0, "y": 24, "w": 8, "h": 8 },
+      "targets": [
+        {
+          "expr": "clamp_min(round(increase(talkingshaha_users_registered_total[$__rate_interval])), 0)",
+          "legendFormat": "registrations"
+        }
+      ]
+    },
+    {
+      "id": 10,
+      "type": "timeseries",
+      "title": "Vehicles Created Over Time",
+      "gridPos": { "x": 8, "y": 24, "w": 8, "h": 8 },
+      "targets": [
+        {
+          "expr": "clamp_min(round(increase(talkingshaha_vehicle_creations_total[$__rate_interval])), 0)",
+          "legendFormat": "vehicles created"
+        }
+      ]
+    },
+    {
+      "id": 11,
+      "type": "timeseries",
+      "title": "Chat And Analytics Activity",
+      "gridPos": { "x": 16, "y": 24, "w": 8, "h": 8 },
+      "targets": [
+        {
+          "expr": "clamp_min(round(increase(talkingshaha_chat_user_messages_total[$__rate_interval])), 0)",
+          "legendFormat": "chat messages"
+        },
+        {
+          "expr": "clamp_min(round(sum(increase(talkingshaha_analytics_views_total{view=\"overview\"}[$__rate_interval]))), 0) or on() vector(0)",
+          "legendFormat": "analytics overview"
+        },
+        {
+          "expr": "clamp_min(round(sum(increase(talkingshaha_analytics_views_total{view=\"mileage_trend\"}[$__rate_interval]))), 0) or on() vector(0)",
+          "legendFormat": "analytics mileage trend"
+        }
+      ]
+    }
+  ]
+}

@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:frontend/app/theme/app_palette.dart';
 import 'package:frontend/app/theme/app_theme.dart';
-import 'package:frontend/features/settings/presentation/colors.dart';
 import 'package:frontend/features/settings/presentation/common/settings_section.dart';
 
 final class SettingsThemeSection extends StatelessWidget {
@@ -29,9 +29,9 @@ final class SettingsThemeSection extends StatelessWidget {
         Container(
           padding: const EdgeInsets.all(AppSpacing.xs),
           decoration: BoxDecoration(
-            color: SettingsColors.surface,
+            color: context.appColors.surface,
             borderRadius: AppRadius.input,
-            border: Border.all(color: SettingsColors.border),
+            border: Border.all(color: context.appColors.border),
           ),
           child: Row(
             children: [
@@ -76,16 +76,16 @@ final class _ThemeSegment extends StatelessWidget {
           padding: const EdgeInsets.symmetric(vertical: AppSpacing.md),
           decoration: BoxDecoration(
             color: selected
-                ? SettingsColors.primary
-                : SettingsColors.transparent,
+                ? context.appColors.primary
+                : context.appColors.transparent,
             borderRadius: AppRadius.input,
           ),
           child: Text(
             label,
             style: Theme.of(context).textTheme.labelLarge?.copyWith(
               color: selected
-                  ? SettingsColors.white
-                  : SettingsColors.textSecondary,
+                  ? context.appColors.white
+                  : context.appColors.textSecondary,
             ),
           ),
         ),

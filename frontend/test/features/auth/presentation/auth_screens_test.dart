@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:frontend/app/theme/app_theme.dart';
 import 'package:frontend/features/auth/di/auth_providers.dart';
@@ -95,6 +96,23 @@ void main() {
     expect(find.text('Invalid credentials'), findsNothing);
   });
 
+  testWidgets('login background follows light theme', (tester) async {
+    await _pumpAuthApp(
+      tester,
+      repository: _FakeAuthRepository(),
+      theme: AppTheme.light,
+    );
+
+    expect(find.byType(SvgPicture), findsNothing);
+    expect(
+      find.byWidgetPredicate(
+        (widget) =>
+            widget is ColoredBox && widget.color == AppLightColors.background,
+      ),
+      findsOneWidget,
+    );
+  });
+
   testWidgets('registration keeps shared password visibility and validation', (
     tester,
   ) async {
@@ -159,6 +177,7 @@ Future<void> _pumpAuthApp(
   WidgetTester tester, {
   required AuthRepository repository,
   String initialLocation = '/login',
+  ThemeData? theme,
 }) async {
   final router = GoRouter(
     initialLocation: initialLocation,
@@ -178,7 +197,7 @@ Future<void> _pumpAuthApp(
         locale: const Locale('en'),
         localizationsDelegates: AppLocalizations.localizationsDelegates,
         supportedLocales: AppLocalizations.supportedLocales,
-        theme: AppTheme.dark,
+        theme: theme ?? AppTheme.dark,
         routerConfig: router,
       ),
     ),

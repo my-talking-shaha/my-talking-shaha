@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:frontend/app/theme/app_palette.dart';
 import 'package:frontend/app/theme/app_theme.dart';
-import 'package:frontend/features/garage/presentation/garage_colors.dart';
 import 'package:frontend/l10n/generated/app_localizations.dart';
 
 final class GarageHeader extends StatelessWidget {
@@ -18,7 +18,7 @@ final class GarageHeader extends StatelessWidget {
         Text(
           l10n.brandName,
           style: Theme.of(context).textTheme.headlineLarge?.copyWith(
-            color: GarageColors.primaryLight,
+            color: context.appColors.primaryLight,
             fontSize: 31,
             fontWeight: FontWeight.w800,
             height: 1.08,
@@ -35,7 +35,7 @@ final class GarageHeader extends StatelessWidget {
                   Text(
                     l10n.yourFleet,
                     style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                      color: GarageColors.success,
+                      color: context.appColors.success,
                       fontSize: 12,
                       fontWeight: FontWeight.w800,
                       letterSpacing: 0.8,
@@ -60,8 +60,8 @@ final class GarageHeader extends StatelessWidget {
                 tooltip: l10n.addVehicle,
                 onPressed: onAddVehicle,
                 style: IconButton.styleFrom(
-                  backgroundColor: GarageColors.primary,
-                  foregroundColor: GarageColors.white,
+                  backgroundColor: context.appColors.primary,
+                  foregroundColor: context.appColors.white,
                   shape: const CircleBorder(),
                 ),
                 icon: const Icon(Icons.add, size: 32),

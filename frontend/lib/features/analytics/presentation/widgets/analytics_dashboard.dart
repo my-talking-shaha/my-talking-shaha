@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:frontend/app/theme/app_palette.dart';
 import 'package:frontend/app/theme/app_theme.dart';
 import 'package:frontend/features/analytics/domain/entities/analytics_period.dart';
 import 'package:frontend/features/analytics/domain/entities/analytics_summary.dart';
 import 'package:frontend/features/analytics/domain/entities/mileage_trend.dart';
-import 'package:frontend/features/analytics/presentation/colors.dart';
 import 'package:frontend/features/analytics/presentation/common/analytics_common_widgets.dart';
 import 'package:frontend/features/analytics/presentation/utils/analytics_formatters.dart';
 import 'package:frontend/features/analytics/presentation/utils/analytics_labels.dart';
@@ -63,7 +63,7 @@ final class AnalyticsDashboard extends StatelessWidget {
         Text(
           l10n.intelligence,
           style: Theme.of(context).textTheme.headlineLarge?.copyWith(
-            color: AnalyticsColors.primaryLight,
+            color: context.appColors.primaryLight,
             fontSize: 28,
             height: 1.1,
           ),
@@ -73,9 +73,9 @@ final class AnalyticsDashboard extends StatelessWidget {
         const SizedBox(height: AppSpacing.sm),
         Text(
           l10n.performanceOverview,
-          style: Theme.of(
-            context,
-          ).textTheme.bodyLarge?.copyWith(color: AnalyticsColors.textSecondary),
+          style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+            color: context.appColors.textSecondary,
+          ),
         ),
         const SizedBox(height: AppSpacing.xl),
         AnalyticsPeriodSelector(
@@ -102,7 +102,7 @@ final class AnalyticsDashboard extends StatelessWidget {
           points: charts.expensesByMonth,
           valueFormatter: (value) => formatAnalyticsMoney(value.round()),
           legend: l10n.monthlyExpenseTrend,
-          accentColor: AnalyticsColors.primaryLight,
+          accentColor: context.appColors.primaryLight,
           chartType: AnalyticsChartType.line,
           trendPercent: summary.trendPercent,
           labelFormatter: (label) => analyticsLocalizedChartLabel(l10n, label),

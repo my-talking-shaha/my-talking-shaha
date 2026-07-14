@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:frontend/app/theme/app_theme.dart';
 
 abstract final class PartsColors {
   static const headerText = Color(0xFFC4C5D9);
-  static const headerTextMuted = Color(0xFFB8C3FF);
-  static const cardBackground = Color(0xFF1C1F25);
+  static const headerTextMuted = AppColors.primaryLight;
+  static const cardBackground = AppColors.surfaceHigh;
   static const bodyText = Color(0xFFE1E2EB);
   static const bodyTextMuted = Color(0xFFC4C5D9);
   static const progressTrack = Color(0xFF343841);
@@ -14,6 +15,6 @@ abstract final class PartsColors {
   static const warning = Color(0xFFFFD08A);
   static const critical = Color(0xFFFFAAA5);
   static const unknown = Color(0xFF8E90A2);
-  static const border = Color(0xFF2B303B);
-  static const error = Color(0xFFE85D75);
+  static const border = AppColors.border;
+  static const error = AppColors.error;
 }

@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:frontend/app/theme/app_palette.dart';
 import 'package:frontend/app/theme/app_theme.dart';
-import 'package:frontend/features/dashboard/presentation/colors.dart';
 
 final class DashboardCard extends StatelessWidget {
   const DashboardCard({
@@ -20,9 +20,9 @@ final class DashboardCard extends StatelessWidget {
       height: height,
       padding: padding,
       decoration: BoxDecoration(
-        color: DashboardColors.surface,
+        color: context.appColors.surface,
         borderRadius: AppRadius.card,
-        border: Border.all(color: DashboardColors.border),
+        border: Border.all(color: context.appColors.border),
       ),
       child: child,
     );

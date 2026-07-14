@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:frontend/app/theme/app_palette.dart';
 import 'package:frontend/app/theme/app_theme.dart';
 import 'package:frontend/features/garage/domain/entities/vehicle.dart';
-import 'package:frontend/features/garage/presentation/garage_colors.dart';
 import 'package:frontend/features/garage/presentation/utils/garage_vehicle_formatters.dart';
 import 'package:frontend/features/garage/presentation/widgets/garage_metric_tile.dart';
 import 'package:frontend/features/garage/presentation/widgets/garage_vehicle_image.dart';
@@ -35,19 +35,19 @@ final class VehicleGarageCard extends StatelessWidget {
           SwipeRevealAction(
             label: l10n.edit,
             iconPath: 'assets/icons/garage/edit.svg',
-            color: GarageColors.swipeEdit,
+            color: context.appColors.swipeEdit,
             onPressed: onEdit!,
           ),
         if (onDelete != null)
           SwipeRevealAction(
             label: l10n.delete,
             iconPath: 'assets/icons/garage/delete.svg',
-            color: GarageColors.swipeDelete,
+            color: context.appColors.swipeDelete,
             onPressed: onDelete!,
           ),
       ],
       child: Material(
-        color: GarageColors.transparent,
+        color: context.appColors.transparent,
         borderRadius: AppRadius.card,
         clipBehavior: Clip.antiAlias,
         child: InkWell(
@@ -56,11 +56,14 @@ final class VehicleGarageCard extends StatelessWidget {
           child: Ink(
             decoration: BoxDecoration(
               borderRadius: AppRadius.card,
-              border: Border.all(color: GarageColors.border),
-              gradient: const LinearGradient(
+              border: Border.all(color: context.appColors.border),
+              gradient: LinearGradient(
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
-                colors: [GarageColors.surfaceHighest, GarageColors.surface],
+                colors: [
+                  context.appColors.surfaceHighest,
+                  context.appColors.surface,
+                ],
               ),
             ),
             child: Column(

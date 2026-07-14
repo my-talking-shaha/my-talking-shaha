@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:frontend/app/theme/app_palette.dart';
 import 'package:frontend/app/theme/app_theme.dart';
-import 'package:frontend/features/analytics/presentation/colors.dart';
 import 'package:frontend/features/analytics/presentation/utils/analytics_formatters.dart';
 
 final class AnalyticsDashboardCard extends StatelessWidget {
@@ -19,16 +19,16 @@ final class AnalyticsDashboardCard extends StatelessWidget {
       width: double.infinity,
       padding: padding,
       decoration: BoxDecoration(
-        gradient: const LinearGradient(
+        gradient: LinearGradient(
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
           colors: [
-            AnalyticsColors.surfaceHigh,
-            AnalyticsColors.surface,
-            AnalyticsColors.backgroundDark,
+            context.appColors.surfaceHigh,
+            context.appColors.surface,
+            context.appColors.backgroundDark,
           ],
         ),
-        border: Border.all(color: AnalyticsColors.border),
+        border: Border.all(color: context.appColors.border),
         borderRadius: AppRadius.card,
       ),
       child: child,
@@ -50,7 +50,7 @@ final class AnalyticsSectionHeader extends StatelessWidget {
           child: Text(
             title,
             style: Theme.of(context).textTheme.labelMedium?.copyWith(
-              color: AnalyticsColors.textSecondary,
+              color: context.appColors.textSecondary,
               letterSpacing: 1.1,
             ),
           ),
@@ -59,7 +59,7 @@ final class AnalyticsSectionHeader extends StatelessWidget {
           Text(
             trailing!,
             style: Theme.of(context).textTheme.labelMedium?.copyWith(
-              color: AnalyticsColors.primaryLight,
+              color: context.appColors.primaryLight,
             ),
           ),
       ],
@@ -80,22 +80,18 @@ final class AnalyticsTrendBadge extends StatelessWidget {
         vertical: AppSpacing.sm,
       ),
       decoration: BoxDecoration(
-        color: AnalyticsColors.success.withValues(alpha: 0.10),
+        color: context.appColors.success.withValues(alpha: 0.10),
         borderRadius: BorderRadius.circular(AppRadius.xl),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          const Icon(
-            Icons.trending_up,
-            color: AnalyticsColors.success,
-            size: 14,
-          ),
+          Icon(Icons.trending_up, color: context.appColors.success, size: 14),
           const SizedBox(width: AppSpacing.xs),
           Text(
             '${formatAnalyticsDecimal(percent)}%',
             style: Theme.of(context).textTheme.labelMedium?.copyWith(
-              color: AnalyticsColors.success,
+              color: context.appColors.success,
               fontWeight: FontWeight.w800,
             ),
           ),
@@ -116,7 +112,7 @@ final class AnalyticsUnavailableText extends StatelessWidget {
       message,
       style: Theme.of(
         context,
-      ).textTheme.bodyMedium?.copyWith(color: AnalyticsColors.textMuted),
+      ).textTheme.bodyMedium?.copyWith(color: context.appColors.textMuted),
     );
   }
 }
@@ -138,9 +134,9 @@ final class AnalyticsMetricBullet extends StatelessWidget {
         Container(
           width: 6,
           height: 6,
-          decoration: const BoxDecoration(
+          decoration: BoxDecoration(
             shape: BoxShape.circle,
-            color: AnalyticsColors.warning,
+            color: context.appColors.warning,
           ),
         ),
         const SizedBox(width: AppSpacing.sm),
@@ -149,9 +145,9 @@ final class AnalyticsMetricBullet extends StatelessWidget {
         ),
         Text(
           value,
-          style: Theme.of(
-            context,
-          ).textTheme.labelMedium?.copyWith(color: AnalyticsColors.textPrimary),
+          style: Theme.of(context).textTheme.labelMedium?.copyWith(
+            color: context.appColors.textPrimary,
+          ),
         ),
       ],
     );

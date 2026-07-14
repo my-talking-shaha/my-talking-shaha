@@ -5,6 +5,8 @@ import java.util.Optional;
 import java.util.UUID;
 
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 import ru.talkingshaha.backend.user.model.AppUser;
 import ru.talkingshaha.backend.vehicle.model.Vehicle;
 
@@ -12,4 +14,7 @@ public interface VehicleRepository extends JpaRepository<Vehicle, UUID> {
     List<Vehicle> findAllByOwnerOrderByBrandAscModelAsc(AppUser owner);
 
     Optional<Vehicle> findByIdAndOwner(UUID id, AppUser owner);
+
+    @Query("select count(v) from Vehicle v where v.owner.email <> :email")
+    long countByOwnerEmailNot(@Param("email") String email);
 }

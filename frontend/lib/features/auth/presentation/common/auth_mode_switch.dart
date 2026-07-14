@@ -36,12 +36,14 @@ final class AuthModeSwitch extends StatelessWidget {
       onSelectionChanged: AuthModeStyleUtils.selectionHandler(onModeSelected),
       style: ButtonStyle(
         visualDensity: VisualDensity.standard,
-        side: WidgetStateProperty.resolveWith(AuthModeStyleUtils.borderSide),
+        side: WidgetStateProperty.resolveWith(
+          (states) => AuthModeStyleUtils.borderSide(context, states),
+        ),
         foregroundColor: WidgetStateProperty.resolveWith(
-          AuthModeStyleUtils.foregroundColor,
+          (states) => AuthModeStyleUtils.foregroundColor(context, states),
         ),
         backgroundColor: WidgetStateProperty.resolveWith(
-          AuthModeStyleUtils.backgroundColor,
+          (states) => AuthModeStyleUtils.backgroundColor(context, states),
         ),
         textStyle: WidgetStateProperty.all(
           const TextStyle(fontSize: 14, fontWeight: FontWeight.w700),

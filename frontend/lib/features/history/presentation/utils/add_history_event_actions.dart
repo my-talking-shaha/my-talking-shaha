@@ -87,6 +87,11 @@ extension _AddHistoryEventActions on _AddHistoryEventScreenState {
               child: DropdownButtonFormField<String>(
                 key: const ValueKey('fuel-type'),
                 initialValue: _fuelType,
+                dropdownColor: context.appColors.surfaceHigh,
+                iconEnabledColor: context.appColors.primaryLight,
+                style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                  color: context.appColors.textPrimary,
+                ),
                 decoration: const InputDecoration(),
                 items: [
                   for (final value in fuelTypeItems)

@@ -21,8 +21,8 @@ abstract final class HistoryColors {
   static const textMuted = AppColors.textMuted;
   static const white = AppColors.white;
 
-  static const warning = Color(0xFFDCA249);
+  static const warning = AppColors.warningStrong;
   static const error = AppColors.error;
-  static const destructive = Color(0xFFD4352F);
+  static const destructive = AppColors.destructive;
   static const transparent = Colors.transparent;
 }

@@ -33,6 +33,7 @@ import ru.talkingshaha.backend.chat.model.ChatMessageRole;
 import ru.talkingshaha.backend.chat.model.ChatSession;
 import ru.talkingshaha.backend.chat.repository.ChatMessageRepository;
 import ru.talkingshaha.backend.chat.repository.ChatSessionRepository;
+import ru.talkingshaha.backend.common.metrics.BusinessMetrics;
 import ru.talkingshaha.backend.part.dto.PartResponse;
 import ru.talkingshaha.backend.part.model.PartStatus;
 import ru.talkingshaha.backend.timeline.dto.CreateMaintenanceEventRequest;
@@ -76,6 +77,7 @@ public class ChatService {
     private final AiChatClient aiChatClient;
     private final TimelineEventService timelineEvents;
     private final ObjectMapper objectMapper;
+    private final BusinessMetrics metrics;
 
     public ChatService(
             VehicleService vehicles,
@@ -85,7 +87,8 @@ public class ChatService {
             ChatIntentResolver intentResolver,
             AiChatClient aiChatClient,
             TimelineEventService timelineEvents,
-            ObjectMapper objectMapper) {
+            ObjectMapper objectMapper,
+            BusinessMetrics metrics) {
         this.vehicles = vehicles;
         this.analytics = analytics;
         this.sessions = sessions;
@@ -94,6 +97,7 @@ public class ChatService {
         this.aiChatClient = aiChatClient;
         this.timelineEvents = timelineEvents;
         this.objectMapper = objectMapper;
+        this.metrics = metrics;
     }
 
     @Transactional
@@ -132,6 +136,7 @@ public class ChatService {
         Vehicle vehicle = vehicles.requireOwnedVehicle(vehicleId);
         ChatSession session = getOrCreateSession(vehicle, ChatLanguage.EN);
         ChatMessage userMessage = saveMessage(session, ChatMessageRole.USER, request.text());
+        metrics.recordChatUserMessage();
 
         VehicleDashboardResponse dashboard = vehicles.dashboard(vehicleId);
         AnalyticsOverviewResponse analyticsOverview = analytics.overview(vehicleId, AnalyticsPeriod.ALL_TIME, null, null);

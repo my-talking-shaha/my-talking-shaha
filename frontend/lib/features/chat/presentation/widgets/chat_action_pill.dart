@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:frontend/app/theme/app_palette.dart';
 import 'package:frontend/features/chat/domain/entities/chat_action.dart';
-import 'package:frontend/features/chat/presentation/colors.dart';
 import 'package:frontend/features/chat/presentation/utils/chat_action_presentation.dart';
 import 'package:frontend/l10n/generated/app_localizations.dart';
 
@@ -22,7 +22,7 @@ final class ChatActionPill extends StatelessWidget {
     return Align(
       alignment: Alignment.centerLeft,
       child: Material(
-        color: ChatColors.transparent,
+        color: context.appColors.transparent,
         child: InkWell(
           key: const ValueKey('chat_message_action'),
           onTap: () =>
@@ -31,10 +31,10 @@ final class ChatActionPill extends StatelessWidget {
           child: Ink(
             padding: const EdgeInsets.fromLTRB(7, 5, 12, 5),
             decoration: BoxDecoration(
-              color: ChatColors.primary.withValues(alpha: 0.1),
+              color: context.appColors.primary.withValues(alpha: 0.1),
               borderRadius: BorderRadius.circular(16),
               border: Border.all(
-                color: ChatColors.primaryLight.withValues(alpha: 0.18),
+                color: context.appColors.primaryLight.withValues(alpha: 0.18),
               ),
             ),
             child: Row(
@@ -44,20 +44,20 @@ final class ChatActionPill extends StatelessWidget {
                   width: 22,
                   height: 22,
                   decoration: BoxDecoration(
-                    color: ChatColors.primary.withValues(alpha: 0.18),
+                    color: context.appColors.primary.withValues(alpha: 0.18),
                     shape: BoxShape.circle,
                   ),
                   child: Icon(
                     chatActionIcon(action),
                     size: 14,
-                    color: ChatColors.primaryLight,
+                    color: context.appColors.primaryLight,
                   ),
                 ),
                 const SizedBox(width: 7),
                 Text(
                   chatActionLabel(AppLocalizations.of(context), action),
                   style: Theme.of(context).textTheme.labelMedium?.copyWith(
-                    color: ChatColors.primaryLight,
+                    color: context.appColors.primaryLight,
                     fontWeight: FontWeight.w700,
                     height: 1,
                   ),

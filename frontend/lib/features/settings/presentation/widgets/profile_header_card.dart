@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:frontend/app/theme/app_palette.dart';
 import 'package:frontend/app/theme/app_theme.dart';
-import 'package:frontend/features/settings/presentation/colors.dart';
 import 'package:frontend/features/settings/presentation/common/settings_surface_card.dart';
 import 'package:frontend/features/settings/presentation/utils/settings_profile_utils.dart';
 
@@ -64,14 +64,14 @@ final class _ProfileAvatar extends StatelessWidget {
           height: 64,
           alignment: Alignment.center,
           decoration: BoxDecoration(
-            color: SettingsColors.surfaceHighest,
+            color: context.appColors.surfaceHighest,
             shape: BoxShape.circle,
-            border: Border.all(color: SettingsColors.border),
+            border: Border.all(color: context.appColors.border),
           ),
           child: Text(
             initials,
             style: Theme.of(context).textTheme.titleLarge?.copyWith(
-              color: SettingsColors.primaryLight,
+              color: context.appColors.primaryLight,
             ),
           ),
         ),
@@ -82,13 +82,13 @@ final class _ProfileAvatar extends StatelessWidget {
             width: 18,
             height: 18,
             decoration: BoxDecoration(
-              color: SettingsColors.primary,
+              color: context.appColors.primary,
               shape: BoxShape.circle,
-              border: Border.all(color: SettingsColors.surface, width: 2),
+              border: Border.all(color: context.appColors.surface, width: 2),
             ),
-            child: const Icon(
+            child: Icon(
               Icons.check_rounded,
-              color: SettingsColors.white,
+              color: context.appColors.white,
               size: 11,
             ),
           ),

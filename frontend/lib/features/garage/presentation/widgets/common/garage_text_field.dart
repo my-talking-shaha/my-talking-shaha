@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:frontend/features/garage/presentation/garage_colors.dart';
+import 'package:frontend/app/theme/app_palette.dart';
 import 'package:frontend/features/garage/presentation/utils/garage_input_decoration.dart';
 import 'package:frontend/features/garage/presentation/widgets/common/garage_field_label.dart';
 
@@ -37,9 +37,10 @@ final class GarageTextField extends StatelessWidget {
         const SizedBox(height: 10),
         TextField(
           controller: controller,
-          style: const TextStyle(color: GarageColors.white, fontSize: 16),
-          cursorColor: GarageColors.primaryLight,
+          style: TextStyle(color: context.appColors.textPrimary, fontSize: 16),
+          cursorColor: context.appColors.primaryLight,
           decoration: garageInputDecoration(
+            context: context,
             hintText: hintText,
             errorText: errorText,
           ),

@@ -16,9 +16,11 @@ import jakarta.validation.ConstraintViolationException;
 import jakarta.validation.Validator;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.StringUtils;
 import org.springframework.web.multipart.MultipartFile;
 import ru.talkingshaha.backend.common.error.FieldValidationException;
 import ru.talkingshaha.backend.common.error.ResourceNotFoundException;
+import ru.talkingshaha.backend.common.metrics.BusinessMetrics;
 import ru.talkingshaha.backend.common.model.BaseEvent;
 import ru.talkingshaha.backend.chat.model.ChatSession;
 import ru.talkingshaha.backend.timeline.dto.CreateMaintenanceEventRequest;
@@ -58,6 +60,7 @@ public class TimelineEventService {
     private final EventPhotoService eventPhotos;
     private final ObjectMapper objectMapper;
     private final Validator validator;
+    private final BusinessMetrics metrics;
 
     public TimelineEventService(
             TimelineEventRepository events,
@@ -68,7 +71,8 @@ public class TimelineEventService {
             PartService parts,
             EventPhotoService eventPhotos,
             ObjectMapper objectMapper,
-            Validator validator) {
+            Validator validator,
+            BusinessMetrics metrics) {
         this.events = events;
         this.trips = trips;
         this.refuels = refuels;
@@ -78,6 +82,7 @@ public class TimelineEventService {
         this.eventPhotos = eventPhotos;
         this.objectMapper = objectMapper;
         this.validator = validator;
+        this.metrics = metrics;
     }
 
     @Transactional(readOnly = true)
@@ -115,7 +120,7 @@ public class TimelineEventService {
         event.setVehicle(vehicle);
         event.setType(type);
         event.setEventDateTime(request.eventDateTime());
-        event.setTitle(request.title());
+        event.setTitle(defaultTitle(request.title(), type));
         event.setMileageKm(request.mileageKm());
         event.setLiters(amount);
         event.setCost(request.cost());
@@ -123,7 +128,9 @@ public class TimelineEventService {
         event.setFuelName(request.fuelName());
         event.setStationName(request.stationName());
         updateVehicleMileage(vehicle, request.mileageKm());
-        return toResponse(refuels.save(event));
+        TimelineEventResponse response = toResponse(refuels.save(event));
+        metrics.recordTimelineEventCreated(type);
+        return response;
     }
 
     private boolean isRechargeRequest(Vehicle vehicle, CreateRefuelEventRequest request) {
@@ -174,7 +181,7 @@ public class TimelineEventService {
         event.setVehicle(vehicle);
         event.setType(TimelineEventType.TRIP);
         event.setEventDateTime(request.eventDateTime());
-        event.setTitle(request.title());
+        event.setTitle(defaultTitle(request.title(), TimelineEventType.TRIP));
         event.setStartMileageKm(request.startMileageKm());
         event.setEndMileageKm(request.endMileageKm());
         if (request.startMileageKm() != null && request.endMileageKm() != null) {
@@ -185,7 +192,9 @@ public class TimelineEventService {
         event.setEndedAt(request.eventDateTime().plusMinutes(request.durationMinutes()));
         event.setStatus(TripCompletionStatus.COMPLETE);
         updateVehicleMileage(vehicle, request.endMileageKm());
-        return toResponse(trips.save(event));
+        TimelineEventResponse response = toResponse(trips.save(event));
+        metrics.recordTimelineEventCreated(TimelineEventType.TRIP);
+        return response;
     }
 
     @Transactional
@@ -200,7 +209,9 @@ public class TimelineEventService {
         event.setNotes(notes);
         event.setStatus(TripCompletionStatus.IN_PROGRESS);
         event.setChatSession(session);
-        return toResponse(trips.save(event));
+        TimelineEventResponse response = toResponse(trips.save(event));
+        metrics.recordTimelineEventCreated(TimelineEventType.TRIP);
+        return response;
     }
 
     @Transactional
@@ -278,7 +289,9 @@ public class TimelineEventService {
         event.setCost(request.cost());
         eventPhotos.attachPhotos(event, photos);
         updateVehicleMileage(vehicle, request.mileageKm());
-        return toResponse(maintenances.save(event));
+        TimelineEventResponse response = toResponse(maintenances.save(event));
+        metrics.recordTimelineEventCreated(TimelineEventType.MAINTENANCE);
+        return response;
     }
 
     @Transactional
@@ -294,7 +307,9 @@ public class TimelineEventService {
         event.setMileageKm(request.mileageKm());
         event.setCost(request.cost());
         updateVehicleMileage(vehicle, request.mileageKm());
-        return toResponse(maintenances.save(event));
+        TimelineEventResponse response = toResponse(maintenances.save(event));
+        metrics.recordTimelineEventCreated(TimelineEventType.PART_REPLACEMENT);
+        return response;
     }
 
     @Transactional
@@ -341,7 +356,7 @@ public class TimelineEventService {
 
     private void applyRefuelUpdate(RefuelEvent event, CreateRefuelEventRequest request) {
         event.setEventDateTime(request.eventDateTime());
-        event.setTitle(request.title());
+        event.setTitle(defaultTitle(request.title(), event.getType()));
         event.setMileageKm(request.mileageKm());
         BigDecimal amount = fuelAmount(request, event.getType());
         validateRechargeLimits(request, amount, event.getType());
@@ -357,7 +372,7 @@ public class TimelineEventService {
             throw new IllegalArgumentException("End mileage must be >= start mileage");
         }
         event.setEventDateTime(request.eventDateTime());
-        event.setTitle(request.title());
+        event.setTitle(defaultTitle(request.title(), TimelineEventType.TRIP));
         event.setStartMileageKm(request.startMileageKm());
         event.setEndMileageKm(request.endMileageKm());
         event.setRoute(request.route());
@@ -378,6 +393,17 @@ public class TimelineEventService {
             case TripEvent trip -> trip.getEndMileageKm();
             case MaintenanceEvent maintenance -> maintenance.getMileageKm();
             default -> null;
+        };
+    }
+
+    private String defaultTitle(String title, TimelineEventType type) {
+        if (StringUtils.hasText(title)) {
+            return title;
+        }
+        return switch (type) {
+            case RECHARGE -> "Recharge";
+            case TRIP -> "Trip";
+            default -> "Refuel";
         };
     }
 

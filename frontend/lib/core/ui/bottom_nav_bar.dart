@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
-import 'package:frontend/app/theme/app_theme.dart';
+import 'package:frontend/app/theme/app_palette.dart';
 import 'package:frontend/l10n/generated/app_localizations.dart';
 
 enum Destination { garage, history, chat, analytics, settings }
@@ -28,6 +28,9 @@ final class PrimaryBottomNavBar extends StatelessWidget {
     final selectedIndex = destinations.indexOf(selectedDestination);
 
     return BottomNavigationBar(
+      backgroundColor: context.appColors.surface,
+      selectedItemColor: context.appColors.primary,
+      unselectedItemColor: context.appColors.textMuted,
       type: BottomNavigationBarType.fixed,
       currentIndex: selectedIndex < 0 ? 0 : selectedIndex,
       onTap: (index) {
@@ -43,11 +46,11 @@ final class PrimaryBottomNavBar extends StatelessWidget {
         return BottomNavigationBarItem(
           icon: _NavigationIcon(
             destination: destination,
-            color: AppColors.textMuted,
+            color: context.appColors.textMuted,
           ),
           activeIcon: _NavigationIcon(
             destination: destination,
-            color: AppColors.primaryLight,
+            color: context.appColors.primaryLight,
           ),
           label: label,
           tooltip: label,

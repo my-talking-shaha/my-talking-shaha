@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:frontend/app/theme/app_palette.dart';
 import 'package:frontend/app/theme/app_theme.dart';
 import 'package:frontend/features/garage/domain/entities/vehicle.dart';
-import 'package:frontend/features/garage/presentation/garage_colors.dart';
 
 final class GarageVehicleImage extends StatelessWidget {
   const GarageVehicleImage({required this.vehicle, super.key});
@@ -22,19 +22,19 @@ final class GarageVehicleImage extends StatelessWidget {
             ? Container(
                 key: ValueKey('garage_vehicle_photo_fallback_${vehicle.id}'),
                 decoration: BoxDecoration(
-                  color: GarageColors.backgroundDark,
+                  color: context.appColors.backgroundDark,
                   gradient: LinearGradient(
                     begin: Alignment.topLeft,
                     end: Alignment.bottomRight,
                     colors: [
-                      GarageColors.primaryPressed.withValues(alpha: 0.34),
-                      GarageColors.primarySoft.withValues(alpha: 0.94),
-                      GarageColors.backgroundDark,
+                      context.appColors.primaryPressed.withValues(alpha: 0.34),
+                      context.appColors.primarySoft.withValues(alpha: 0.94),
+                      context.appColors.backgroundDark,
                     ],
                     stops: const [0, 0.56, 1],
                   ),
-                  border: const Border(
-                    bottom: BorderSide(color: GarageColors.border),
+                  border: Border(
+                    bottom: BorderSide(color: context.appColors.border),
                   ),
                 ),
                 child: Stack(
@@ -43,17 +43,17 @@ final class GarageVehicleImage extends StatelessWidget {
                       alignment: const Alignment(0, -0.22),
                       child: ShaderMask(
                         blendMode: BlendMode.srcIn,
-                        shaderCallback: (bounds) => const LinearGradient(
+                        shaderCallback: (bounds) => LinearGradient(
                           begin: Alignment.topCenter,
                           end: Alignment.bottomCenter,
                           colors: [
-                            GarageColors.primaryLight,
-                            GarageColors.primaryPressed,
+                            context.appColors.primaryLight,
+                            context.appColors.primaryPressed,
                           ],
                         ).createShader(bounds),
-                        child: const Icon(
+                        child: Icon(
                           Icons.directions_car_filled_rounded,
-                          color: GarageColors.white,
+                          color: context.appColors.white,
                           size: 92,
                         ),
                       ),

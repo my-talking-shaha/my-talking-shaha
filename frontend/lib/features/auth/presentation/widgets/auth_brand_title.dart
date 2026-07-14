@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:frontend/features/auth/presentation/colors.dart';
+import 'package:frontend/app/theme/app_palette.dart';
 
 final class AuthBrandTitle extends StatelessWidget {
   const AuthBrandTitle({super.key});
@@ -10,7 +10,7 @@ final class AuthBrandTitle extends StatelessWidget {
       'My Talking\nShaha',
       textAlign: TextAlign.center,
       style: Theme.of(context).textTheme.headlineLarge?.copyWith(
-        color: AuthColors.primaryLight,
+        color: context.appColors.primaryLight,
         fontSize: 42,
         fontWeight: FontWeight.w900,
         height: 1.12,

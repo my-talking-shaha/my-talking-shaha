@@ -35,8 +35,8 @@ final class _EventTypeSelector extends StatelessWidget {
     return Container(
       height: 58,
       padding: const EdgeInsets.all(AppSpacing.xs),
-      decoration: const BoxDecoration(
-        color: HistoryColors.surface,
+      decoration: BoxDecoration(
+        color: context.appColors.surface,
         borderRadius: AppRadius.card,
       ),
       child: Stack(
@@ -57,7 +57,9 @@ final class _EventTypeSelector extends StatelessWidget {
                 heightFactor: 1,
                 child: DecoratedBox(
                   decoration: BoxDecoration(
-                    color: HistoryColors.primaryPressed.withValues(alpha: 0.45),
+                    color: context.appColors.primaryPressed.withValues(
+                      alpha: 0.45,
+                    ),
                     borderRadius: AppRadius.input,
                   ),
                 ),
@@ -83,8 +85,8 @@ final class _EventTypeSelector extends StatelessWidget {
                           height: 22,
                           colorFilter: ColorFilter.mode(
                             type == selectedType
-                                ? HistoryColors.primary
-                                : HistoryColors.textSecondary,
+                                ? context.appColors.primary
+                                : context.appColors.textSecondary,
                             BlendMode.srcIn,
                           ),
                         ),
@@ -116,8 +118,8 @@ final class _FormCard extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(AppSpacing.lg),
       decoration: BoxDecoration(
-        color: HistoryColors.surface,
-        border: Border.all(color: HistoryColors.border),
+        color: context.appColors.surface,
+        border: Border.all(color: context.appColors.border),
         borderRadius: AppRadius.card,
       ),
       child: Column(
@@ -228,7 +230,7 @@ final class _ReadOnlyValue extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Material(
-      color: HistoryColors.background,
+      color: context.appColors.background,
       borderRadius: AppRadius.input,
       child: InkWell(
         onTap: onTap,
@@ -240,7 +242,7 @@ final class _ReadOnlyValue extends StatelessWidget {
           ),
           child: Row(
             children: [
-              Icon(icon, size: 17, color: HistoryColors.primary),
+              Icon(icon, size: 17, color: context.appColors.primary),
               const SizedBox(width: AppSpacing.sm),
               Text(value, style: Theme.of(context).textTheme.bodyMedium),
             ],
@@ -261,26 +263,22 @@ final class _InformationCard extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(AppSpacing.lg),
       decoration: BoxDecoration(
-        color: HistoryColors.primarySoft,
+        color: context.appColors.primarySoft,
         border: Border.all(
-          color: HistoryColors.primaryPressed.withValues(alpha: 0.4),
+          color: context.appColors.primaryPressed.withValues(alpha: 0.4),
         ),
         borderRadius: AppRadius.card,
       ),
       child: Row(
         children: [
-          const Icon(
-            Icons.info_outline,
-            color: HistoryColors.primary,
-            size: 18,
-          ),
+          Icon(Icons.info_outline, color: context.appColors.primary, size: 18),
           const SizedBox(width: AppSpacing.md),
           Expanded(
             child: Text(
               message,
-              style: Theme.of(
-                context,
-              ).textTheme.bodyMedium?.copyWith(color: HistoryColors.primary),
+              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                color: context.appColors.primary,
+              ),
             ),
           ),
         ],
@@ -377,11 +375,11 @@ final class _PhotoCard extends StatelessWidget {
                           fit: BoxFit.cover,
                           errorBuilder: (context, error, stackTrace) =>
                               Container(
-                                color: HistoryColors.surfaceElevated,
+                                color: context.appColors.surfaceElevated,
                                 alignment: Alignment.center,
-                                child: const Icon(
+                                child: Icon(
                                   Icons.broken_image_outlined,
-                                  color: HistoryColors.textMuted,
+                                  color: context.appColors.textMuted,
                                 ),
                               ),
                         ),
@@ -443,10 +441,10 @@ final class _PhotoPreviewTile extends StatelessWidget {
                 onPressed: onRemove,
                 tooltip: l10n.removePhoto,
                 style: IconButton.styleFrom(
-                  backgroundColor: HistoryColors.background.withValues(
+                  backgroundColor: context.appColors.background.withValues(
                     alpha: 0.82,
                   ),
-                  foregroundColor: HistoryColors.textPrimary,
+                  foregroundColor: context.appColors.textPrimary,
                   minimumSize: const Size.square(32),
                   fixedSize: const Size.square(32),
                   padding: EdgeInsets.zero,
@@ -478,11 +476,11 @@ final class _ExistingHistoryPhoto extends StatelessWidget {
       image: imageProvider,
       fit: BoxFit.cover,
       errorBuilder: (context, error, stackTrace) => Container(
-        color: HistoryColors.surfaceElevated,
+        color: context.appColors.surfaceElevated,
         alignment: Alignment.center,
-        child: const Icon(
+        child: Icon(
           Icons.broken_image_outlined,
-          color: HistoryColors.textMuted,
+          color: context.appColors.textMuted,
         ),
       ),
     );

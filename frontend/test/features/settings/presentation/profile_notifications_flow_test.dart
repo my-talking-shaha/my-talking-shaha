@@ -63,33 +63,62 @@ void main() {
     expect(find.text('Выйти'), findsOneWidget);
   });
 
-  testWidgets('theme and notifications controls keep local visual state', (
-    tester,
-  ) async {
-    await _pumpApp(tester);
+  testWidgets(
+    'theme control changes the app theme and notifications stay local',
+    (tester) async {
+      await _pumpApp(tester);
 
-    Color segmentColor(String label) {
-      final segment = tester.widget<AnimatedContainer>(
-        find.ancestor(
-          of: find.text(label),
-          matching: find.byType(AnimatedContainer),
-        ),
+      Color segmentColor(String label) {
+        final segment = tester.widget<AnimatedContainer>(
+          find.ancestor(
+            of: find.text(label),
+            matching: find.byType(AnimatedContainer),
+          ),
+        );
+        return (segment.decoration! as BoxDecoration).color!;
+      }
+
+      expect(segmentColor('Dark'), AppColors.primary);
+      expect(segmentColor('Light'), Colors.transparent);
+      expect(
+        tester.widget<MaterialApp>(find.byType(MaterialApp)).themeMode,
+        ThemeMode.dark,
       );
-      return (segment.decoration! as BoxDecoration).color!;
-    }
+      expect(tester.widget<Switch>(find.byType(Switch)).value, isTrue);
 
-    expect(segmentColor('Dark'), AppColors.primary);
-    expect(segmentColor('Light'), Colors.transparent);
-    expect(tester.widget<Switch>(find.byType(Switch)).value, isTrue);
+      await tester.tap(find.text('Light'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.byType(Switch));
+      await tester.pumpAndSettle();
+
+      expect(segmentColor('Light'), AppLightColors.primary);
+      expect(segmentColor('Dark'), Colors.transparent);
+      expect(
+        tester.widget<MaterialApp>(find.byType(MaterialApp)).themeMode,
+        ThemeMode.light,
+      );
+      expect(tester.widget<Switch>(find.byType(Switch)).value, isFalse);
+    },
+  );
+
+  testWidgets('profile restores selected theme on next launch', (tester) async {
+    await _pumpApp(tester);
 
     await tester.tap(find.text('Light'));
     await tester.pumpAndSettle();
-    await tester.tap(find.byType(Switch));
-    await tester.pumpAndSettle();
+    expect(
+      tester.widget<MaterialApp>(find.byType(MaterialApp)).themeMode,
+      ThemeMode.light,
+    );
 
-    expect(segmentColor('Light'), AppColors.primary);
-    expect(segmentColor('Dark'), Colors.transparent);
-    expect(tester.widget<Switch>(find.byType(Switch)).value, isFalse);
+    await tester.pumpWidget(const SizedBox.shrink());
+    await tester.pump();
+    await _pumpApp(tester);
+
+    expect(
+      tester.widget<MaterialApp>(find.byType(MaterialApp)).themeMode,
+      ThemeMode.light,
+    );
   });
 
   testWidgets('settings list responds only to vertical scrolling', (

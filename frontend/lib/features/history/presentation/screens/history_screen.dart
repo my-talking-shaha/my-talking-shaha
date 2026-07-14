@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:frontend/app/providers/vehicle_mileage_provider.dart';
+import 'package:frontend/app/theme/app_palette.dart';
 import 'package:frontend/app/theme/app_theme.dart';
 import 'package:frontend/features/analytics/di/analytics_providers.dart';
 import 'package:frontend/features/analytics/domain/entities/analytics_period.dart';
@@ -11,7 +12,6 @@ import 'package:frontend/features/garage/di/garage_providers.dart';
 import 'package:frontend/features/history/di/history_providers.dart';
 import 'package:frontend/features/history/domain/entities/history_event.dart';
 import 'package:frontend/features/history/domain/entities/history_event_type.dart';
-import 'package:frontend/features/history/presentation/colors.dart';
 import 'package:frontend/features/history/presentation/utils/history_timeline_utils.dart';
 import 'package:frontend/features/history/presentation/widgets/event_card.dart';
 import 'package:frontend/features/parts/di/parts_providers.dart';
@@ -75,8 +75,8 @@ final class _HistoryScreenState extends ConsumerState<HistoryScreen> {
           }
         },
         tooltip: l10n.addEvent,
-        backgroundColor: HistoryColors.primary,
-        foregroundColor: HistoryColors.onPrimary,
+        backgroundColor: context.appColors.primary,
+        foregroundColor: context.appColors.onPrimary,
         elevation: 8,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(AppRadius.lg),

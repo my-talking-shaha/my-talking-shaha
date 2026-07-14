@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:frontend/app/theme/app_palette.dart';
 import 'package:frontend/app/theme/app_theme.dart';
-import 'package:frontend/features/auth/presentation/colors.dart';
 
 final class AuthFormCard extends StatelessWidget {
   const AuthFormCard({required this.child, super.key});
@@ -19,12 +19,12 @@ final class AuthFormCard extends StatelessWidget {
         AppSpacing.xxl,
       ),
       decoration: BoxDecoration(
-        color: AuthColors.surface.withValues(alpha: 0.82),
+        color: context.appColors.surface.withValues(alpha: 0.82),
         borderRadius: BorderRadius.circular(AppRadius.md),
-        border: Border.all(color: AuthColors.formBorder),
+        border: Border.all(color: context.appColors.formBorder),
         boxShadow: [
           BoxShadow(
-            color: AuthColors.black.withValues(alpha: 0.24),
+            color: context.appColors.black.withValues(alpha: 0.24),
             blurRadius: 22,
             offset: const Offset(0, 14),
           ),

@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:frontend/app/theme/app_palette.dart';
 import 'package:frontend/app/theme/app_theme.dart';
-import 'package:frontend/features/auth/presentation/colors.dart';
 import 'package:frontend/features/auth/presentation/common/auth_account_prompt.dart';
 import 'package:frontend/features/auth/presentation/common/auth_form_card.dart';
 import 'package:frontend/features/auth/presentation/common/auth_mode_switch.dart';
@@ -55,9 +55,9 @@ final class RegistrationForm extends StatelessWidget {
             const SizedBox(height: AppSpacing.md),
             Text(
               l10n.createYourProfile,
-              style: Theme.of(
-                context,
-              ).textTheme.bodyLarge?.copyWith(color: AuthColors.textSecondary),
+              style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                color: context.appColors.textSecondary,
+              ),
             ),
             const SizedBox(height: AppSpacing.xxl),
             if (formState.errorMessage case final message?) ...[
