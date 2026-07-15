@@ -25,7 +25,7 @@ void main() {
           prefill: {'mileageKm': 15000},
         ),
       ),
-      '/vehicle/vehicle-1/history/add?type=maintenance&mileageKm=15000',
+      '/vehicle/vehicle-1/history/add?type=part&mileageKm=15000',
     );
   });
 

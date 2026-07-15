@@ -62,7 +62,10 @@ final class HistoryApiDatasource implements HistoryDatasource {
 }
 
 abstract final class HistoryApiEventMapper {
-  static HistoryEvent? tryFromJson(Map<String, dynamic> json, String vehicleId) {
+  static HistoryEvent? tryFromJson(
+    Map<String, dynamic> json,
+    String vehicleId,
+  ) {
     try {
       return fromJson(json, vehicleId);
     } catch (_) {
@@ -208,8 +211,7 @@ abstract final class HistoryApiEventMapper {
     return switch (type) {
       HistoryEventType.fuel => _fuelTitle(json),
       HistoryEventType.trip => _tripTitle(json),
-      HistoryEventType.part ||
-      HistoryEventType.maintenance =>
+      HistoryEventType.part || HistoryEventType.maintenance =>
         _nullableStringValue(json['name']) ??
             _nullableStringValue(json['title']) ??
             _fallbackTitle(type),
@@ -333,25 +335,26 @@ abstract final class HistoryApiEventMapper {
   }
 
   static Map<String, dynamic> _maintenancePayload(
-  HistoryEvent event,
-  MaintenanceDetails details,
-) {
-  return {
-    'eventDateTime': _dateTimePayload(event.occurredAt),
-    'mileageKm': event.currentMileageKm,
-    if (details.currentMileageKm != null)
-      'currentMileageKm': details.currentMileageKm,
-    'name': event.title,
-    'description': event.type == HistoryEventType.part
-        ? details.description
-        : _maintenanceDescription(details),
-    if (details.cost != null) 'cost': details.cost,
-    if (event.type == HistoryEventType.maintenance &&
-        details.replacedParts != null &&
-        details.replacedParts!.isNotEmpty)
-      'replacedParts': details.replacedParts,
-  };
-}
+    HistoryEvent event,
+    MaintenanceDetails details,
+  ) {
+    return {
+      'eventDateTime': _dateTimePayload(event.occurredAt),
+      'mileageKm': event.currentMileageKm,
+      if (details.currentMileageKm != null)
+        'currentMileageKm': details.currentMileageKm,
+      'name': event.title,
+      'description': event.type == HistoryEventType.part
+          ? details.description
+          : _maintenanceDescription(details),
+      if (details.cost != null) 'cost': details.cost,
+      if (event.type == HistoryEventType.maintenance &&
+          details.replacedParts != null &&
+          details.replacedParts!.isNotEmpty)
+        'replacedParts': details.replacedParts,
+    };
+  }
+
   static bool _isRemoteUrl(String value) {
     final uri = Uri.tryParse(value);
     return uri != null && (uri.scheme == 'http' || uri.scheme == 'https');

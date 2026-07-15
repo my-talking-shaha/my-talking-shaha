@@ -83,12 +83,12 @@ final class _HistoryCompositionGrid extends StatelessWidget {
     final mileage = summary.mileage;
     final fuel = summary.fuel;
     final items = [
-      (
-        _historyEventsLabel(context),
-        _eventCount(summary.history),
-      ),
+      (_historyEventsLabel(context), _eventCount(summary.history)),
       (_historyTripsLabel(context), mileage?.monthlyDeltaKm ?? 0),
-      (_historyRepairsLabel(context), repairs?.mostFrequentTypes.first.count ?? 0),
+      (
+        _historyRepairsLabel(context),
+        repairs?.mostFrequentTypes.first.count ?? 0,
+      ),
       (_historyPartsLabel(context), repairs?.mostFrequentTypes.last.count ?? 0),
       (_historyFuelLabel(context), fuel?.totalLiters.round() ?? 0),
     ];
@@ -96,7 +96,7 @@ final class _HistoryCompositionGrid extends StatelessWidget {
     return LayoutBuilder(
       builder: (context, constraints) {
         final columns = constraints.maxWidth < 560 ? 2 : 5;
-        final spacing = AppSpacing.sm;
+        const spacing = AppSpacing.sm;
         final itemWidth =
             (constraints.maxWidth - spacing * (columns - 1)) / columns;
 
@@ -168,7 +168,9 @@ bool _analyticsIsRussian(BuildContext context) {
 }
 
 String _historyCompositionTitle(BuildContext context) {
-  return _analyticsIsRussian(context) ? 'СОСТАВ ИСТОРИИ' : 'HISTORY COMPOSITION';
+  return _analyticsIsRussian(context)
+      ? 'СОСТАВ ИСТОРИИ'
+      : 'HISTORY COMPOSITION';
 }
 
 String _historyEventsLabel(BuildContext context) {

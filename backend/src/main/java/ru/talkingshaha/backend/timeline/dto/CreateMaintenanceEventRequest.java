@@ -2,6 +2,7 @@ package ru.talkingshaha.backend.timeline.dto;
 
 import java.math.BigDecimal;
 import java.time.OffsetDateTime;
+import java.util.List;
 
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;

@@ -289,7 +289,7 @@ public class TimelineEventService {
         event.setMileageKm(request.mileageKm());
         event.setCost(request.cost());
         eventPhotos.attachPhotos(event, photos);
-        updateVehicleMileage(vehicle, request.mileageKm());
+        updateVehicleMileage(vehicle, currentMileageKm);
         TimelineEventResponse response = toResponse(maintenances.save(event));
         parts.createPartsFromMaintenance(
                 vehicle, request.eventDateTime(), request.mileageKm(), request.description(), request.replacedParts());
@@ -310,7 +310,7 @@ public class TimelineEventService {
         event.setDescription(request.description());
         event.setMileageKm(request.mileageKm());
         event.setCost(request.cost());
-        updateVehicleMileage(vehicle, request.mileageKm());
+        updateVehicleMileage(vehicle, currentMileageKm);
         TimelineEventResponse response = toResponse(maintenances.save(event));
         parts.createPartsFromMaintenance(
                 vehicle, request.eventDateTime(), request.mileageKm(), request.description(), List.of(request.name()));

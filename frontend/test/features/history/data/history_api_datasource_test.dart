@@ -396,7 +396,7 @@ void main() {
         occurredAt: DateTime.utc(2026, 6, 12, 16, 30),
         title: 'Battery',
         currentMileageKm: 80000,
-        details: const MaintenanceDetails(
+        details: MaintenanceDetails(
           description: 'Installed before I started using the app',
           cost: 12000,
           replacedParts: ['Should not be sent'],
@@ -413,7 +413,6 @@ void main() {
         'name': 'Battery',
         'description': 'Installed before I started using the app',
         'cost': 12000,
-        'photoUrls': ['https://example.com/part-photo.jpg'],
       });
     });
 

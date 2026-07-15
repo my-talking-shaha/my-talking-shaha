@@ -119,7 +119,7 @@ extension _AddHistoryEventActions on _AddHistoryEventScreenState {
         enabled: !_isEditing,
         onSelected: (type) {
           if (type == _type) return;
-          setState(() => _type = type);
+          _update(() => _type = type);
           _formKey.currentState?.reset();
         },
       ),
@@ -243,12 +243,10 @@ extension _AddHistoryEventActions on _AddHistoryEventScreenState {
             controller: _replacedPartsController,
             minLines: 3,
             maxLines: 5,
-            decoration: InputDecoration(
-              hintText: l10n.enterPartsSeparated,
-            ),
+            decoration: InputDecoration(hintText: l10n.enterPartsSeparated),
           ),
         ),
-      ),
+      ],
       if (!kIsWeb &&
           (!_isEditing || (_existingPhotoUrls?.isNotEmpty ?? false))) ...[
         const SizedBox(height: AppSpacing.md),
