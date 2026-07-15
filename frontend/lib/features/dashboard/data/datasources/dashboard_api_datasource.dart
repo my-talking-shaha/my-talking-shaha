@@ -59,9 +59,8 @@ abstract final class DashboardApiEventMapper {
     return switch (_stringValue(value).toUpperCase()) {
       'REFUEL' => HistoryEventType.fuel,
       'TRIP' => HistoryEventType.trip,
-      'MAINTENANCE' ||
-      'PART_REPLACEMENT' ||
-      'REPAIR' => HistoryEventType.maintenance,
+      'PART_REPLACEMENT' => HistoryEventType.part,
+      'MAINTENANCE' || 'REPAIR' => HistoryEventType.maintenance,
       _ => HistoryEventType.maintenance,
     };
   }
@@ -70,6 +69,7 @@ abstract final class DashboardApiEventMapper {
     return switch (_eventType(value)) {
       HistoryEventType.fuel => 'Refueling',
       HistoryEventType.maintenance => 'Maintenance',
+      HistoryEventType.part => 'Part replacement',
       HistoryEventType.trip => 'Trip',
     };
   }

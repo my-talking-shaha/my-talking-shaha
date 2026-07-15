@@ -23,7 +23,8 @@ String? chatActionDestination(String vehicleId, ChatAction action) {
     final form = action.form?.toUpperCase();
     final routeType = switch (form) {
       'TRIP' => 'trip',
-      'MAINTENANCE' || 'PART_REPLACEMENT' => 'maintenance',
+      'PART_REPLACEMENT' => 'part',
+      'MAINTENANCE' => 'maintenance',
       _ => 'fuel',
     };
     final query = <String, String>{'type': routeType};

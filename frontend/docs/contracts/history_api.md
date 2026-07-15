@@ -14,6 +14,9 @@ MAINTENANCE
 PART_REPLACEMENT
 ```
 
+Mobile mapping: `PART_REPLACEMENT` must be shown as a separate part event, not
+as a maintenance/service event, so part costs stay separated in analytics.
+
 ## List Events
 
 `GET /api/v1/vehicles/{vehicleId}/timeline?type=REFUEL`
@@ -124,7 +127,8 @@ The `event` part:
   "mileageKm": 10000,
   "name": "Oil change",
   "description": "Oil and filter replacement",
-  "cost": 3000
+  "cost": 3000,
+  "replacedParts": ["Engine oil", "Oil filter"]
 }
 ```
 
@@ -134,6 +138,11 @@ absolute backend URLs for the stored photos. Invalid or unsupported files return
 
 Validation: `name` is required, `mileageKm >= previous mileage`, optional `cost > 0`,
 `eventDateTime <= now`.
+
+When `replacedParts` is provided, backend creates matching vehicle part records
+for the maintenance forecast. For backwards compatibility, backend also accepts
+legacy descriptions containing a `Replaced parts:` line with comma-separated
+part names.
 
 ## Add Part Event
 
@@ -150,8 +159,9 @@ Validation: `name` is required, `mileageKm >= previous mileage`, optional `cost 
 }
 ```
 
-Validation: `name` is required, `mileageKm >= previous mileage`, optional `cost > 0`,
-`eventDateTime <= now`. Response has `type = PART_REPLACEMENT`.
+Validation: `name` is required, `mileageKm >= 0`, optional `cost > 0`,
+`eventDateTime <= now`. `mileageKm` is the part installation mileage and may be
+lower than the vehicle's current mileage. Response has `type = PART_REPLACEMENT`.
 
 ## Update Event
 
@@ -166,7 +176,8 @@ Request body uses the same event-specific fields as add endpoints:
 - trip: `eventDateTime`, `startMileageKm`, `endMileageKm`, optional `route`,
   `durationMinutes`;
 - maintenance/part: `eventDateTime`, `mileageKm`, `name`, `description`,
-  optional `cost`. Photo attachments are not changed by this endpoint.
+  optional `cost`, optional `replacedParts` for
+  maintenance. Photo attachments are not changed by this endpoint.
 
 Validation is the same as the matching add event endpoint. Event type is not
 changed by this endpoint.

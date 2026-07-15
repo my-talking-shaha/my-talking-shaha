@@ -1,6 +1,9 @@
 package ru.talkingshaha.backend.part.service;
 
 import java.util.List;
+import java.util.LinkedHashSet;
+import java.util.Locale;
+import java.util.Set;
 import java.util.UUID;
 
 import org.springframework.stereotype.Service;
@@ -13,6 +16,7 @@ import ru.talkingshaha.backend.part.dto.PartListResponse;
 import ru.talkingshaha.backend.part.dto.PartResponse;
 import ru.talkingshaha.backend.part.dto.UpdatePartRequest;
 import ru.talkingshaha.backend.part.model.Part;
+import ru.talkingshaha.backend.part.model.PartCategory;
 import ru.talkingshaha.backend.part.repository.PartRepository;
 import ru.talkingshaha.backend.prediction.dto.PartLifetimeRequest;
 import ru.talkingshaha.backend.prediction.service.PartLifetimeService;
@@ -105,6 +109,88 @@ public class PartService {
     public void refreshPartsForVehicle(Vehicle vehicle) {
         parts.findAllByVehicleOrderByInstalledAtDescNameAsc(vehicle)
                 .forEach(part -> refreshLifetime(vehicle, part));
+    }
+
+    @Transactional
+    public void createPartsFromMaintenance(
+            Vehicle vehicle,
+            java.time.OffsetDateTime eventDateTime,
+            Integer mileageKm,
+            String description,
+            List<String> replacedParts) {
+        List<String> names = maintenancePartNames(description, replacedParts);
+        if (names.isEmpty()) {
+            return;
+        }
+        for (String name : names) {
+            Part part = new Part();
+            part.setVehicle(vehicle);
+            part.setName(name);
+            part.setCategory(categoryFor(name));
+            part.setInstalledAt(eventDateTime.toLocalDate());
+            part.setInstalledMileageKm(mileageKm);
+            part.setDescription("Created from maintenance record");
+            refreshLifetime(vehicle, part);
+            parts.save(part);
+            metrics.recordPartCreated();
+        }
+    }
+
+    private List<String> maintenancePartNames(String description, List<String> replacedParts) {
+        Set<String> names = new LinkedHashSet<>();
+        if (replacedParts != null) {
+            replacedParts.stream()
+                    .map(this::cleanPartName)
+                    .filter(StringUtils::hasText)
+                    .forEach(names::add);
+        }
+        if (description != null) {
+            for (String line : description.lines().toList()) {
+                String stripped = line.strip();
+                if (stripped.regionMatches(true, 0, "Replaced parts:", 0, "Replaced parts:".length())) {
+                    String value = stripped.substring("Replaced parts:".length());
+                    List.of(value.split(",")).stream()
+                            .map(this::cleanPartName)
+                            .filter(StringUtils::hasText)
+                            .forEach(names::add);
+                }
+            }
+        }
+        return List.copyOf(names);
+    }
+
+    private String cleanPartName(String name) {
+        if (name == null) {
+            return "";
+        }
+        String cleaned = name.replaceAll("\\s+", " ").strip();
+        return cleaned.length() > 255 ? cleaned.substring(0, 255) : cleaned;
+    }
+
+    private PartCategory categoryFor(String name) {
+        String normalized = name.toLowerCase(Locale.ROOT);
+        if ((normalized.contains("oil") || normalized.contains("масл"))
+                && (normalized.contains("filter") || normalized.contains("фильтр"))) {
+            return PartCategory.OIL_FILTER;
+        }
+        if (normalized.contains("air filter")
+                || normalized.contains("воздуш")
+                || (normalized.contains("filter") && normalized.contains("air"))) {
+            return PartCategory.AIR_FILTER;
+        }
+        if (normalized.contains("pad") || normalized.contains("brake") || normalized.contains("колод")) {
+            return PartCategory.BRAKE_PADS;
+        }
+        if (normalized.contains("timing") || normalized.contains("belt") || normalized.contains("грм") || normalized.contains("ремен")) {
+            return PartCategory.TIMING_BELT;
+        }
+        if (normalized.contains("battery") || normalized.contains("аккум")) {
+            return PartCategory.BATTERY;
+        }
+        if (normalized.contains("oil") || normalized.contains("масл")) {
+            return PartCategory.ENGINE_OIL;
+        }
+        return PartCategory.OTHER;
     }
 
     private void refreshLifetime(Vehicle vehicle, Part part) {

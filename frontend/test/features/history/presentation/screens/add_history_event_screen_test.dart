@@ -193,6 +193,8 @@ void main() {
 
     await tester.tap(find.byKey(const ValueKey('event-type-maintenance')));
     await tester.pump();
+    await tester.tap(find.byKey(const ValueKey('service-type-maintenance')));
+    await tester.pump();
 
     selection = tester.widget<AnimatedAlign>(
       find.byKey(const ValueKey('event-type-selection')),
@@ -200,12 +202,23 @@ void main() {
     expect(selection.alignment, Alignment.center);
     await tester.pumpAndSettle();
 
+    await tester.dragUntilVisible(
+      find.byKey(const ValueKey('maintenance-description')),
+      find.byType(ListView).first,
+      const Offset(0, -300),
+    );
     expect(
       find.byKey(const ValueKey('maintenance-description')),
       findsOneWidget,
     );
 
-    await tester.tap(find.byKey(const ValueKey('event-type-trip')));
+    final tripTypeButton = find.byKey(
+      const ValueKey('event-type-trip'),
+      skipOffstage: false,
+    );
+    await tester.ensureVisible(tripTypeButton);
+    await tester.pumpAndSettle();
+    await tester.tap(tripTypeButton);
     await tester.pumpAndSettle();
 
     expect(find.byKey(const ValueKey('trip-start')), findsOneWidget);
@@ -237,19 +250,26 @@ void main() {
 
     await tester.tap(find.byKey(const ValueKey('event-type-maintenance')));
     await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const ValueKey('service-type-maintenance')));
+    await tester.pumpAndSettle();
     await tester.enterText(
       find.byKey(const ValueKey('event-title')),
       'Oil service',
     );
-    await tester.enterText(
-      find.byKey(const ValueKey('maintenance-description')),
-      'Changed oil and filter',
+    final descriptionField = find.byKey(
+      const ValueKey('maintenance-description'),
     );
+    await tester.dragUntilVisible(
+      descriptionField,
+      find.byType(ListView).first,
+      const Offset(0, -300),
+    );
+    await tester.enterText(descriptionField, 'Changed oil and filter');
 
     final addPhotoButton = find.byKey(const ValueKey('maintenance-photo-add'));
     await tester.dragUntilVisible(
       addPhotoButton,
-      find.byType(ListView),
+      find.byType(ListView).first,
       const Offset(0, -300),
     );
     await tester.tap(addPhotoButton);

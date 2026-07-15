@@ -448,7 +448,8 @@ String? _invalidVehicleRedirect(Uri uri) {
 HistoryEventType _historyEventTypeFromQuery(String? value) {
   return switch (value?.toLowerCase()) {
     'trip' => HistoryEventType.trip,
-    'maintenance' || 'part_replacement' => HistoryEventType.maintenance,
+    'part' || 'part_replacement' => HistoryEventType.part,
+    'maintenance' => HistoryEventType.maintenance,
     _ => HistoryEventType.fuel,
   };
 }

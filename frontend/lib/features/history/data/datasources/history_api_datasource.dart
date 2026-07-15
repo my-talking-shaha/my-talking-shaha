@@ -22,7 +22,8 @@ final class HistoryApiDatasource implements HistoryDatasource {
 
     return events
         .whereType<Map<String, dynamic>>()
-        .map((json) => HistoryApiEventMapper.fromJson(json, vehicleId))
+        .map((json) => HistoryApiEventMapper.tryFromJson(json, vehicleId))
+        .whereType<HistoryEvent>()
         .toList(growable: false);
   }
 
@@ -61,11 +62,23 @@ final class HistoryApiDatasource implements HistoryDatasource {
 }
 
 abstract final class HistoryApiEventMapper {
+  static HistoryEvent? tryFromJson(
+    Map<String, dynamic> json,
+    String vehicleId,
+  ) {
+    try {
+      return fromJson(json, vehicleId);
+    } catch (_) {
+      return null;
+    }
+  }
+
   static String createEndpoint(HistoryEvent event) {
     return switch (event.type) {
       HistoryEventType.fuel =>
         _isRechargeDetails(event.details) ? 'recharge' : 'refuel',
       HistoryEventType.maintenance => 'maintenance',
+      HistoryEventType.part => 'part',
       HistoryEventType.trip => 'trip',
     };
   }
@@ -105,6 +118,11 @@ abstract final class HistoryApiEventMapper {
           replacedParts: maintenanceDescription.replacedParts,
           photoUrls: _stringListValue(json['photoUrls']),
         ),
+        HistoryEventType.part => MaintenanceDetails(
+          description: maintenanceDescription.description,
+          cost: _intValue(json['cost']),
+          photoUrls: _stringListValue(json['photoUrls']),
+        ),
         HistoryEventType.trip => TripDetails(
           startKm: _intValue(json['startMileageKm']) ?? mileageKm,
           endKm: _intValue(json['endMileageKm']) ?? mileageKm,
@@ -132,13 +150,7 @@ abstract final class HistoryApiEventMapper {
         'fuelName': _fuelNamePayload(details.fuelType),
         'stationName': ?_stationNamePayload(details.fuelType),
       },
-      MaintenanceDetails() => {
-        'eventDateTime': _dateTimePayload(event.occurredAt),
-        'mileageKm': event.currentMileageKm,
-        'name': event.title,
-        'description': _maintenanceDescription(details),
-        if (details.cost != null) 'cost': details.cost,
-      },
+      MaintenanceDetails() => _maintenancePayload(event, details),
       TripDetails() => {
         'title': event.title,
         'eventDateTime': _dateTimePayload(event.occurredAt),
@@ -180,9 +192,8 @@ abstract final class HistoryApiEventMapper {
     return switch (value.toUpperCase()) {
       'REFUEL' || 'RECHARGE' => HistoryEventType.fuel,
       'TRIP' => HistoryEventType.trip,
-      'MAINTENANCE' ||
-      'PART_REPLACEMENT' ||
-      'REPAIR' => HistoryEventType.maintenance,
+      'PART_REPLACEMENT' => HistoryEventType.part,
+      'MAINTENANCE' || 'REPAIR' => HistoryEventType.maintenance,
       _ => HistoryEventType.maintenance,
     };
   }
@@ -191,6 +202,7 @@ abstract final class HistoryApiEventMapper {
     return switch (type) {
       HistoryEventType.fuel => 'Refueling',
       HistoryEventType.maintenance => 'Maintenance',
+      HistoryEventType.part => 'Part replacement',
       HistoryEventType.trip => 'Trip',
     };
   }
@@ -199,7 +211,7 @@ abstract final class HistoryApiEventMapper {
     return switch (type) {
       HistoryEventType.fuel => _fuelTitle(json),
       HistoryEventType.trip => _tripTitle(json),
-      HistoryEventType.maintenance =>
+      HistoryEventType.part || HistoryEventType.maintenance =>
         _nullableStringValue(json['name']) ??
             _nullableStringValue(json['title']) ??
             _fallbackTitle(type),
@@ -320,6 +332,27 @@ abstract final class HistoryApiEventMapper {
     }
 
     return '${details.description}\nReplaced parts: ${replacedParts.join(', ')}';
+  }
+
+  static Map<String, dynamic> _maintenancePayload(
+    HistoryEvent event,
+    MaintenanceDetails details,
+  ) {
+    return {
+      'eventDateTime': _dateTimePayload(event.occurredAt),
+      'mileageKm': event.currentMileageKm,
+      if (details.currentMileageKm != null)
+        'currentMileageKm': details.currentMileageKm,
+      'name': event.title,
+      'description': event.type == HistoryEventType.part
+          ? details.description
+          : _maintenanceDescription(details),
+      if (details.cost != null) 'cost': details.cost,
+      if (event.type == HistoryEventType.maintenance &&
+          details.replacedParts != null &&
+          details.replacedParts!.isNotEmpty)
+        'replacedParts': details.replacedParts,
+    };
   }
 
   static bool _isRemoteUrl(String value) {

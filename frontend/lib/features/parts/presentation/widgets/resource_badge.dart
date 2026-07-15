@@ -14,7 +14,7 @@ final class ResourceBadge extends StatelessWidget {
     final percent = this.percent;
 
     return Container(
-      width: 92,
+      width: 126,
       height: 86,
       padding: const EdgeInsets.all(AppSpacing.md),
       decoration: BoxDecoration(
@@ -28,10 +28,11 @@ final class ResourceBadge extends StatelessWidget {
           Text(
             percent == null ? '--' : '$percent%',
             maxLines: 1,
-            overflow: TextOverflow.ellipsis,
+            overflow: TextOverflow.visible,
+            textAlign: TextAlign.center,
             style: Theme.of(context).textTheme.headlineMedium?.copyWith(
               color: context.appColors.partsWarning,
-              fontSize: 30,
+              fontSize: 28,
               fontWeight: FontWeight.w900,
               height: 1,
             ),

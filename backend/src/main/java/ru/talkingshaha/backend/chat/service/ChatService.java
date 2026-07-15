@@ -184,6 +184,12 @@ public class ChatService {
             }
             Optional<ChatActionResponse> pending = latestPendingAction(session);
             if (pending.isPresent()) {
+                if (cancelsPendingEvent(userText)) {
+                    return Optional.of(new AssistantDraft(cancelPendingAnswer(decision.language()), null, null));
+                }
+                if (!continuesPendingEvent(userText, pending.get())) {
+                    return Optional.empty();
+                }
                 return continuePendingEvent(userText, pending.get(), session, vehicle);
             }
             if (decision.intent() == ChatIntent.OPEN_TRIP_FORM && endsTripConversation(userText)) {
@@ -229,6 +235,33 @@ public class ChatService {
             case "MAINTENANCE" -> createMaintenanceFromText(userText, vehicle, merged);
             default -> Optional.empty();
         };
+    }
+
+    private boolean continuesPendingEvent(String userText, ChatActionResponse pending) {
+        if (asksForRequiredFields(userText)) {
+            return true;
+        }
+        Map<String, Object> newFields = prefill(userText);
+        return switch (pending.form()) {
+            case "REFUEL" -> hasAnyField(newFields, "liters", "cost", "fuelName", "mileageKm")
+                    || shortFuelName(userText).isPresent();
+            case "TRIP" -> hasAnyField(newFields, "liters", "mileageKm")
+                    || firstInteger(userText, DISTANCE_PATTERN).isPresent()
+                    || durationMinutes(userText).isPresent()
+                    || endsTripConversation(userText);
+            case "MAINTENANCE" -> hasAnyField(newFields, "cost", "mileageKm")
+                    || maintenanceName(userText).isPresent();
+            default -> false;
+        };
+    }
+
+    private boolean hasAnyField(Map<String, Object> fields, String... keys) {
+        for (String key : keys) {
+            if (fields.containsKey(key)) {
+                return true;
+            }
+        }
+        return false;
     }
 
     private Optional<AssistantDraft> createRefuelFromText(
@@ -360,10 +393,12 @@ public class ChatService {
                 new CreateMaintenanceEventRequest(
                         eventDateTime(userText),
                         integerField(fields, "mileageKm").orElseThrow(),
+                        null,
                         stringField(fields, "name").orElseThrow(),
                         description,
-                        decimalField(fields, "cost").orElse(null)),
-                null);
+                        decimalField(fields, "cost").orElse(null),
+                        List.of()),
+                List.of());
         return Optional.of(new AssistantDraft(maintenanceCreatedAnswer(event), editEventAction(event), event));
     }
 
@@ -862,6 +897,11 @@ public class ChatService {
                 || lower.contains("what should i enter");
     }
 
+    private boolean cancelsPendingEvent(String userText) {
+        String text = normalizedText(userText).strip();
+        return text.matches("(?iu)^(cancel|stop|never mind|nevermind|forget it|abort|отмена|отмени|стоп|не надо|забей|передумал|передумала)[.!?\\s]*$");
+    }
+
     private Optional<String> maintenanceName(String userText) {
         String stripped = maintenanceWorkText(userText);
         if (stripped.isBlank() || stripped.length() < 4 || stripped.equals("записать") || stripped.equals("добавить")) {
@@ -958,6 +998,12 @@ public class ChatService {
 
     private String maintenanceRequiredFieldsAnswer() {
         return "Для ремонта пришли, что сделали со мной, пробег и стоимость, если она есть. Без описания работы я запись не создам.";
+    }
+
+    private String cancelPendingAnswer(ChatLanguage language) {
+        return language == ChatLanguage.RU
+                ? "Ок, не буду продолжать эту запись. Можем просто поговорить или начать новую, когда понадобится."
+                : "Okay, I will stop working on that record. We can just chat or start a new one when you need it.";
     }
 
     private String refuelCreatedAnswer(TimelineEventResponse event) {

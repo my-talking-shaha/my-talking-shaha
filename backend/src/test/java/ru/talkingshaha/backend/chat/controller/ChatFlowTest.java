@@ -3,6 +3,7 @@ package ru.talkingshaha.backend.chat.controller;
 import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.hasSize;
 import static org.hamcrest.Matchers.not;
+import static org.hamcrest.Matchers.nullValue;
 import static org.hamcrest.Matchers.startsWith;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -184,6 +185,28 @@ class ChatFlowTest {
                 .andExpect(jsonPath("$.events[0].liters").value(5))
                 .andExpect(jsonPath("$.events[0].cost").value(1000))
                 .andExpect(jsonPath("$.events[0].fuelName").value("95 octane"));
+    }
+
+    @Test
+    void doesNotContinuePendingRefuelWhenUserChangesTopic() throws Exception {
+        String vehicleId = createVehicle();
+        mockMvc.perform(post("/api/v1/vehicles/{vehicleId}/chat/messages", vehicleId)
+                        .header("Authorization", bearer())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"text\":\"I refuled the car today\"}"))
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.assistantMessage.action.form").value("REFUEL"));
+        mockMvc.perform(post("/api/v1/vehicles/{vehicleId}/chat/messages", vehicleId)
+                        .header("Authorization", bearer())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"text\":\"Do you hate gasoline?\"}"))
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.createdEvent", nullValue()))
+                .andExpect(jsonPath("$.assistantMessage.action.form").doesNotExist());
+        mockMvc.perform(get("/api/v1/vehicles/{vehicleId}/timeline?type=REFUEL", vehicleId)
+                        .header("Authorization", bearer()))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.events", hasSize(0)));
     }
 
     @Test

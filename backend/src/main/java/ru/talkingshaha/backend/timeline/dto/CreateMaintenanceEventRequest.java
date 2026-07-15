@@ -2,6 +2,7 @@ package ru.talkingshaha.backend.timeline.dto;
 
 import java.math.BigDecimal;
 import java.time.OffsetDateTime;
+import java.util.List;
 
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
@@ -20,6 +21,9 @@ public record CreateMaintenanceEventRequest(
         @NotNull(message = "must be provided")
         @PositiveOrZero(message = "must be greater than or equal to 0")
         Integer mileageKm,
+        @Schema(example = "12000")
+        @PositiveOrZero(message = "must be greater than or equal to 0")
+        Integer currentMileageKm,
         @Schema(example = "Oil change")
         @NotBlank(message = "must not be blank")
         @Size(max = 255, message = "must contain at most 255 characters")
@@ -28,5 +32,7 @@ public record CreateMaintenanceEventRequest(
         String description,
         @Schema(example = "3000")
         @Positive(message = "must be greater than 0")
-        BigDecimal cost) {
+        BigDecimal cost,
+        @Schema(example = "[\"Engine oil\", \"Oil filter\"]")
+        List<@Size(max = 255, message = "must contain at most 255 characters") String> replacedParts) {
 }

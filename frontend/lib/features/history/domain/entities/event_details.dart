@@ -21,12 +21,14 @@ class MaintenanceDetails extends EventDetails {
   final int? cost;
   final List<String>? replacedParts;
   final List<String>? photoUrls;
+  final int? currentMileageKm;
 
   MaintenanceDetails({
     required this.description,
     this.cost,
     this.replacedParts,
     this.photoUrls,
+    this.currentMileageKm,
   });
 }
 

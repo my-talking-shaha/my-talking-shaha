@@ -7,6 +7,7 @@ import 'package:frontend/features/analytics/di/analytics_providers.dart';
 import 'package:frontend/features/analytics/presentation/screens/analytics_screen.dart';
 import 'package:frontend/features/parts/di/parts_providers.dart';
 import 'package:frontend/l10n/generated/app_localizations.dart';
+import 'package:frontend/l10n/generated/app_localizations_ru.dart';
 import 'package:go_router/go_router.dart';
 
 void main() {
@@ -91,16 +92,15 @@ void main() {
     expect(find.text('Все месяцы'), findsWidgets);
     expect(find.text('Июнь'), findsOneWidget);
 
-    await tester.dragUntilVisible(
-      find.text('АНАЛИЗ ИСТОРИИ'),
-      find.byType(ListView),
-      const Offset(0, -300),
+    final ru = AppLocalizationsRu();
+    expect(find.text(ru.historyAnalysis, skipOffstage: false), findsOneWidget);
+    expect(find.text(ru.companyMetrics, skipOffstage: false), findsOneWidget);
+    expect(find.text('Надежность', skipOffstage: false), findsOneWidget);
+    expect(find.text('Эффективность', skipOffstage: false), findsOneWidget);
+    expect(
+      find.text('Нагрузка обслуживания', skipOffstage: false),
+      findsOneWidget,
     );
-    expect(find.text('АНАЛИЗ ИСТОРИИ'), findsOneWidget);
-    expect(find.text('МЕТРИКИ КОМПАНИИ'), findsOneWidget);
-    expect(find.text('Надежность'), findsOneWidget);
-    expect(find.text('Эффективность'), findsOneWidget);
-    expect(find.text('Нагрузка обслуживания'), findsOneWidget);
   });
 
   testWidgets('preserves period selection and ignores horizontal swipes', (

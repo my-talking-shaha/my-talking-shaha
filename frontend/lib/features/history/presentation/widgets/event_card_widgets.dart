@@ -452,6 +452,15 @@ class _EventPresentation {
           _ => null,
         },
       ),
+      HistoryEventType.part => _EventPresentation(
+        iconAsset: 'assets/icons/parts/maintenance.svg',
+        iconColor: context.appColors.error,
+        iconBackground: context.appColors.error.withValues(alpha: 0.14),
+        metric: switch (event.details) {
+          MaintenanceDetails(cost: final cost?) => '${_formatNumber(cost)} ₽',
+          _ => null,
+        },
+      ),
       HistoryEventType.trip => _EventPresentation(
         iconAsset: 'assets/icons/events/trip.svg',
         iconColor: context.appColors.textSecondary,

@@ -516,7 +516,11 @@ The `event` part:
   "mileageKm": 10000,
   "name": "Oil change",
   "description": "Oil and filter replacement",
-  "cost": 3000
+  "cost": 3000,
+  "replacedParts": [
+    "Engine oil",
+    "Oil filter"
+  ]
 }
 ```
 
@@ -524,6 +528,10 @@ Uploaded photos are stored server-side (the bytes on the file system, metadata i
 database) exactly like vehicle photos; each photo part must be a JPG or PNG image within the
 upload size limit. `cost`, when provided, must be greater than `0`. Response `201`: timeline
 event whose `photoUrls` are absolute URLs to the stored images (see "Get photo content").
+When replacedParts is provided, backend creates matching vehicle part records
+for maintenance forecast calculation. For backwards compatibility, backend also
+extracts comma-separated part names from a legacy "Replaced parts": line inside
+description.
 
 Errors:
 
@@ -545,9 +553,11 @@ Request:
 }
 ```
 
-`name`, `eventDateTime`, and `mileageKm` are required. `description` and `cost` are optional.
+`name`, `eventDateTime`, and `mileageKm` are required. `description` and `cost` are optional. 
 `cost`, when provided, must be greater than `0`. Part events do not accept photo uploads yet.
-Response `201`: timeline event with `type = PART_REPLACEMENT`.
+Response `201`: timeline event with `type = PART_REPLACEMENT`. `mileageKm` is
+the part installation mileage and may be lower than the vehicle's current
+mileage; if it is higher, the vehicle mileage advances.
 
 Creating any event with a `mileageKm`/`endMileageKm` higher than the vehicle's current
 mileage advances the vehicle mileage and recalculates its parts.
@@ -564,8 +574,9 @@ Request body uses the same event-specific fields as the matching add endpoint:
   `fuelName`, optional `stationName`. `liters` is accepted as a legacy alias for `kwh`;
 - trip: `eventDateTime`, `endMileageKm`, `durationMinutes`, optional
   `startMileageKm`, optional `route`;
-- maintenance/part: `eventDateTime`, `mileageKm`, `name`, optional `description`,
-  optional `cost`. This endpoint is JSON-only and does not modify attached photos.
+- maintenance/part: `eventDateTime`, `mileageKm`, `name`, optional `currentMileageKm`,
+optional `description`, optional `cost`, optional `replacedParts` for maintenance.
+This endpoint is JSON-only and does not modify attached photos.
 
 Field validation is the same as the matching add endpoint. The event type is
 determined by the stored event and is not changed by this endpoint.

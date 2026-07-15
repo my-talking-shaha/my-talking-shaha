@@ -55,6 +55,7 @@ public class OpenAiCompatibleChatClient implements AiChatClient {
                   "extractedFields": {}
                 }
                 Prefer OPEN_* intents when the user wants to add or record data in an existing form.
+                Use OPEN_PART_FORM only when the user clearly wants to add, record, install, or replace a specific part; do not use it for ordinary questions that merely mention oil, filters, batteries, belts, pads, or parts.
                 Use ASK_REPAIR_NEED when the user asks what needs repair, what is urgent, or what can break soon.
                 Use ASK_FUEL when the user asks about fuel level, fuel stock, consumption, or refueling state.
                 Use CASUAL for greetings, small talk, emotional check-ins, or "how are you" style messages.
