@@ -19,14 +19,14 @@ void main() {
       occurredAt: DateTime(2026, 6, 15, 14, 30),
       title: 'Refueling AI-95',
       currentMileageKm: 124580,
-      details: FuelDetails(cost: 2450, liters: 45, fuelType: 'AI-95'),
+      details: FuelDetails(cost: 2450.75, liters: 45, fuelType: 'AI-95'),
     );
 
     await _pumpCard(tester, event);
 
     expect(find.text('Refueling AI-95'), findsOneWidget);
     expect(find.text('45 L • AI-95'), findsOneWidget);
-    expect(find.text('2 450 ₽'), findsOneWidget);
+    expect(find.text('2 450.75 ₽'), findsOneWidget);
     expect(find.text('June 15, 14:30'), findsOneWidget);
     expect(_svgAssetName(tester), 'assets/icons/events/gas.svg');
   });

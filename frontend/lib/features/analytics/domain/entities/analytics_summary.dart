@@ -7,7 +7,7 @@ enum AnalyticsMaintenanceUrgency { stable, warning, critical }
 final class MoneyAmount {
   const MoneyAmount({required this.amount, required this.currency});
 
-  final int amount;
+  final double amount;
   final String currency;
 }
 
@@ -15,7 +15,7 @@ final class ExpenseCategoryAmount {
   const ExpenseCategoryAmount({required this.category, required this.amount});
 
   final ExpenseCategory category;
-  final int amount;
+  final double amount;
 }
 
 final class MileageAnalytics {

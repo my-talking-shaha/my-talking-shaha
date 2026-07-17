@@ -34,6 +34,23 @@ void main() {
     expect(HistoryEventFormUtils.validateFuelLiters('abc'), 'Enter number');
   });
 
+  test('validates required and optional decimal costs', () {
+    expect(HistoryEventFormUtils.validateStoredCost('1250.75'), isNull);
+    expect(HistoryEventFormUtils.validateStoredCost('1250,75'), isNull);
+    expect(
+      HistoryEventFormUtils.validateStoredCost('', optional: true),
+      isNull,
+    );
+    expect(
+      HistoryEventFormUtils.validateStoredCost('0'),
+      'Cost must be positive',
+    );
+    expect(
+      HistoryEventFormUtils.validateStoredCost('100000.01'),
+      'Max 100 000',
+    );
+  });
+
   test('formats and normalizes form values', () {
     expect(
       HistoryEventFormUtils.formatDateTime(DateTime(2026, 6, 20, 9, 5)),

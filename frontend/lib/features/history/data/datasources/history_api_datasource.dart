@@ -105,7 +105,7 @@ abstract final class HistoryApiEventMapper {
       currentMileageKm: mileageKm,
       details: switch (type) {
         HistoryEventType.fuel => FuelDetails(
-          cost: _intValue(json['cost']) ?? 0,
+          cost: _doubleValue(json['cost']) ?? 0,
           liters: isRecharge
               ? _doubleValue(json['kwh']) ?? _doubleValue(json['liters']) ?? 0
               : _doubleValue(json['liters']) ?? 0,
@@ -114,13 +114,13 @@ abstract final class HistoryApiEventMapper {
         ),
         HistoryEventType.maintenance => MaintenanceDetails(
           description: maintenanceDescription.description,
-          cost: _intValue(json['cost']),
+          cost: _doubleValue(json['cost']),
           replacedParts: maintenanceDescription.replacedParts,
           photoUrls: _stringListValue(json['photoUrls']),
         ),
         HistoryEventType.part => MaintenanceDetails(
           description: maintenanceDescription.description,
-          cost: _intValue(json['cost']),
+          cost: _doubleValue(json['cost']),
           photoUrls: _stringListValue(json['photoUrls']),
         ),
         HistoryEventType.trip => TripDetails(

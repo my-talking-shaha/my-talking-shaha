@@ -252,7 +252,7 @@ void main() {
           locale: const Locale('en'),
           localizationsDelegates: AppLocalizations.localizationsDelegates,
           supportedLocales: AppLocalizations.supportedLocales,
-          theme: AppTheme.dark,
+          theme: AppTheme.dark.copyWith(platform: TargetPlatform.iOS),
           home: const HistoryScreen(vehicleId: 'vehicle_1'),
         ),
       ),
@@ -274,7 +274,7 @@ void main() {
     );
     await tester.tap(deleteAction);
     await tester.pumpAndSettle();
-    await tester.tap(find.widgetWithText(TextButton, 'Delete'));
+    await tester.tap(find.text('Delete'));
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 250));
 
@@ -284,6 +284,7 @@ void main() {
       'cache:maintenance_1',
     ]);
     expect(find.text('Oil and filter change'), findsNothing);
+    expect(find.byType(SnackBar), findsOneWidget);
     await tester.pumpWidget(const SizedBox.shrink());
   });
 

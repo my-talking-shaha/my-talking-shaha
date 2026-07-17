@@ -126,7 +126,7 @@ final class MockAnalyticsDatasource implements AnalyticsDatasource {
   ) {
     final days = dateRange.endDate.difference(dateRange.startDate).inDays + 1;
     final safeDays = days < 1 ? 1 : days;
-    final totalExpenses = 8200 * safeDays;
+    final totalExpenses = 8200.0 * safeDays;
     final totalKm = 96 * safeDays;
 
     return AnalyticsSummary(
@@ -137,19 +137,19 @@ final class MockAnalyticsDatasource implements AnalyticsDatasource {
       expensesByCategory: [
         ExpenseCategoryAmount(
           category: ExpenseCategory.parts,
-          amount: (totalExpenses * 0.42).round(),
+          amount: totalExpenses * 0.42,
         ),
         ExpenseCategoryAmount(
           category: ExpenseCategory.maintenance,
-          amount: (totalExpenses * 0.26).round(),
+          amount: totalExpenses * 0.26,
         ),
         ExpenseCategoryAmount(
           category: ExpenseCategory.fuel,
-          amount: (totalExpenses * 0.24).round(),
+          amount: totalExpenses * 0.24,
         ),
         ExpenseCategoryAmount(
           category: ExpenseCategory.other,
-          amount: (totalExpenses * 0.08).round(),
+          amount: totalExpenses * 0.08,
         ),
       ],
       mileage: MileageAnalytics(

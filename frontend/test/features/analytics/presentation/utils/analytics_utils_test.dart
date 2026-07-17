@@ -9,9 +9,11 @@ void main() {
   group('analytics formatters', () {
     test('preserve money, decimal, compact and date formatting', () {
       expect(formatAnalyticsMoney(1258700), '1,258,700 ₽');
+      expect(formatAnalyticsMoney(1258700.75), '1,258,700.75 ₽');
       expect(formatAnalyticsNumber(-12345), '-12,345');
       expect(formatAnalyticsDecimal(14), '14');
       expect(formatAnalyticsDecimal(14.8), '14.8');
+      expect(formatAnalyticsDecimal(14.85), '14.85');
       expect(formatAnalyticsCompactNumber(1250000), '1.3M');
       expect(formatAnalyticsCompactMoney(12500), '12.5K ₽');
       expect(formatAnalyticsCompactKilometers(1200), '1.2K km');

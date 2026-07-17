@@ -3,7 +3,7 @@ sealed class EventDetails {
 }
 
 class FuelDetails extends EventDetails {
-  final int cost;
+  final double cost;
   final double liters;
   final String fuelType;
   final bool isRecharge;
@@ -18,7 +18,7 @@ class FuelDetails extends EventDetails {
 
 class MaintenanceDetails extends EventDetails {
   final String description;
-  final int? cost;
+  final double? cost;
   final List<String>? replacedParts;
   final List<String>? photoUrls;
   final int? currentMileageKm;

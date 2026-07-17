@@ -4,6 +4,8 @@ Base path: `/api/v1/vehicles/{vehicleId}/timeline`
 
 Auth: required.
 
+All `cost` fields are JSON numbers and may contain up to two fractional digits.
+
 ## Event Types
 
 ```text
@@ -33,7 +35,7 @@ Response:
       "type": "REFUEL",
       "title": "Refuel",
       "eventDateTime": "2026-06-12T14:30:00Z",
-      "cost": 2000,
+      "cost": 2000.75,
       "mileageKm": 10000,
       "liters": 30,
       "fuelType": "GASOLINE",
@@ -53,7 +55,7 @@ Response:
   "eventDateTime": "2026-06-12T14:30:00Z",
   "mileageKm": 10000,
   "liters": 30,
-  "cost": 2000,
+  "cost": 2000.75,
   "fuelType": "GASOLINE",
   "fuelName": "95 octane",
   "stationName": "Test Station"
@@ -77,7 +79,7 @@ electric vehicles.
   "title": "Recharge",
   "mileageKm": 10000,
   "kwh": 37.5,
-  "cost": 1200,
+  "cost": 1200.50,
   "fuelType": "ELECTRIC",
   "fuelName": "AC charging",
   "stationName": "Home charger"
@@ -127,7 +129,7 @@ The `event` part:
   "mileageKm": 10000,
   "name": "Oil change",
   "description": "Oil and filter replacement",
-  "cost": 3000,
+  "cost": 3000.25,
   "replacedParts": ["Engine oil", "Oil filter"]
 }
 ```
@@ -154,7 +156,7 @@ part names.
   "mileageKm": 10400,
   "name": "Brake pads",
   "description": "Front axle replacement",
-  "cost": 4200,
+  "cost": 4200.75,
   "photoUrls": ["https://example.com/brake-pads.jpg"]
 }
 ```

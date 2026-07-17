@@ -44,6 +44,7 @@ abstract final class PartsApiPartMapper {
       installedAt: _dateValue(json['installedAt']),
       installedAtMileageKm: _intValue(json['installedMileageKm']),
       lifetimeKm: _nullableIntValue(json['expectedLifetimeKm']),
+      cost: _nullableDoubleValue(json['cost']),
       remainingKm: _nullableIntValue(json['remainingKm']),
       remainingPercent: _nullableIntValue(json['remainingPercent']),
       status: _statusValue(json['status']),
@@ -91,6 +92,14 @@ abstract final class PartsApiPartMapper {
       int intValue => intValue,
       num numValue => numValue.toInt(),
       String stringValue => int.tryParse(stringValue),
+      _ => null,
+    };
+  }
+
+  static double? _nullableDoubleValue(Object? value) {
+    return switch (value) {
+      num numValue => numValue.toDouble(),
+      String stringValue => double.tryParse(stringValue),
       _ => null,
     };
   }

@@ -69,6 +69,7 @@ extension _AddHistoryEventActions on _AddHistoryEventScreenState {
                       controller: _fuelCostController,
                       hintText: '0',
                       suffixText: '₽',
+                      allowDecimal: true,
                       validator: (value) =>
                           HistoryEventFormUtils.validateStoredCost(
                             value,
@@ -231,6 +232,12 @@ extension _AddHistoryEventActions on _AddHistoryEventScreenState {
           hintText: '0',
           suffixText: '₽',
           icon: Icons.payments_outlined,
+          allowDecimal: true,
+          validator: (value) => HistoryEventFormUtils.validateStoredCost(
+            value,
+            l10n: l10n,
+            optional: true,
+          ),
         ),
       ),
       if (includeReplacedParts) ...[
@@ -460,7 +467,7 @@ extension _AddHistoryEventActions on _AddHistoryEventScreenState {
       case FuelDetails(:final liters, :final cost, :final fuelType):
         _mileageController.text = event.currentMileageKm.toString();
         _fuelLitersController.text = liters.toString();
-        _fuelCostController.text = cost.toString();
+        _fuelCostController.text = _decimalText(cost);
         _fuelType = fuelType;
       case MaintenanceDetails(
         :final description,
@@ -473,7 +480,7 @@ extension _AddHistoryEventActions on _AddHistoryEventScreenState {
         _currentMileageController.text =
             (currentMileageKm ?? event.currentMileageKm).toString();
         _maintenanceDescriptionController.text = description;
-        _maintenanceCostController.text = cost?.toString() ?? '';
+        _maintenanceCostController.text = _decimalText(cost);
         _replacedPartsController.text = replacedParts?.join(', ') ?? '';
         _existingPhotoUrls = photoUrls
             ?.where((url) => url.trim().isNotEmpty)
@@ -489,6 +496,13 @@ extension _AddHistoryEventActions on _AddHistoryEventScreenState {
         _tripRouteController.text = route ?? '';
         _tripDurationController.text = duration.inMinutes.toString();
     }
+  }
+
+  String _decimalText(double? value) {
+    if (value == null) return '';
+    return value == value.roundToDouble()
+        ? value.toInt().toString()
+        : value.toStringAsFixed(2).replaceFirst(RegExp(r'0+$'), '');
   }
 
   Future<void> _pickPhotos() async {
@@ -613,7 +627,7 @@ extension _AddHistoryEventActions on _AddHistoryEventScreenState {
         title: _titleController.text.trim(),
         currentMileageKm: int.parse(_mileageController.text),
         details: FuelDetails(
-          cost: int.parse(_fuelCostController.text),
+          cost: HistoryEventFormUtils.parseDecimal(_fuelCostController.text)!,
           liters: HistoryEventFormUtils.parseDecimal(
             _fuelLitersController.text,
           )!,
@@ -630,7 +644,9 @@ extension _AddHistoryEventActions on _AddHistoryEventScreenState {
         currentMileageKm: int.parse(_mileageController.text),
         details: MaintenanceDetails(
           description: _maintenanceDescriptionController.text.trim(),
-          cost: int.tryParse(_maintenanceCostController.text),
+          cost: HistoryEventFormUtils.parseDecimal(
+            _maintenanceCostController.text,
+          ),
           replacedParts: HistoryEventFormUtils.parseCommaSeparated(
             _replacedPartsController.text,
           ),
@@ -647,7 +663,9 @@ extension _AddHistoryEventActions on _AddHistoryEventScreenState {
         currentMileageKm: int.parse(_mileageController.text),
         details: MaintenanceDetails(
           description: _maintenanceDescriptionController.text.trim(),
-          cost: int.tryParse(_maintenanceCostController.text),
+          cost: HistoryEventFormUtils.parseDecimal(
+            _maintenanceCostController.text,
+          ),
           photoUrls: _maintenancePhotoUrls(photoPaths),
           currentMileageKm: int.parse(_currentMileageController.text),
         ),

@@ -34,7 +34,7 @@ dev_dependencies:
 flutter_native_splash:
   color: "#000006"
   image_ios: assets/images/splash.png
-  ios_content_mode: center
+  ios_content_mode: scaleAspectFill
   web: false
   android_12:
     color: "#000006"
