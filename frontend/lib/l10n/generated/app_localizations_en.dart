@@ -512,6 +512,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get noEventsFound => 'No events found';
 
   @override
+  String get eventNotFound => 'Event was not found';
+
+  @override
   String get historyEmpty => 'History is empty';
 
   @override
@@ -550,6 +553,12 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get editTrip => 'Edit trip';
+
+  @override
+  String get editPartRecord => 'Edit part record';
+
+  @override
+  String get editEvent => 'Edit event';
 
   @override
   String get deleteEventQuestion => 'Delete event?';
@@ -818,6 +827,9 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get openForm => 'Open form';
+
+  @override
+  String get createEvent => 'Create event';
 
   @override
   String get intelligence => 'Intelligence';

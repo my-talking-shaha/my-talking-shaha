@@ -32,6 +32,7 @@ import 'package:frontend/features/history/data/datasources/history_datasource.da
 import 'package:frontend/features/history/data/datasources/mock_history_datasource.dart';
 import 'package:frontend/features/history/di/history_providers.dart';
 import 'package:frontend/features/history/di/live_trip_providers.dart';
+import 'package:frontend/features/history/domain/entities/event_details.dart';
 import 'package:frontend/features/history/domain/entities/history_event.dart';
 import 'package:frontend/features/history/domain/entities/history_event_type.dart';
 import 'package:frontend/features/history/domain/entities/live_trip_session.dart';
@@ -271,6 +272,216 @@ void main() {
     expect(_navigationBar(tester).currentIndex, 2);
   });
 
+  testWidgets('chat created-event editor handles the system back action', (
+    tester,
+  ) async {
+    const vehicleId = '096c10bb-13d1-4599-9109-e9e79789ea88';
+    final historyDatasource = _editableHistoryDatasource(vehicleId);
+    final app = await _pumpApp(
+      tester,
+      initialLocation: '/vehicle/$vehicleId/chat',
+      historyDatasource: historyDatasource,
+      chatRepository: const _ActionChatRepository(
+        screen: 'HISTORY_EVENT_EDIT',
+        prefill: {'eventId': 'fuel_1', 'eventType': 'REFUEL'},
+      ),
+    );
+    await tester.tap(find.byKey(const ValueKey('chat_message_action')));
+    await tester.pumpAndSettle();
+
+    expect(
+      app.router.routeInformationProvider.value.uri.path,
+      '/vehicle/$vehicleId/history/fuel_1/edit',
+    );
+    expect(app.router.routeInformationProvider.value.uri.queryParameters, {
+      'from': 'chat',
+    });
+    final editor = tester.widget<AddHistoryEventScreen>(
+      find.byType(AddHistoryEventScreen),
+    );
+    expect(editor.initialEvent?.id, 'fuel_1');
+    expect(find.text('Edit refueling'), findsOneWidget);
+    expect(find.byTooltip('Back to chat'), findsOneWidget);
+
+    await tester.binding.handlePopRoute();
+    await tester.pumpAndSettle();
+
+    expect(
+      app.router.routeInformationProvider.value.uri.path,
+      '/vehicle/$vehicleId/chat',
+    );
+  });
+
+  testWidgets('saving a chat-created event refreshes cached history', (
+    tester,
+  ) async {
+    const vehicleId = '096c10bb-13d1-4599-9109-e9e79789ea88';
+    final historyDatasource = _editableHistoryDatasource(vehicleId);
+    final app = await _pumpApp(
+      tester,
+      initialLocation: '/vehicle/$vehicleId/chat',
+      historyDatasource: historyDatasource,
+      chatRepository: const _ActionChatRepository(
+        screen: 'HISTORY_EVENT_EDIT',
+        prefill: {'eventId': 'fuel_1', 'eventType': 'REFUEL'},
+      ),
+    );
+    final historySubscription = app.container.listen(
+      historyEventsProvider(vehicleId),
+      (previous, next) {},
+    );
+    addTearDown(historySubscription.close);
+    final initialHistory = app.container.read(
+      historyEventsProvider(vehicleId).future,
+    );
+    await tester.pumpAndSettle();
+    await initialHistory;
+
+    await tester.tap(find.byKey(const ValueKey('chat_message_action')));
+    await tester.pumpAndSettle();
+    await tester.enterText(
+      find.byKey(const ValueKey('event-title')),
+      'Edited chat refueling',
+    );
+    final saveButton = find.widgetWithText(ElevatedButton, 'Save changes');
+    await tester.dragUntilVisible(
+      saveButton,
+      find.byType(ListView),
+      const Offset(0, -300),
+    );
+    await tester.tap(saveButton);
+    await tester.pumpAndSettle();
+
+    expect(
+      app.router.routeInformationProvider.value.uri.path,
+      '/vehicle/$vehicleId/chat',
+    );
+    final refreshedEvents = await app.container.read(
+      historyEventsProvider(vehicleId).future,
+    );
+    expect(historyDatasource.getCalls, 2);
+    expect(
+      refreshedEvents.firstWhere((event) => event.id == 'fuel_1').title,
+      'Edited chat refueling',
+    );
+  });
+
+  testWidgets('chat incomplete-event action opens a prefilled form', (
+    tester,
+  ) async {
+    const vehicleId = '096c10bb-13d1-4599-9109-e9e79789ea88';
+    final app = await _pumpApp(
+      tester,
+      initialLocation: '/vehicle/$vehicleId/chat',
+      chatRepository: const _ActionChatRepository(
+        type: 'OPEN_FORM',
+        form: 'TRIP',
+        prefill: {
+          'title': 'City trip',
+          'startMileageKm': 124580,
+          'distanceKm': 50,
+          'durationMinutes': 45,
+        },
+      ),
+    );
+
+    await tester.tap(find.byKey(const ValueKey('chat_message_action')));
+    await tester.pumpAndSettle();
+
+    expect(
+      app.router.routeInformationProvider.value.uri.path,
+      '/vehicle/$vehicleId/history/add',
+    );
+    expect(
+      tester
+          .widget<TextFormField>(find.byKey(const ValueKey('event-title')))
+          .controller
+          ?.text,
+      'City trip',
+    );
+    expect(_formFieldText(tester, 'trip-start'), '124580');
+    expect(_formFieldText(tester, 'trip-end'), '124630');
+    await tester.dragUntilVisible(
+      find.byKey(const ValueKey('trip-duration')),
+      find.byType(ListView),
+      const Offset(0, -300),
+    );
+    expect(_formFieldText(tester, 'trip-duration'), '45');
+
+    await tester.binding.handlePopRoute();
+    await tester.pumpAndSettle();
+
+    expect(
+      app.router.routeInformationProvider.value.uri.path,
+      '/vehicle/$vehicleId/chat',
+    );
+  });
+
+  testWidgets('chat returns to the latest messages after closing event form', (
+    tester,
+  ) async {
+    const vehicleId = '096c10bb-13d1-4599-9109-e9e79789ea88';
+    final app = await _pumpApp(
+      tester,
+      initialLocation: '/vehicle/$vehicleId/chat',
+      chatRepository: const _ActionChatRepository(
+        type: 'OPEN_FORM',
+        form: 'TRIP',
+        messageCount: 24,
+        prefill: {
+          'title': 'City trip',
+          'startMileageKm': 124580,
+          'distanceKm': 50,
+          'durationMinutes': 45,
+        },
+      ),
+    );
+    final action = find.byKey(const ValueKey('chat_message_action'));
+    await tester.scrollUntilVisible(
+      action,
+      500,
+      scrollable: find.byType(Scrollable).first,
+    );
+    await tester.tap(action);
+    await tester.pumpAndSettle();
+
+    expect(
+      app.router.routeInformationProvider.value.uri.path,
+      '/vehicle/$vehicleId/history/add',
+    );
+
+    await tester.binding.handlePopRoute();
+    await tester.pumpAndSettle();
+
+    final messageList = tester.widget<ListView>(find.byType(ListView));
+    final position = messageList.controller!.position;
+    expect(position.pixels, closeTo(position.maxScrollExtent, 1));
+  });
+
+  testWidgets('missing history event returns with a notification', (
+    tester,
+  ) async {
+    const vehicleId = '096c10bb-13d1-4599-9109-e9e79789ea88';
+    final app = await _pumpApp(
+      tester,
+      initialLocation: '/vehicle/$vehicleId/chat',
+      historyDatasource: _RecordingEditableHistoryDatasource(),
+      chatRepository: const _ActionChatRepository(
+        screen: 'HISTORY_EVENT_EDIT',
+        prefill: {'eventId': 'missing-event', 'eventType': 'REFUEL'},
+      ),
+    );
+
+    await tester.tap(find.byKey(const ValueKey('chat_message_action')));
+    await tester.pumpAndSettle();
+
+    expect(
+      app.router.routeInformationProvider.value.uri.path,
+      '/vehicle/$vehicleId/chat',
+    );
+    expect(find.text('Event was not found'), findsOneWidget);
+  });
+
   testWidgets('history add route opens outside the tab shell', (tester) async {
     await _pumpApp(
       tester,
@@ -309,6 +520,51 @@ void main() {
     expect(screen.initialType, HistoryEventType.maintenance);
     expect(screen.initialMileageKm, 130000);
     expect(find.text('New maintenance'), findsOneWidget);
+  });
+
+  testWidgets('history add route fills fields from chat prefill', (
+    tester,
+  ) async {
+    const vehicleId = '096c10bb-13d1-4599-9109-e9e79789ea88';
+    final location = Uri(
+      path: '/vehicle/$vehicleId/history/add',
+      queryParameters: const {
+        'type': 'fuel',
+        'title': 'Highway refueling',
+        'mileageKm': '130000',
+        'liters': '42.5',
+        'cost': '3000',
+        'fuelName': '95 octane',
+        'stationName': 'Test station',
+      },
+    ).toString();
+
+    await _pumpApp(tester, initialLocation: location);
+
+    String fieldText(String key) {
+      return tester
+              .widget<TextFormField>(
+                find.descendant(
+                  of: find.byKey(ValueKey(key)),
+                  matching: find.byType(TextFormField),
+                ),
+              )
+              .controller
+              ?.text ??
+          '';
+    }
+
+    expect(
+      tester
+          .widget<TextFormField>(find.byKey(const ValueKey('event-title')))
+          .controller
+          ?.text,
+      'Highway refueling',
+    );
+    expect(fieldText('fuel-mileage'), '130000');
+    expect(fieldText('fuel-liters'), '42.5');
+    expect(fieldText('fuel-cost'), '3000');
+    expect(find.text('95 octane • Test station'), findsOneWidget);
   });
 
   testWidgets('history add route accepts part query parameter', (tester) async {
@@ -493,6 +749,19 @@ List<String> _destinationLabels(WidgetTester tester) {
   ).items.map((destination) => destination.label ?? '').toList();
 }
 
+String _formFieldText(WidgetTester tester, String key) {
+  return tester
+          .widget<TextFormField>(
+            find.descendant(
+              of: find.byKey(ValueKey(key)),
+              matching: find.byType(TextFormField),
+            ),
+          )
+          .controller
+          ?.text ??
+      '';
+}
+
 final class _TestApp {
   const _TestApp(this.router, this.container);
 
@@ -524,9 +793,19 @@ final class _RecordingLiveTripRepository extends _EmptyLiveTripRepository {
 }
 
 final class _ActionChatRepository implements ChatRepository {
-  const _ActionChatRepository({required this.screen});
+  const _ActionChatRepository({
+    this.type = 'OPEN_SCREEN',
+    this.form,
+    this.screen,
+    this.messageCount = 1,
+    this.prefill = const {},
+  });
 
-  final String screen;
+  final String type;
+  final String? form;
+  final String? screen;
+  final int messageCount;
+  final Map<String, Object?> prefill;
 
   @override
   Future<ChatState> getState(String vehicleId) async {
@@ -534,17 +813,21 @@ final class _ActionChatRepository implements ChatRepository {
       sessionId: 'chat-session',
       quickQuestions: const [],
       messages: [
-        ChatMessage(
-          id: 'message_1',
-          role: ChatMessageRole.assistant,
-          text: 'I can open that screen for you.',
-          createdAt: DateTime(2026, 6, 22, 10, 15),
-          action: ChatAction(
-            type: 'OPEN_SCREEN',
-            screen: screen,
-            prefill: const {},
+        for (var index = 0; index < messageCount; index++)
+          ChatMessage(
+            id: 'message_$index',
+            role: ChatMessageRole.assistant,
+            text: 'Chat message ${index + 1}',
+            createdAt: DateTime(2026, 6, 22, 10, 15 + index),
+            action: index == messageCount - 1
+                ? ChatAction(
+                    type: type,
+                    form: form,
+                    screen: screen,
+                    prefill: prefill,
+                  )
+                : null,
           ),
-        ),
       ],
     );
   }
@@ -556,6 +839,54 @@ final class _ActionChatRepository implements ChatRepository {
   }) {
     throw UnimplementedError();
   }
+}
+
+final class _RecordingEditableHistoryDatasource implements HistoryDatasource {
+  _RecordingEditableHistoryDatasource([HistoryEvent? event])
+    : _events = [?event];
+
+  final List<HistoryEvent> _events;
+  int getCalls = 0;
+
+  @override
+  Future<List<HistoryEvent>> getEvents(String vehicleId) async {
+    getCalls++;
+    return List.unmodifiable(_events);
+  }
+
+  @override
+  Future<String> addEvent(HistoryEvent event) async {
+    _events.add(event);
+    return event.id;
+  }
+
+  @override
+  Future<void> updateEvent(HistoryEvent event) async {
+    final index = _events.indexWhere((item) => item.id == event.id);
+    if (index == -1) throw StateError('Event not found');
+    _events[index] = event;
+  }
+
+  @override
+  Future<void> deleteEvent(String vehicleId, String eventId) async {
+    _events.removeWhere((event) => event.id == eventId);
+  }
+}
+
+_RecordingEditableHistoryDatasource _editableHistoryDatasource(
+  String vehicleId,
+) {
+  return _RecordingEditableHistoryDatasource(
+    HistoryEvent(
+      id: 'fuel_1',
+      carId: vehicleId,
+      type: HistoryEventType.fuel,
+      occurredAt: DateTime(2026, 6, 15, 14, 30),
+      title: 'Refueling AI-95',
+      currentMileageKm: 124580,
+      details: FuelDetails(cost: 2450, liters: 45, fuelType: '95 octane'),
+    ),
+  );
 }
 
 final class _MileageGarageDatasource implements GarageDatasource {

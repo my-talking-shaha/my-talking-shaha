@@ -33,6 +33,21 @@ void scrollChatToLatest(ScrollController controller) {
   });
 }
 
+void positionChatAtLatest(ScrollController controller) {
+  void jumpAfterLayout(int remainingAttempts) {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!controller.hasClients) return;
+      controller.jumpTo(controller.position.maxScrollExtent);
+      if (remainingAttempts > 1) {
+        WidgetsBinding.instance.scheduleFrame();
+        jumpAfterLayout(remainingAttempts - 1);
+      }
+    });
+  }
+
+  jumpAfterLayout(2);
+}
+
 String localizedChatError(AppLocalizations l10n, String message) {
   return switch (message) {
     'Could not get a reply. Check the backend and try again.' =>

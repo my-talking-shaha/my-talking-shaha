@@ -33,17 +33,23 @@ structure-only refactor. It is the regression source of truth for the refactor.
 - New messages animate the vertical list to its latest extent.
 - User bubbles are narrower and blue; assistant bubbles are dark, bordered,
   wider, and include the assistant mark. Both show `HH:mm` time.
-- A created timeline event invalidates history, dashboard, and every analytics
-  period for the current vehicle.
+- A created, updated, or deleted timeline event invalidates history, garage
+  mileage, dashboard, parts, and analytics data for the current vehicle.
 - Supported `OPEN_SCREEN` actions open analytics, history, dashboard, or the
   maintenance forecast inside the tab shell with `from=chat`.
+- `HISTORY_EVENT_EDIT` actions open the existing event editor with an explicit
+  return-to-chat path after editing or cancelling. If the event no longer
+  exists, the client returns to chat and shows a localized notification.
 - Supported `OPEN_FORM` actions open the add-history form outside the tab shell,
-  selecting fuel, trip, or maintenance and preserving `mileageKm` when present.
+  selecting fuel, recharge, trip, part replacement, or maintenance and
+  preserving every supported field from the backend `prefill` payload.
 - Unsupported actions are not rendered.
 
 ## Gestures and scrolling
 
 - The empty state and message history scroll vertically.
+- Reopening chat after an event form positions the conversation at its latest
+  messages instead of the first message.
 - Quick suggestions below a non-empty conversation scroll horizontally in both
   directions and tapping a chip sends its text.
 - Chat has no left/right dismiss, edit, delete, or navigation swipe action.

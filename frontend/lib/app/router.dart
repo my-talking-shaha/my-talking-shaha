@@ -1,19 +1,19 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:frontend/app/providers/history_mutation_invalidation_provider.dart';
 import 'package:frontend/app/providers/vehicle_mileage_provider.dart';
 import 'package:frontend/core/ui/native_ui.dart';
 import 'package:frontend/core/ui/navigation_shell.dart';
 import 'package:frontend/core/utils/uuid_format.dart';
-import 'package:frontend/features/analytics/di/analytics_providers.dart';
 import 'package:frontend/features/analytics/presentation/screens/analytics_screen.dart';
 import 'package:frontend/features/auth/di/auth_providers.dart';
 import 'package:frontend/features/auth/domain/entities/auth_session.dart';
 import 'package:frontend/features/auth/presentation/screens/login_screen.dart';
 import 'package:frontend/features/auth/presentation/screens/registration_screen.dart';
 import 'package:frontend/features/chat/presentation/screens/chat_screen.dart';
-import 'package:frontend/features/dashboard/di/dashboard_providers.dart';
 import 'package:frontend/features/dashboard/presentation/screens/dashboard_screen.dart';
-import 'package:frontend/features/garage/di/garage_providers.dart';
 import 'package:frontend/features/garage/presentation/screens/add_vehicle_screen.dart';
 import 'package:frontend/features/garage/presentation/screens/garage_screen.dart';
 import 'package:frontend/features/history/di/history_providers.dart';
@@ -22,9 +22,9 @@ import 'package:frontend/features/history/domain/entities/history_event_type.dar
 import 'package:frontend/features/history/presentation/screens/add_history_event_screen.dart';
 import 'package:frontend/features/history/presentation/screens/history_screen.dart';
 import 'package:frontend/features/history/presentation/screens/live_trip_screen.dart';
+import 'package:frontend/features/history/presentation/state/history_event_form_prefill.dart';
 import 'package:frontend/features/notifications/presentation/screens/notification_details_screen.dart';
 import 'package:frontend/features/notifications/presentation/screens/notifications_screen.dart';
-import 'package:frontend/features/parts/di/parts_providers.dart';
 import 'package:frontend/features/settings/presentation/screens/settings_screen.dart';
 import 'package:frontend/l10n/generated/app_localizations.dart';
 import 'package:go_router/go_router.dart';
@@ -89,8 +89,15 @@ final routerProvider = Provider<GoRouter>((ref) {
           final vehicleId = state.pathParameters['vehicleId'] ?? '';
           final query = state.uri.queryParameters;
           final initialType = _historyEventTypeFromQuery(query['type']);
-          final prefillMileageKm = int.tryParse(query['mileageKm'] ?? '');
-          return Consumer(
+          final initialPrefill = HistoryEventFormPrefill.fromQueryParameters(
+            query,
+          );
+          final prefillMileageKm = initialPrefill.mileageKm;
+          final launchedFromChat = _launchedFromChat(state.uri);
+          final onClose = launchedFromChat
+              ? () => context.go('/vehicle/$vehicleId/chat')
+              : null;
+          final content = Consumer(
             builder: (context, ref, _) {
               final mileageState = ref.watch(vehicleMileageProvider(vehicleId));
               final engineTypeState = ref.watch(
@@ -110,7 +117,9 @@ final routerProvider = Provider<GoRouter>((ref) {
                         vehicleId: vehicleId,
                         initialMileageKm: initialMileageKm,
                         initialType: initialType,
+                        initialPrefill: initialPrefill,
                         isElectricVehicle: _isElectricEngine(engineType),
+                        onClose: onClose,
                         onSave: (event) => _saveHistoryEvent(ref, event),
                         persistPhoto: ref
                             .read(historyPhotoStorageProvider)
@@ -155,6 +164,9 @@ final routerProvider = Provider<GoRouter>((ref) {
               );
             },
           );
+          return onClose == null
+              ? content
+              : _RoutePopScope(onPop: onClose, child: content);
         },
       ),
       GoRoute(
@@ -172,8 +184,12 @@ final routerProvider = Provider<GoRouter>((ref) {
           final initialEvent = state.extra is HistoryEvent
               ? state.extra as HistoryEvent
               : null;
+          final launchedFromChat = _launchedFromChat(state.uri);
+          final onClose = launchedFromChat
+              ? () => context.go('/vehicle/$vehicleId/chat')
+              : null;
 
-          return Consumer(
+          final content = Consumer(
             builder: (context, ref, _) {
               Widget screenFor(HistoryEvent event) {
                 final engineTypeState = ref.watch(
@@ -186,7 +202,8 @@ final routerProvider = Provider<GoRouter>((ref) {
                     initialMileageKm: event.currentMileageKm,
                     initialType: event.type,
                     isElectricVehicle: _isElectricEngine(engineType),
-                    onSave: ref.read(updateHistoryEventProvider),
+                    onClose: onClose,
+                    onSave: (event) => _updateHistoryEvent(ref, event),
                     persistPhoto: ref
                         .read(historyPhotoStorageProvider)
                         .persistPhoto,
@@ -220,9 +237,10 @@ final routerProvider = Provider<GoRouter>((ref) {
                 data: (events) {
                   final event = _historyEventById(events, eventId);
                   if (event == null) {
-                    return Scaffold(
-                      appBar: AppBar(),
-                      body: const Center(child: Text('Event not found')),
+                    return _MissingHistoryEvent(
+                      onClose:
+                          onClose ??
+                          () => context.go('/vehicle/$vehicleId/history'),
                     );
                   }
 
@@ -245,6 +263,9 @@ final routerProvider = Provider<GoRouter>((ref) {
               );
             },
           );
+          return onClose == null
+              ? content
+              : _RoutePopScope(onPop: onClose, child: content);
         },
       ),
       StatefulShellRoute.indexedStack(
@@ -420,6 +441,67 @@ NoTransitionPage<void> _tabPage({
   return NoTransitionPage<void>(key: state.pageKey, child: child);
 }
 
+final class _RoutePopScope extends StatelessWidget {
+  const _RoutePopScope({required this.onPop, required this.child});
+
+  final VoidCallback onPop;
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) {
+    return PopScope(
+      canPop: false,
+      onPopInvokedWithResult: (didPop, result) {
+        if (!didPop) onPop();
+      },
+      child: child,
+    );
+  }
+}
+
+final class _MissingHistoryEvent extends StatefulWidget {
+  const _MissingHistoryEvent({required this.onClose});
+
+  final VoidCallback onClose;
+
+  @override
+  State<_MissingHistoryEvent> createState() => _MissingHistoryEventState();
+}
+
+final class _MissingHistoryEventState extends State<_MissingHistoryEvent> {
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      unawaited(_showMessageAndClose());
+    });
+  }
+
+  Future<void> _showMessageAndClose() async {
+    showNativeMessage(context, AppLocalizations.of(context).eventNotFound);
+    final routeAnimation = ModalRoute.of(context)?.animation;
+    if (routeAnimation != null &&
+        routeAnimation.status != AnimationStatus.completed) {
+      final completed = Completer<void>();
+      late AnimationStatusListener listener;
+      listener = (status) {
+        if (status != AnimationStatus.completed) return;
+        routeAnimation.removeStatusListener(listener);
+        completed.complete();
+      };
+      routeAnimation.addStatusListener(listener);
+      await completed.future;
+    }
+    if (mounted) widget.onClose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return const SizedBox.shrink();
+  }
+}
+
 String? _invalidVehicleRedirect(Uri uri) {
   if (uri.pathSegments case [
     'vehicle',
@@ -473,12 +555,15 @@ bool _isElectricEngine(String? engineType) {
 }
 
 Future<void> _saveHistoryEvent(WidgetRef ref, HistoryEvent event) async {
-  await ref.read(addHistoryEventProvider)(event);
-  final vehicleId = event.carId;
-  ref.invalidate(historyEventsProvider(vehicleId));
-  ref.invalidate(garageControllerProvider);
-  ref.invalidate(vehicleMileageProvider(vehicleId));
-  ref.invalidate(vehicleDashboardProvider(vehicleId));
-  ref.invalidate(vehiclePartsProvider(vehicleId));
-  ref.invalidate(analyticsSummaryProvider);
+  final save = ref.read(addHistoryEventProvider);
+  final invalidate = ref.read(historyMutationInvalidationProvider);
+  await save(event);
+  invalidate(event.carId);
+}
+
+Future<void> _updateHistoryEvent(WidgetRef ref, HistoryEvent event) async {
+  final update = ref.read(updateHistoryEventProvider);
+  final invalidate = ref.read(historyMutationInvalidationProvider);
+  await update(event);
+  invalidate(event.carId);
 }
