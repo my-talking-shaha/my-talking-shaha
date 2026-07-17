@@ -37,6 +37,32 @@ The mobile app talks to the backend as its single source of truth. The backend s
 and coordinates the AI chat and prediction flows. A dedicated ML service computes component-level
 maintenance-need scores.
 
+&nbsp;&nbsp;
+
+<p align="center">
+  <img src="frontend/assets/readme/login.png" width="230" />
+  &nbsp;&nbsp;
+  <img src="frontend/assets/readme/new_car.png" width="230" />
+  &nbsp;&nbsp;
+  <img src="frontend/assets/readme/garage.png" width="230" />
+</p>
+
+<p align="center">
+  <img src="frontend/assets/readme/new_trip.png" width="230" />
+  &nbsp;&nbsp;
+  <img src="frontend/assets/readme/history.png" width="230" />
+  &nbsp;&nbsp;
+  <img src="frontend/assets/readme/live_trip.png" width="230" />
+</p>
+
+<p align="center">
+  <img src="frontend/assets/readme/analytics.png" width="230" />
+  &nbsp;&nbsp;
+  <img src="frontend/assets/readme/chat.png" width="230" />
+  &nbsp;&nbsp;
+  <img src="frontend/assets/readme/profile.png" width="230" />
+</p>
+
 ## Features
 
 - **Authentication & profile** — email + password registration and login with JWT access/refresh tokens.
