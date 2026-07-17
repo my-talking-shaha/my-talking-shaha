@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:frontend/app/providers/history_mutation_invalidation_provider.dart';
 import 'package:frontend/app/theme/app_theme.dart';
 import 'package:frontend/features/garage/data/datasources/in_memory_garage_datasource.dart';
 import 'package:frontend/features/garage/di/garage_providers.dart';
@@ -32,6 +33,7 @@ void main() {
     );
     final liveTripRepository = _MemoryLiveTripRepository(session);
     HistoryEvent? savedEvent;
+    String? invalidatedVehicleId;
     final router = GoRouter(
       initialLocation: '/history',
       routes: [
@@ -54,6 +56,9 @@ void main() {
           liveTripRepositoryProvider.overrideWithValue(liveTripRepository),
           addHistoryEventProvider.overrideWithValue((event) async {
             savedEvent = event;
+          }),
+          historyMutationInvalidationProvider.overrideWithValue((vehicleId) {
+            invalidatedVehicleId = vehicleId;
           }),
         ],
         child: MaterialApp.router(
@@ -99,6 +104,7 @@ void main() {
     expect(find.text('History'), findsOneWidget);
     expect(liveTripRepository.session, isNull);
     expect(savedEvent?.currentMileageKm, 120015);
+    expect(invalidatedVehicleId, 'vehicle_1');
     final details = savedEvent?.details as TripDetails;
     expect(details.startKm, 120000);
     expect(details.route, 'Home — Office');
