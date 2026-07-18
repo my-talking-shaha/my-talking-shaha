@@ -9,6 +9,7 @@ final class VehiclePart {
     required this.installedAt,
     required this.installedAtMileageKm,
     required this.lifetimeKm,
+    this.cost,
     this.remainingKm,
     this.remainingPercent,
     this.status = PartResourceStatus.unknown,
@@ -21,6 +22,7 @@ final class VehiclePart {
   final DateTime installedAt;
   final int installedAtMileageKm;
   final int? lifetimeKm;
+  final double? cost;
   final int? remainingKm;
   final int? remainingPercent;
   final PartResourceStatus status;
@@ -38,6 +40,7 @@ final class VehiclePart {
       installedAt: installedAt,
       installedAtMileageKm: installedAtMileageKm,
       lifetimeKm: lifetimeKm,
+      cost: cost,
       remainingKm: remainingKm,
       remainingPercent: remainingPercent,
       status: status,

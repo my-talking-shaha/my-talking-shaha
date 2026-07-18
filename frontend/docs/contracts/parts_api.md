@@ -4,6 +4,9 @@ Base path: `/api/v1/vehicles/{vehicleId}/parts`
 
 Auth: required.
 
+The optional `cost` field is a JSON number and may contain up to two
+fractional digits.
+
 ## List Parts
 
 `GET /api/v1/vehicles/{vehicleId}/parts`
@@ -24,7 +27,7 @@ Response:
       "remainingPercent": 75,
       "status": "OK",
       "description": "Front axle",
-      "cost": 2500,
+      "cost": 2500.75,
       "photoUrls": []
     }
   ]
@@ -54,7 +57,7 @@ Request:
   "installedMileageKm": 123000,
   "expectedLifetimeKm": 10000,
   "description": "Shell Helix Ultra 5W-40",
-  "cost": 8900,
+  "cost": 8900.50,
   "photoUrls": ["https://example.com/part-photo.jpg"]
 }
 ```

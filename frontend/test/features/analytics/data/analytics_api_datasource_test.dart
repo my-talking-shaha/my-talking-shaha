@@ -9,10 +9,10 @@ void main() {
     test('maps backend analytics overview to domain summary', () {
       final summary = AnalyticsApiSummaryMapper.fromJson(const {
         'period': 'YEAR',
-        'totalExpenses': 342500,
+        'totalExpenses': 342500.75,
         'currency': 'RUB',
         'expensesByCategory': {
-          'FUEL': 112500,
+          'FUEL': 112500.25,
           'MAINTENANCE': 56000,
           'PARTS': 174000,
         },
@@ -50,10 +50,11 @@ void main() {
 
       expect(summary.period, AnalyticsPeriod.year);
       expect(summary.hasEnoughData, isTrue);
-      expect(summary.totalExpenses?.amount, 342500);
+      expect(summary.totalExpenses?.amount, 342500.75);
       expect(summary.totalExpenses?.currency, 'RUB');
       expect(summary.expensesByCategory, hasLength(3));
       expect(summary.expensesByCategory.first.category, ExpenseCategory.fuel);
+      expect(summary.expensesByCategory.first.amount, 112500.25);
       expect(summary.mileage?.totalKm, 1240);
       expect(summary.mileage?.costPerKm, 12.62);
       expect(summary.fuel?.averageConsumptionPer100Km, 7.2);

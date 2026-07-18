@@ -34,7 +34,8 @@ of truth when a future document differs from the running app.
   require start at or above the allowed minimum and end at or above start.
 - Fuel accepts decimal liters greater than zero and at most 100. Recharge uses
   kWh wording and accepts values greater than zero and at most 500. Stored cost
-  is capped at 100,000. Trip duration must be a positive integer.
+  accepts decimal values and is capped at 100,000. Trip duration must be a
+  positive integer.
 - Maintenance requires a work description; cost, replaced parts, and photos
   are optional. Native platforms support multiple horizontally scrolling
   photos, removal, lost-photo recovery, and cleanup of local removed files.

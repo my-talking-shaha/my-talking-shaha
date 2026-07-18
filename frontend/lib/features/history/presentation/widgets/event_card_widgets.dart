@@ -491,8 +491,17 @@ String _formatFuelAmount(FuelDetails details) {
   return '${_formatDecimal(details.liters)} $unit';
 }
 
-String _formatNumber(int value) {
-  final digits = value.abs().toString();
+String _formatNumber(num value) {
+  final absoluteText = value
+      .abs()
+      .toStringAsFixed(2)
+      .replaceFirst(RegExp(r'\.0+$'), '')
+      .replaceFirstMapped(
+        RegExp(r'(\.\d*[1-9])0+$'),
+        (match) => match.group(1)!,
+      );
+  final parts = absoluteText.split('.');
+  final digits = parts.first;
   final buffer = StringBuffer();
 
   for (var index = 0; index < digits.length; index++) {
@@ -502,7 +511,9 @@ String _formatNumber(int value) {
     buffer.write(digits[index]);
   }
 
-  return value < 0 ? '-$buffer' : buffer.toString();
+  final decimal = parts.length == 2 ? '.${parts.last}' : '';
+  final formatted = '$buffer$decimal';
+  return value < 0 ? '-$formatted' : formatted;
 }
 
 String _formatDecimal(double value) {

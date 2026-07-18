@@ -23,7 +23,7 @@ void main() {
       '124000',
     );
     await tester.enterText(find.byKey(const ValueKey('fuel-liters')), '42');
-    await tester.enterText(find.byKey(const ValueKey('fuel-cost')), '3000');
+    await tester.enterText(find.byKey(const ValueKey('fuel-cost')), '3000,75');
     await _tapSave(tester);
 
     expect(savedEvent, isNull);
@@ -40,6 +40,7 @@ void main() {
     expect(savedEvent?.currentMileageKm, 124600);
     expect(savedEvent?.details, isA<FuelDetails>());
     expect((savedEvent?.details as FuelDetails).liters, 42);
+    expect((savedEvent?.details as FuelDetails).cost, 3000.75);
 
     final amountDecoration = tester.widget<InputDecorator>(
       find.descendant(
@@ -265,6 +266,10 @@ void main() {
       const Offset(0, -300),
     );
     await tester.enterText(descriptionField, 'Changed oil and filter');
+    await tester.enterText(
+      find.byKey(const ValueKey('maintenance-cost')),
+      '2450.50',
+    );
 
     final addPhotoButton = find.byKey(const ValueKey('maintenance-photo-add'));
     await tester.dragUntilVisible(
@@ -302,6 +307,7 @@ void main() {
       '/tmp/selected-photo-2.jpg',
     ]);
     final details = savedEvent?.details as MaintenanceDetails;
+    expect(details.cost, 2450.5);
     expect(details.photoUrls, hasLength(2));
     expect(details.photoUrls?.first, startsWith('/documents/history_photos/'));
   });

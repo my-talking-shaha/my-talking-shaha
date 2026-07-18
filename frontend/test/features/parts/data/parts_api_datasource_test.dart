@@ -16,7 +16,7 @@ void main() {
         'remainingPercent': 8,
         'status': 'ATTENTION',
         'description': 'Front axle',
-        'cost': 2500,
+        'cost': 2500.75,
         'photoUrls': <String>[],
       }, vehicleId: '096c10bb-13d1-4599-9109-e9e79789ea88');
 
@@ -27,6 +27,7 @@ void main() {
       expect(part.installedAt, DateTime.utc(2026, 6, 12));
       expect(part.installedAtMileageKm, 10000);
       expect(part.lifetimeKm, 25000);
+      expect(part.cost, 2500.75);
       expect(part.remainingKm, 500);
       expect(part.remainingPercent, 8);
       expect(part.status, PartResourceStatus.warning);
@@ -47,6 +48,7 @@ void main() {
 
       expect(part.catalogKey, 'other');
       expect(part.lifetimeKm, isNull);
+      expect(part.cost, isNull);
       expect(part.remainingKm, isNull);
       expect(part.remainingPercent, isNull);
       expect(part.status, PartResourceStatus.unknown);

@@ -212,7 +212,7 @@ void main() {
         'type': 'REFUEL',
         'title': 'Refill AI-95',
         'eventDateTime': '2026-06-12T14:30:00Z',
-        'cost': 2000,
+        'cost': 2000.75,
         'mileageKm': 10000,
         'liters': 30,
         'fuelType': 'GASOLINE',
@@ -228,7 +228,7 @@ void main() {
       expect(event.occurredAt.toUtc(), DateTime.utc(2026, 6, 12, 14, 30));
 
       final details = event.details as FuelDetails;
-      expect(details.cost, 2000);
+      expect(details.cost, 2000.75);
       expect(details.liters, 30);
       expect(details.fuelType, 'AI-95 • Test Station');
     });
@@ -242,11 +242,16 @@ void main() {
           occurredAt: DateTime.utc(2026, 6, 12, 14, 30),
           title: 'Refuel',
           currentMileageKm: 10000,
-          details: FuelDetails(cost: 3000, liters: 42.5, fuelType: '95 octane'),
+          details: FuelDetails(
+            cost: 3000.25,
+            liters: 42.5,
+            fuelType: '95 octane',
+          ),
         ),
       );
 
       expect(payload['liters'], 42.5);
+      expect(payload['cost'], 3000.25);
     });
 
     test('builds backend recharge payload with electric fuel type and kwh', () {

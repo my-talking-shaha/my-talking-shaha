@@ -150,7 +150,7 @@ abstract final class AnalyticsApiSummaryMapper {
       period: period,
       hasEnoughData: true,
       totalExpenses: MoneyAmount(
-        amount: _intValue(json['totalExpenses']),
+        amount: _doubleValue(json['totalExpenses']),
         currency: _stringValue(json['currency'], fallback: 'RUB'),
       ),
       expensesByCategory: _expenseCategories(json['expensesByCategory']),
@@ -240,7 +240,7 @@ abstract final class AnalyticsApiSummaryMapper {
         .map(
           (entry) => ExpenseCategoryAmount(
             category: _expenseCategory(entry.key),
-            amount: _intValue(entry.value),
+            amount: _doubleValue(entry.value),
           ),
         )
         .toList(growable: false);

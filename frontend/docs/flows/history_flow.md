@@ -125,6 +125,7 @@ matching local cache.
 - Trip end mileage must be >= start mileage.
 - Refueling amount supports decimal values and must be greater than 0 and no more than 100 liters.
 - Recharge energy supports decimal kWh values and must be greater than 0.
+- Event costs support decimal values with `.` or `,` as the input separator.
 - If backend rejects mileage, show field-level error.
 
 ## Acceptance Criteria

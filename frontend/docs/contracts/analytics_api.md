@@ -4,6 +4,9 @@ Base path: `/api/v1/vehicles/{vehicleId}/analytics`
 
 Auth: required.
 
+All monetary totals and category amounts are JSON numbers and may contain up
+to two fractional digits.
+
 ## Get Analytics Overview
 
 `GET /api/v1/vehicles/{vehicleId}/analytics?period=MONTH`
@@ -31,17 +34,17 @@ Response:
 ```json
 {
   "period": "YEAR",
-  "totalExpenses": 342500,
+  "totalExpenses": 342500.75,
   "currency": "RUB",
   "expensesByCategory": {
-    "FUEL": 112500,
+    "FUEL": 112500.25,
     "MAINTENANCE": 56000,
     "PARTS": 174000
   },
   "monthlyExpenses": [
     {
       "month": "2026-06",
-      "total": 15650,
+      "total": 15650.50,
       "breakdownByCategory": {
         "FUEL": 2450,
         "MAINTENANCE": 8900,

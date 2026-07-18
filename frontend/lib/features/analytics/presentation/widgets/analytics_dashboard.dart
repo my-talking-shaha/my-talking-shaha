@@ -100,7 +100,7 @@ final class AnalyticsDashboard extends StatelessWidget {
         const SizedBox(height: AppSpacing.md),
         AnalyticsChartCard(
           points: charts.expensesByMonth,
-          valueFormatter: (value) => formatAnalyticsMoney(value.round()),
+          valueFormatter: formatAnalyticsMoney,
           legend: l10n.monthlyExpenseTrend,
           accentColor: context.appColors.primaryLight,
           chartType: AnalyticsChartType.line,

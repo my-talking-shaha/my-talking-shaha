@@ -2,7 +2,7 @@ import 'package:frontend/features/history/domain/entities/history_event_type.dar
 import 'package:frontend/l10n/generated/app_localizations.dart';
 
 abstract final class HistoryEventFormUtils {
-  static const int _maxEventCost = 100000;
+  static const double _maxEventCost = 100000;
   static const double _maxRechargeEnergyKwh = 500;
 
   static String titleFor(
@@ -151,13 +151,23 @@ abstract final class HistoryEventFormUtils {
     return null;
   }
 
-  static String? validateStoredCost(String? value, {AppLocalizations? l10n}) {
-    return validatePositiveInt(
-      value,
-      label: l10n?.cost ?? 'Cost',
-      l10n: l10n,
-      maxValue: _maxEventCost,
-    );
+  static String? validateStoredCost(
+    String? value, {
+    AppLocalizations? l10n,
+    bool optional = false,
+  }) {
+    if (optional && (value == null || value.trim().isEmpty)) return null;
+
+    final label = l10n?.cost ?? 'Cost';
+    final cost = parseDecimal(value);
+    if (cost == null || cost <= 0) {
+      return l10n?.fieldMustBePositive(label) ?? '$label must be positive';
+    }
+    if (cost > _maxEventCost) {
+      final formattedMax = _formatCompactNumber(_maxEventCost);
+      return l10n?.fieldMax(formattedMax) ?? 'Max $formattedMax';
+    }
+    return null;
   }
 
   static String? validateFuelLiters(String? value, {AppLocalizations? l10n}) {

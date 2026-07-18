@@ -1,6 +1,6 @@
 import 'package:frontend/features/analytics/domain/entities/analytics_period.dart';
 
-String formatAnalyticsMoney(int amount) => '${formatAnalyticsNumber(amount)} ₽';
+String formatAnalyticsMoney(num amount) => '${formatAnalyticsNumber(amount)} ₽';
 
 String formatAnalyticsCompactMoney(double value) {
   return '${formatAnalyticsCompactNumber(value)} ₽';
@@ -30,8 +30,16 @@ String _formatCompactDecimal(double value) {
 }
 
 String formatAnalyticsNumber(num value) {
-  final roundedValue = value.round();
-  final digits = roundedValue.abs().toString();
+  final absoluteText = value
+      .abs()
+      .toStringAsFixed(2)
+      .replaceFirst(RegExp(r'\.0+$'), '')
+      .replaceFirstMapped(
+        RegExp(r'(\.\d*[1-9])0+$'),
+        (match) => match.group(1)!,
+      );
+  final parts = absoluteText.split('.');
+  final digits = parts.first;
   final buffer = StringBuffer();
 
   for (var index = 0; index < digits.length; index++) {
@@ -41,12 +49,19 @@ String formatAnalyticsNumber(num value) {
     buffer.write(digits[index]);
   }
 
-  return roundedValue < 0 ? '-$buffer' : buffer.toString();
+  final decimal = parts.length == 2 ? '.${parts.last}' : '';
+  final formatted = '$buffer$decimal';
+  return value < 0 ? '-$formatted' : formatted;
 }
 
 String formatAnalyticsDecimal(double value) {
-  final fixed = value.toStringAsFixed(1);
-  return fixed.endsWith('.0') ? fixed.substring(0, fixed.length - 2) : fixed;
+  return value
+      .toStringAsFixed(2)
+      .replaceFirst(RegExp(r'\.0+$'), '')
+      .replaceFirstMapped(
+        RegExp(r'(\.\d*[1-9])0+$'),
+        (match) => match.group(1)!,
+      );
 }
 
 String analyticsDateRangeLabel(AnalyticsDateRange dateRange) {
