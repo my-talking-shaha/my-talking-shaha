@@ -3,13 +3,11 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_svg/flutter_svg.dart';
+import 'package:frontend/app/providers/history_mutation_invalidation_provider.dart';
 import 'package:frontend/app/providers/vehicle_mileage_provider.dart';
 import 'package:frontend/app/theme/app_palette.dart';
 import 'package:frontend/app/theme/app_theme.dart';
 import 'package:frontend/core/ui/native_ui.dart';
-import 'package:frontend/features/analytics/di/analytics_providers.dart';
-import 'package:frontend/features/analytics/domain/entities/analytics_period.dart';
-import 'package:frontend/features/dashboard/di/dashboard_providers.dart';
 import 'package:frontend/features/garage/di/garage_providers.dart';
 import 'package:frontend/features/history/di/history_providers.dart';
 import 'package:frontend/features/history/di/live_trip_providers.dart';
@@ -18,7 +16,6 @@ import 'package:frontend/features/history/domain/entities/history_event_type.dar
 import 'package:frontend/features/history/presentation/controllers/live_trip_controller.dart';
 import 'package:frontend/features/history/presentation/utils/history_timeline_utils.dart';
 import 'package:frontend/features/history/presentation/widgets/event_card.dart';
-import 'package:frontend/features/parts/di/parts_providers.dart';
 import 'package:frontend/l10n/generated/app_localizations.dart';
 import 'package:go_router/go_router.dart';
 
@@ -186,7 +183,6 @@ final class _HistoryScreenState extends ConsumerState<HistoryScreen> {
     );
     if (!mounted) return;
     if (event != null) {
-      _invalidateAfterHistoryMutation(affectsMileage: true);
       _showSuccessMessage(AppLocalizations.of(context).eventAdded);
     }
   }
@@ -225,7 +221,6 @@ final class _HistoryScreenState extends ConsumerState<HistoryScreen> {
       if (!mounted || event == null) return;
       await WidgetsBinding.instance.endOfFrame;
       if (!mounted) return;
-      _invalidateAfterHistoryMutation(affectsMileage: true);
       _showSuccessMessage(AppLocalizations.of(context).tripSaved);
     } on LiveTripAlreadyActiveException {
       _showSuccessMessage(l10n.activeTripForAnotherVehicle);
@@ -236,27 +231,13 @@ final class _HistoryScreenState extends ConsumerState<HistoryScreen> {
 
   Future<bool> _confirmStartLiveTrip() async {
     final l10n = AppLocalizations.of(context);
-    final confirmed = await showDialog<bool>(
+    return showNativeConfirmDialog(
       context: context,
-      builder: (context) {
-        return AlertDialog(
-          title: Text(l10n.startTripQuestion),
-          content: Text(l10n.startTripConfirmation),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.of(context).pop(false),
-              child: Text(l10n.cancel),
-            ),
-            TextButton(
-              onPressed: () => Navigator.of(context).pop(true),
-              child: Text(l10n.startLiveTrip),
-            ),
-          ],
-        );
-      },
+      title: l10n.startTripQuestion,
+      message: l10n.startTripConfirmation,
+      cancelLabel: l10n.cancel,
+      confirmLabel: l10n.startLiveTrip,
     );
-
-    return confirmed ?? false;
   }
 
   bool get _hasFilters => _query.isNotEmpty || _selectedType != null;
@@ -282,7 +263,6 @@ final class _HistoryScreenState extends ConsumerState<HistoryScreen> {
     if (!mounted) return;
     setState(() => _cardStateRevision++);
     if (updatedEvent != null) {
-      _invalidateAfterHistoryMutation(affectsMileage: true);
       _showSuccessMessage(AppLocalizations.of(context).eventUpdated);
     }
   }
@@ -302,13 +282,19 @@ final class _HistoryScreenState extends ConsumerState<HistoryScreen> {
       return;
     }
 
+    final invalidate = ref.read(historyMutationInvalidationProvider);
+    final deleteCachedPhotos = ref.read(deleteHistoryPhotoCacheProvider);
     try {
       await ref
           .read(deleteHistoryEventProvider)
           .call(widget.vehicleId, event.id);
-      await ref.read(deleteHistoryPhotoCacheProvider)(event);
+      invalidate(widget.vehicleId);
+      try {
+        await deleteCachedPhotos(event);
+      } catch (_) {
+        // The backend deletion succeeded; stale local photos are non-blocking.
+      }
       if (!mounted) return;
-      _invalidateAfterHistoryMutation(affectsMileage: false);
       setState(() => _cardStateRevision++);
       _showSuccessMessage(l10n.eventDeleted);
     } catch (_) {
@@ -319,28 +305,5 @@ final class _HistoryScreenState extends ConsumerState<HistoryScreen> {
 
   void _showSuccessMessage(String message) {
     showNativeMessage(context, message);
-  }
-
-  void _invalidateAfterHistoryMutation({required bool affectsMileage}) {
-    final vehicleId = widget.vehicleId;
-    ref.invalidate(historyEventsProvider(vehicleId));
-    ref.invalidate(vehicleDashboardProvider(vehicleId));
-    for (final period in AnalyticsPeriod.values) {
-      ref.invalidate(
-        analyticsSummaryProvider((
-          vehicleId: vehicleId,
-          period: period,
-          dateRange: null,
-        )),
-      );
-    }
-
-    if (!affectsMileage) {
-      return;
-    }
-
-    ref.invalidate(garageControllerProvider);
-    ref.invalidate(vehicleMileageProvider(vehicleId));
-    ref.invalidate(vehiclePartsProvider(vehicleId));
   }
 }

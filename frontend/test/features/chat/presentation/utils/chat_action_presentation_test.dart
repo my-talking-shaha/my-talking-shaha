@@ -15,17 +15,61 @@ void main() {
     );
   });
 
-  test('form actions preserve type and mileage prefill', () {
+  test('form actions preserve all supported prefill values', () {
+    final destination = chatActionDestination(
+      vehicleId,
+      const ChatAction(
+        type: 'OPEN_FORM',
+        form: 'REFUEL',
+        prefill: {
+          'mileageKm': 15000,
+          'liters': 5.5,
+          'cost': 1000,
+          'fuelName': '95 octane',
+          'stationName': 'Test station',
+          'ignored': 'not forwarded',
+        },
+      ),
+    );
+
+    final uri = Uri.parse(destination!);
+    expect(uri.path, '/vehicle/vehicle-1/history/add');
+    expect(uri.queryParameters, {
+      'type': 'fuel',
+      'from': 'chat',
+      'mileageKm': '15000',
+      'liters': '5.5',
+      'cost': '1000',
+      'fuelName': '95 octane',
+      'stationName': 'Test station',
+    });
+  });
+
+  test('created event action opens the matching history editor', () {
     expect(
       chatActionDestination(
         vehicleId,
         const ChatAction(
-          type: 'OPEN_FORM',
-          form: 'PART_REPLACEMENT',
-          prefill: {'mileageKm': 15000},
+          type: 'OPEN_SCREEN',
+          screen: 'HISTORY_EVENT_EDIT',
+          prefill: {'eventId': 'event-42', 'eventType': 'MAINTENANCE'},
         ),
       ),
-      '/vehicle/vehicle-1/history/add?type=part&mileageKm=15000',
+      '/vehicle/vehicle-1/history/event-42/edit?from=chat',
+    );
+  });
+
+  test('event actions without a target id remain hidden', () {
+    expect(
+      chatActionDestination(
+        vehicleId,
+        const ChatAction(
+          type: 'OPEN_SCREEN',
+          screen: 'HISTORY_EVENT_EDIT',
+          prefill: {},
+        ),
+      ),
+      isNull,
     );
   });
 
@@ -34,6 +78,16 @@ void main() {
       chatActionDestination(
         vehicleId,
         const ChatAction(type: 'UNKNOWN', prefill: {}),
+      ),
+      isNull,
+    );
+  });
+
+  test('unsupported forms remain hidden', () {
+    expect(
+      chatActionDestination(
+        vehicleId,
+        const ChatAction(type: 'OPEN_FORM', form: 'UNKNOWN', prefill: {}),
       ),
       isNull,
     );

@@ -11,6 +11,7 @@ import 'package:frontend/core/ui/native_ui.dart';
 import 'package:frontend/features/history/domain/entities/event_details.dart';
 import 'package:frontend/features/history/domain/entities/history_event.dart';
 import 'package:frontend/features/history/domain/entities/history_event_type.dart';
+import 'package:frontend/features/history/presentation/state/history_event_form_prefill.dart';
 import 'package:frontend/features/history/presentation/utils/history_event_form_utils.dart';
 import 'package:frontend/l10n/generated/app_localizations.dart';
 import 'package:image_picker/image_picker.dart';
@@ -49,7 +50,9 @@ final class AddHistoryEventScreen extends StatefulWidget {
     this.initialMileageKm = 0,
     this.initialType = HistoryEventType.fuel,
     this.initialOccurredAt,
+    this.initialPrefill,
     this.isElectricVehicle = false,
+    this.onClose,
     super.key,
   });
 
@@ -63,7 +66,9 @@ final class AddHistoryEventScreen extends StatefulWidget {
   final int initialMileageKm;
   final HistoryEventType initialType;
   final DateTime? initialOccurredAt;
+  final HistoryEventFormPrefill? initialPrefill;
   final bool isElectricVehicle;
+  final VoidCallback? onClose;
 
   @override
   State<AddHistoryEventScreen> createState() => _AddHistoryEventScreenState();
@@ -119,16 +124,28 @@ final class _AddHistoryEventScreenState extends State<AddHistoryEventScreen> {
     final initialEvent = widget.initialEvent;
     _type = initialEvent?.type ?? widget.initialType;
     _occurredAt =
-        initialEvent?.occurredAt ?? widget.initialOccurredAt ?? DateTime.now();
+        initialEvent?.occurredAt ??
+        widget.initialPrefill?.occurredAt ??
+        widget.initialOccurredAt ??
+        DateTime.now();
     if (initialEvent != null) {
       _populateFromEvent(initialEvent);
-    } else if (widget.initialMileageKm > 0) {
-      _mileageController.text = widget.initialMileageKm.toString();
-      _currentMileageController.text = widget.initialMileageKm.toString();
-      _tripStartController.text = widget.initialMileageKm.toString();
-    }
-    if (initialEvent == null && widget.isElectricVehicle) {
-      _fuelType = _defaultChargerTypes.first;
+    } else {
+      if (widget.isElectricVehicle) {
+        _fuelType = _defaultChargerTypes.first;
+      }
+      _populateFromPrefill(widget.initialPrefill);
+      if (widget.initialMileageKm > 0) {
+        _mileageController.text = _mileageController.text.isEmpty
+            ? widget.initialMileageKm.toString()
+            : _mileageController.text;
+        _currentMileageController.text = _currentMileageController.text.isEmpty
+            ? widget.initialMileageKm.toString()
+            : _currentMileageController.text;
+        _tripStartController.text = _tripStartController.text.isEmpty
+            ? widget.initialMileageKm.toString()
+            : _tripStartController.text;
+      }
     }
     if (!kIsWeb &&
         widget.pickPhoto == null &&
@@ -159,8 +176,15 @@ final class _AddHistoryEventScreenState extends State<AddHistoryEventScreen> {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
 
-    return Scaffold(
+    final screen = Scaffold(
       appBar: AppBar(
+        leading: widget.onClose == null
+            ? null
+            : IconButton(
+                onPressed: widget.onClose,
+                tooltip: l10n.backToChat,
+                icon: const Icon(Icons.chevron_left_rounded),
+              ),
         title: Text(
           _isEditing
               ? HistoryEventFormUtils.editTitleFor(
@@ -238,5 +262,7 @@ final class _AddHistoryEventScreenState extends State<AddHistoryEventScreen> {
         ),
       ),
     );
+
+    return screen;
   }
 }

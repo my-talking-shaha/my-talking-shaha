@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:frontend/app/providers/history_mutation_invalidation_provider.dart';
 import 'package:frontend/app/theme/app_palette.dart';
 import 'package:frontend/app/theme/app_theme.dart';
 import 'package:frontend/features/history/di/history_providers.dart';
@@ -89,6 +90,7 @@ final class _LiveTripScreenState extends ConsumerState<LiveTripScreen> {
         title: l10n.tripEvent,
         route: result.route,
       );
+      final invalidate = ref.read(historyMutationInvalidationProvider);
       await ref.read(addHistoryEventProvider)(event);
       try {
         await ref.read(liveTripControllerProvider.notifier).end();
@@ -96,6 +98,8 @@ final class _LiveTripScreenState extends ConsumerState<LiveTripScreen> {
         // The trip is already stored remotely; do not invite a duplicate save.
       }
       if (mounted) context.pop(event);
+      await WidgetsBinding.instance.endOfFrame;
+      invalidate(event.carId);
     } on LiveTripMileageException {
       _showError(l10n.mileageAtLeastKm(session.startMileageKm));
     } catch (_) {

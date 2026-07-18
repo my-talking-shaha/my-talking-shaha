@@ -23,6 +23,7 @@ final class ChatScreen extends ConsumerStatefulWidget {
 final class _ChatScreenState extends ConsumerState<ChatScreen> {
   final _messageController = TextEditingController();
   final _scrollController = ScrollController();
+  bool _positionedInitialMessages = false;
 
   @override
   void dispose() {
@@ -61,18 +62,24 @@ final class _ChatScreenState extends ConsumerState<ChatScreen> {
         title: const ChatTitle(),
       ),
       body: chatState.when(
-        data: (state) => ChatLoadedBody(
-          vehicleId: widget.vehicleId,
-          state: state,
-          controller: _messageController,
-          scrollController: _scrollController,
-          onSend: (text) => sendChatMessage(
-            ref: ref,
+        data: (state) {
+          if (!_positionedInitialMessages) {
+            _positionedInitialMessages = true;
+            positionChatAtLatest(_scrollController);
+          }
+          return ChatLoadedBody(
             vehicleId: widget.vehicleId,
-            messageController: _messageController,
-            text: text,
-          ),
-        ),
+            state: state,
+            controller: _messageController,
+            scrollController: _scrollController,
+            onSend: (text) => sendChatMessage(
+              ref: ref,
+              vehicleId: widget.vehicleId,
+              messageController: _messageController,
+              text: text,
+            ),
+          );
+        },
         loading: () => const ChatWarmupState(),
         error: (error, stackTrace) => ChatLoadError(
           onRetry: () => unawaited(ref.read(provider.notifier).reload()),

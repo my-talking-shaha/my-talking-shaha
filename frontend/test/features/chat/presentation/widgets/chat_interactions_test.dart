@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:frontend/app/theme/app_theme.dart';
+import 'package:frontend/features/chat/domain/entities/chat_action.dart';
+import 'package:frontend/features/chat/presentation/widgets/chat_action_pill.dart';
 import 'package:frontend/features/chat/presentation/widgets/chat_empty_state.dart';
 import 'package:frontend/features/chat/presentation/widgets/chat_input_bar.dart';
 import 'package:frontend/features/chat/presentation/widgets/chat_suggestion_strip.dart';
@@ -71,6 +73,41 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(scrollable.position.pixels, greaterThan(0));
+  });
+
+  testWidgets('created event action names the event editor', (tester) async {
+    await _pump(
+      tester,
+      const ChatActionPill(
+        vehicleId: 'vehicle-1',
+        action: ChatAction(
+          type: 'OPEN_SCREEN',
+          screen: 'HISTORY_EVENT_EDIT',
+          prefill: {'eventId': 'event-42', 'eventType': 'REFUEL'},
+        ),
+      ),
+    );
+
+    expect(find.text('Edit refueling'), findsOneWidget);
+    expect(find.byIcon(Icons.edit_rounded), findsOneWidget);
+  });
+
+  testWidgets('incomplete event action offers a prefilled creation flow', (
+    tester,
+  ) async {
+    await _pump(
+      tester,
+      const ChatActionPill(
+        vehicleId: 'vehicle-1',
+        action: ChatAction(
+          type: 'OPEN_FORM',
+          form: 'MAINTENANCE',
+          prefill: {'description': 'Replace brake pads'},
+        ),
+      ),
+    );
+
+    expect(find.text('Create event'), findsOneWidget);
   });
 }
 

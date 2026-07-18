@@ -1,7 +1,9 @@
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:frontend/app/providers/history_mutation_invalidation_provider.dart';
 import 'package:frontend/app/providers/vehicle_mileage_provider.dart';
 import 'package:frontend/app/theme/app_theme.dart';
 import 'package:frontend/features/garage/data/datasources/in_memory_garage_datasource.dart';
@@ -194,7 +196,7 @@ void main() {
           locale: const Locale('en'),
           localizationsDelegates: AppLocalizations.localizationsDelegates,
           supportedLocales: AppLocalizations.supportedLocales,
-          theme: AppTheme.dark,
+          theme: AppTheme.dark.copyWith(platform: TargetPlatform.iOS),
           routerConfig: router,
         ),
       ),
@@ -204,19 +206,21 @@ void main() {
     await tester.tap(find.byKey(const ValueKey('live-trip-fab')));
     await tester.pumpAndSettle();
 
-    expect(find.byType(AlertDialog), findsOneWidget);
+    expect(find.byType(CupertinoAlertDialog), findsOneWidget);
     expect(find.text('Start trip?'), findsOneWidget);
     expect(liveTripRepository.session, isNull);
 
-    await tester.tap(find.widgetWithText(TextButton, 'Cancel'));
+    await tester.tap(find.widgetWithText(CupertinoDialogAction, 'Cancel'));
     await tester.pumpAndSettle();
 
-    expect(find.byType(AlertDialog), findsNothing);
+    expect(find.byType(CupertinoAlertDialog), findsNothing);
     expect(liveTripRepository.session, isNull);
 
     await tester.tap(find.byKey(const ValueKey('live-trip-fab')));
     await tester.pumpAndSettle();
-    await tester.tap(find.widgetWithText(TextButton, 'Start live trip'));
+    await tester.tap(
+      find.widgetWithText(CupertinoDialogAction, 'Start live trip'),
+    );
     await tester.pumpAndSettle();
 
     expect(find.text('Live trip opened'), findsOneWidget);
@@ -234,6 +238,7 @@ void main() {
       deletionSteps,
     );
     HistoryEvent? cacheDeletedFor;
+    String? invalidatedVehicleId;
 
     await tester.pumpWidget(
       ProviderScope(
@@ -243,6 +248,12 @@ void main() {
           deleteHistoryPhotoCacheProvider.overrideWithValue((event) async {
             deletionSteps.add('cache:${event.id}');
             cacheDeletedFor = event;
+          }),
+          historyMutationInvalidationProvider.overrideWith((ref) {
+            return (vehicleId) {
+              invalidatedVehicleId = vehicleId;
+              ref.invalidate(historyEventsProvider(vehicleId));
+            };
           }),
           vehicleEngineTypeProvider.overrideWith(
             (ref, vehicleId) async => 'gasoline',
@@ -279,6 +290,7 @@ void main() {
     await tester.pump(const Duration(milliseconds: 250));
 
     expect(cacheDeletedFor?.id, 'maintenance_1');
+    expect(invalidatedVehicleId, 'vehicle_1');
     expect(deletionSteps, const [
       'backend:vehicle_1:maintenance_1',
       'cache:maintenance_1',

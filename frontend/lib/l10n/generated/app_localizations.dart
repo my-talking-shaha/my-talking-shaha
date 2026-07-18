@@ -1070,6 +1070,12 @@ abstract class AppLocalizations {
   /// **'No events found'**
   String get noEventsFound;
 
+  /// No description provided for @eventNotFound.
+  ///
+  /// In en, this message translates to:
+  /// **'Event was not found'**
+  String get eventNotFound;
+
   /// No description provided for @historyEmpty.
   ///
   /// In en, this message translates to:
@@ -1147,6 +1153,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Edit trip'**
   String get editTrip;
+
+  /// No description provided for @editPartRecord.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit part record'**
+  String get editPartRecord;
+
+  /// No description provided for @editEvent.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit event'**
+  String get editEvent;
 
   /// No description provided for @deleteEventQuestion.
   ///
@@ -1639,6 +1657,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Open form'**
   String get openForm;
+
+  /// No description provided for @createEvent.
+  ///
+  /// In en, this message translates to:
+  /// **'Create event'**
+  String get createEvent;
 
   /// No description provided for @intelligence.
   ///

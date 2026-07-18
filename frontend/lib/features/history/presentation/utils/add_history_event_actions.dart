@@ -101,7 +101,9 @@ extension _AddHistoryEventActions on _AddHistoryEventScreenState {
                     NativePickerItem(value: value, label: value),
                 ],
                 onChanged: (value) {
-                  if (value != null) _fuelType = value;
+                  if (value != null) {
+                    _update(() => _fuelType = value);
+                  }
                 },
               ),
             ),
@@ -441,7 +443,14 @@ extension _AddHistoryEventActions on _AddHistoryEventScreenState {
       final event = _createEvent(id: eventId, photoPaths: persistedPhotoPaths);
       await widget.onSave(event);
       await _deleteRemovedExistingPhotos();
-      if (mounted) Navigator.of(context).pop(event);
+      if (mounted) {
+        final onClose = widget.onClose;
+        if (onClose == null) {
+          Navigator.of(context).pop(event);
+        } else {
+          onClose();
+        }
+      }
     } catch (_) {
       for (final photoPath in persistedPhotoPaths) {
         try {
@@ -496,6 +505,38 @@ extension _AddHistoryEventActions on _AddHistoryEventScreenState {
         _tripRouteController.text = route ?? '';
         _tripDurationController.text = duration.inMinutes.toString();
     }
+  }
+
+  void _populateFromPrefill(HistoryEventFormPrefill? prefill) {
+    if (prefill == null) return;
+
+    _titleController.text = prefill.title ?? '';
+    _mileageController.text = prefill.mileageKm?.toString() ?? '';
+    _currentMileageController.text = prefill.currentMileageKm?.toString() ?? '';
+    _fuelLitersController.text = _decimalText(prefill.amount);
+    _fuelCostController.text = prefill.cost?.toString() ?? '';
+    _maintenanceDescriptionController.text = prefill.description ?? '';
+    _maintenanceCostController.text = prefill.cost?.toString() ?? '';
+    _replacedPartsController.text = prefill.replacedParts ?? '';
+
+    final fuelOrChargerType = prefill.fuelOrChargerType;
+    final stationName = prefill.stationName;
+    if (fuelOrChargerType != null) {
+      _fuelType = stationName == null || fuelOrChargerType.contains(stationName)
+          ? fuelOrChargerType
+          : '$fuelOrChargerType • $stationName';
+    }
+
+    final tripStart = prefill.tripStartMileageKm ?? prefill.mileageKm;
+    final tripEnd =
+        prefill.tripEndMileageKm ??
+        (tripStart != null && prefill.distanceKm != null
+            ? tripStart + prefill.distanceKm!
+            : null);
+    _tripStartController.text = tripStart?.toString() ?? '';
+    _tripEndController.text = tripEnd?.toString() ?? '';
+    _tripRouteController.text = prefill.route ?? '';
+    _tripDurationController.text = prefill.durationMinutes?.toString() ?? '';
   }
 
   String _decimalText(double? value) {

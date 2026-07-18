@@ -511,6 +511,9 @@ class AppLocalizationsRu extends AppLocalizations {
   String get noEventsFound => 'События не найдены';
 
   @override
+  String get eventNotFound => 'Событие не найдено';
+
+  @override
   String get historyEmpty => 'История пуста';
 
   @override
@@ -549,6 +552,12 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get editTrip => 'Редактировать поездку';
+
+  @override
+  String get editPartRecord => 'Редактировать запись о детали';
+
+  @override
+  String get editEvent => 'Редактировать событие';
 
   @override
   String get deleteEventQuestion => 'Удалить событие?';
@@ -820,6 +829,9 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get openForm => 'Открыть форму';
+
+  @override
+  String get createEvent => 'Создать событие';
 
   @override
   String get intelligence => 'Интеллект';
