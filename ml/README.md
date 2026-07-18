@@ -1,21 +1,21 @@
-# ML-сервис предсказания ТО
+# ML Service: Maintenance Prediction
 
-Этот модуль оценивает, насколько срочно нужно обслуживание 12 деталей автомобиля. На выходе — число от **0.0** (всё спокойно) до **1.0** (пора менять).
+This module estimates how urgently each of 12 vehicle components needs service. The output is a score from **0.0** (all clear) to **1.0** (time to replace).
 
-Подробные правила расчёта — в [RULES.md](RULES.md).  
-Актуальные коэффициенты — в [coefficients.json](coefficients.json).
+Detailed scoring rules are in [RULES.md](RULES.md).  
+Current coefficients are in [coefficients.json](coefficients.json).
 
 ---
 
-## Как это работает (коротко)
+## How It Works (short)
 
-1. Берём **пробег** и **дату последнего ТО**.
-2. Берём **характеристики авто**: тип двигателя, объём, КПП, вес.
-3. Для каждой детали есть **базовый интервал** (км и месяцы).
-4. Интервал корректируется **коэффициентами** (дизель, гибрид, автомат, вес и т.д.).
-5. Считаем score по пробегу и по времени, берём **больший** из двух.
+1. Take **mileage** and the **date of last maintenance**.
+2. Take **vehicle specs**: engine type, displacement, transmission, weight.
+3. Each component has a **base interval** (km and months).
+4. The interval is adjusted by **coefficients** (diesel, hybrid, automatic, weight, etc.).
+5. Compute a mileage score and a time score, then take the **larger** of the two.
 
-Цель модели — **предупредить за ~50 км до поломки** (порог тревоги: score ≥ **0.83**).
+The model aims to **warn ~50 km before failure** (alert threshold: score ≥ **0.83**).
 
 ---
 
@@ -26,12 +26,12 @@ pip install -r requirements.txt
 uvicorn ml.api:app --reload
 ```
 
-| Метод | Путь | Описание |
-|-------|------|----------|
-| GET | `/health` | Проверка, что сервис жив |
-| POST | `/api/v1/predict` | Score для 12 компонентов |
+| Method | Path | Description |
+|--------|------|-------------|
+| GET | `/health` | Health check |
+| POST | `/api/v1/predict` | Scores for 12 components |
 
-Пример запроса:
+Example request:
 
 ```json
 {
@@ -52,107 +52,107 @@ uvicorn ml.api:app --reload
 }
 ```
 
-Можно передать `"modification_id"` вместо ручного `spec` — тогда характеристики подтянутся из CSV каталога.
+You can pass `"modification_id"` instead of a manual `spec` — specs will be loaded from the CSV catalog.
 
 ---
 
-## Откуда взялись коэффициенты
+## Where the Coefficients Come From
 
-Изначально коэффициенты были **заданы вручную** (см. [RULES.md](RULES.md)).  
-Потом мы **дообучили** их на реальных жалобах владельцев из базы **NHTSA** (США).
+Coefficients were originally **set by hand** (see [RULES.md](RULES.md)).  
+Then they were **fine-tuned** on real owner complaints from the **NHTSA** database (USA).
 
-### Источник данных
+### Data Sources
 
-| Источник | Что даёт |
-|----------|----------|
-| [NHTSA FLAT_CMPL](https://static.nhtsa.gov/odi/ffdd/cmpl/FLAT_CMPL.zip) | Жалобы владельцев с пробегом на момент поломки |
-| [failure-mileage-distribution](https://huggingface.co/datasets/ProblemsByVin/failure-mileage-distribution) | Медианы пробега поломок (для проверки после обучения) |
-| NHTSA VPIC API | Вес, объём двигателя, тип КПП (опционально, с кэшем) |
+| Source | What it provides |
+|--------|------------------|
+| [NHTSA FLAT_CMPL](https://static.nhtsa.gov/odi/ffdd/cmpl/FLAT_CMPL.zip) | Owner complaints with mileage at failure |
+| [failure-mileage-distribution](https://huggingface.co/datasets/ProblemsByVin/failure-mileage-distribution) | Median failure mileages (for post-training checks) |
+| NHTSA VPIC API | Weight, engine displacement, transmission type (optional, cached) |
 
-Жалoba маппится на одну из 12 наших деталей по тексту неисправности (`COMPDESC`).  
-Поля авто из NHTSA приводятся к нашему формату `CarSpec` (тип топлива → тип двигателя, и т.д.).
+Each complaint is mapped to one of our 12 components via the failure description (`COMPDESC`).  
+NHTSA vehicle fields are normalized to our `CarSpec` format (fuel type → engine type, etc.).
 
-### Обучающая выборка (последний прогон)
+### Training Set (latest run)
 
-| Параметр | Значение |
-|----------|----------|
-| Жалоб отобрано | 4 978 |
-| Марок автомобилей | 60 |
-| Комбинаций марка+модель | 481 |
-| Обучающих точек | 11 748 |
-| Точек для проверки | 3 186 |
+| Parameter | Value |
+|-----------|-------|
+| Complaints selected | 4,978 |
+| Vehicle makes | 60 |
+| Make+model combinations | 481 |
+| Training points | 11,748 |
+| Validation points | 3,186 |
 
-**Как набирали выборку:** брали жалобы с пробегом 1 000–400 000 миль, не больше 20 штук на одну группу (марка + модель + десятилетие + деталь), чтобы один популярный автомobile не «забил» всё обучение. Цель — разнообразие марок и деталей.
+**How the sample was built:** complaints with 1,000–400,000 miles, at most 20 per group (make + model + decade + component), so one popular vehicle does not dominate training. Goal — diversity of makes and components.
 
-### Как устроено обучение
+### How Training Works
 
-Это **не нейросеть с нуля**. Мы оставили ту же формулу, что в коде (`effective_interval = base × коэффициенты`), но коэффициенты стали **обучаемыми параметрами**.
+This is **not a neural net from scratch**. We keep the same formula used in code (`effective_interval = base × coefficients`), but the coefficients become **learnable parameters**.
 
-- **Фреймворк:** PyTorch, оптимизатор Adam
-- **Что учим:** множители для двигателя, КПП, веса + отдельный `part_scale` для каждой из 12 деталей
-- **Loss:** модель должна давать score ≥ 0.83 за 50 км до поломки, низкий score далеко от поломки, score = 1.0 после поломки; плюс штраф, если интервал сильно уехал от prior-значений
+- **Framework:** PyTorch, Adam optimizer
+- **What we learn:** multipliers for engine, transmission, weight + a separate `part_scale` for each of the 12 components
+- **Loss:** the model should produce score ≥ 0.83 at 50 km before failure, a low score far from failure, and score = 1.0 after failure; plus a penalty if intervals drift too far from prior values
 
-### Метрики последнего прогона
+### Metrics (latest run)
 
-| Метрика | Значение | Комментарий |
-|---------|----------|-------------|
-| Early-warning recall @ 50 km | **79%** | Доля случаев, где тревога сработала вовремя |
-| False alarm rate | **66%** | Пока высокий — нужно больше данных/эпох |
+| Metric | Value | Notes |
+|--------|-------|-------|
+| Early-warning recall @ 50 km | **79%** | Share of cases where the alert fired in time |
+| False alarm rate | **66%** | Still high — needs more data/epochs |
 
-Подробности — в [`data/training_report.json`](data/training_report.json).
+Details are in [`data/training_report.json`](data/training_report.json).
 
 ---
 
-## Как переобучить
+## How to Retrain
 
 ```bash
-# 1. Скачать свежие жалобы NHTSA (~1.5 GB)
+# 1. Download fresh NHTSA complaints (~1.5 GB)
 python -m ml.nhtsa_download
 
-# 2. Обучить коэффициенты
+# 2. Train coefficients
 python -m ml.train --epochs 1000 --max-complaints 20000
 
-# 3. Проверить
+# 3. Verify
 pytest ml/test_api.py ml/test_coefficients.py
 ```
 
-После обучения обновятся [`coefficients.json`](coefficients.json) и [`data/training_report.json`](data/training_report.json).  
-Сервис подхватит новые значения при следующем запуске — менять API не нужно.
+After training, [`coefficients.json`](coefficients.json) and [`data/training_report.json`](data/training_report.json) are updated.  
+The service picks up the new values on the next start — no API changes needed.
 
 ---
 
-## Текущие коэффициенты (округлённо)
+## Current Coefficients (rounded)
 
-Значения ниже — из последнего обучения. Точные float-значения — в [`coefficients.json`](coefficients.json).
+Values below are from the latest training run. Exact floats are in [`coefficients.json`](coefficients.json).
 
-### Двигатель
+### Engine
 
-| Условие | Деталь | × |
-|---------|--------|---|
-| Дизель | fuel_filter, injectors | 0.80 |
-| Гибрид | brake_pads, brake_discs | 1.50 |
-| Гибрид | engine_oil, oil_filter | 1.15 |
-| Электро | brake_pads, brake_discs | 1.60 |
-| Электро | tires, suspension | 0.90 |
-| Бензин, ≤1600 см³ | spark_plugs | 0.80 |
-| Бензин, ≥3000 см³ | spark_plugs | 1.04 |
+| Condition | Component | × |
+|-----------|-----------|---|
+| Diesel | fuel_filter, injectors | 0.80 |
+| Hybrid | brake_pads, brake_discs | 1.50 |
+| Hybrid | engine_oil, oil_filter | 1.15 |
+| Electric | brake_pads, brake_discs | 1.60 |
+| Electric | tires, suspension | 0.90 |
+| Gasoline, ≤1600 cc | spark_plugs | 0.80 |
+| Gasoline, ≥3000 cc | spark_plugs | 1.04 |
 
-### КПП и вес
+### Transmission and Weight
 
-| Условие | Деталь | × |
-|---------|--------|---|
-| Автомат | transmission_oil | 0.78 |
-| Автомат | transmission_filter | 0.85 |
-| Механика | clutch | 0.90 |
-| Механика | transmission_oil | 1.14 |
-| Механика | transmission_filter | 1.15 |
-| Вес > 2200 кг | brakes, tires, suspension | 0.85 |
-| Вес < 1300 кг | brakes, tires, suspension | 1.10 |
+| Condition | Component | × |
+|-----------|-----------|---|
+| Automatic | transmission_oil | 0.78 |
+| Automatic | transmission_filter | 0.85 |
+| Manual | clutch | 0.90 |
+| Manual | transmission_oil | 1.14 |
+| Manual | transmission_filter | 1.15 |
+| Weight > 2200 kg | brakes, tires, suspension | 0.85 |
+| Weight < 1300 kg | brakes, tires, suspension | 1.10 |
 
-### Масштаб по детали (`part_scale`)
+### Per-Component Scale (`part_scale`)
 
-| Деталь | × |
-|--------|---|
+| Component | × |
+|-----------|---|
 | Engine Oil | 0.92 |
 | Oil Filter | 1.00 |
 | Air Filter | 0.99 |
@@ -168,18 +168,18 @@ pytest ml/test_api.py ml/test_coefficients.py
 
 ---
 
-## Структура папки
+## Folder Structure
 
-| Файл | Зачем |
-|------|-------|
-| `api.py` | HTTP-сервер FastAPI |
-| `predict.py` | Расчёт score |
-| `coefficients.py` | Загрузка и применение коэффициентов |
-| `coefficients.json` | **Текущие** обученные коэффициенты |
-| `train.py` | Скрипт обучения |
-| `nhtsa_download.py` / `nhtsa_parse.py` | Загрузка и разбор NHTSA |
-| `vehicle_sync.py` | NHTSA → наш формат авто |
-| `component_mapping.py` | NHTSA-деталь → одна из 12 наших |
-| `RULES.md` | Описание логики (числа могут устареть — смотри JSON) |
+| File | Purpose |
+|------|---------|
+| `api.py` | FastAPI HTTP server |
+| `predict.py` | Score calculation |
+| `coefficients.py` | Load and apply coefficients |
+| `coefficients.json` | **Current** trained coefficients |
+| `train.py` | Training script |
+| `nhtsa_download.py` / `nhtsa_parse.py` | Download and parse NHTSA |
+| `vehicle_sync.py` | NHTSA → our vehicle format |
+| `component_mapping.py` | NHTSA part → one of our 12 |
+| `RULES.md` | Logic description (numbers may be stale — check the JSON) |
 
-Сырые данные NHTSA лежат в `data/nhtsa/` и в git не попадают (см. `data/.gitignore`).
+Raw NHTSA data lives in `data/nhtsa/` and is not committed to git (see `data/.gitignore`).
