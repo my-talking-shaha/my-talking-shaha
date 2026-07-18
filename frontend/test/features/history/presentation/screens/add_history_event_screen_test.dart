@@ -317,12 +317,13 @@ void main() {
       occurredAt: DateTime(2026, 6, 15, 14, 30),
       title: 'Refueling AI-95',
       currentMileageKm: 124580,
-      details: FuelDetails(cost: 2450, liters: 45, fuelType: 'AI-95'),
+      details: FuelDetails(cost: 2450, liters: 45, fuelType: 'GASOLINE'),
     );
 
     await _pumpScreen(
       tester,
       initialEvent: initialEvent,
+      theme: AppTheme.dark.copyWith(platform: TargetPlatform.iOS),
       onSave: (event) async => savedEvent = event,
     );
 
@@ -346,7 +347,17 @@ void main() {
           ?.text,
       '124580',
     );
-    expect(find.text('AI-95'), findsOneWidget);
+    expect(find.text('GASOLINE'), findsOneWidget);
+
+    final fuelType = find.byKey(const ValueKey('fuel-type'));
+    await tester.drag(find.byType(ListView), const Offset(0, -300));
+    await tester.pumpAndSettle();
+    await tester.tap(fuelType);
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('95 octane'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('95 octane'), findsOneWidget);
 
     await tester.enterText(
       find.byKey(const ValueKey('event-title')),
@@ -357,7 +368,7 @@ void main() {
     expect(savedEvent?.id, 'fuel_1');
     expect(savedEvent?.title, 'Updated fuel stop');
     expect(savedEvent?.occurredAt, DateTime(2026, 6, 15, 14, 30));
-    expect((savedEvent?.details as FuelDetails).fuelType, 'AI-95');
+    expect((savedEvent?.details as FuelDetails).fuelType, '95 octane');
   });
 
   testWidgets('localizes electric edit title and max validators', (

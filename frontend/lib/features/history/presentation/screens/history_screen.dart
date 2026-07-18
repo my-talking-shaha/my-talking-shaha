@@ -231,27 +231,13 @@ final class _HistoryScreenState extends ConsumerState<HistoryScreen> {
 
   Future<bool> _confirmStartLiveTrip() async {
     final l10n = AppLocalizations.of(context);
-    final confirmed = await showDialog<bool>(
+    return showNativeConfirmDialog(
       context: context,
-      builder: (context) {
-        return AlertDialog(
-          title: Text(l10n.startTripQuestion),
-          content: Text(l10n.startTripConfirmation),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.of(context).pop(false),
-              child: Text(l10n.cancel),
-            ),
-            TextButton(
-              onPressed: () => Navigator.of(context).pop(true),
-              child: Text(l10n.startLiveTrip),
-            ),
-          ],
-        );
-      },
+      title: l10n.startTripQuestion,
+      message: l10n.startTripConfirmation,
+      cancelLabel: l10n.cancel,
+      confirmLabel: l10n.startLiveTrip,
     );
-
-    return confirmed ?? false;
   }
 
   bool get _hasFilters => _query.isNotEmpty || _selectedType != null;

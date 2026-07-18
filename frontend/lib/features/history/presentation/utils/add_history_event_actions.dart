@@ -100,7 +100,9 @@ extension _AddHistoryEventActions on _AddHistoryEventScreenState {
                     NativePickerItem(value: value, label: value),
                 ],
                 onChanged: (value) {
-                  if (value != null) _fuelType = value;
+                  if (value != null) {
+                    _update(() => _fuelType = value);
+                  }
                 },
               ),
             ),

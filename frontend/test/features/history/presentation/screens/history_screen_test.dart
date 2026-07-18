@@ -1,3 +1,4 @@
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_svg/flutter_svg.dart';
@@ -195,7 +196,7 @@ void main() {
           locale: const Locale('en'),
           localizationsDelegates: AppLocalizations.localizationsDelegates,
           supportedLocales: AppLocalizations.supportedLocales,
-          theme: AppTheme.dark,
+          theme: AppTheme.dark.copyWith(platform: TargetPlatform.iOS),
           routerConfig: router,
         ),
       ),
@@ -205,19 +206,21 @@ void main() {
     await tester.tap(find.byKey(const ValueKey('live-trip-fab')));
     await tester.pumpAndSettle();
 
-    expect(find.byType(AlertDialog), findsOneWidget);
+    expect(find.byType(CupertinoAlertDialog), findsOneWidget);
     expect(find.text('Start trip?'), findsOneWidget);
     expect(liveTripRepository.session, isNull);
 
-    await tester.tap(find.widgetWithText(TextButton, 'Cancel'));
+    await tester.tap(find.widgetWithText(CupertinoDialogAction, 'Cancel'));
     await tester.pumpAndSettle();
 
-    expect(find.byType(AlertDialog), findsNothing);
+    expect(find.byType(CupertinoAlertDialog), findsNothing);
     expect(liveTripRepository.session, isNull);
 
     await tester.tap(find.byKey(const ValueKey('live-trip-fab')));
     await tester.pumpAndSettle();
-    await tester.tap(find.widgetWithText(TextButton, 'Start live trip'));
+    await tester.tap(
+      find.widgetWithText(CupertinoDialogAction, 'Start live trip'),
+    );
     await tester.pumpAndSettle();
 
     expect(find.text('Live trip opened'), findsOneWidget);

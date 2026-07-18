@@ -4,6 +4,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:frontend/app/app.dart';
+import 'package:frontend/app/providers/history_mutation_invalidation_provider.dart';
+import 'package:frontend/app/providers/vehicle_mileage_provider.dart';
 import 'package:frontend/app/router.dart';
 import 'package:frontend/features/analytics/di/analytics_providers.dart';
 import 'package:frontend/features/analytics/domain/entities/analytics_period.dart';
@@ -276,18 +278,26 @@ void main() {
     tester,
   ) async {
     const vehicleId = '096c10bb-13d1-4599-9109-e9e79789ea88';
-    final historyDatasource = _editableHistoryDatasource(vehicleId);
+    final historyDatasource = _editableHistoryDatasource(
+      vehicleId,
+      isRecharge: true,
+    );
     final app = await _pumpApp(
       tester,
       initialLocation: '/vehicle/$vehicleId/chat',
       historyDatasource: historyDatasource,
       chatRepository: const _ActionChatRepository(
         screen: 'HISTORY_EVENT_EDIT',
-        prefill: {'eventId': 'fuel_1', 'eventType': 'REFUEL'},
+        prefill: {'eventId': 'fuel_1', 'eventType': 'RECHARGE'},
       ),
     );
+    await app.container.read(vehicleEngineTypeProvider(vehicleId).future);
+    await app.container.read(vehicleMileageProvider(vehicleId).future);
+    app.container.read(historyMutationInvalidationProvider)(vehicleId);
     await tester.tap(find.byKey(const ValueKey('chat_message_action')));
     await tester.pumpAndSettle();
+
+    expect(tester.takeException(), isNull);
 
     expect(
       app.router.routeInformationProvider.value.uri.path,
@@ -300,7 +310,7 @@ void main() {
       find.byType(AddHistoryEventScreen),
     );
     expect(editor.initialEvent?.id, 'fuel_1');
-    expect(find.text('Edit refueling'), findsOneWidget);
+    expect(find.text('Edit recharge'), findsOneWidget);
     expect(find.byTooltip('Back to chat'), findsOneWidget);
 
     await tester.binding.handlePopRoute();
@@ -874,8 +884,9 @@ final class _RecordingEditableHistoryDatasource implements HistoryDatasource {
 }
 
 _RecordingEditableHistoryDatasource _editableHistoryDatasource(
-  String vehicleId,
-) {
+  String vehicleId, {
+  bool isRecharge = false,
+}) {
   return _RecordingEditableHistoryDatasource(
     HistoryEvent(
       id: 'fuel_1',
@@ -884,7 +895,12 @@ _RecordingEditableHistoryDatasource _editableHistoryDatasource(
       occurredAt: DateTime(2026, 6, 15, 14, 30),
       title: 'Refueling AI-95',
       currentMileageKm: 124580,
-      details: FuelDetails(cost: 2450, liters: 45, fuelType: '95 octane'),
+      details: FuelDetails(
+        cost: 2450,
+        liters: 45,
+        fuelType: isRecharge ? 'AC charging' : '95 octane',
+        isRecharge: isRecharge,
+      ),
     ),
   );
 }

@@ -29,6 +29,8 @@ void main() {
           .read(chatControllerProvider('vehicle-1').notifier)
           .send('Add a trip');
 
+      expect(invalidatedVehicleId, isNull);
+      await Future<void>.delayed(Duration.zero);
       expect(invalidatedVehicleId, 'vehicle-1');
       expect(
         container.read(chatControllerProvider('vehicle-1')).value?.messages,

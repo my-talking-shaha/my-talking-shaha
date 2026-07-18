@@ -17,6 +17,7 @@ import 'package:frontend/features/dashboard/presentation/screens/dashboard_scree
 import 'package:frontend/features/garage/presentation/screens/add_vehicle_screen.dart';
 import 'package:frontend/features/garage/presentation/screens/garage_screen.dart';
 import 'package:frontend/features/history/di/history_providers.dart';
+import 'package:frontend/features/history/domain/entities/event_details.dart';
 import 'package:frontend/features/history/domain/entities/history_event.dart';
 import 'package:frontend/features/history/domain/entities/history_event_type.dart';
 import 'package:frontend/features/history/presentation/screens/add_history_event_screen.dart';
@@ -192,39 +193,20 @@ final routerProvider = Provider<GoRouter>((ref) {
           final content = Consumer(
             builder: (context, ref, _) {
               Widget screenFor(HistoryEvent event) {
-                final engineTypeState = ref.watch(
-                  vehicleEngineTypeProvider(vehicleId),
-                );
-                return engineTypeState.when(
-                  data: (engineType) => AddHistoryEventScreen(
-                    vehicleId: vehicleId,
-                    initialEvent: event,
-                    initialMileageKm: event.currentMileageKm,
-                    initialType: event.type,
-                    isElectricVehicle: _isElectricEngine(engineType),
-                    onClose: onClose,
-                    onSave: (event) => _updateHistoryEvent(ref, event),
-                    persistPhoto: ref
-                        .read(historyPhotoStorageProvider)
-                        .persistPhoto,
-                    deletePhoto: ref
-                        .read(historyPhotoStorageProvider)
-                        .deletePhoto,
-                  ),
-                  loading: () => const Scaffold(
-                    body: Center(child: NativeActivityIndicator()),
-                  ),
-                  error: (error, stackTrace) => Scaffold(
-                    appBar: AppBar(),
-                    body: Center(
-                      child: TextButton(
-                        onPressed: () {
-                          ref.invalidate(vehicleEngineTypeProvider(vehicleId));
-                        },
-                        child: Text(AppLocalizations.of(context).retry),
-                      ),
-                    ),
-                  ),
+                return AddHistoryEventScreen(
+                  vehicleId: vehicleId,
+                  initialEvent: event,
+                  initialMileageKm: event.currentMileageKm,
+                  initialType: event.type,
+                  isElectricVehicle: _isRechargeEvent(event),
+                  onClose: onClose,
+                  onSave: (event) => _updateHistoryEvent(ref, event),
+                  persistPhoto: ref
+                      .read(historyPhotoStorageProvider)
+                      .persistPhoto,
+                  deletePhoto: ref
+                      .read(historyPhotoStorageProvider)
+                      .deletePhoto,
                 );
               }
 
@@ -552,6 +534,13 @@ bool _launchedFromChat(Uri uri) {
 
 bool _isElectricEngine(String? engineType) {
   return engineType?.toLowerCase() == 'electric';
+}
+
+bool _isRechargeEvent(HistoryEvent event) {
+  return switch (event.details) {
+    FuelDetails(:final isRecharge) => isRecharge,
+    _ => false,
+  };
 }
 
 Future<void> _saveHistoryEvent(WidgetRef ref, HistoryEvent event) async {
