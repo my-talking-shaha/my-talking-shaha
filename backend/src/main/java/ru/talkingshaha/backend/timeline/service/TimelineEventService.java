@@ -199,11 +199,17 @@ public class TimelineEventService {
 
     @Transactional
     public TimelineEventResponse startChatTrip(UUID vehicleId, ChatSession session, OffsetDateTime startedAt, String notes) {
+        return startChatTrip(vehicleId, session, startedAt, notes, "Trip");
+    }
+
+    @Transactional
+    public TimelineEventResponse startChatTrip(
+            UUID vehicleId, ChatSession session, OffsetDateTime startedAt, String notes, String title) {
         Vehicle vehicle = vehicles.requireOwnedVehicle(vehicleId);
         TripEvent event = new TripEvent();
         event.setVehicle(vehicle);
         event.setType(TimelineEventType.TRIP);
-        event.setTitle("Поездка");
+        event.setTitle(title);
         event.setEventDateTime(startedAt == null ? OffsetDateTime.now() : startedAt);
         event.setStartMileageKm(vehicle.getMileageKm());
         event.setNotes(notes);

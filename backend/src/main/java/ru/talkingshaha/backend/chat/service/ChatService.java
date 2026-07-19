@@ -178,9 +178,10 @@ public class ChatService {
             ChatDecision decision,
             ChatSession session,
             Vehicle vehicle) {
+        ChatLanguage language = decision.language();
         try {
             if (decision.intent() == ChatIntent.OPEN_TRIP_FORM && startsTripConversation(userText)) {
-                return startTripFromChatMessage(userText, session, vehicle);
+                return startTripFromChatMessage(userText, session, vehicle, language);
             }
             Optional<ChatActionResponse> pending = latestPendingAction(session);
             if (pending.isPresent()) {
@@ -190,24 +191,24 @@ public class ChatService {
                 if (!continuesPendingEvent(userText, pending.get())) {
                     return Optional.empty();
                 }
-                return continuePendingEvent(userText, pending.get(), session, vehicle);
+                return continuePendingEvent(userText, pending.get(), session, vehicle, language);
             }
             if (decision.intent() == ChatIntent.OPEN_TRIP_FORM && endsTripConversation(userText)) {
-                return endActiveTripFromChatMessage(userText, session, vehicle);
+                return endActiveTripFromChatMessage(userText, session, vehicle, language);
             }
             if (asksForRequiredFields(userText)) {
                 Map<String, Object> fields = prefillForIntent(userText, decision.intent(), vehicle);
                 return switch (decision.intent()) {
-                    case OPEN_REFUEL_FORM -> Optional.of(new AssistantDraft(refuelRequiredFieldsAnswer(), pendingAction("REFUEL", fields), null));
-                    case OPEN_TRIP_FORM -> Optional.of(new AssistantDraft(tripRequiredFieldsAnswer(), pendingAction("TRIP", fields), null));
-                    case OPEN_REPAIR_FORM -> Optional.of(new AssistantDraft(maintenanceRequiredFieldsAnswer(), pendingAction("MAINTENANCE", fields), null));
+                    case OPEN_REFUEL_FORM -> Optional.of(new AssistantDraft(refuelRequiredFieldsAnswer(language), pendingAction("REFUEL", fields), null));
+                    case OPEN_TRIP_FORM -> Optional.of(new AssistantDraft(tripRequiredFieldsAnswer(language), pendingAction("TRIP", fields), null));
+                    case OPEN_REPAIR_FORM -> Optional.of(new AssistantDraft(maintenanceRequiredFieldsAnswer(language), pendingAction("MAINTENANCE", fields), null));
                     default -> Optional.empty();
                 };
             }
             return switch (decision.intent()) {
-                case OPEN_REFUEL_FORM -> createRefuelFromText(userText, vehicle, Map.of());
-                case OPEN_TRIP_FORM -> createTripFromText(userText, vehicle, Map.of());
-                case OPEN_REPAIR_FORM -> createMaintenanceFromText(userText, vehicle, Map.of());
+                case OPEN_REFUEL_FORM -> createRefuelFromText(userText, vehicle, Map.of(), language);
+                case OPEN_TRIP_FORM -> createTripFromText(userText, vehicle, Map.of(), language);
+                case OPEN_REPAIR_FORM -> createMaintenanceFromText(userText, vehicle, Map.of(), language);
                 default -> Optional.empty();
             };
         } catch (RuntimeException exception) {
@@ -220,7 +221,8 @@ public class ChatService {
             String userText,
             ChatActionResponse pending,
             ChatSession session,
-            Vehicle vehicle) {
+            Vehicle vehicle,
+            ChatLanguage language) {
         Map<String, Object> merged = new LinkedHashMap<>(pending.prefill());
         Map<String, Object> newFields = prefill(userText);
         if ("REFUEL".equals(pending.form())) {
@@ -228,11 +230,11 @@ public class ChatService {
         }
         merged.putAll(newFields);
         return switch (pending.form()) {
-            case "REFUEL" -> createRefuelFromText(userText, vehicle, merged);
+            case "REFUEL" -> createRefuelFromText(userText, vehicle, merged, language);
             case "TRIP" -> uuidField(merged, "tripId")
-                    .map(tripId -> updateLifecycleTripFromText(userText, vehicle, session, tripId, merged))
-                    .orElseGet(() -> createTripFromText(userText, vehicle, merged));
-            case "MAINTENANCE" -> createMaintenanceFromText(userText, vehicle, merged);
+                    .map(tripId -> updateLifecycleTripFromText(userText, vehicle, session, tripId, merged, language))
+                    .orElseGet(() -> createTripFromText(userText, vehicle, merged, language));
+            case "MAINTENANCE" -> createMaintenanceFromText(userText, vehicle, merged, language);
             default -> Optional.empty();
         };
     }
@@ -267,14 +269,15 @@ public class ChatService {
     private Optional<AssistantDraft> createRefuelFromText(
             String userText,
             Vehicle vehicle,
-            Map<String, Object> carriedFields) {
+            Map<String, Object> carriedFields,
+            ChatLanguage language) {
         Map<String, Object> fields = mergedFields(carriedFields, prefill(userText));
         fields.putIfAbsent("mileageKm", vehicle.getMileageKm());
         fields.putIfAbsent("fuelType", fuelType(userText, vehicle).name());
 
-        List<String> errors = refuelValidationErrors(fields, vehicle);
+        List<String> errors = refuelValidationErrors(fields, vehicle, language);
         if (!errors.isEmpty()) {
-            return Optional.of(new AssistantDraft(missingOrInvalidAnswer("заправку", errors), pendingAction("REFUEL", fields), null));
+            return Optional.of(new AssistantDraft(missingOrInvalidAnswer(language, "refuel", "заправку", errors), pendingAction("REFUEL", fields), null));
         }
 
         Integer mileageKm = integerField(fields, "mileageKm").orElseThrow();
@@ -286,7 +289,7 @@ public class ChatService {
                 vehicle.getId(),
                 new CreateRefuelEventRequest(
                         eventDateTime(userText),
-                        "Заправка",
+                        language == ChatLanguage.RU ? "Заправка" : "Refuel",
                         mileageKm,
                         liters,
                         null,
@@ -294,13 +297,14 @@ public class ChatService {
                         fuelType,
                         fuelName,
                         null));
-        return Optional.of(new AssistantDraft(refuelCreatedAnswer(event), editEventAction(event), event));
+        return Optional.of(new AssistantDraft(refuelCreatedAnswer(event, language), editEventAction(event), event));
     }
 
     private Optional<AssistantDraft> createTripFromText(
             String userText,
             Vehicle vehicle,
-            Map<String, Object> carriedFields) {
+            Map<String, Object> carriedFields,
+            ChatLanguage language) {
         Map<String, Object> fields = mergedFields(carriedFields, prefill(userText));
         fields.putIfAbsent("startMileageKm", vehicle.getMileageKm());
         firstInteger(userText, DISTANCE_PATTERN).ifPresent(distance ->
@@ -308,37 +312,46 @@ public class ChatService {
         durationMinutes(userText).ifPresent(duration ->
                 fields.put("durationMinutes", duration));
         route(userText).ifPresent(route -> fields.put("route", route));
-        List<String> errors = tripValidationErrors(fields, vehicle);
+        List<String> errors = tripValidationErrors(fields, vehicle, language);
         if (!errors.isEmpty()) {
-            return Optional.of(new AssistantDraft(missingOrInvalidAnswer("поездку", errors), pendingAction("TRIP", fields), null));
+            return Optional.of(new AssistantDraft(missingOrInvalidAnswer(language, "trip", "поездку", errors), pendingAction("TRIP", fields), null));
         }
         TimelineEventResponse event = timelineEvents.createTripEvent(
                 vehicle.getId(),
                 new CreateTripEventRequest(
                         eventDateTime(userText),
-                        stringField(fields, "route").orElse("Поездка"),
+                        stringField(fields, "route").orElse(language == ChatLanguage.RU ? "Поездка" : "Trip"),
                         integerField(fields, "startMileageKm").orElse(null),
                         integerField(fields, "endMileageKm").orElseThrow(),
                         stringField(fields, "route").orElse(null),
                         integerField(fields, "durationMinutes").orElseThrow()));
-        return Optional.of(new AssistantDraft(tripCreatedAnswer(event), editEventAction(event), event));
+        return Optional.of(new AssistantDraft(tripCreatedAnswer(event, language), editEventAction(event), event));
     }
 
-    private Optional<AssistantDraft> startTripFromChatMessage(String userText, ChatSession session, Vehicle vehicle) {
-        TimelineEventResponse event = timelineEvents.startChatTrip(vehicle.getId(), session, OffsetDateTime.now(), userText);
+    private Optional<AssistantDraft> startTripFromChatMessage(
+            String userText, ChatSession session, Vehicle vehicle, ChatLanguage language) {
+        TimelineEventResponse event = timelineEvents.startChatTrip(
+                vehicle.getId(),
+                session,
+                OffsetDateTime.now(),
+                userText,
+                language == ChatLanguage.RU ? "Поездка" : "Trip");
         Map<String, Object> fields = new LinkedHashMap<>();
         fields.put("tripId", event.id().toString());
         return Optional.of(new AssistantDraft(
-                tripStartedAnswer(event),
+                tripStartedAnswer(language),
                 pendingAction("TRIP", fields),
                 event));
     }
 
-    private Optional<AssistantDraft> endActiveTripFromChatMessage(String userText, ChatSession session, Vehicle vehicle) {
+    private Optional<AssistantDraft> endActiveTripFromChatMessage(
+            String userText, ChatSession session, Vehicle vehicle, ChatLanguage language) {
         return timelineEvents.activeChatTripId(session)
-                .map(tripId -> updateLifecycleTripFromText(userText, vehicle, session, tripId, Map.of()))
+                .map(tripId -> updateLifecycleTripFromText(userText, vehicle, session, tripId, Map.of(), language))
                 .orElseGet(() -> Optional.of(new AssistantDraft(
-                        "\u041d\u0435 \u0432\u0438\u0436\u0443 \u0430\u043a\u0442\u0438\u0432\u043d\u043e\u0439 \u043f\u043e\u0435\u0437\u0434\u043a\u0438 \u0434\u043b\u044f \u0437\u0430\u0432\u0435\u0440\u0448\u0435\u043d\u0438\u044f. \u0421\u043d\u0430\u0447\u0430\u043b\u0430 \u043d\u0430\u0447\u043d\u0438 \u043f\u043e\u0435\u0437\u0434\u043a\u0443, \u0430 \u043f\u043e\u0442\u043e\u043c \u044f \u0441\u043e\u0445\u0440\u0430\u043d\u044e \u0432\u0440\u0435\u043c\u044f \u0444\u0438\u043d\u0438\u0448\u0430.",
+                        language == ChatLanguage.RU
+                                ? "Не вижу активной поездки для завершения. Сначала начни поездку, а потом я сохраню время финиша."
+                                : "I don't see an active trip to finish. Start a trip first, and then I'll save its finish time.",
                         null,
                         null)));
     }
@@ -348,7 +361,8 @@ public class ChatService {
             Vehicle vehicle,
             ChatSession session,
             UUID tripId,
-            Map<String, Object> carriedFields) {
+            Map<String, Object> carriedFields,
+            ChatLanguage language) {
         Map<String, Object> fields = mergedFields(carriedFields, prefill(userText));
         firstInteger(userText, DISTANCE_PATTERN).ifPresent(distance -> fields.put("distanceKm", distance));
         durationMinutes(userText).ifPresent(duration -> fields.put("durationMinutes", duration));
@@ -367,25 +381,26 @@ public class ChatService {
                         decimalField(fields, "fuelLiters").orElse(null),
                         userText));
         if (event.tripStatus() == ru.talkingshaha.backend.timeline.model.TripCompletionStatus.COMPLETE) {
-            return Optional.of(new AssistantDraft(tripLifecycleCompletedAnswer(event), editEventAction(event), event));
+            return Optional.of(new AssistantDraft(tripLifecycleCompletedAnswer(event, language), editEventAction(event), event));
         }
         Map<String, Object> nextFields = new LinkedHashMap<>(fields);
         nextFields.put("tripId", tripId.toString());
-        return Optional.of(new AssistantDraft(tripLifecyclePartialAnswer(event), pendingAction("TRIP", nextFields), event));
+        return Optional.of(new AssistantDraft(tripLifecyclePartialAnswer(language), pendingAction("TRIP", nextFields), event));
     }
 
     private Optional<AssistantDraft> createMaintenanceFromText(
             String userText,
             Vehicle vehicle,
-            Map<String, Object> carriedFields) {
+            Map<String, Object> carriedFields,
+            ChatLanguage language) {
         Map<String, Object> fields = mergedFields(carriedFields, prefill(userText));
         fields.putIfAbsent("mileageKm", vehicle.getMileageKm());
         MaintenanceDraft draft = maintenanceDraft(userText);
         draft.name().ifPresent(name -> fields.putIfAbsent("name", name));
         firstDecimal(userText, MONEY_PATTERN).ifPresent(cost -> fields.put("cost", cost));
-        List<String> errors = maintenanceValidationErrors(fields, vehicle);
+        List<String> errors = maintenanceValidationErrors(fields, vehicle, language);
         if (!errors.isEmpty()) {
-            return Optional.of(new AssistantDraft(missingOrInvalidAnswer("ремонт", errors), pendingAction("MAINTENANCE", fields), null));
+            return Optional.of(new AssistantDraft(missingOrInvalidAnswer(language, "repair", "ремонт", errors), pendingAction("MAINTENANCE", fields), null));
         }
         String description = draft.description().orElse(userText);
         TimelineEventResponse event = timelineEvents.createMaintenanceEvent(
@@ -399,7 +414,7 @@ public class ChatService {
                         decimalField(fields, "cost").orElse(null),
                         List.of()),
                 List.of());
-        return Optional.of(new AssistantDraft(maintenanceCreatedAnswer(event), editEventAction(event), event));
+        return Optional.of(new AssistantDraft(maintenanceCreatedAnswer(event, language), editEventAction(event), event));
     }
 
     private ChatActionResponse action(ChatDecision decision, String userText) {
@@ -500,104 +515,133 @@ public class ChatService {
         return merged;
     }
 
-    private List<String> refuelValidationErrors(Map<String, Object> fields, Vehicle vehicle) {
+    private List<String> refuelValidationErrors(
+            Map<String, Object> fields, Vehicle vehicle, ChatLanguage language) {
         List<String> errors = new java.util.ArrayList<>();
-        validateMileageField(fields, vehicle, errors);
-        validatePositiveDecimal(fields, "liters", "литры", true, errors);
-        validatePositiveDecimal(fields, "cost", "стоимость", true, errors);
+        validateMileageField(fields, vehicle, language, errors);
+        validatePositiveDecimal(fields, "liters", language, "liters", "литры", true, errors);
+        validatePositiveDecimal(fields, "cost", language, "cost", "стоимость", true, errors);
         unsupportedFuelName(fields).ifPresent(value ->
-                errors.add("тип топлива должен быть одним из: " + String.join(", ", SUPPORTED_FUEL_NAMES)));
+                errors.add(language == ChatLanguage.RU
+                        ? "тип топлива должен быть одним из: " + String.join(", ", SUPPORTED_FUEL_NAMES)
+                        : "fuel type must be one of: " + String.join(", ", SUPPORTED_FUEL_NAMES)));
         if (fuelTypeField(fields, vehicle) == null) {
-            errors.add("нужно указать тип топлива");
+            errors.add(language == ChatLanguage.RU ? "нужно указать тип топлива" : "fuel type is required");
         }
         return errors;
     }
 
-    private List<String> tripValidationErrors(Map<String, Object> fields, Vehicle vehicle) {
+    private List<String> tripValidationErrors(
+            Map<String, Object> fields, Vehicle vehicle, ChatLanguage language) {
         List<String> errors = new java.util.ArrayList<>();
         Optional<Integer> start = integerField(fields, "startMileageKm");
         Optional<Integer> end = integerField(fields, "endMileageKm");
         if (start.isEmpty()) {
-            errors.add("нужен начальный пробег");
+            errors.add(language == ChatLanguage.RU ? "нужен начальный пробег" : "start mileage is required");
         } else {
-            validateMileageValue(start.get(), vehicle, "начальный пробег", errors);
+            validateMileageValue(start.get(), vehicle, language, "start mileage", "начальный пробег", errors);
         }
         if (end.isEmpty()) {
-            errors.add("нужен конечный пробег или дистанция поездки");
+            errors.add(language == ChatLanguage.RU
+                    ? "нужен конечный пробег или дистанция поездки"
+                    : "end mileage or trip distance is required");
         } else {
-            validateMileageValue(end.get(), vehicle, "конечный пробег", errors);
+            validateMileageValue(end.get(), vehicle, language, "end mileage", "конечный пробег", errors);
         }
         if (start.isPresent() && end.isPresent() && end.get() <= start.get()) {
-            errors.add("конечный пробег должен быть больше начального");
+            errors.add(language == ChatLanguage.RU
+                    ? "конечный пробег должен быть больше начального"
+                    : "end mileage must be greater than start mileage");
         }
-        validatePositiveInteger(fields, "durationMinutes", "длительность", true, errors);
+        validatePositiveInteger(fields, "durationMinutes", language, "duration", "длительность", true, errors);
         return errors;
     }
 
-    private List<String> maintenanceValidationErrors(Map<String, Object> fields, Vehicle vehicle) {
+    private List<String> maintenanceValidationErrors(
+            Map<String, Object> fields, Vehicle vehicle, ChatLanguage language) {
         List<String> errors = new java.util.ArrayList<>();
-        validateMileageField(fields, vehicle, errors);
+        validateMileageField(fields, vehicle, language, errors);
         Optional<String> name = stringField(fields, "name");
         if (name.isEmpty() || name.get().isBlank()) {
-            errors.add("нужно описание работы");
+            errors.add(language == ChatLanguage.RU ? "нужно описание работы" : "work description is required");
         } else if (name.get().length() > 255) {
-            errors.add("описание работы должно быть не длиннее 255 символов");
+            errors.add(language == ChatLanguage.RU
+                    ? "описание работы должно быть не длиннее 255 символов"
+                    : "work description must be no longer than 255 characters");
         }
-        validatePositiveDecimal(fields, "cost", "стоимость", false, errors);
+        validatePositiveDecimal(fields, "cost", language, "cost", "стоимость", false, errors);
         return errors;
     }
 
-    private void validateMileageField(Map<String, Object> fields, Vehicle vehicle, List<String> errors) {
+    private void validateMileageField(
+            Map<String, Object> fields, Vehicle vehicle, ChatLanguage language, List<String> errors) {
         Optional<Integer> mileage = integerField(fields, "mileageKm");
         if (mileage.isEmpty()) {
-            errors.add("нужен текущий пробег");
+            errors.add(language == ChatLanguage.RU ? "нужен текущий пробег" : "current mileage is required");
             return;
         }
-        validateMileageValue(mileage.get(), vehicle, "пробег", errors);
+        validateMileageValue(mileage.get(), vehicle, language, "mileage", "пробег", errors);
     }
 
-    private void validateMileageValue(Integer mileage, Vehicle vehicle, String label, List<String> errors) {
+    private void validateMileageValue(
+            Integer mileage,
+            Vehicle vehicle,
+            ChatLanguage language,
+            String englishLabel,
+            String russianLabel,
+            List<String> errors) {
+        String label = language == ChatLanguage.RU ? russianLabel : englishLabel;
         if (mileage <= 0) {
-            errors.add(label + " должен быть положительным");
+            errors.add(language == ChatLanguage.RU
+                    ? label + " должен быть положительным"
+                    : label + " must be positive");
         }
         if (mileage < vehicle.getMileageKm()) {
-            errors.add(label + " должен быть не меньше текущего пробега " + vehicle.getMileageKm() + " км");
+            errors.add(language == ChatLanguage.RU
+                    ? label + " должен быть не меньше текущего пробега " + vehicle.getMileageKm() + " км"
+                    : label + " must not be less than the current mileage of " + vehicle.getMileageKm() + " km");
         }
     }
 
     private void validatePositiveDecimal(
             Map<String, Object> fields,
             String key,
-            String label,
+            ChatLanguage language,
+            String englishLabel,
+            String russianLabel,
             boolean required,
             List<String> errors) {
+        String label = language == ChatLanguage.RU ? russianLabel : englishLabel;
         Optional<BigDecimal> value = decimalField(fields, key);
         if (value.isEmpty()) {
             if (required) {
-                errors.add("нужно указать " + label);
+                errors.add(language == ChatLanguage.RU ? "нужно указать " + label : label + " is required");
             }
             return;
         }
         if (value.get().compareTo(BigDecimal.ZERO) <= 0) {
-            errors.add(label + " должна быть больше 0");
+            errors.add(language == ChatLanguage.RU ? label + " должна быть больше 0" : label + " must be greater than 0");
         }
     }
 
     private void validatePositiveInteger(
             Map<String, Object> fields,
             String key,
-            String label,
+            ChatLanguage language,
+            String englishLabel,
+            String russianLabel,
             boolean required,
             List<String> errors) {
+        String label = language == ChatLanguage.RU ? russianLabel : englishLabel;
         Optional<Integer> value = integerField(fields, key);
         if (value.isEmpty()) {
             if (required) {
-                errors.add("нужно указать " + label);
+                errors.add(language == ChatLanguage.RU ? "нужно указать " + label : label + " is required");
             }
             return;
         }
         if (value.get() <= 0) {
-            errors.add(label + " должна быть больше 0");
+            errors.add(language == ChatLanguage.RU ? label + " должна быть больше 0" : label + " must be greater than 0");
         }
     }
 
@@ -677,10 +721,15 @@ public class ChatService {
         return vehicle != null && vehicle.getFuelType() != null ? vehicle.getFuelType() : FuelType.GASOLINE;
     }
 
-    private String missingOrInvalidAnswer(String eventName, List<String> errors) {
-        return "Хочу записать " + eventName + " в свою историю, но нужно уточнить данные: "
-                + String.join("; ", errors)
-                + ". Пришли недостающие или исправленные значения одним сообщением.";
+    private String missingOrInvalidAnswer(
+            ChatLanguage language, String englishEventName, String russianEventName, List<String> errors) {
+        return language == ChatLanguage.RU
+                ? "Хочу записать " + russianEventName + " в свою историю, но нужно уточнить данные: "
+                        + String.join("; ", errors)
+                        + ". Пришли недостающие или исправленные значения одним сообщением."
+                : "I want to add this " + englishEventName + " to my history, but I need a few details: "
+                        + String.join("; ", errors)
+                        + ". Send the missing or corrected values in one message.";
     }
 
     private Optional<Integer> explicitMileage(String userText) {
@@ -988,16 +1037,22 @@ public class ChatService {
         };
     }
 
-    private String refuelRequiredFieldsAnswer() {
-        return "Для заправки мне нужны литры, стоимость, тип топлива и пробег. Если пробег не укажешь, возьму мой текущий.";
+    private String refuelRequiredFieldsAnswer(ChatLanguage language) {
+        return language == ChatLanguage.RU
+                ? "Для заправки мне нужны литры, стоимость, тип топлива и пробег. Если пробег не укажешь, возьму мой текущий."
+                : "For a refuel record, I need the liters, cost, fuel type, and mileage. If you omit the mileage, I'll use my current one.";
     }
 
-    private String tripRequiredFieldsAnswer() {
-        return "Для поездки мне нужны дистанция или конечный пробег и длительность. Начальный пробег могу взять из моего текущего пробега.";
+    private String tripRequiredFieldsAnswer(ChatLanguage language) {
+        return language == ChatLanguage.RU
+                ? "Для поездки мне нужны дистанция или конечный пробег и длительность. Начальный пробег могу взять из моего текущего пробега."
+                : "For a trip record, I need the distance or end mileage and the duration. I can use my current mileage as the start mileage.";
     }
 
-    private String maintenanceRequiredFieldsAnswer() {
-        return "Для ремонта пришли, что сделали со мной, пробег и стоимость, если она есть. Без описания работы я запись не создам.";
+    private String maintenanceRequiredFieldsAnswer(ChatLanguage language) {
+        return language == ChatLanguage.RU
+                ? "Для ремонта пришли, что сделали со мной, пробег и стоимость, если она есть. Без описания работы я запись не создам."
+                : "For a repair record, tell me what was done, the mileage, and the cost if there was one. I can't create the record without a work description.";
     }
 
     private String cancelPendingAnswer(ChatLanguage language) {
@@ -1006,34 +1061,52 @@ public class ChatService {
                 : "Okay, I will stop working on that record. We can just chat or start a new one when you need it.";
     }
 
-    private String refuelCreatedAnswer(TimelineEventResponse event) {
+    private String refuelCreatedAnswer(TimelineEventResponse event, ChatLanguage language) {
         String fuel = event.fuelName() == null ? event.fuelType().name() : event.fuelName();
-        String cost = event.cost() == null ? "без стоимости" : "за " + event.cost() + " RUB";
-        return "Записала себе заправку: %s л %s, %s. Пробег сейчас %s км."
+        if (language == ChatLanguage.RU) {
+            String cost = event.cost() == null ? "без стоимости" : "за " + event.cost() + " RUB";
+            return "Записала себе заправку: %s л %s, %s. Пробег сейчас %s км."
+                    .formatted(event.liters(), fuel, cost, event.mileageKm());
+        }
+        String cost = event.cost() == null ? "without a cost" : "for " + event.cost() + " RUB";
+        return "I added the refuel to my history: %s L of %s, %s. My mileage is now %s km."
                 .formatted(event.liters(), fuel, cost, event.mileageKm());
     }
 
-    private String tripCreatedAnswer(TimelineEventResponse event) {
-        return "Записала поездку: %s км за %s минут. Мой текущий пробег теперь %s км."
-                .formatted(event.distanceKm(), event.durationMinutes(), event.endMileageKm());
+    private String tripCreatedAnswer(TimelineEventResponse event, ChatLanguage language) {
+        return language == ChatLanguage.RU
+                ? "Записала поездку: %s км за %s минут. Мой текущий пробег теперь %s км."
+                        .formatted(event.distanceKm(), event.durationMinutes(), event.endMileageKm())
+                : "I added the trip to my history: %s km in %s minutes. My mileage is now %s km."
+                        .formatted(event.distanceKm(), event.durationMinutes(), event.endMileageKm());
     }
 
-    private String maintenanceCreatedAnswer(TimelineEventResponse event) {
-        return "Записала ремонт в свою историю: %s, пробег %s км."
-                .formatted(event.name(), event.mileageKm());
+    private String maintenanceCreatedAnswer(TimelineEventResponse event, ChatLanguage language) {
+        return language == ChatLanguage.RU
+                ? "Записала ремонт в свою историю: %s, пробег %s км."
+                        .formatted(event.name(), event.mileageKm())
+                : "I added the repair to my history: %s at %s km."
+                        .formatted(event.name(), event.mileageKm());
     }
 
-    private String tripStartedAnswer(TimelineEventResponse event) {
-        return "\u041f\u043e\u0435\u0437\u0434\u043a\u0443 \u043d\u0430\u0447\u0430\u043b\u0430 \u0438 \u0441\u043e\u0445\u0440\u0430\u043d\u0438\u043b\u0430 \u0441\u0442\u0430\u0440\u0442. \u041a\u043e\u0433\u0434\u0430 \u0437\u0430\u043a\u043e\u043d\u0447\u0438\u0448\u044c, \u043d\u0430\u043f\u0438\u0448\u0438 \u0441\u044e\u0434\u0430 \u0434\u0438\u0441\u0442\u0430\u043d\u0446\u0438\u044e, \u0434\u043b\u0438\u0442\u0435\u043b\u044c\u043d\u043e\u0441\u0442\u044c \u0438 \u0440\u0430\u0441\u0445\u043e\u0434 \u0442\u043e\u043f\u043b\u0438\u0432\u0430.";
+    private String tripStartedAnswer(ChatLanguage language) {
+        return language == ChatLanguage.RU
+                ? "Поездку начала и сохранила старт. Когда закончишь, напиши сюда дистанцию, длительность и расход топлива."
+                : "I started the trip record and saved the start. When you finish, send me the distance, duration, and fuel used.";
     }
 
-    private String tripLifecyclePartialAnswer(TimelineEventResponse event) {
-        return "\u0421\u043e\u0445\u0440\u0430\u043d\u0438\u043b\u0430 \u043f\u043e\u0435\u0437\u0434\u043a\u0443 \u0447\u0430\u0441\u0442\u0438\u0447\u043d\u043e. \u041f\u0440\u0438\u0448\u043b\u0438 \u043d\u0435\u0434\u043e\u0441\u0442\u0430\u044e\u0449\u0438\u0435 \u0434\u0430\u043d\u043d\u044b\u0435: \u0434\u0438\u0441\u0442\u0430\u043d\u0446\u0438\u044e, \u0434\u043b\u0438\u0442\u0435\u043b\u044c\u043d\u043e\u0441\u0442\u044c \u0438\u043b\u0438 \u0440\u0430\u0441\u0445\u043e\u0434 \u0442\u043e\u043f\u043b\u0438\u0432\u0430.";
+    private String tripLifecyclePartialAnswer(ChatLanguage language) {
+        return language == ChatLanguage.RU
+                ? "Сохранила поездку частично. Пришли недостающие данные: дистанцию, длительность или расход топлива."
+                : "I saved the trip partially. Send the missing distance, duration, or fuel used.";
     }
 
-    private String tripLifecycleCompletedAnswer(TimelineEventResponse event) {
-        return "\u041f\u043e\u0435\u0437\u0434\u043a\u0443 \u0437\u0430\u0432\u0435\u0440\u0448\u0438\u043b\u0430: %s \u043a\u043c \u0437\u0430 %s \u043c\u0438\u043d\u0443\u0442, \u0440\u0430\u0441\u0445\u043e\u0434 \u0442\u043e\u043f\u043b\u0438\u0432\u0430 %s \u043b."
-                .formatted(event.distanceKm(), event.durationMinutes(), decimal(event.fuelLiters()));
+    private String tripLifecycleCompletedAnswer(TimelineEventResponse event, ChatLanguage language) {
+        return language == ChatLanguage.RU
+                ? "Поездку завершила: %s км за %s минут, расход топлива %s л."
+                        .formatted(event.distanceKm(), event.durationMinutes(), decimal(event.fuelLiters()))
+                : "I finished the trip record: %s km in %s minutes, using %s L of fuel."
+                        .formatted(event.distanceKm(), event.durationMinutes(), decimal(event.fuelLiters()));
     }
 
     private String contextForDecision(
