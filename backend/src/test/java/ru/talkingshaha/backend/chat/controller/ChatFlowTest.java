@@ -112,8 +112,9 @@ class ChatFlowTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("{\"text\":\"I refuled the car today\"}"))
                 .andExpect(status().isCreated())
-                .andExpect(jsonPath("$.assistantMessage.text", containsString("нужно указать литры")))
-                .andExpect(jsonPath("$.assistantMessage.text", containsString("нужно указать стоимость")))
+                .andExpect(jsonPath("$.assistantMessage.text", containsString("liters is required")))
+                .andExpect(jsonPath("$.assistantMessage.text", containsString("cost is required")))
+                .andExpect(jsonPath("$.assistantMessage.text", not(containsString("нужно"))))
                 .andExpect(jsonPath("$.assistantMessage.action.type").value("OPEN_FORM"))
                 .andExpect(jsonPath("$.assistantMessage.action.form").value("REFUEL"))
                 .andExpect(jsonPath("$.assistantMessage.action.prefill.mileageKm").value(10000));
@@ -133,7 +134,9 @@ class ChatFlowTest {
                         .content("{\"text\":\"I refueled AI-95 gas for 5 liters for 1000 rubles\"}"))
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.createdEvent.type").value("REFUEL"))
+                .andExpect(jsonPath("$.createdEvent.title").value("Refuel"))
                 .andExpect(jsonPath("$.createdEvent.liters").value(5))
+                .andExpect(jsonPath("$.assistantMessage.text", startsWith("I added the refuel")))
                 .andExpect(jsonPath("$.assistantMessage.action.type").value("OPEN_SCREEN"))
                 .andExpect(jsonPath("$.assistantMessage.action.screen").value("HISTORY_EVENT_EDIT"))
                 .andExpect(jsonPath("$.assistantMessage.action.prefill.eventId").exists())
@@ -146,7 +149,7 @@ class ChatFlowTest {
                 .andExpect(jsonPath("$.events[0].mileageKm").value(10000))
                 .andExpect(jsonPath("$.events[0].liters").value(5))
                 .andExpect(jsonPath("$.events[0].cost").value(1000))
-                .andExpect(jsonPath("$.events[0].title").value("Заправка"))
+                .andExpect(jsonPath("$.events[0].title").value("Refuel"))
                 .andExpect(jsonPath("$.events[0].fuelName").value("95 octane"));
     }
 
@@ -259,7 +262,7 @@ class ChatFlowTest {
                         .content("{\"text\":\"92\"}"))
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.createdEvent.type").value("REFUEL"))
-                .andExpect(jsonPath("$.createdEvent.title").value("Заправка"))
+                .andExpect(jsonPath("$.createdEvent.title").value("Refuel"))
                 .andExpect(jsonPath("$.createdEvent.fuelName").value("92 octane"))
                 .andExpect(jsonPath("$.assistantMessage.action.type").value("OPEN_SCREEN"))
                 .andExpect(jsonPath("$.assistantMessage.action.screen").value("HISTORY_EVENT_EDIT"))
@@ -268,7 +271,7 @@ class ChatFlowTest {
                         .header("Authorization", bearer()))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.events", hasSize(1)))
-                .andExpect(jsonPath("$.events[0].title").value("Заправка"))
+                .andExpect(jsonPath("$.events[0].title").value("Refuel"))
                 .andExpect(jsonPath("$.events[0].fuelName").value("92 octane"));
     }
 
@@ -281,7 +284,9 @@ class ChatFlowTest {
                         .content("{\"text\":\"I drove 12 km for 20 minutes\"}"))
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.createdEvent.type").value("TRIP"))
+                .andExpect(jsonPath("$.createdEvent.title").value("Trip"))
                 .andExpect(jsonPath("$.createdEvent.distanceKm").value(12))
+                .andExpect(jsonPath("$.assistantMessage.text", startsWith("I added the trip")))
                 .andExpect(jsonPath("$.assistantMessage.action.type").value("OPEN_SCREEN"))
                 .andExpect(jsonPath("$.assistantMessage.action.screen").value("HISTORY_EVENT_EDIT"))
                 .andExpect(jsonPath("$.assistantMessage.action.prefill.eventType").value("TRIP"));
@@ -290,6 +295,7 @@ class ChatFlowTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.events", hasSize(1)))
                 .andExpect(jsonPath("$.events[0].type").value("TRIP"))
+                .andExpect(jsonPath("$.events[0].title").value("Trip"))
                 .andExpect(jsonPath("$.events[0].startMileageKm").value(10000))
                 .andExpect(jsonPath("$.events[0].endMileageKm").value(10012))
                 .andExpect(jsonPath("$.events[0].distanceKm").value(12))
