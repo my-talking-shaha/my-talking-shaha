@@ -1,0 +1,16 @@
+# Default owner for unmatched and newly added paths
+* @my-talking-shaha/management
+
+/backend/ @my-talking-shaha/backend
+/frontend/ @my-talking-shaha/mobile
+/cars/ @my-talking-shaha/ml
+/ml/ @my-talking-shaha/ml
+/docker/ @my-talking-shaha/devops
+/docs/ @my-talking-shaha/management
+
+/.env.example @my-talking-shaha/devops @my-talking-shaha/backend
+/.dockerignore @my-talking-shaha/devops @my-talking-shaha/backend
+/.gitignore @my-talking-shaha/devops
+/.github/workflows/ @my-talking-shaha/devops
+/.github/CODEOWNERS @my-talking-shaha/management
+/README.md @my-talking-shaha/management
